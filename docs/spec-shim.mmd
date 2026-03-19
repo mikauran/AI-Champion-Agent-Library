@@ -1,0 +1,23 @@
+flowchart LR
+    subgraph Input["Source Format"]
+        OAS["Oracle AgentSpec YAML\n(component_type, llm_config,\nhuman_in_the_loop, ...)"]
+    end
+
+    subgraph Shim["Shim Layer  src/lib/spec/"]
+        Index["index.ts\ndetectFormat()\nnormalize()"]
+        Schema["oracle-agentspec.ts\nZod schema\nfromOracleAgentSpec()"]
+        Types["types.ts\nAgentRecord\nslugify()"]
+
+        Index --> Schema --> Types
+    end
+
+    subgraph Output["Canonical Type"]
+        AR["AgentRecord\n(title, summary, llm.name,\ntoolNames, maturityStatus, ...)"]
+    end
+
+    OAS --> Index
+    Types --> AR
+
+    style Input fill:#fff8e1,stroke:#FF9800
+    style Shim fill:#f0f7ff,stroke:#2196F3
+    style Output fill:#f0fff4,stroke:#4CAF50

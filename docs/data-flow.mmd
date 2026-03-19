@@ -1,0 +1,15 @@
+flowchart LR
+    YAML["📄 Agent YAML files\ndata/agents/"]
+    Ingest["⚙️ Ingest script\nnpm run dev / build"]
+    DB[("🗄️ SQLite catalog\ndb/catalog.db")]
+    Catalog["📋 Browse catalog\n/catalog"]
+    Detail["🔍 Agent detail\n/agents/slug"]
+    GitHub["🐙 GitHub\nimplementation"]
+
+    YAML --> Ingest --> DB --> Catalog --> Detail --> GitHub
+
+    style YAML fill:#e8f4fd,stroke:#2196F3
+    style DB fill:#e8f4fd,stroke:#2196F3
+    style Catalog fill:#f3e8fd,stroke:#9C27B0
+    style Detail fill:#f3e8fd,stroke:#9C27B0
+    style GitHub fill:#e8fde8,stroke:#4CAF50

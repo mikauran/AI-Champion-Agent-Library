@@ -1,0 +1,25 @@
+component_type: Agent
+id: "aic-customer-support-001"
+name: "Customer Support Triager"
+description: "Routes incoming customer support tickets to the appropriate team based on content analysis and urgency classification."
+metadata:
+  category: "customer-support"
+  github_url: "https://github.com/aic-consortium/customer-support-triager"
+  maturity: "production"
+  tags:
+    - "nlp"
+    - "classification"
+    - "customer-support"
+system_prompt: "You are a customer support triage agent. Analyze incoming tickets and route them to the correct team."
+llm_config:
+  name: "gpt-4o"
+  default_generation_parameters:
+    max_tokens: 1024
+    temperature: 0.3
+    top_p: 0.9
+tools:
+  - name: "classify_ticket"
+    description: "Classifies a support ticket by category and urgency"
+  - name: "route_to_team"
+    description: "Routes a ticket to the appropriate support team"
+human_in_the_loop: false

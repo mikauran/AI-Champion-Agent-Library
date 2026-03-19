@@ -1,0 +1,5 @@
+component_type: Agent
+name: "Minimal Agent"
+system_prompt: "You are a minimal agent for testing."
+llm_config:
+  name: "gpt-3.5-turbo"

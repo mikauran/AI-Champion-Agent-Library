@@ -1,0 +1,44 @@
+flowchart TB
+    subgraph Ingest["Ingest Pipeline (build time)"]
+        YAML["data/agents/*.yaml"]
+        Parser["YAML Parser"]
+        Detect["detectFormat()"]
+        Zod["Zod validation\nOracleAgentSpecSchema"]
+        Adapter["fromOracleAgentSpec()\nAgentRecord"]
+        Flatten["flattenRecord()\nNewAgentRow"]
+        DB[("SQLite\ndb/catalog.db")]
+
+        YAML --> Parser --> Detect --> Zod --> Adapter --> Flatten --> DB
+    end
+
+    subgraph Server["SvelteKit Server (request time)"]
+        CatalogLoad["/catalog\n+page.server.ts"]
+        DetailLoad["/agents/[slug]\n+page.server.ts"]
+        DBSingleton["db singleton\nsrc/lib/server/db.ts"]
+
+        DB --> DBSingleton
+        DBSingleton --> CatalogLoad
+        DBSingleton --> DetailLoad
+    end
+
+    subgraph Client["Svelte 5 Client"]
+        CatalogPage["+page.svelte\nCatalog"]
+        DetailPage["+page.svelte\nDetail"]
+        FilterBar["FilterBar"]
+        AgentCard["AgentCard"]
+        Pagination["Pagination"]
+        TechAccordion["TechAccordion"]
+        CustomPanel["CustomizationPanel"]
+
+        CatalogLoad --> CatalogPage
+        DetailLoad --> DetailPage
+        CatalogPage --> FilterBar
+        CatalogPage --> AgentCard
+        CatalogPage --> Pagination
+        DetailPage --> TechAccordion
+        DetailPage --> CustomPanel
+    end
+
+    style Ingest fill:#f0f7ff,stroke:#2196F3
+    style Server fill:#f5f0ff,stroke:#9C27B0
+    style Client fill:#f0fff4,stroke:#4CAF50

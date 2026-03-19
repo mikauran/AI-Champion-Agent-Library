@@ -1,0 +1,17 @@
+flowchart TD
+    A["Open /catalog"] --> B["Browse agent cards\nby category"]
+    B --> C{"Filter agents"}
+    C -->|"Category / LLM / Status"| B
+    C --> D["Open agent detail page"]
+    D --> E["Read executive summary\nname · purpose · GitHub link"]
+    E --> F{"Need technical details?"}
+    F -->|"Yes — expand section"| G["View LLM config, tools,\nhuman-in-the-loop, system prompt"]
+    F -->|"No"| H["Click GitHub →\nimplementation repo"]
+    G --> H
+
+    style A fill:#f3e8fd,stroke:#9C27B0
+    style B fill:#f3e8fd,stroke:#9C27B0
+    style D fill:#f3e8fd,stroke:#9C27B0
+    style E fill:#e8f4fd,stroke:#2196F3
+    style G fill:#e8f4fd,stroke:#2196F3
+    style H fill:#e8fde8,stroke:#4CAF50

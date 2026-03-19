@@ -1,0 +1,42 @@
+{
+  "name": "2026_aic_agent_library",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "ingest": "tsx scripts/ingest.ts",
+    "db:push": "drizzle-kit push",
+    "build": "npm run db:push && npm run ingest && vite build",
+    "preview": "node build",
+    "dev": "npm run db:push && npm run ingest && vite dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "AIC Agent Library — catalog of Oracle AgentSpec agents",
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "drizzle-orm": "^0.45.1",
+    "yaml": "^2.8.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "^5.5.4",
+    "@sveltejs/kit": "^2.55.0",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/svelte": "^5.3.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.5.0",
+    "drizzle-kit": "^0.31.10",
+    "jsdom": "^29.0.0",
+    "svelte": "^5.54.0",
+    "tailwindcss": "^4.2.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.1",
+    "vitest": "^4.1.0"
+  }
+}
