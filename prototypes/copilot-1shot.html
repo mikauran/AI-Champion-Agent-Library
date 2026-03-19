@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AIC Agent Library – Mockup</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-elevated: #0b1020;
+      --bg-soft: #111729;
+      --accent: #4f46e5;
+      --accent-soft: rgba(79, 70, 229, 0.12);
+      --accent-strong: #818cf8;
+      --border-subtle: #1f2937;
+      --text: #e5e7eb;
+      --text-soft: #9ca3af;
+      --text-faint: #6b7280;
+      --danger: #f97373;
+      --success: #4ade80;
+      --warning: #facc15;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-pill: 999px;
+      --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.55);
+      --shadow-subtle: 0 10px 30px rgba(0, 0, 0, 0.35);
+      --transition-fast: 150ms ease-out;
+      --transition-med: 220ms ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-shell {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 20px 16px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      background: conic-gradient(
+        from 210deg,
+        #4f46e5,
+        #22c55e,
+        #06b6d4,
+        #f97316,
+        #4f46e5
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.9),
+        0 12px 30px rgba(15, 23, 42, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-logo::after {
+      content: "";
+      position: absolute;
+      inset: 4px;
+      border-radius: 9px;
+      background: radial-gradient(circle at 20% 0, #111827 0, #020617 55%, #000 100%);
+    }
+
+    .brand-logo span {
+      position: relative;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #e5e7eb;
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .brand-text p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      border-radius: var(--radius-pill);
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      color: var(--text-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(10px);
+    }
+
+    .pill strong {
+      font-weight: 600;
+      color: var(--accent-strong);
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
+    }
+
+    .pill-outline {
+      border-style: dashed;
+      border-color: rgba(148, 163, 184, 0.5);
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-soft);
+      max-width: 640px;
+    }
+
+    .subtitle strong {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    /* Layout */
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 960px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    /* Left column: search + catalog */
+
+    .panel {
+      background: radial-gradient(circle at top left, #111827 0, #020617 55%, #000 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      box-shadow: var(--shadow-soft);
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 0 0, rgba(79, 70, 229, 0.12), transparent 55%),
+        radial-gradient(circle at 100% 0, rgba(56, 189, 248, 0.12), transparent 55%);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .panel-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title span {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .panel-title-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.25);
+    }
+
+    .panel-header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      border-radius: var(--radius-pill);
+      padding: 3px 8px;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: var(--text-soft);
+      background: rgba(15, 23, 42, 0.9);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-badge {
+      border-radius: 999px;
+      padding: 1px 6px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: rgba(79, 70, 229, 0.18);
+      color: var(--accent-strong);
+    }
+
+    .chip-pill {
+      border-radius: var(--radius-pill);
+      padding: 3px 9px;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: var(--text-soft);
+      background: rgba(15, 23, 42, 0.9);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-pill span {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--success);
+    }
+
+    /* Search bar */
+
+    .search-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 9px 12px 9px 32px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      box-shadow: var(--shadow-subtle);
+      transition: border-color var(--transition-med), box-shadow var(--transition-med),
+        background var(--transition-med), transform var(--transition-fast);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-faint);
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-strong);
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.6),
+        0 18px 40px rgba(15, 23, 42, 0.9);
+      background: #020617;
+      transform: translateY(-0.5px);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      font-size: 13px;
+      color: var(--text-faint);
+      pointer-events: none;
+    }
+
+    .search-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .search-meta span strong {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    .search-meta-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .search-meta-pill {
+      border-radius: var(--radius-pill);
+      padding: 2px 8px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-soft);
+    }
+
+    .search-meta-pill span {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    /* Filters */
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .filter-group-label {
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 10px;
+      margin-right: 4px;
+    }
+
+    .filter-pill {
+      border-radius: var(--radius-pill);
+      padding: 3px 9px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: border-color var(--transition-fast), background var(--transition-fast),
+        color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .filter-pill span {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.7);
+    }
+
+    .filter-pill.active {
+      border-color: var(--accent-strong);
+      background: rgba(79, 70, 229, 0.18);
+      color: #e5e7eb;
+      transform: translateY(-0.5px);
+    }
+
+    .filter-pill.active span {
+      background: var(--accent-strong);
+    }
+
+    /* Catalog list */
+
+    .catalog {
+      border-radius: 12px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: rgba(15, 23, 42, 0.96);
+      box-shadow: var(--shadow-subtle);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 460px;
+      overflow: hidden;
+    }
+
+    .catalog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 6px 2px;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .catalog-header span strong {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    .catalog-header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .catalog-scroll {
+      overflow-y: auto;
+      padding: 2px 2px 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .catalog-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .catalog-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .catalog-scroll::-webkit-scrollbar-thumb {
+      background: rgba(55, 65, 81, 0.9);
+      border-radius: 999px;
+    }
+
+    .agent-card {
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: linear-gradient(
+        135deg,
+        rgba(15, 23, 42, 0.98),
+        rgba(15, 23, 42, 0.96)
+      );
+      padding: 7px 8px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      cursor: pointer;
+      transition: border-color var(--transition-med), background var(--transition-med),
+        transform var(--transition-fast), box-shadow var(--transition-med);
+    }
+
+    .agent-card:hover {
+      border-color: rgba(129, 140, 248, 0.9);
+      background: radial-gradient(circle at top left, #020617 0, #020617 55%, #020617 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 14px 35px rgba(15, 23, 42, 0.9);
+    }
+
+    .agent-card.selected {
+      border-color: var(--accent-strong);
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.7),
+        0 18px 40px rgba(15, 23, 42, 0.95);
+      background: radial-gradient(circle at top left, #020617 0, #020617 55%, #020617 100%);
+    }
+
+    .agent-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background: radial-gradient(circle at 0 0, #4f46e5, #22c55e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #e5e7eb;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.9),
+        0 10px 25px rgba(15, 23, 42, 0.9);
+    }
+
+    .agent-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .agent-name-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .agent-name {
+      font-weight: 600;
+      color: #e5e7eb;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .agent-domain-pill {
+      border-radius: var(--radius-pill);
+      padding: 1px 7px;
+      font-size: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      color: var(--text-soft);
+      background: rgba(15, 23, 42, 0.9);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .agent-summary {
+      font-size: 11px;
+      color: var(--text-soft);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .agent-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      font-size: 10px;
+    }
+
+    .agent-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-faint);
+    }
+
+    .agent-meta-row strong {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    .agent-tags {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    .agent-tag {
+      border-radius: var(--radius-pill);
+      padding: 1px 6px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-soft);
+    }
+
+    .agent-tag span {
+      color: var(--accent-strong);
+      font-weight: 600;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 6px 2px;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pagination-btn {
+      border-radius: var(--radius-pill);
+      padding: 2px 8px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-soft);
+      font-size: 11px;
+      cursor: pointer;
+      transition: background var(--transition-fast), border-color var(--transition-fast),
+        color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background: rgba(79, 70, 229, 0.18);
+      border-color: var(--accent-strong);
+      color: #e5e7eb;
+      transform: translateY(-0.5px);
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    /* Right column: detail */
+
+    .detail-panel {
+      background: radial-gradient(circle at top right, #111827 0, #020617 55%, #000 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      box-shadow: var(--shadow-soft);
+      padding: 14px 14px 12px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .detail-panel::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 100% 0, rgba(79, 70, 229, 0.16), transparent 55%),
+        radial-gradient(circle at 0 100%, rgba(56, 189, 248, 0.12), transparent 55%);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .detail-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .detail-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .detail-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .detail-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .detail-badge {
+      border-radius: var(--radius-pill);
+      padding: 2px 8px;
+      font-size: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      color: var(--text-soft);
+      background: rgba(15, 23, 42, 0.9);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .detail-badge span {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-strong);
+    }
+
+    .detail-subtitle {
+      font-size: 12px;
+      color: var(--text-soft);
+      max-width: 520px;
+    }
+
+    .detail-subtitle strong {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    .detail-header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .detail-header-right-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .link-pill {
+      border-radius: var(--radius-pill);
+      padding: 3px 9px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--accent-strong);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background var(--transition-fast), border-color var(--transition-fast),
+        transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .link-pill:hover {
+      background: rgba(79, 70, 229, 0.18);
+      border-color: var(--accent-strong);
+      transform: translateY(-0.5px);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.9);
+    }
+
+    .link-pill span {
+      font-size: 12px;
+    }
+
+    .detail-meta-line {
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .detail-meta-line strong {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    /* Executive summary */
+
+    .section {
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: rgba(15, 23, 42, 0.96);
+      padding: 8px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .section-header span {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    .section-body {
+      font-size: 12px;
+      color: var(--text-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .section-body strong {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .pill-small {
+      border-radius: var(--radius-pill);
+      padding: 2px 7px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      font-size: 11px;
+      color: var(--text-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-small span {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.8);
+    }
+
+    /* Technical spec (collapsible) */
+
+    .collapsible-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .collapsible-toggle {
+      border-radius: var(--radius-pill);
+      padding: 2px 8px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-soft);
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background var(--transition-fast), border-color var(--transition-fast),
+        transform var(--transition-fast);
+    }
+
+    .collapsible-toggle span {
+      font-size: 11px;
+    }
+
+    .collapsible-toggle:hover {
+      background: rgba(79, 70, 229, 0.18);
+      border-color: var(--accent-strong);
+      transform: translateY(-0.5px);
+    }
+
+    .collapsible-body {
+      margin-top: 4px;
+      display: none;
+      animation: fadeIn 200ms ease-out;
+    }
+
+    .collapsible-body.open {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 6px;
+    }
+
+    .spec-item {
+      border-radius: 8px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: rgba(15, 23, 42, 0.96);
+      padding: 6px 7px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .spec-label {
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 10px;
+    }
+
+    .spec-value {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    .spec-sub {
+      color: var(--text-soft);
+      font-size: 11px;
+    }
+
+    /* Customization section */
+
+    .customization-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .customization-main {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-soft);
+      max-width: 420px;
+    }
+
+    .customization-main strong {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    .customization-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .customization-tag {
+      border-radius: var(--radius-pill);
+      padding: 2px 7px;
+      border: 1px dashed rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .customization-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      border: none;
+      background: linear-gradient(135deg, #4f46e5, #22c55e);
+      color: #e5e7eb;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 14px 35px rgba(15, 23, 42, 0.9);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast),
+        filter var(--transition-fast);
+    }
+
+    .btn-primary span {
+      font-size: 13px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.95);
+      filter: brightness(1.05);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.9);
+      filter: brightness(0.98);
+    }
+
+    .customization-note {
+      font-size: 11px;
+      color: var(--text-faint);
+      text-align: right;
+    }
+
+    .customization-note strong {
+      color: var(--accent-strong);
+      font-weight: 600;
+    }
+
+    /* Customize menu (placeholder) */
+
+    .customize-menu {
+      position: absolute;
+      right: 16px;
+      top: 54px;
+      border-radius: 12px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: rgba(15, 23, 42, 0.98);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.9);
+      padding: 8px;
+      width: 220px;
+      font-size: 12px;
+      display: none;
+      z-index: 10;
+    }
+
+    .customize-menu.open {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .customize-menu-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .customize-menu-header strong {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    .customize-menu-badge {
+      border-radius: var(--radius-pill);
+      padding: 1px 7px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      font-size: 10px;
+      color: var(--warning);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .customize-menu-item {
+      border-radius: 8px;
+      padding: 5px 6px;
+      border: 1px dashed rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .customize-menu-item-title {
+      font-size: 11px;
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    .customize-menu-item-sub {
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .customize-menu-footer {
+      font-size: 10px;
+      color: var(--text-faint);
+      text-align: right;
+    }
+
+    /* Discovery / v2 hints */
+
+    .discovery-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .discovery-pill {
+      border-radius: var(--radius-pill);
+      padding: 2px 7px;
+      border: 1px dashed rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .discovery-pill span {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(248, 250, 252, 0.4);
+    }
+
+    /* Footer / out of scope */
+
+    footer {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--text-faint);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .out-of-scope {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .out-pill {
+      border-radius: var(--radius-pill);
+      padding: 2px 7px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .out-pill span {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--danger);
+    }
+
+    .version-pill {
+      border-radius: var(--radius-pill);
+      padding: 2px 7px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-soft);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-2px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div class="top-row">
+        <div class="brand">
+          <div class="brand-logo">
+            <span>AL</span>
+          </div>
+          <div class="brand-text">
+            <h1>AIC Agent Library</h1>
+            <p>Find the right AI agent in seconds — then understand it at executive and technical depth.</p>
+          </div>
+        </div>
+        <div class="meta">
+          <div class="pill">
+            <div class="pill-dot"></div>
+            <span><strong>Core value</strong> Tech evaluators &amp; execs get to the right agent fast.</span>
+          </div>
+          <div class="pill pill-outline">
+            <strong>Spec</strong> Defined 2026‑03‑19
+          </div>
+        </div>
+      </div>
+      <p class="subtitle">
+        <strong>v1 focus:</strong> semantic search, category browse, and rich agent detail — with a visible runway into v2 customization and discovery.
+      </p>
+    </header>
+
+    <main class="layout">
+      <!-- LEFT: SEARCH + CATALOG -->
+      <section class="panel" aria-label="Agent catalog">
+        <div class="panel-inner">
+          <div class="panel-header">
+            <div class="panel-title">
+              <div class="panel-title-dot"></div>
+              <span>Catalog browse</span>
+            </div>
+            <div class="panel-header-right">
+              <div class="chip">
+                <span class="chip-badge">v1</span>
+                BROW‑01 · BROW‑02 · BROW‑03
+              </div>
+              <div class="chip">
+                <span class="chip-badge">v1</span>
+                SRCH‑01 · SRCH‑02 · SRCH‑03
+              </div>
+            </div>
+          </div>
+
+          <!-- Search -->
+          <div class="search-row">
+            <div class="search-input-wrap">
+              <span class="search-icon">🔍</span>
+              <input
+                id="searchInput"
+                class="search-input"
+                type="text"
+                placeholder="Search agents in natural language — e.g. “PCI‑compliant RAG over Oracle ERP”"
+                autocomplete="off"
+              />
+            </div>
+            <div class="search-meta">
+              <span>
+                <strong>Semantic + keyword</strong> scoring · live as you type
+              </span>
+              <div class="search-meta-right">
+                <div class="search-meta-pill">
+                  <span></span>
+                  SRCH‑01 · SRCH‑02 · SRCH‑03
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="filters" aria-label="Filters">
+            <span class="filter-group-label">Domain</span>
+            <button class="filter-pill active" data-filter-domain="all">
+              <span></span> All
+            </button>
+            <button class="filter-pill" data-filter-domain="Data &amp; Analytics">
+              <span></span> Data &amp; Analytics
+            </button>
+            <button class="filter-pill" data-filter-domain="Customer">
+              <span></span> Customer &amp; CX
+            </button>
+            <button class="filter-pill" data-filter-domain="Finance">
+              <span></span> Finance &amp; Risk
+            </button>
+            <button class="filter-pill" data-filter-domain="DevOps">
+              <span></span> DevOps &amp; Platform
+            </button>
+          </div>
+
+          <div class="filters" aria-label="Attribute filters">
+            <span class="filter-group-label">Attributes</span>
+            <button class="filter-pill" data-filter-attr="gpt-4.1">
+              <span></span> LLM: GPT‑4.1
+            </button>
+            <button class="filter-pill" data-filter-attr="llama-3">
+              <span></span> LLM: Llama‑3
+            </button>
+            <button class="filter-pill" data-filter-attr="mcp">
+              <span></span> MCP tools
+            </button>
+            <button class="filter-pill" data-filter-attr="serverless">
+              <span></span> Serverless
+            </button>
+            <button class="filter-pill" data-filter-attr="kubernetes">
+              <span></span> Kubernetes
+            </button>
+          </div>
+
+          <!-- Catalog -->
+          <div class="catalog">
+            <div class="catalog-header">
+              <span>
+                <strong id="resultCount">0</strong> agents · handles 100+ with pagination
+              </span>
+              <div class="catalog-header-right">
+                <span>Sorted by relevance</span>
+              </div>
+            </div>
+            <div id="catalogScroll" class="catalog-scroll" aria-label="Agent list">
+              <!-- Agent cards injected by JS -->
+            </div>
+            <div class="pagination">
+              <span id="paginationLabel">Page 1 of 1</span>
+              <div class="pagination-controls">
+                <button id="prevPage" class="pagination-btn" disabled>Prev</button>
+                <button id="nextPage" class="pagination-btn" disabled>Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: DETAIL -->
+      <section class="detail-panel" aria-label="Agent detail">
+        <div class="detail-inner">
+          <div class="detail-header">
+            <div class="detail-title-block">
+              <div class="detail-title-row">
+                <h2 id="detailName" class="detail-title">Select an agent from the catalog</h2>
+                <div class="detail-badge">
+                  <span></span>
+                  Executive summary · DETL‑01
+                </div>
+              </div>
+              <p id="detailPurpose" class="detail-subtitle">
+                You’ll see <strong>name, purpose, use cases, and GitHub link</strong> here — plus technical spec and customization options.
+              </p>
+            </div>
+            <div class="detail-header-right">
+              <div class="detail-header-right-row">
+                <button id="githubLink" class="link-pill" disabled>
+                  <span>↗</span> GitHub repo
+                </button>
+                <div class="chip">
+                  <span class="chip-badge">v1</span>
+                  DETL‑01 · DETL‑02 · DETL‑03
+                </div>
+              </div>
+              <div class="detail-meta-line" id="detailMeta">
+                Domain · LLM · Deployment · Tags
+              </div>
+            </div>
+          </div>
+
+          <!-- Executive summary -->
+          <section class="section" aria-label="Executive summary">
+            <div class="section-header">
+              <span>Executive summary</span>
+              <span id="detailId">Agent ID —</span>
+            </div>
+            <div class="section-body">
+              <div><strong>Primary purpose:</strong> <span id="detailPrimaryPurpose">—</span></div>
+              <div><strong>Ideal use cases:</strong> <span id="detailUseCases">—</span></div>
+              <div class="pill-row" id="detailUseCasePills">
+                <!-- Use case pills -->
+              </div>
+            </div>
+          </section>
+
+          <!-- Technical spec (collapsible) -->
+          <section class="section" aria-label="Technical specification">
+            <div class="collapsible-header" id="specToggle">
+              <div class="section-header">
+                <span>Technical specification</span>
+                <span>LLM · tools · memory · invocation · deployment</span>
+              </div>
+              <button class="collapsible-toggle" type="button">
+                <span id="specToggleIcon">▾</span> Collapsed by default · DETL‑02
+              </button>
+            </div>
+            <div id="specBody" class="collapsible-body">
+              <div class="spec-item">
+                <div class="spec-label">LLM</div>
+                <div id="specLLM" class="spec-value">—</div>
+                <div id="specLLMNotes" class="spec-sub">—</div>
+              </div>
+              <div class="spec-item">
+                <div class="spec-label">Tools</div>
+                <div id="specTools" class="spec-value">—</div>
+                <div id="specToolsNotes" class="spec-sub">—</div>
+              </div>
+              <div class="spec-item">
+                <div class="spec-label">Memory</div>
+                <div id="specMemory" class="spec-value">—</div>
+                <div id="specMemoryNotes" class="spec-sub">—</div>
+              </div>
+              <div class="spec-item">
+                <div class="spec-label">Invocation</div>
+                <div id="specInvocation" class="spec-value">—</div>
+                <div id="specInvocationNotes" class="spec-sub">—</div>
+              </div>
+              <div class="spec-item">
+                <div class="spec-label">Deployment</div>
+                <div id="specDeployment" class="spec-value">—</div>
+                <div id="specDeploymentNotes" class="spec-sub">—</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Customization -->
+          <section class="section" aria-label="Customization">
+            <div class="section-header">
+              <span>Customization</span>
+              <span>Tailorable 20% · CUST‑01 · CUST‑02 · CUST‑03</span>
+            </div>
+            <div class="customization-row">
+              <div class="customization-main">
+                <div>
+                  <strong>Tailorable fields:</strong>
+                  <span id="detailTailorable">—</span>
+                </div>
+                <div class="customization-tags" id="detailTailorableTags">
+                  <!-- Tailorable tags -->
+                </div>
+              </div>
+              <div class="customization-actions">
+                <button id="customizeBtn" class="btn-primary" type="button">
+                  <span>✨</span> Customize (placeholder)
+                </button>
+                <div class="customization-note">
+                  <strong>CUST‑01</strong> visible now · <strong>CUST‑02/03</strong> become functional in v2.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Discovery / v2 hints -->
+          <section class="section" aria-label="Discovery enhancements">
+            <div class="section-header">
+              <span>Discovery runway</span>
+              <span>DISC‑01 · DISC‑02 · DISC‑03</span>
+            </div>
+            <div class="section-body">
+              <div class="discovery-row">
+                <div class="discovery-pill">
+                  <span></span> Related agents (embedding distance) · DISC‑01
+                </div>
+                <div class="discovery-pill">
+                  <span></span> Side‑by‑side comparison view · DISC‑02
+                </div>
+                <div class="discovery-pill">
+                  <span></span> Curated collections / bundles · DISC‑03
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Customize menu (placeholder) -->
+        <div id="customizeMenu" class="customize-menu" aria-label="Customize menu">
+          <div class="customize-menu-header">
+            <strong>Customization flows</strong>
+            <div class="customize-menu-badge">v1 placeholder</div>
+          </div>
+          <div class="customize-menu-item">
+            <div class="customize-menu-item-title">MCP config wizard</div>
+            <div class="customize-menu-item-sub">
+              CUST‑02 · Provide DB schema &amp; credentials, generate configured MCP variant.
+            </div>
+          </div>
+          <div class="customize-menu-item">
+            <div class="customize-menu-item-title">Verticalized agent templates</div>
+            <div class="customize-menu-item-sub">
+              CUST‑03 · Opinionated flows for finance, CX, and platform engineering agents.
+            </div>
+          </div>
+          <div class="customize-menu-footer">
+            Non‑functional in v1 · visible to signal roadmap.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="out-of-scope">
+        <div class="out-pill">
+          <span></span> Agent runtime execution
+        </div>
+        <div class="out-pill">
+          <span></span> Real‑time GitHub sync
+        </div>
+        <div class="out-pill">
+          <span></span> Dedicated vector DB
+        </div>
+        <div class="out-pill">
+          <span></span> Ratings / reviews
+        </div>
+        <div class="out-pill">
+          <span></span> Execution sandbox / demo
+        </div>
+        <div class="out-pill">
+          <span></span> Mobile‑optimized layout
+        </div>
+      </div>
+      <div class="version-pill">
+        UI‑01 responsive (desktop / tablet) · UI‑02/03/04 planned · AUTH‑01/02 · DEPL‑01 in v2.
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // --- Mock data -----------------------------------------------------------
+    const agents = [
+      {
+        id: "AG‑001",
+        name: "Oracle ERP RAG Advisor",
+        domain: "Finance",
+        domainLabel: "Finance & Risk",
+        llm: "GPT‑4.1",
+        llmNotes: "Optimized for structured financial reasoning and long‑context retrieval.",
+        tools: "MCP: Oracle ERP connector, SQL tool, Slack notifier",
+        toolsNotes: "Uses MCP to safely query ERP and push insights into collaboration tools.",
+        memory: "SQLite + in‑memory embeddings",
+        memoryNotes: "Approx. 300 agents; cosine similarity over local vectors.",
+        invocation: "REST API · MCP · scheduled batch jobs",
+        invocationNotes: "Supports both synchronous Q&A and scheduled reporting.",
+        deployment: "Kubernetes · private VPC",
+        deploymentNotes: "Consortium member cluster; no multi‑tenant runtime.",
+        purpose:
+          "Executive‑grade RAG over Oracle ERP for financial controllers and FP&amp;A teams.",
+        primaryPurpose:
+          "Summarize ERP data into board‑ready narratives and answer ad‑hoc financial questions.",
+        useCases: [
+          "Quarterly close variance analysis",
+          "Budget vs. actuals drill‑downs",
+          "Cash‑flow scenario Q&A"
+        ],
+        tags: ["gpt-4.1", "mcp", "kubernetes", "serverless"],
+        tailorable: "LLM, retrieval scope, reporting templates, escalation rules.",
+        tailorableFields: [
+          "LLM choice",
+          "Embedding model",
+          "Data sources",
+          "Report templates",
+          "Escalation routing"
+        ],
+        github: "https://github.com/example/oracle-erp-rag-advisor"
+      },
+      {
+        id: "AG‑002",
+        name: "Customer Journey Insight Agent",
+        domain: "Customer",
+        domainLabel: "Customer & CX",
+        llm: "Llama‑3 70B",
+        llmNotes: "Open‑weight model tuned for CX analytics and summarization.",
+        tools: "MCP: CDP connector, analytics API, email summarizer",
+        toolsNotes: "Pulls journeys from CDP and enriches with analytics events.",
+        memory: "SQLite + embeddings",
+        memoryNotes: "Session‑level embeddings for journey similarity.",
+        invocation: "REST API · event‑driven webhooks",
+        invocationNotes: "Triggered on new campaign launches and CX anomalies.",
+        deployment: "Serverless · regional",
+        deploymentNotes: "Deployed into consortium member serverless environments.",
+        purpose:
+          "Helps CX leaders understand customer journeys and campaign performance in natural language.",
+        primaryPurpose:
+          "Explain what’s happening across journeys and highlight where customers are getting stuck.",
+        useCases: [
+          "Campaign performance summaries",
+          "Journey drop‑off analysis",
+          "CX anomaly explanations"
+        ],
+        tags: ["llama-3", "mcp", "serverless"],
+        tailorable:
+          "Segmentation logic, KPI thresholds, channel coverage, escalation destinations.",
+        tailorableFields: [
+          "Segments",
+          "KPI thresholds",
+          "Channels",
+          "Alert routing"
+        ],
+        github: "https://github.com/example/customer-journey-insight-agent"
+      },
+      {
+        id: "AG‑003",
+        name: "Data Mesh Steward Agent",
+        domain: "Data &amp; Analytics",
+        domainLabel: "Data &amp; Analytics",
+        llm: "GPT‑4.1",
+        llmNotes: "Strong at schema reasoning and policy explanation.",
+        tools: "MCP: data catalog, lineage graph, policy engine",
+        toolsNotes: "Surfaces mesh domains, owners, and policies conversationally.",
+        memory: "SQLite + in‑memory embeddings",
+        memoryNotes: "Embeds schemas, policies, and lineage paths.",
+        invocation: "Chat UI · Slack bot · REST API",
+        invocationNotes: "Embedded into data portal and collaboration tools.",
+        deployment: "Kubernetes · on‑prem / hybrid",
+        deploymentNotes: "Runs close to data plane; no data leaves member boundary.",
+        purpose:
+          "Guides data producers and consumers through a federated data mesh.",
+        primaryPurpose:
+          "Explain where data lives, who owns it, and how to use it safely.",
+        useCases: [
+          "“Where is the source of truth for revenue?”",
+          "“Who owns this table?”",
+          "“Can I use this dataset for PII?”"
+        ],
+        tags: ["gpt-4.1", "mcp", "kubernetes"],
+        tailorable:
+          "Domain taxonomy, policy templates, escalation paths, supported tools.",
+        tailorableFields: [
+          "Domain taxonomy",
+          "Policy templates",
+          "Tool integrations",
+          "Escalation paths"
+        ],
+        github: "https://github.com/example/data-mesh-steward-agent"
+      },
+      {
+        id: "AG‑004",
+        name: "Platform Runbook Copilot",
+        domain: "DevOps",
+        domainLabel: "DevOps &amp; Platform",
+        llm: "GPT‑4.1",
+        llmNotes: "Good at step‑wise reasoning and log interpretation.",
+        tools: "MCP: runbook repository, incident system, log search",
+        toolsNotes: "Maps incidents to runbooks and suggests next best actions.",
+        memory: "SQLite + embeddings",
+        memoryNotes: "Embeds runbooks, incidents, and postmortems.",
+        invocation: "Chat UI · CLI · incident webhooks",
+        invocationNotes: "Available in on‑call tools and terminal.",
+        deployment: "Kubernetes · private VPC",
+        deploymentNotes: "Deployed alongside observability stack.",
+        purpose:
+          "Helps SREs and platform teams execute runbooks quickly and consistently.",
+        primaryPurpose:
+          "Turn incidents into guided flows with context‑aware runbook steps.",
+        useCases: [
+          "On‑call incident triage",
+          "Runbook discovery",
+          "Postmortem drafting"
+        ],
+        tags: ["gpt-4.1", "mcp", "kubernetes"],
+        tailorable:
+          "Runbook library, escalation rules, environment metadata, safety rails.",
+        tailorableFields: [
+          "Runbook sources",
+          "Escalation rules",
+          "Environment metadata",
+          "Guardrails"
+        ],
+        github: "https://github.com/example/platform-runbook-copilot"
+      },
+      {
+        id: "AG‑005",
+        name: "Regulatory Policy Explainer",
+        domain: "Finance",
+        domainLabel: "Finance & Risk",
+        llm: "Llama‑3 70B",
+        llmNotes: "Tuned for legal and regulatory text summarization.",
+        tools: "MCP: document store, citation engine",
+        toolsNotes: "Surfaces citations for every answer.",
+        memory: "SQLite + embeddings",
+        memoryNotes: "Embeds regulations, policies, and guidance notes.",
+        invocation: "Chat UI · REST API",
+        invocationNotes: "Used by risk and compliance teams.",
+        deployment: "Serverless · regional",
+        deploymentNotes: "Runs in region to keep data local.",
+        purpose:
+          "Explains regulatory policies and internal controls in plain language.",
+        primaryPurpose:
+          "Translate dense regulation into actionable guidance for risk teams.",
+        useCases: [
+          "“What does this clause mean for us?”",
+          "Control mapping suggestions",
+          "Policy change summaries"
+        ],
+        tags: ["llama-3", "serverless"],
+        tailorable:
+          "Jurisdiction scope, control frameworks, tone and reading level.",
+        tailorableFields: [
+          "Jurisdictions",
+          "Control frameworks",
+          "Tone",
+          "Reading level"
+        ],
+        github: "https://github.com/example/regulatory-policy-explainer"
+      }
+    ];
+
+    // --- State ---------------------------------------------------------------
+    const state = {
+      search: "",
+      domainFilter: "all",
+      attrFilters: new Set(),
+      page: 1,
+      pageSize: 3,
+      selectedId: null
+    };
+
+    // --- DOM references ------------------------------------------------------
+    const searchInput = document.getElementById("searchInput");
+    const catalogScroll = document.getElementById("catalogScroll");
+    const resultCountEl = document.getElementById("resultCount");
+    const paginationLabel = document.getElementById("paginationLabel");
+    const prevPageBtn = document.getElementById("prevPage");
+    const nextPageBtn = document.getElementById("nextPage");
+
+    const detailName = document.getElementById("detailName");
+    const detailPurpose = document.getElementById("detailPurpose");
+    const detailMeta = document.getElementById("detailMeta");
+    const detailId = document.getElementById("detailId");
+    const detailPrimaryPurpose = document.getElementById("detailPrimaryPurpose");
+    const detailUseCases = document.getElementById("detailUseCases");
+    const detailUseCasePills = document.getElementById("detailUseCasePills");
+    const detailTailorable = document.getElementById("detailTailorable");
+    const detailTailorableTags = document.getElementById("detailTailorableTags");
+    const githubLink = document.getElementById("githubLink");
+
+    const specBody = document.getElementById("specBody");
+    const specToggle = document.getElementById("specToggle");
+    const specToggleIcon = document.getElementById("specToggleIcon");
+    const specLLM = document.getElementById("specLLM");
+    const specLLMNotes = document.getElementById("specLLMNotes");
+    const specTools = document.getElementById("specTools");
+    const specToolsNotes = document.getElementById("specToolsNotes");
+    const specMemory = document.getElementById("specMemory");
+    const specMemoryNotes = document.getElementById("specMemoryNotes");
+    const specInvocation = document.getElementById("specInvocation");
+    const specInvocationNotes = document.getElementById("specInvocationNotes");
+    const specDeployment = document.getElementById("specDeployment");
+    const specDeploymentNotes = document.getElementById("specDeploymentNotes");
+
+    const customizeBtn = document.getElementById("customizeBtn");
+    const customizeMenu = document.getElementById("customizeMenu");
+
+    // --- Helpers -------------------------------------------------------------
+    function normalize(text) {
+      return text.toLowerCase();
+    }
+
+    function matchesSearch(agent, query) {
+      if (!query) return true;
+      const q = normalize(query);
+      const haystack = [
+        agent.name,
+        agent.domain,
+        agent.domainLabel,
+        agent.purpose,
+        agent.primaryPurpose,
+        ...(agent.useCases || []),
+        ...(agent.tags || [])
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    }
+
+    function matchesDomain(agent, domainFilter) {
+      if (!domainFilter || domainFilter === "all") return true;
+      return (
+        normalize(agent.domainLabel || agent.domain).includes(
+          normalize(domainFilter)
+        ) ||
+        normalize(agent.domain).includes(normalize(domainFilter))
+      );
+    }
+
+    function matchesAttributes(agent, attrFilters) {
+      if (!attrFilters || attrFilters.size === 0) return true;
+      const haystack = [
+        agent.llm,
+        agent.tools,
+        agent.deployment,
+        ...(agent.tags || [])
+      ]
+        .join(" ")
+        .toLowerCase();
+      for (const attr of attrFilters) {
+        if (!haystack.includes(attr.toLowerCase())) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function getFilteredAgents() {
+      return agents.filter((agent) => {
+        return (
+          matchesSearch(agent, state.search) &&
+          matchesDomain(agent, state.domainFilter) &&
+          matchesAttributes(agent, state.attrFilters)
+        );
+      });
+    }
+
+    function renderCatalog() {
+      const filtered = getFilteredAgents();
+      const total = filtered.length;
+      resultCountEl.textContent = total.toString();
+
+      const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+      if (state.page > totalPages) state.page = totalPages;
+
+      const start = (state.page - 1) * state.pageSize;
+      const end = start + state.pageSize;
+      const pageItems = filtered.slice(start, end);
+
+      catalogScroll.innerHTML = "";
+      pageItems.forEach((agent) => {
+        const card = document.createElement("article");
+        card.className =
+          "agent-card" + (agent.id === state.selectedId ? " selected" : "");
+        card.setAttribute("data-id", agent.id);
+        card.innerHTML = `
+          <div class="agent-avatar">${agent.name
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase()}</div>
+          <div class="agent-main">
+            <div class="agent-name-row">
+              <div class="agent-name">${agent.name}</div>
+              <div class="agent-domain-pill">${agent.domainLabel}</div>
+            </div>
+            <div class="agent-summary">${agent.purpose}</div>
+          </div>
+          <div class="agent-meta">
+            <div class="agent-meta-row">
+              <span>LLM:</span> <strong>${agent.llm}</strong>
+            </div>
+            <div class="agent-tags">
+              ${agent.tags
+                .map(
+                  (tag) =>
+                    `<div class="agent-tag"><span>#</span>${tag}</div>`
+                )
+                .join("")}
+            </div>
+          </div>
+        `;
+        card.addEventListener("click", () => {
+          state.selectedId = agent.id;
+          renderCatalog();
+          renderDetail(agent);
+        });
+        catalogScroll.appendChild(card);
+      });
+
+      paginationLabel.textContent = `Page ${state.page} of ${totalPages}`;
+      prevPageBtn.disabled = state.page <= 1;
+      nextPageBtn.disabled = state.page >= totalPages;
+    }
+
+    function renderDetail(agent) {
+      if (!agent) {
+        detailName.textContent = "Select an agent from the catalog";
+        detailPurpose.innerHTML =
+          "You’ll see <strong>name, purpose, use cases, and GitHub link</strong> here — plus technical spec and customization options.";
+        detailMeta.textContent = "Domain · LLM · Deployment · Tags";
+        detailId.textContent = "Agent ID —";
+        detailPrimaryPurpose.textContent = "—";
+        detailUseCases.textContent = "—";
+        detailUseCasePills.innerHTML = "";
+        detailTailorable.textContent = "—";
+        detailTailorableTags.innerHTML = "";
+        githubLink.disabled = true;
+        githubLink.removeAttribute("href");
+        specLLM.textContent = "—";
+        specLLMNotes.textContent = "—";
+        specTools.textContent = "—";
+        specToolsNotes.textContent = "—";
+        specMemory.textContent = "—";
+        specMemoryNotes.textContent = "—";
+        specInvocation.textContent = "—";
+        specInvocationNotes.textContent = "—";
+        specDeployment.textContent = "—";
+        specDeploymentNotes.textContent = "—";
+        return;
+      }
+
+      detailName.textContent = agent.name;
+      detailPurpose.textContent = agent.purpose;
+      detailMeta.textContent = `${agent.domainLabel} · ${agent.llm} · ${agent.deployment}`;
+      detailId.textContent = agent.id;
+      detailPrimaryPurpose.textContent = agent.primaryPurpose;
+      detailUseCases.textContent = agent.useCases.join("; ");
+      detailUseCasePills.innerHTML = agent.useCases
+        .map(
+          (uc) =>
+            `<div class="pill-small"><span></span>${uc}</div>`
+        )
+        .join("");
+      detailTailorable.textContent = agent.tailorable;
+      detailTailorableTags.innerHTML = agent.tailorableFields
+        .map(
+          (field) =>
+            `<div class="customization-tag">${field}</div>`
+        )
+        .join("");
+
+      githubLink.disabled = false;
+      githubLink.href = agent.github;
+
+      specLLM.textContent = agent.llm;
+      specLLMNotes.textContent = agent.llmNotes;
+      specTools.textContent = agent.tools;
+      specToolsNotes.textContent = agent.toolsNotes;
+      specMemory.textContent = agent.memory;
+      specMemoryNotes.textContent = agent.memoryNotes;
+      specInvocation.textContent = agent.invocation;
+      specInvocationNotes.textContent = agent.invocationNotes;
+      specDeployment.textContent = agent.deployment;
+      specDeploymentNotes.textContent = agent.deploymentNotes;
+    }
+
+    // --- Event wiring --------------------------------------------------------
+    searchInput.addEventListener("input", (e) => {
+      state.search = e.target.value;
+      state.page = 1;
+      renderCatalog();
+    });
+
+    document
+      .querySelectorAll("[data-filter-domain]")
+      .forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const value = btn.getAttribute("data-filter-domain");
+          state.domainFilter = value;
+          state.page = 1;
+          document
+            .querySelectorAll("[data-filter-domain]")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          renderCatalog();
+        });
+      });
+
+    document
+      .querySelectorAll("[data-filter-attr]")
+      .forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const value = btn.getAttribute("data-filter-attr");
+          if (state.attrFilters.has(value)) {
+            state.attrFilters.delete(value);
+            btn.classList.remove("active");
+          } else {
+            state.attrFilters.add(value);
+            btn.classList.add("active");
+          }
+          state.page = 1;
+          renderCatalog();
+        });
+      });
+
+    prevPageBtn.addEventListener("click", () => {
+      if (state.page > 1) {
+        state.page -= 1;
+        renderCatalog();
+      }
+    });
+
+    nextPageBtn.addEventListener("click", () => {
+      const total = getFilteredAgents().length;
+      const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+      if (state.page < totalPages) {
+        state.page += 1;
+        renderCatalog();
+      }
+    });
+
+    // Collapsible spec
+    let specOpen = false;
+    specBody.classList.remove("open"); // collapsed by default
+
+    specToggle.addEventListener("click", () => {
+      specOpen = !specOpen;
+      if (specOpen) {
+        specBody.classList.add("open");
+        specToggleIcon.textContent = "▴";
+      } else {
+        specBody.classList.remove("open");
+        specToggleIcon.textContent = "▾";
+      }
+    });
+
+    // Customize menu (placeholder)
+    let customizeOpen = false;
+    customizeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      customizeOpen = !customizeOpen;
+      if (customizeOpen) {
+        customizeMenu.classList.add("open");
+      } else {
+        customizeMenu.classList.remove("open");
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (
+        customizeOpen &&
+        !customizeMenu.contains(e.target) &&
+        e.target !== customizeBtn
+      ) {
+        customizeOpen = false;
+        customizeMenu.classList.remove("open");
+      }
+    });
+
+    // --- Initial render ------------------------------------------------------
+    (function init() {
+      state.selectedId = agents[0]?.id || null;
+      renderCatalog();
+      renderDetail(agents[0]);
+    })();
+  </script>
+</body>
+</html>
