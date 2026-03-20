@@ -1,6 +1,6 @@
 # AIC Agent Library
 
-A browse-and-discovery catalog for the AI agents produced by the AI Champion (AIC) consortium. Tech evaluators and engineers can find the right agent for their use case in seconds — filter by discipline, read an executive summary, expand technical details when needed, and follow a link straight to the GitHub implementation.
+A browse-and-discovery catalog for the AI agents produced for the AI Champion (AIC) consortium. It is one of the main WP5 outputs. This repository does not contain the agents themselves, but the code for the website presenting and showcasing them. With the catalog, tech evaluators and engineers can find the right agent for their use case. One can filter by discipline, read an executive summary, expand technical details when needed, and follow a link straight to the GitHub implementation.
 
 ---
 
