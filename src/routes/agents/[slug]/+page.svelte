@@ -68,6 +68,15 @@
           >
             Try it out &rarr;
           </a>
+        {:else if agent.tryItOutMode === 'runnable'}
+          <button
+            type="button"
+            disabled
+            title="Try it out is not yet available for this agent"
+            class="inline-flex items-center gap-2 text-sm font-medium text-gray-400 bg-gray-100 px-3 py-1.5 rounded cursor-not-allowed"
+          >
+            Try it out
+          </button>
         {/if}
       </div>
     </section>
