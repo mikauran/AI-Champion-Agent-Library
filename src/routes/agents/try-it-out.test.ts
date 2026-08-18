@@ -46,4 +46,50 @@ describe('Try It Out affordance', () => {
     expect(link.getAttribute('target')).toBe('_blank')
     expect(link.getAttribute('rel')).toBe('noopener noreferrer')
   })
+
+  function tryItOutElements(container: HTMLElement) {
+    return Array.from(container.querySelectorAll('a, button')).filter((el) =>
+      /try it out/i.test(el.textContent ?? '')
+    )
+  }
+
+  it('runnable mode renders a single disabled "Try it out" button and no link', () => {
+    const { container } = renderPage({ tryItOutMode: 'runnable' })
+
+    const elements = tryItOutElements(container)
+    expect(elements).toHaveLength(1)
+
+    const button = elements[0] as HTMLButtonElement
+    expect(button.tagName).toBe('BUTTON')
+    expect(button.disabled).toBe(true)
+
+    const anchors = elements.filter((el) => el.tagName === 'A')
+    expect(anchors).toHaveLength(0)
+  })
+
+  it('none mode renders nothing for Try It Out, but still renders the GitHub link', () => {
+    const { container } = renderPage({
+      tryItOutMode: 'none',
+      githubUrl: 'https://github.com/example/repo',
+    })
+
+    expect(tryItOutElements(container)).toHaveLength(0)
+
+    const githubLink = Array.from(container.querySelectorAll('a')).find(
+      (a) => a.getAttribute('href') === 'https://github.com/example/repo'
+    )
+    expect(githubLink).not.toBeUndefined()
+  })
+
+  it('null/missing mode renders nothing, without crashing', () => {
+    const { container } = renderPage({ tryItOutMode: null as unknown as string })
+
+    expect(tryItOutElements(container)).toHaveLength(0)
+  })
+
+  it('external mode with a missing url renders nothing (malformed row)', () => {
+    const { container } = renderPage({ tryItOutMode: 'external', tryItOutUrl: null })
+
+    expect(tryItOutElements(container)).toHaveLength(0)
+  })
 })
