@@ -47,16 +47,29 @@
         </div>
       {/if}
 
-      {#if agent.githubUrl}
-        <a
-          href={agent.githubUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:underline"
-        >
-          View on GitHub &rarr;
-        </a>
-      {/if}
+      <div class="flex flex-wrap items-center gap-4">
+        {#if agent.githubUrl}
+          <a
+            href={agent.githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:underline"
+          >
+            View on GitHub &rarr;
+          </a>
+        {/if}
+
+        {#if agent.tryItOutMode === 'external' && agent.tryItOutUrl}
+          <a
+            href={agent.tryItOutUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:underline"
+          >
+            Try it out &rarr;
+          </a>
+        {/if}
+      </div>
     </section>
 
     <!-- Collapsible technical spec — collapsed by default (DETL-02) -->
