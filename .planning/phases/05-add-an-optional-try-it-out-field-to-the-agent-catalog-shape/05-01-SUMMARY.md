@@ -196,3 +196,10 @@ None - no external service configuration required.
 ---
 *Phase: 05-add-an-optional-try-it-out-field-to-the-agent-catalog-shape*
 *Completed: 2026-08-18*
+
+## Self-Check: PASSED
+
+- FOUND: `.planning/phases/05-add-an-optional-try-it-out-field-to-the-agent-catalog-shape/05-01-SUMMARY.md`
+- FOUND: `src/routes/agents/try-it-out.test.ts`
+- FOUND: `.planning/phases/05-add-an-optional-try-it-out-field-to-the-agent-catalog-shape/deferred-items.md`
+- FOUND commits: `b0cbde8`, `ec960ab`, `b14e7bb`, `aa469a7`, `b476724`
