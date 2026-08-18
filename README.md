@@ -108,6 +108,36 @@ Re-running ingest on an existing agent ID updates the record — it never create
 
 ---
 
+## Deploying with Podman
+
+The repo includes a `Containerfile`, `.containerignore`, `docker-entrypoint.sh`,
+and `podman-compose.yml` for running the built server in a container.
+
+```bash
+# Build the image (multi-stage: installs deps, runs the full build
+# pipeline — schema push, YAML ingest, vite build — then copies the
+# result into a slim runtime image)
+podman build -t aic-agent-library -f Containerfile .
+
+# Run it
+podman run -d --name aic-agent-library -p 3000:3000 aic-agent-library
+
+# Or with podman-compose
+podman-compose up -d --build
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+The catalog data is baked into the image at build time from `data/agents/`.
+To pick up new or changed agent YAML files, rebuild the image — or bind-mount
+`data/agents` and set `RUN_INGEST_ON_START=true` to re-ingest on container
+start (see the commented-out block in `podman-compose.yml`).
+
+Env vars the container respects: `PORT` (default `3000`), `CATALOG_DB_PATH`,
+`INGEST_DATA_DIR`, `RUN_INGEST_ON_START`.
+
+---
+
 ## Technical documentation
 
 For stack choices, data model, ingestion pipeline, component structure, and contribution guidelines, see [TECHNICAL_DOCUMENTATION.md](TECHNICAL_DOCUMENTATION.md).

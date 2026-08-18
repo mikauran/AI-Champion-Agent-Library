@@ -1,0 +1,23 @@
+# Usage: podman-compose up -d --build
+# (or: podman play kube / docker compose — this file is compatible with both
+# podman-compose and docker-compose syntax)
+services:
+  aic-agent-library:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: aic-agent-library:latest
+    container_name: aic-agent-library
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      # Set to "true" to re-run drizzle-kit push + ingest against
+      # data/agents/ every time the container starts (useful if you bind
+      # mount a data/agents directory with content newer than the image).
+      RUN_INGEST_ON_START: "false"
+    # Uncomment to update agent YAML without rebuilding the image
+    # (combine with RUN_INGEST_ON_START: "true" above):
+    # volumes:
+    #   - ./data/agents:/app/data/agents:ro
+    restart: unless-stopped
