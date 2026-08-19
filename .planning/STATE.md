@@ -2,14 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
+current_phase: 05
+current_phase_name: add-an-optional-try-it-out-field-to-the-agent-catalog-shape
 status: unknown
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-03-19T18:07:57.194Z"
+stopped_at: Phase 06 UI-SPEC approved
+last_updated: "2026-08-19T08:24:57.319Z"
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 1
-  total_plans: 6
-  completed_plans: 5
+  total_plans: 11
+  completed_plans: 6
 ---
 
 # Project State
@@ -19,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Tech evaluators and executives can find the right AI agent for their use case within seconds — through semantic search or category browsing — and understand what it does, how it works, and how to get it.
-**Current focus:** Phase 02 — catalog-and-detail
+**Current focus:** Phase 05 — add-an-optional-try-it-out-field-to-the-agent-catalog-shape
 
 ## Current Position
 
-Phase: 02 (catalog-and-detail) — EXECUTING
-Plan: 3 of 4
+Phase: 05 (add-an-optional-try-it-out-field-to-the-agent-catalog-shape) — EXECUTING
+Plan: 1 of 2
 
 ## Performance Metrics
 
@@ -86,8 +88,13 @@ None yet.
 - Oracle AgentSpec field structure not directly inspected — must obtain actual spec files or schema before implementing PIPE-01/PIPE-02 (research gap flagged)
 - Embedding model selection (all-MiniLM-L6-v2 recommended) needs validation against real agent descriptions before Phase 3 commits to it
 
+### Roadmap Evolution
+
+- Phase 5 added: Try It Out Field — optional try_it_out mode (none|external|runnable) on agent records, threaded through schema/ingest/detail page
+- Phase 6 added: Runnable Try It Out Flow (mock-backed) — src/lib/tryItOut.ts (submitJob/subscribeProgress/downloadArtifact) + TryItOutPanel.svelte, shaped to docs/job-api-contract.md, no real backend
+
 ## Session Continuity
 
-Last session: 2026-03-19T18:07:57.189Z
-Stopped at: Completed 02-03-PLAN.md
-Resume file: None
+Last session: 2026-08-19T07:59:32.498Z
+Stopped at: Phase 06 UI-SPEC approved
+Resume file: .planning/phases/06-runnable-try-it-out-flow-mock-backed/06-UI-SPEC.md
