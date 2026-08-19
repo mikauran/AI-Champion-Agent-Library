@@ -228,6 +228,119 @@ describe('TryItOutPanel XSS-shape assertion', () => {
   })
 })
 
+describe('TryItOutPanel file input', () => {
+  it('T2.12 renders a label bound to a single-file input', () => {
+    const { container, getByText } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    const label = getByText('Attach a file (optional)')
+    expect(label.tagName).toBe('LABEL')
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    expect(fileInput).not.toBeNull()
+    expect(label.getAttribute('for')).toBe(fileInput.id)
+    expect(fileInput.hasAttribute('multiple')).toBe(false)
+  })
+
+  it('T2.13 an attached file reaches the client end-to-end into the downloaded artifact', async () => {
+    let capturedBlob: Blob | null = null
+    URL.createObjectURL = vi.fn((blob: Blob) => {
+      capturedBlob = blob
+      return 'blob:mock'
+    }) as unknown as typeof URL.createObjectURL
+    URL.revokeObjectURL = vi.fn() as unknown as typeof URL.revokeObjectURL
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    const file = new File(['a,b\n1,2\n'], 'sample.csv', { type: 'text/csv' })
+    Object.defineProperty(fileInput, 'files', { value: [file], configurable: true })
+    await fireEvent.change(fileInput)
+
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+    await vi.advanceTimersByTimeAsync(4400)
+    await tick()
+
+    const downloadButton = findButtonByText(container, 'Download results') as HTMLButtonElement
+    await fireEvent.click(downloadButton)
+
+    expect(capturedBlob).not.toBeNull()
+    const text = await (capturedBlob as unknown as Blob).text()
+    expect(text).toContain('attached file: sample.csv')
+
+    clickSpy.mockRestore()
+  })
+})
+
+describe('TryItOutPanel bounded feed', () => {
+  it('T2.14 feed container is capped, scrollable, monospace and lines wrap', async () => {
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+    await vi.advanceTimersByTimeAsync(400)
+    await tick()
+
+    const feed = container.querySelector('.font-mono') as HTMLElement
+    expect(feed).not.toBeNull()
+    expect(feed.className).toContain('max-h-64')
+    expect(feed.className).toContain('overflow-y-auto')
+
+    await vi.advanceTimersByTimeAsync(1000)
+    await tick()
+    const lines = Array.from(feed.querySelectorAll('p'))
+    expect(lines.length).toBeGreaterThan(0)
+    for (const line of lines) {
+      expect(line.className).toContain('whitespace-pre-wrap')
+      expect(line.className).toContain('break-words')
+    }
+  })
+
+  it('T2.15 the auto-scroll effect writes scrollTop to scrollHeight', async () => {
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+    await vi.advanceTimersByTimeAsync(400)
+    await tick()
+
+    const feed = container.querySelector('.font-mono') as HTMLElement
+    Object.defineProperty(feed, 'scrollHeight', { value: 999, configurable: true })
+
+    let recordedScrollTop: number | undefined
+    Object.defineProperty(feed, 'scrollTop', {
+      configurable: true,
+      get() {
+        return recordedScrollTop ?? 0
+      },
+      set(value: number) {
+        recordedScrollTop = value
+      }
+    })
+
+    await vi.advanceTimersByTimeAsync(1000)
+    await tick()
+
+    expect(recordedScrollTop).toBe(999)
+  })
+
+  it('T2.16 feed lines render in emission order, newest at bottom', async () => {
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+    await vi.advanceTimersByTimeAsync(4400)
+    await tick()
+
+    const feed = container.querySelector('.font-mono') as HTMLElement
+    const lineTexts = Array.from(feed.querySelectorAll('p')).map((p) => p.textContent ?? '')
+    const readIndex = lineTexts.findIndex((t) => t.includes('read data/sample.csv') && !t.includes('12 lines'))
+    const writeIndex = lineTexts.findIndex((t) => t.includes('write output/result.txt'))
+    expect(readIndex).toBeGreaterThanOrEqual(0)
+    expect(writeIndex).toBeGreaterThan(readIndex)
+  })
+})
+
 describe('TryItOutPanel re-run reset', () => {
   it('T2.11 clears the failed block and stale feed before the new job starts', async () => {
     const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
