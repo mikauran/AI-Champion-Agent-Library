@@ -135,7 +135,7 @@ Plans:
   5. The panel is wired into the runnable-mode agent detail page AND works standalone with a hardcoded agentId
   6. No real backend exists; the UI only ever calls the three client functions — no `fetch`/`EventSource`/endpoint references anywhere else in the UI
 
-**Plans:** 3/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 **Wave 1**
@@ -163,4 +163,4 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
 | 3. Search | 0/3 | Not started | - |
 | 4. Customization Placeholder | 0/1 | Not started | - |
 | 5. Try It Out Field | 1/2 | In Progress | - |
-| 6. Runnable Try It Out Flow (mock-backed) | 3/3 | Complete | 2026-08-19 |
+| 6. Runnable Try It Out Flow (mock-backed) | 3/3 | Complete    | 2026-08-19 |
