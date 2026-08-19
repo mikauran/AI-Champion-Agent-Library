@@ -5,13 +5,13 @@ milestone_name: milestone
 current_phase: 06
 current_phase_name: runnable-try-it-out-flow-mock-backed
 status: unknown
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-08-19T08:32:51.195Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-08-19T08:39:14.627Z"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 11
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 ## Current Position
 
 Phase: 06 (runnable-try-it-out-flow-mock-backed) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Plan: 2 of 3
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 06 P01 | 5min | 3 tasks | 6 files |
+| Phase 06 P02 | 4min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,9 @@ Recent decisions affecting current work:
 - [Phase 02-03]: Native <details>/<summary> for TechAccordion — no JS library, keyboard accessible by default, collapsed with no open attribute
 - [Phase 06-01]: advanceTimersByTimeAsync + tick (imported from svelte) works cleanly for Svelte 5 rune components under vitest fake timers — no real-timer waitFor fallback needed
 - [Phase 06-01]: Shipped exact contract regex /(^|\W)fail(\W|$)/i verbatim per D-06's authoritative clause; 'failure'/'failing' correctly do NOT trigger the fail path (D-06 prose was wrong on this point)
+- [Phase 06]: Auto-scroll observation: Object.defineProperty accessor-pair recorder for scrollTop chosen directly over vi.spyOn(el, prop, 'set') for jsdom compatibility
+- [Phase 06]: Cleanup-assertion variant: vi.getTimerCount() under fake timers worked cleanly with unmount(); no real-timer clearTimeout-spy fallback needed
+- [Phase 06]: Task 3 required no production fix — 06-01's unsubscribe-on-terminal/unsubscribe-on-destroy logic already passed all four cleanup tests
 
 ### Pending Todos
 
@@ -102,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-19T08:32:51.164Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-08-19T08:39:14.596Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: .planning/phases/06-runnable-try-it-out-flow-mock-backed/06-UI-SPEC.md

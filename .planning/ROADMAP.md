@@ -135,7 +135,7 @@ Plans:
   5. The panel is wired into the runnable-mode agent detail page AND works standalone with a hardcoded agentId
   6. No real backend exists; the UI only ever calls the three client functions — no `fetch`/`EventSource`/endpoint references anywhere else in the UI
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 **Wave 1**
@@ -144,7 +144,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 06-02-PLAN.md — Panel expansion: red "Job failed" block, "Download results" button, optional file input, bounded auto-scrolling monospace log box, plus unmount/terminal/re-run subscription-cleanup tests
+- [x] 06-02-PLAN.md — Panel expansion: red "Job failed" block, "Download results" button, optional file input, bounded auto-scrolling monospace log box, plus unmount/terminal/re-run subscription-cleanup tests
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -163,4 +163,4 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
 | 3. Search | 0/3 | Not started | - |
 | 4. Customization Placeholder | 0/1 | Not started | - |
 | 5. Try It Out Field | 1/2 | In Progress | - |
-| 6. Runnable Try It Out Flow (mock-backed) | 1/3 | In Progress|  |
+| 6. Runnable Try It Out Flow (mock-backed) | 2/3 | In Progress|  |
