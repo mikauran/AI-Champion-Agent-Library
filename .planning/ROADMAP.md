@@ -18,6 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 3: Search** - Hybrid keyword + semantic search with live results
 - [ ] **Phase 4: Customization Placeholder** - Customize button and visible-but-non-functional menu
 - [ ] **Phase 5: Try It Out Field** - Optional try_it_out field (none/external/runnable) threaded through schema, ingest, and detail page
+- [ ] **Phase 6: Runnable Try It Out Flow (mock-backed)** - Mock-backed job client + panel for runnable mode, contract-shaped for a later real backend swap
 
 ## Phase Details
 
@@ -120,11 +121,33 @@ Plans:
 - [ ] 05-01-PLAN.md — Tracer: try_it_out_* schema columns applied to the DB, mode-conditional Try It Out affordance on the agent detail page (external link / disabled runnable button / nothing), rfi-triage-assistant set to external with a placeholder URL
 - [ ] 05-02-PLAN.md — Ingestion safe defaults + no-clobber onConflictDoUpdate omission with regression tests, full-build durability check, human verification of all three modes
 
+### Phase 6: Runnable Try It Out Flow (mock-backed)
+
+**Goal:** Build a mock-backed, contract-shaped "Try It Out" runnable flow that demos end-to-end with no real backend: a client layer (`src/lib/tryItOut.ts`) exposing exactly `submitJob`, `subscribeProgress`, and `downloadArtifact` per `docs/job-api-contract.md`'s frozen signatures, and a Svelte 5 `TryItOutPanel.svelte` wired into the agent detail page's `runnable` mode (replacing Phase 5's disabled placeholder button), also usable standalone with a hardcoded agentId. Swapping mock → real backend later must touch only `tryItOut.ts`, never the UI.
+**Depends on:** Phase 5
+**Requirements**: none assigned (scope defined by `docs/job-api-contract.md` and user-specified success criteria below)
+**Success Criteria** (what must be TRUE):
+
+  1. `src/lib/tryItOut.ts` exposes `submitJob`, `subscribeProgress`, `downloadArtifact` — all mock-backed and contract-shaped; a later real-backend swap touches only this file
+  2. Mock progress events look like real `pi` tool_execution output, with timestamps (e.g. "read data/sample.csv", "read data/sample.csv (12 lines)", "write output/result.txt")
+  3. `TryItOutPanel.svelte` renders a task textarea, optional file input, Run button, a live auto-scrolling progress feed, a "Download results" button on success, and a red failed state showing the error
+  4. A task containing the word "fail" exercises the failed path so both outcomes are demoable
+  5. The panel is wired into the runnable-mode agent detail page AND works standalone with a hardcoded agentId
+  6. No real backend exists; the UI only ever calls the three client functions — no `fetch`/`EventSource`/endpoint references anywhere else in the UI
+
+**Plans:** 3 plans
+
+Plans:
+
+- [ ] 06-01-PLAN.md — Tracer: complete frozen mock client (`src/lib/tryItOut.ts` — submitJob/subscribeProgress/downloadArtifact + the 4 contract types, success and fail scripts), tracer `TryItOutPanel.svelte` (Task textarea, Run, live timestamped feed), and the runnable-mode detail-page wiring replacing Phase 5's disabled button
+- [ ] 06-02-PLAN.md — Panel expansion: red "Job failed" block, "Download results" button, optional file input, bounded auto-scrolling monospace log box, plus unmount/terminal/re-run subscription-cleanup tests
+- [ ] 06-03-PLAN.md — COVERAGE.md no-external-API declaration, staged runnable demo row in the dev DB, and human verification of both outcomes in a browser
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
-Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it does not require Phase 3. Phase 5 depends only on Phase 2 and can begin any time after Phase 2 completes.
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it does not require Phase 3. Phase 5 depends only on Phase 2 and can begin any time after Phase 2 completes. Phase 6 depends on Phase 5 (replaces its disabled runnable button).
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -132,4 +155,5 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
 | 2. Catalog and Detail | 3/4 | In Progress|  |
 | 3. Search | 0/3 | Not started | - |
 | 4. Customization Placeholder | 0/1 | Not started | - |
-| 5. Try It Out Field | 0/2 | Not started | - |
+| 5. Try It Out Field | 1/2 | In Progress | - |
+| 6. Runnable Try It Out Flow (mock-backed) | 0/3 | Not started | - |
