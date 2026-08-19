@@ -21,10 +21,10 @@ Replace Phase 6's mock-backed Try It Out client with a real (but "cheating") dem
 - **D-05:** `try_it_out_mode`/`try_it_out_url`/`try_it_out_task_template` are DB columns that ingest deliberately never overwrites (Phase 5 D-05/D-06/D-07) — they are NOT sourced from the YAML. So `demo-rfi-triage.yaml`'s frontmatter has no `try_it_out` field; setting its row to `mode: 'runnable'` (and reverting `hvac-load-calculator`'s row to `mode: 'none'`) happens via the same one-off DB `UPDATE` mechanism Phase 5 used (D-13 pattern) — not via ingest or YAML.
 
 ### LLM provider, SDK, and model source
-- **D-06:** Add `@anthropic-ai/sdk` as a new dependency (not currently in `package.json`).
+- **D-06:** Add `openai` (the official OpenAI SDK) as a new dependency (not currently in `package.json`). — **Changed 2026-08-19:** originally `@anthropic-ai/sdk`; user redirected to OpenAI mid-session, before any implementation started.
 - **D-07:** Use a single fixed model + fixed low temperature for ALL runnable demo agents — do NOT read `llm_config` per-agent from the YAML. Reading per-agent config is generality this demo doesn't need and adds a failure mode (a YAML naming a model the deployed key can't reach). — **Reversibility:** costly — **rationale:** switching to per-agent model config later means touching every call site that currently assumes one fixed model/temperature constant.
-- **D-08:** Resolve the exact Anthropic API model ID during research/implementation (verify against the actual API — a model *alias* like "claude-sonnet-5" may not be the literal API model-id string; confirm what the deployed key/account actually accepts before hardcoding it).
-- **D-09:** The API key is supplied via a server-side-only env var, never sent to or read by client code. Use the SDK's standard `ANTHROPIC_API_KEY` env var name (the `@anthropic-ai/sdk` client reads this by default) unless research surfaces a reason to deviate.
+- **D-08:** Resolve the exact OpenAI API model ID during research/implementation (verify against the actual API — confirm what the deployed key/account actually accepts before hardcoding it, e.g. via the OpenAI models list endpoint or current API docs).
+- **D-09:** The API key is supplied via a server-side-only env var, never sent to or read by client code. Use the SDK's standard `OPENAI_API_KEY` env var name (the `openai` client reads this by default) unless research surfaces a reason to deviate.
 
 ### jobId client persistence
 - **D-10:** Persist `jobId` via a URL query param (`?job=<jobId>`), NOT a cookie. It survives a refresh the same as a cookie would and makes a running/finished job's URL shareable — a small plus for a stakeholder demo.
@@ -80,7 +80,7 @@ Replace Phase 6's mock-backed Try It Out client with a real (but "cheating") dem
 - `scripts/ingest.ts`'s `flattenRecord()`/`onConflictDoUpdate` explicitly omits `try_it_out_*` columns from the update `set` clause — new code must not add these columns to that list.
 - No existing `src/routes/api/*` directory or `+server.ts` file exists anywhere in this codebase yet — this phase establishes that pattern from scratch (standard SvelteKit server-route conventions apply, no local precedent to match).
 - No `skill.md` or LLM-prompt files exist anywhere in the repo yet — this phase establishes the "base prompt + skill.md loaded from files shipped with the app" pattern from scratch.
-- No LLM SDK is currently a dependency (`package.json` has `better-sqlite3`, `drizzle-orm`, `yaml`, `zod` — no `@anthropic-ai/sdk` or similar). D-06 adds it.
+- No LLM SDK is currently a dependency (`package.json` has `better-sqlite3`, `drizzle-orm`, `yaml`, `zod` — no `openai` or similar). D-06 adds it.
 
 ### Integration Points
 - `agent.tryItOutMode` / `agent.slug` already flow from `+page.server.ts`'s `db.select()` into the page (Phase 5); `agentId` passed into `TryItOutPanel` is `agent.slug`. The new job routes must map an incoming `agentId` (the slug) to the correct base-prompt/`skill.md` files shipped in the app package — this mapping mechanism (e.g. a fixed directory keyed by slug) is left to research/planning.
