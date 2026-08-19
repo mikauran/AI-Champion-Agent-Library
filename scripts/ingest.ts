@@ -29,6 +29,13 @@ function flattenRecord(record: AgentRecord): NewAgentRow {
     maturityStatus: record.maturityStatus,
     tags: JSON.stringify(record.tags),
     specId: record.specId,
+    // try_it_out_* mirror the drizzle/schema.ts column defaults and are
+    // intentionally NOT read from AgentRecord (D-05/D-06) — try_it_out is
+    // not sourced from Oracle AgentSpec YAML in this phase; the DB row is
+    // the system of record.
+    tryItOutMode: 'none',
+    tryItOutUrl: null,
+    tryItOutTaskTemplate: null,
     lastIngestedAt: new Date().toISOString(),
   }
 }
@@ -74,6 +81,12 @@ async function ingest(dataDir: string, dbPath: string): Promise<{ succeeded: num
             maturityStatus: sql`excluded.maturity_status`,
             tags: sql`excluded.tags`,
             specId: sql`excluded.spec_id`,
+            // tryItOutMode / tryItOutUrl / tryItOutTaskTemplate are
+            // deliberately OMITTED from this set block (D-07): try_it_out
+            // is not sourced from AgentSpec YAML, so the DB is the system
+            // of record for it. Re-ingestion must never clobber a
+            // manually-set value. Every other column above keeps updating
+            // from excluded.* as before — do not "fix" this omission.
             lastIngestedAt: sql`excluded.last_ingested_at`,
           },
         })
