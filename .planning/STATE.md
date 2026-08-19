@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 05
-current_phase_name: add-an-optional-try-it-out-field-to-the-agent-catalog-shape
+current_phase: 06
+current_phase_name: runnable-try-it-out-flow-mock-backed
 status: unknown
-stopped_at: Phase 06 UI-SPEC approved
-last_updated: "2026-08-19T08:24:57.319Z"
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-08-19T08:32:51.195Z"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 11
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Tech evaluators and executives can find the right AI agent for their use case within seconds — through semantic search or category browsing — and understand what it does, how it works, and how to get it.
-**Current focus:** Phase 05 — add-an-optional-try-it-out-field-to-the-agent-catalog-shape
+**Current focus:** Phase 06 — runnable-try-it-out-flow-mock-backed
 
 ## Current Position
 
-Phase: 05 (add-an-optional-try-it-out-field-to-the-agent-catalog-shape) — EXECUTING
-Plan: 1 of 2
+Phase: 06 (runnable-try-it-out-flow-mock-backed) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -52,6 +52,11 @@ Plan: 1 of 2
 | Phase 01-data-pipeline P02 | 6min | 2 tasks | 6 files |
 | Phase 02 P02 | 4 | 2 tasks | 7 files |
 | Phase 02 P03 | 4min | 1 tasks | 8 files |
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 06 P01 | 5min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -78,6 +83,8 @@ Recent decisions affecting current work:
 - [Phase 02-03]: svelteTesting() vite plugin required alongside sveltekit() for @testing-library/svelte to use browser Svelte (not SSR) in jsdom tests
 - [Phase 02-03]: vitest.config.ts needs sveltekit() plugin to resolve $lib alias and transform .svelte files in tests
 - [Phase 02-03]: Native <details>/<summary> for TechAccordion — no JS library, keyboard accessible by default, collapsed with no open attribute
+- [Phase 06-01]: advanceTimersByTimeAsync + tick (imported from svelte) works cleanly for Svelte 5 rune components under vitest fake timers — no real-timer waitFor fallback needed
+- [Phase 06-01]: Shipped exact contract regex /(^|\W)fail(\W|$)/i verbatim per D-06's authoritative clause; 'failure'/'failing' correctly do NOT trigger the fail path (D-06 prose was wrong on this point)
 
 ### Pending Todos
 
@@ -95,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-19T07:59:32.498Z
-Stopped at: Phase 06 UI-SPEC approved
+Last session: 2026-08-19T08:32:51.164Z
+Stopped at: Completed 06-01-PLAN.md
 Resume file: .planning/phases/06-runnable-try-it-out-flow-mock-backed/06-UI-SPEC.md

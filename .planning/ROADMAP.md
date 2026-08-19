@@ -135,12 +135,12 @@ Plans:
   5. The panel is wired into the runnable-mode agent detail page AND works standalone with a hardcoded agentId
   6. No real backend exists; the UI only ever calls the three client functions — no `fetch`/`EventSource`/endpoint references anywhere else in the UI
 
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 06-01-PLAN.md — Tracer: complete frozen mock client (`src/lib/tryItOut.ts` — submitJob/subscribeProgress/downloadArtifact + the 4 contract types, success and fail scripts), tracer `TryItOutPanel.svelte` (Task textarea, Run, live timestamped feed), and the runnable-mode detail-page wiring replacing Phase 5's disabled button
+- [x] 06-01-PLAN.md — Tracer: complete frozen mock client (`src/lib/tryItOut.ts` — submitJob/subscribeProgress/downloadArtifact + the 4 contract types, success and fail scripts), tracer `TryItOutPanel.svelte` (Task textarea, Run, live timestamped feed), and the runnable-mode detail-page wiring replacing Phase 5's disabled button
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -163,4 +163,4 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
 | 3. Search | 0/3 | Not started | - |
 | 4. Customization Placeholder | 0/1 | Not started | - |
 | 5. Try It Out Field | 1/2 | In Progress | - |
-| 6. Runnable Try It Out Flow (mock-backed) | 0/3 | Not started | - |
+| 6. Runnable Try It Out Flow (mock-backed) | 1/3 | In Progress|  |
