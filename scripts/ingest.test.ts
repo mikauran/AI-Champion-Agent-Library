@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS agents (
   maturity_status TEXT NOT NULL DEFAULT 'experimental',
   tags TEXT NOT NULL DEFAULT '[]',
   spec_id TEXT,
+  try_it_out_mode TEXT NOT NULL DEFAULT 'none',
+  try_it_out_url TEXT,
+  try_it_out_task_template TEXT,
   last_ingested_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 )
 `
@@ -93,5 +96,41 @@ describe('ingest', () => {
     expect(row.llm_name).toBe('gpt-4o')
     expect(row.requires_human_approval).toBe(0)
     expect(JSON.parse(row.tool_names as string).length).toBe(2)
+  })
+
+  it('fresh insert defaults try_it_out columns to safe values', async () => {
+    await ingest(FIXTURES_DIR, TEST_DB)
+    const db = new Database(TEST_DB)
+    const row = db.prepare(`SELECT try_it_out_mode, try_it_out_url, try_it_out_task_template FROM agents WHERE slug = 'customer-support-triager'`).get() as Record<string, unknown>
+    db.close()
+
+    expect(row.try_it_out_mode).toBe('none')
+    expect(row.try_it_out_url).toBeNull()
+    expect(row.try_it_out_task_template).toBeNull()
+  })
+
+  it('re-ingesting never clobbers a manually-set try_it_out value, but still refreshes other columns', async () => {
+    await ingest(FIXTURES_DIR, TEST_DB)
+
+    const dbBefore = new Database(TEST_DB)
+    dbBefore
+      .prepare(`UPDATE agents SET try_it_out_mode = 'external', try_it_out_url = 'https://example.com/try/x' WHERE slug = 'customer-support-triager'`)
+      .run()
+    const rowBefore = dbBefore.prepare(`SELECT last_ingested_at FROM agents WHERE slug = 'customer-support-triager'`).get() as { last_ingested_at: string }
+    dbBefore.close()
+    const tsBefore = rowBefore.last_ingested_at
+
+    // Wait 50ms to ensure timestamp difference
+    await new Promise(resolve => setTimeout(resolve, 50))
+
+    await ingest(FIXTURES_DIR, TEST_DB)
+
+    const dbAfter = new Database(TEST_DB)
+    const rowAfter = dbAfter.prepare(`SELECT try_it_out_mode, try_it_out_url, last_ingested_at FROM agents WHERE slug = 'customer-support-triager'`).get() as Record<string, unknown>
+    dbAfter.close()
+
+    expect(rowAfter.try_it_out_mode).toBe('external')
+    expect(rowAfter.try_it_out_url).toBe('https://example.com/try/x')
+    expect(rowAfter.last_ingested_at as string > tsBefore).toBe(true)
   })
 })
