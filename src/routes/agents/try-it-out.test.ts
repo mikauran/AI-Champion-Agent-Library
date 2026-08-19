@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest'
-import { render } from '@testing-library/svelte'
+import { render, fireEvent } from '@testing-library/svelte'
+import { tick } from 'svelte'
 import Page from './[slug]/+page.svelte'
 
 const baseAgent = {
@@ -53,22 +54,76 @@ describe('Try It Out affordance', () => {
     )
   }
 
-  it('runnable mode renders the TryItOutPanel and no disabled placeholder button', () => {
+  function tryItOutToggle(container: HTMLElement) {
+    return Array.from(container.querySelectorAll('button')).filter((b) =>
+      /try it out/i.test(b.textContent ?? '')
+    )
+  }
+
+  it('runnable mode hides the TryItOutPanel on initial render', () => {
     const { container } = renderPage({ tryItOutMode: 'runnable' })
+
+    const headings = Array.from(container.querySelectorAll('h2')).filter((h) =>
+      /try it out/i.test(h.textContent ?? '')
+    )
+    expect(headings).toHaveLength(0)
+
+    expect(container.querySelector('#tryitout-task')).toBeNull()
+
+    const buttons = Array.from(container.querySelectorAll('button'))
+    const runButton = buttons.find((b) => (b.textContent ?? '').trim() === 'Run')
+    expect(runButton).toBeUndefined()
+  })
+
+  it('runnable mode renders an enabled "Try it out" toggle with a down arrow', () => {
+    const { container } = renderPage({ tryItOutMode: 'runnable' })
+
+    const toggles = tryItOutToggle(container)
+    expect(toggles).toHaveLength(1)
+
+    const toggle = toggles[0]
+    expect(toggle.textContent).toContain('↓')
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(toggle.disabled).toBe(false)
+  })
+
+  it('clicking the toggle reveals the existing TryItOutPanel inline below the control', async () => {
+    const { container } = renderPage({ tryItOutMode: 'runnable' })
+
+    const toggle = tryItOutToggle(container)[0]
+    await fireEvent.click(toggle)
+    await tick()
 
     const headings = Array.from(container.querySelectorAll('h2')).filter((h) =>
       /try it out/i.test(h.textContent ?? '')
     )
     expect(headings).toHaveLength(1)
 
+    expect(container.querySelector('#tryitout-task')).not.toBeNull()
+
     const buttons = Array.from(container.querySelectorAll('button'))
     const runButton = buttons.find((b) => (b.textContent ?? '').trim() === 'Run')
     expect(runButton).not.toBeUndefined()
 
-    expect(container.querySelector('#tryitout-task')).not.toBeNull()
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
 
-    // Phase 5's disabled placeholder is gone
-    expect(buttons.filter((b) => b.disabled && /try it out/i.test(b.textContent ?? ''))).toHaveLength(0)
+    const panelHeading = headings[0]
+    expect(
+      toggle.compareDocumentPosition(panelHeading) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+  })
+
+  it('clicking the toggle a second time collapses the panel again', async () => {
+    const { container } = renderPage({ tryItOutMode: 'runnable' })
+
+    const toggle = tryItOutToggle(container)[0]
+    await fireEvent.click(toggle)
+    await tick()
+    await fireEvent.click(toggle)
+    await tick()
+
+    expect(container.querySelector('#tryitout-task')).toBeNull()
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
   })
 
   it('none mode renders nothing for Try It Out, but still renders the GitHub link', () => {

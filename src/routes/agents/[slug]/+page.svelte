@@ -6,6 +6,7 @@
 
   let { data }: { data: PageData } = $props()
   let { agent } = data
+  let tryItOutOpen = $state(false)
 </script>
 
 <svelte:head>
@@ -74,7 +75,25 @@
 
       {#if agent.tryItOutMode === 'runnable'}
         <div class="mt-6">
-          <TryItOutPanel agentId={agent.slug} />
+          <button
+            type="button"
+            onclick={() => (tryItOutOpen = !tryItOutOpen)}
+            aria-expanded={tryItOutOpen}
+            class="inline-flex items-center gap-2 rounded text-sm font-medium text-indigo-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+          >
+            Try it out
+            <span
+              class="inline-block transition-transform"
+              class:rotate-180={tryItOutOpen}
+              aria-hidden="true">&darr;</span
+            >
+          </button>
+
+          {#if tryItOutOpen}
+            <div class="mt-4">
+              <TryItOutPanel agentId={agent.slug} />
+            </div>
+          {/if}
         </div>
       {/if}
     </section>
