@@ -182,8 +182,22 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
   8. `jobId` is persisted on the client and survives a refresh in the same session; the finished result and download remain available
   9. The LLM provider/key are server-side only, never exposed to the client
 
-**Plans:** 0 plans
+**Plans:** 5 plans in 4 waves
 
 Plans:
+**Wave 1** *(parallel)*
 
-- [ ] TBD (run /gsd-plan-phase 7 to break down)
+- [ ] 07-01-PLAN.md — Preflight: install the `openai` SDK, probe the deployed key with `models.list()` to resolve the model ID and whether custom `temperature` is accepted, freeze both into `src/lib/server/tryItOutModel.ts` behind a decision checkpoint (D-07 costly reversibility)
+- [ ] 07-02-PLAN.md — Demo assets: `data/agents/demo-rfi-triage.yaml` + shipped `skill.md` + sample RFI, one-off DB `UPDATE` flipping `demo-rfi-triage` to runnable and `hvac-load-calculator` back to none, `.tryitout-work/` gitignore
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 07-03-PLAN.md — Server core: in-memory job store with UUID-validated path helpers, base-prompt (DB) + `skill.md` (file) loader with agentId validation, and the staged runner making the single real OpenAI call
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 07-04-PLAN.md — The three `+server.ts` job routes (POST create / GET status / GET artifact) and the `src/lib/tryItOut.ts` mock-to-`fetch` rewire, with the Phase 6 test suite migrated to a fetch stub and UI components untouched
+
+**Wave 4** *(blocked on Wave 3)*
+
+- [ ] 07-05-PLAN.md — `?job=` refresh persistence (SC-08) via a transport-free session helper plus minimal additive panel wiring, then live end-to-end human verification against the real OpenAI API
