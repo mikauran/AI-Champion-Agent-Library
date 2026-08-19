@@ -164,3 +164,26 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
 | 4. Customization Placeholder | 0/1 | Not started | - |
 | 5. Try It Out Field | 2/2 | Complete    | 2026-08-19 |
 | 6. Runnable Try It Out Flow (mock-backed) | 3/3 | Complete    | 2026-08-19 |
+
+### Phase 7: No-Container Demo Backend for Try It Out
+
+**Goal:** Replace the mock-backed Try It Out client with a real (but "cheating") demo backend: no Docker, no `pi`, no parallelism, no worker containers — plain SvelteKit server routes that actually call an LLM. `POST /api/tryitout/jobs` accepts `agentId`, `task`, and an optional uploaded file; creates a session UUID that acts as a fake container ID (`jobId`); writes the uploaded file to a `jobId`-prefixed server folder (e.g. `.tryitout-work/<jobId>/input/`) — isolation is by UUID prefix only, and file-collision risk is knowingly accepted for the demo. The backend loads the agent's hardcoded base prompt and its `skill.md` from files shipped with the app (pretending to fetch a "container prompt" by container ID, but actually reading locally) — demos are restricted to agents that only need to read the input file and write an output file. It then calls a language model with the base prompt + skill.md + uploaded file contents, writes the result to `.tryitout-work/<jobId>/output/`, and updates job status `queued → running → succeeded` (or `failed` with an error string) — progress is staged status only, no live tool-event feed, since a single LLM call has no tool stream. `GET /api/tryitout/jobs/:id` returns a `JobUpdate` (`{ status, events, error }`) with staged progress lines; `GET /api/tryitout/jobs/:id/artifact` returns the output file as a download, valid only when `status: 'succeeded'`. Job state lives in server memory keyed by `jobId`; the client persists `jobId` (URL `?job=` or a cookie) so refreshing mid-session restores the view and the finished result/download stays available. `src/lib/tryItOut.ts` is rewired to call these routes via real `fetch()` — the three function signatures (`submitJob`, `subscribeProgress`, `downloadArtifact`) stay identical, and the UI components (including Phase 6's disclosure panel) are unchanged. The LLM provider and API key are supplied server-side only (env var on deploy), never sent to the client.
+**Requirements**: none assigned (scope defined by user-specified success criteria below)
+**Depends on:** Phase 6
+**Success Criteria** (what must be TRUE):
+
+  1. `POST /jobs` creates a `jobId` that acts as a fake container ID; no container or `pi` is started
+  2. The uploaded file is written to a `jobId`-prefixed server folder
+  3. For the given `agentId` the backend loads BOTH the hardcoded base prompt AND the agent's `skill.md` from the package, and passes both plus the uploaded file to the model
+  4. Backend calls the language model, writes an output file, and status goes `queued → running → succeeded` (or `failed` with an error)
+  5. Progress is staged status only (no live tool-event feed); download brightens on success
+  6. GET status and GET artifact work; download returns the real generated result
+  7. `src/lib/tryItOut.ts` calls the routes via `fetch`; UI components (incl. the Phase 6 panel) unchanged
+  8. `jobId` is persisted on the client and survives a refresh in the same session; the finished result and download remain available
+  9. The LLM provider/key are server-side only, never exposed to the client
+
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd-plan-phase 7 to break down)
