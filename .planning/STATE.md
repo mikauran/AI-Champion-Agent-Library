@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 05
-current_phase_name: add-an-optional-try-it-out-field-to-the-agent-catalog-shape
+current_phase: 06
+current_phase_name: Runnable Try It Out Flow (mock-backed)
 status: ready_for_verification
 stopped_at: Completed 05-02-PLAN.md — Phase 5 complete (human checkpoint approved)
-last_updated: "2026-08-19T14:09:23.093Z"
+last_updated: "2026-08-19T14:18:09.281Z"
 progress:
   total_phases: 5
   completed_phases: 3
@@ -25,14 +25,14 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 
 ## Current Position
 
-Phase: 05 (add-an-optional-try-it-out-field-to-the-agent-catalog-shape) — EXECUTING
-Plan: 2 of 2
+Phase: 06 — Runnable Try It Out Flow (mock-backed)
+Plan: Not started
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 3
+- Total plans completed: 5
 - Average duration: -
 - Total execution time: -
 
@@ -41,6 +41,7 @@ Plan: 2 of 2
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 06 | 3 | - | - |
+| 05 | 2 | - | - |
 
 **Recent Trend:**
 

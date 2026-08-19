@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2: Catalog and Detail** - Browse page, agent detail page, responsive layout
 - [ ] **Phase 3: Search** - Hybrid keyword + semantic search with live results
 - [ ] **Phase 4: Customization Placeholder** - Customize button and visible-but-non-functional menu
-- [ ] **Phase 5: Try It Out Field** - Optional try_it_out field (none/external/runnable) threaded through schema, ingest, and detail page
+- [x] **Phase 5: Try It Out Field** - Optional try_it_out field (none/external/runnable) threaded through schema, ingest, and detail page (completed 2026-08-19)
 - [x] **Phase 6: Runnable Try It Out Flow (mock-backed)** - Mock-backed job client + panel for runnable mode, contract-shaped for a later real backend swap
 
 ## Phase Details
@@ -114,7 +114,7 @@ Plans:
   4. One agent (e.g. rfi-triage-assistant) has mode: external with a placeholder url visible on its detail page
   5. No runtime execution behavior is added for runnable mode
 
-**Plans:** 2/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 
@@ -162,5 +162,5 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
 | 2. Catalog and Detail | 3/4 | In Progress|  |
 | 3. Search | 0/3 | Not started | - |
 | 4. Customization Placeholder | 0/1 | Not started | - |
-| 5. Try It Out Field | 2/2 | In Progress|  |
+| 5. Try It Out Field | 2/2 | Complete    | 2026-08-19 |
 | 6. Runnable Try It Out Flow (mock-backed) | 3/3 | Complete    | 2026-08-19 |
