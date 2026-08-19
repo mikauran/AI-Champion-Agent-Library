@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 3: Search** - Hybrid keyword + semantic search with live results
 - [ ] **Phase 4: Customization Placeholder** - Customize button and visible-but-non-functional menu
 - [ ] **Phase 5: Try It Out Field** - Optional try_it_out field (none/external/runnable) threaded through schema, ingest, and detail page
-- [ ] **Phase 6: Runnable Try It Out Flow (mock-backed)** - Mock-backed job client + panel for runnable mode, contract-shaped for a later real backend swap
+- [x] **Phase 6: Runnable Try It Out Flow (mock-backed)** - Mock-backed job client + panel for runnable mode, contract-shaped for a later real backend swap
 
 ## Phase Details
 
@@ -135,7 +135,7 @@ Plans:
   5. The panel is wired into the runnable-mode agent detail page AND works standalone with a hardcoded agentId
   6. No real backend exists; the UI only ever calls the three client functions — no `fetch`/`EventSource`/endpoint references anywhere else in the UI
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
 **Wave 1**
@@ -148,7 +148,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 06-03-PLAN.md — COVERAGE.md no-external-API declaration, staged runnable demo row in the dev DB, and human verification of both outcomes in a browser
+- [x] 06-03-PLAN.md — COVERAGE.md no-external-API declaration, staged runnable demo row in the dev DB, and human verification of both outcomes in a browser
 
 ## Progress
 
@@ -163,4 +163,4 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
 | 3. Search | 0/3 | Not started | - |
 | 4. Customization Placeholder | 0/1 | Not started | - |
 | 5. Try It Out Field | 1/2 | In Progress | - |
-| 6. Runnable Try It Out Flow (mock-backed) | 2/3 | In Progress|  |
+| 6. Runnable Try It Out Flow (mock-backed) | 3/3 | Complete | 2026-08-19 |

@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 06
 current_phase_name: runnable-try-it-out-flow-mock-backed
-status: unknown
-stopped_at: "06-03: Task 1 complete (COVERAGE.md + DB staged); awaiting human checkpoint (Task 2)"
-last_updated: "2026-08-19T08:45:31.215Z"
+status: ready_for_verification
+stopped_at: Completed 06-03-PLAN.md — Phase 6 complete (human checkpoint approved)
+last_updated: "2026-08-19T12:58:33.340Z"
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 
 ## Current Position
 
-Phase: 06 (runnable-try-it-out-flow-mock-backed) — EXECUTING
-Plan: 3 of 3
+Phase: 06 (runnable-try-it-out-flow-mock-backed) — COMPLETE (3/3 plans, human checkpoint approved 2026-08-19)
+Plan: 3 of 3 (all plans complete)
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Plan: 3 of 3
 |------|----------|-------|-------|
 | Phase 06 P01 | 5min | 3 tasks | 6 files |
 | Phase 06 P02 | 4min | 3 tasks | 2 files |
+| Phase 06 P03 | 16min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,8 @@ Recent decisions affecting current work:
 - [Phase 06]: Auto-scroll observation: Object.defineProperty accessor-pair recorder for scrollTop chosen directly over vi.spyOn(el, prop, 'set') for jsdom compatibility
 - [Phase 06]: Cleanup-assertion variant: vi.getTimerCount() under fake timers worked cleanly with unmount(); no real-timer clearTimeout-spy fallback needed
 - [Phase 06]: Task 3 required no production fix — 06-01's unsubscribe-on-terminal/unsubscribe-on-destroy logic already passed all four cleanup tests
+- [Phase 06]: [Phase 06-03]: COVERAGE.md declares no external API integration (grep-verified); the future runtime phase owns the real API coverage matrix
+- [Phase 06]: [Phase 06-03]: Human checkpoint approved all 10 verification steps with no defects, including both UI-SPEC backstop items (overflow, long-text) -- Phase 6 complete
 
 ### Pending Todos
 
@@ -106,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-19T08:45:31.185Z
-Stopped at: 06-03: Task 1 complete (COVERAGE.md + DB staged); awaiting human checkpoint (Task 2)
+Last session: 2026-08-19T12:58:33.309Z
+Stopped at: Completed 06-03-PLAN.md — Phase 6 complete (human checkpoint approved)
 Resume file: .planning/phases/06-runnable-try-it-out-flow-mock-backed/06-UI-SPEC.md
