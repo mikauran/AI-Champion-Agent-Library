@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { submitJob, subscribeProgress } from '$lib/tryItOut'
+  import { submitJob, subscribeProgress, downloadArtifact } from '$lib/tryItOut'
   import type { JobEvent, JobStatus } from '$lib/tryItOut'
 
   interface Props {
@@ -86,6 +86,24 @@
           <span class="text-xs font-semibold text-gray-500">{event.ts}</span> {event.summary}
         </p>
       {/each}
+    </div>
+  {/if}
+
+  {#if status === 'succeeded' && jobId}
+    <button
+      type="button"
+      onclick={() => downloadArtifact(jobId!)}
+      class="mt-4 inline-flex items-center gap-2 min-h-[44px] rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-600"
+    >
+      Download results
+    </button>
+  {/if}
+
+  {#if status === 'failed'}
+    <div class="mt-4 rounded border border-red-200 bg-red-50 p-4">
+      <p class="text-xs font-semibold text-red-700">Job failed</p>
+      <p class="mt-1 text-sm text-red-700">{error}</p>
+      <p class="mt-1 text-sm text-red-700">Adjust your task and try again.</p>
     </div>
   {/if}
 </aside>
