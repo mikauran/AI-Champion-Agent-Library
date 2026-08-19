@@ -53,18 +53,22 @@ describe('Try It Out affordance', () => {
     )
   }
 
-  it('runnable mode renders a single disabled "Try it out" button and no link', () => {
+  it('runnable mode renders the TryItOutPanel and no disabled placeholder button', () => {
     const { container } = renderPage({ tryItOutMode: 'runnable' })
 
-    const elements = tryItOutElements(container)
-    expect(elements).toHaveLength(1)
+    const headings = Array.from(container.querySelectorAll('h2')).filter((h) =>
+      /try it out/i.test(h.textContent ?? '')
+    )
+    expect(headings).toHaveLength(1)
 
-    const button = elements[0] as HTMLButtonElement
-    expect(button.tagName).toBe('BUTTON')
-    expect(button.disabled).toBe(true)
+    const buttons = Array.from(container.querySelectorAll('button'))
+    const runButton = buttons.find((b) => (b.textContent ?? '').trim() === 'Run')
+    expect(runButton).not.toBeUndefined()
 
-    const anchors = elements.filter((el) => el.tagName === 'A')
-    expect(anchors).toHaveLength(0)
+    expect(container.querySelector('#tryitout-task')).not.toBeNull()
+
+    // Phase 5's disabled placeholder is gone
+    expect(buttons.filter((b) => b.disabled && /try it out/i.test(b.textContent ?? ''))).toHaveLength(0)
   })
 
   it('none mode renders nothing for Try It Out, but still renders the GitHub link', () => {
