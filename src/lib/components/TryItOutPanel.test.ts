@@ -363,3 +363,76 @@ describe('TryItOutPanel re-run reset', () => {
     expect(findButtonByText(container, 'Download results')).not.toBeUndefined()
   })
 })
+
+describe('TryItOutPanel subscription cleanup', () => {
+  it('T2.17 unmount mid-job clears every pending timer (threat T2)', async () => {
+    const { container, unmount } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+    await vi.advanceTimersByTimeAsync(1000)
+    await tick()
+
+    unmount()
+
+    expect(vi.getTimerCount()).toBe(0)
+
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('T2.18 no post-unmount console errors', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const { container, unmount } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+    await vi.advanceTimersByTimeAsync(1000)
+    await tick()
+
+    unmount()
+    await vi.advanceTimersByTimeAsync(10000)
+
+    expect(errSpy).not.toHaveBeenCalled()
+    errSpy.mockRestore()
+  })
+
+  it('T2.19 terminal state releases the subscription: no further updates after succeeded', async () => {
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+    await vi.advanceTimersByTimeAsync(4400)
+    await tick()
+
+    const feed = container.querySelector('.font-mono') as HTMLElement
+    const lineCountBefore = feed.querySelectorAll('p').length
+
+    await vi.advanceTimersByTimeAsync(10000)
+    await tick()
+
+    const lineCountAfter = feed.querySelectorAll('p').length
+    expect(lineCountAfter).toBe(lineCountBefore)
+    expect(findButtonByText(container, 'Run')).not.toBeUndefined()
+    expect(findButtonByText(container, 'Running…')).toBeUndefined()
+  })
+
+  it('T2.20 re-run does not stack subscriptions', async () => {
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+    await vi.advanceTimersByTimeAsync(4400)
+    await tick()
+
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+    await vi.advanceTimersByTimeAsync(4400)
+    await tick()
+
+    const feed = container.querySelector('.font-mono') as HTMLElement
+    expect(feed.querySelectorAll('p').length).toBe(5)
+  })
+})
