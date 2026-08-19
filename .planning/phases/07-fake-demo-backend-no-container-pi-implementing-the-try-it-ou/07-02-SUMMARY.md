@@ -137,3 +137,7 @@ None - no external service configuration required (this plan touches no `OPENAI_
 ---
 *Phase: 07-fake-demo-backend-no-container-pi-implementing-the-try-it-ou*
 *Completed: 2026-08-19*
+
+## Self-Check: PASSED
+
+All created files confirmed present (`data/agents/demo-rfi-triage.yaml`, `data/tryitout-prompts/demo-rfi-triage/skill.md`, `data/tryitout-prompts/demo-rfi-triage/sample-rfi.txt`, `scripts/set-try-it-out-mode.ts`, `scripts/set-try-it-out-mode.test.ts`, this SUMMARY.md) and the `.tryitout-work/` `.gitignore` entry confirmed present. Task commits `9675cf5` and `2cdccd5` confirmed in `git log`.
