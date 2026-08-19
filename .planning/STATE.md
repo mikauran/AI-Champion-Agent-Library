@@ -106,6 +106,12 @@ None yet.
 - Oracle AgentSpec field structure not directly inspected — must obtain actual spec files or schema before implementing PIPE-01/PIPE-02 (research gap flagged)
 - Embedding model selection (all-MiniLM-L6-v2 recommended) needs validation against real agent descriptions before Phase 3 commits to it
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260819-nsi | Hide the existing Try It Out panel behind a collapsible arrow control on the runnable agent detail page; clicking reveals it inline below the control. No changes to TryItOutPanel.svelte or tryItOut.ts. | 2026-08-19 | e5e4157 | [260819-nsi-hide-the-existing-try-it-out-panel-behin](./quick/260819-nsi-hide-the-existing-try-it-out-panel-behin/) |
+
 ### Roadmap Evolution
 
 - Phase 5 added: Try It Out Field — optional try_it_out mode (none|external|runnable) on agent records, threaded through schema/ingest/detail page
@@ -113,6 +119,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-19T14:09:23.061Z
-Stopped at: Completed 05-02-PLAN.md — Phase 5 complete (human checkpoint approved)
-Resume file: .planning/phases/06-runnable-try-it-out-flow-mock-backed/06-UI-SPEC.md
+Last session: 2026-08-19T17:18:00.000Z
+Stopped at: Completed quick task 260819-nsi: Hide the existing Try It Out panel behind a collapsible arrow control
+Resume file: .planning/quick/260819-nsi-hide-the-existing-try-it-out-panel-behin/260819-nsi-SUMMARY.md
