@@ -114,12 +114,12 @@ Plans:
   4. One agent (e.g. rfi-triage-assistant) has mode: external with a placeholder url visible on its detail page
   5. No runtime execution behavior is added for runnable mode
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans executed
 
 Plans:
 
-- [ ] 05-01-PLAN.md — Tracer: try_it_out_* schema columns applied to the DB, mode-conditional Try It Out affordance on the agent detail page (external link / disabled runnable button / nothing), rfi-triage-assistant set to external with a placeholder URL
-- [ ] 05-02-PLAN.md — Ingestion safe defaults + no-clobber onConflictDoUpdate omission with regression tests, full-build durability check, human verification of all three modes
+- [x] 05-01-PLAN.md — Tracer: try_it_out_* schema columns applied to the DB, mode-conditional Try It Out affordance on the agent detail page (external link / disabled runnable button / nothing), rfi-triage-assistant set to external with a placeholder URL
+- [x] 05-02-PLAN.md — Ingestion safe defaults + no-clobber onConflictDoUpdate omission with regression tests, full-build durability check, human verification of all three modes
 
 ### Phase 6: Runnable Try It Out Flow (mock-backed)
 
@@ -162,5 +162,5 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
 | 2. Catalog and Detail | 3/4 | In Progress|  |
 | 3. Search | 0/3 | Not started | - |
 | 4. Customization Placeholder | 0/1 | Not started | - |
-| 5. Try It Out Field | 1/2 | In Progress | - |
+| 5. Try It Out Field | 2/2 | In Progress|  |
 | 6. Runnable Try It Out Flow (mock-backed) | 3/3 | Complete    | 2026-08-19 |

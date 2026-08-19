@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 1
-current_phase_name: Data Pipeline
+current_phase: 05
+current_phase_name: add-an-optional-try-it-out-field-to-the-agent-catalog-shape
 status: ready_for_verification
-stopped_at: Completed 06-03-PLAN.md — Phase 6 complete (human checkpoint approved)
-last_updated: "2026-08-19T13:12:54.677Z"
+stopped_at: Completed 05-02-PLAN.md — Phase 5 complete (human checkpoint approved)
+last_updated: "2026-08-19T14:09:23.093Z"
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Tech evaluators and executives can find the right AI agent for their use case within seconds — through semantic search or category browsing — and understand what it does, how it works, and how to get it.
-**Current focus:** Phase 06 — runnable-try-it-out-flow-mock-backed
+**Current focus:** Phase 05 — add-an-optional-try-it-out-field-to-the-agent-catalog-shape
 
 ## Current Position
 
-Phase: 1 — Data Pipeline
-Plan: Not started
+Phase: 05 (add-an-optional-try-it-out-field-to-the-agent-catalog-shape) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Plan: Not started
 | Phase 06 P01 | 5min | 3 tasks | 6 files |
 | Phase 06 P02 | 4min | 3 tasks | 2 files |
 | Phase 06 P03 | 16min | 2 tasks | 1 files |
+| Phase 05 P02 | 10min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,8 @@ Recent decisions affecting current work:
 - [Phase 06]: Task 3 required no production fix — 06-01's unsubscribe-on-terminal/unsubscribe-on-destroy logic already passed all four cleanup tests
 - [Phase 06]: [Phase 06-03]: COVERAGE.md declares no external API integration (grep-verified); the future runtime phase owns the real API coverage matrix
 - [Phase 06]: [Phase 06-03]: Human checkpoint approved all 10 verification steps with no defects, including both UI-SPEC backstop items (overflow, long-text) -- Phase 6 complete
+- [Phase 05]: 05-02: flattenRecord() writes literal try_it_out defaults; onConflictDoUpdate deliberately omits the three try_it_out columns so re-ingestion never clobbers a manually-set value (D-06/D-07)
+- [Phase 05]: 05-02: User decision — hvac-load-calculator stays try_it_out_mode='runnable' in the dev DB (not reset to 'none') so Phase 6's working TryItOutPanel demo remains live
 
 ### Pending Todos
 
@@ -109,6 +112,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-19T12:58:33.309Z
-Stopped at: Completed 06-03-PLAN.md — Phase 6 complete (human checkpoint approved)
+Last session: 2026-08-19T14:09:23.061Z
+Stopped at: Completed 05-02-PLAN.md — Phase 5 complete (human checkpoint approved)
 Resume file: .planning/phases/06-runnable-try-it-out-flow-mock-backed/06-UI-SPEC.md
