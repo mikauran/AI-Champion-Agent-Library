@@ -14,8 +14,8 @@ affects: []
 
 actuals:
   tokens: 0
-  tasks: 1
-  commits: 1
+  tasks: 2
+  commits: 4
 
 tech-stack:
   added: []
@@ -59,22 +59,22 @@ coverage:
     description: "A human runs the 10-step browser verification script and confirms both outcomes, both UI-SPEC backstop items, and Phase 5 regression-free behavior"
     verification:
       - kind: manual
-        ref: "Checkpoint presented; awaiting human response (approved / defects)"
-        status: pending
+        ref: "Human completed all 10 steps against http://localhost:5173 and responded 'approved' — no defects reported"
+        status: pass
     human_judgment: true
 
-duration: pending (checkpoint not yet resolved)
-completed: pending
-status: checkpoint-pending
+duration: ~16min active work (Task 1 + checkpoint setup); checkpoint itself spanned a longer wall-clock gap while the human ran the browser walkthrough
+completed: 2026-08-19
+status: complete
 ---
 
 # Phase 06 Plan 03: Coverage Declaration, Demo DB Staging, and Human Checkpoint Summary
 
-**COVERAGE.md written and grep-verified, local dev DB staged with one `runnable` agent (`hvac-load-calculator`) and the Phase 5 `external` example (`rfi-triage-assistant`), a stale orphaned dev server replaced with a fresh one — checkpoint presented to the human, awaiting sign-off.**
+**COVERAGE.md written and grep-verified, local dev DB staged with one `runnable` agent (`hvac-load-calculator`) and the Phase 5 `external` example (`rfi-triage-assistant`), a stale orphaned dev server replaced with a fresh one — human completed the full 10-step browser walkthrough and approved with no defects. Phase 6 is complete.**
 
-## Status: IN PROGRESS — human checkpoint pending
+## Status: COMPLETE — human checkpoint approved, no defects
 
-This SUMMARY documents Task 1 (fully complete and committed) and the setup performed for Task 2's human-verification checkpoint (dev server prepared and confirmed serving correct data). Task 2 itself — the 10-step manual browser walkthrough — has NOT yet been approved by a human. This file will be updated/finalized by the continuation agent once the human responds "approved" or reports defects, per the plan's checkpoint protocol.
+The human ran the full 10-step verification script against the live dev server at `http://localhost:5173` and responded **"approved"** with no defects reported. All four visually/behaviorally-verifiable ROADMAP Phase 6 success criteria (SC-2 through SC-5) and both UI-SPEC backstop items (overflow, long-text) are now human-confirmed. No code changes were required as a result of the checkpoint.
 
 ## Task 1: Write COVERAGE.md and stage a runnable agent in the dev DB — COMPLETE
 
@@ -128,19 +128,65 @@ Before presenting the checkpoint, per the plan's "Automation is already complete
 
 **Verification:** `curl -s http://localhost:5173/agents/hvac-load-calculator` and `.../rfi-triage-assistant` and `.../mep-scope-planner`, each grepped for `tryItOutMode:"..."`, confirmed correct per-agent values.
 
-## Checkpoint Presented
+## Task 2: Human verification — both outcomes, in a real browser — APPROVED
 
-The human-verification checkpoint (Task 2, the 10-step browser walkthrough) has been presented. See the orchestrator/executor's "## CHECKPOINT" message for the exact steps, URLs (`http://localhost:5173/agents/hvac-load-calculator`, `http://localhost:5173/agents/rfi-triage-assistant`), and resume signal. This SUMMARY will be completed with the human's verdict per step (especially steps 6 and 7, the UI-SPEC overflow/long-text backstops), any defects found and how they were fixed or deferred, any scope-expansion follow-ups, and the closing runtime-swap note once the checkpoint resolves.
+The human ran all 10 steps of the checkpoint script against `http://localhost:5173` and responded **"approved"** — no defects reported at any step.
 
-## Files Created/Modified (Task 1 only; Task 2 file changes, if any, will be added when the checkpoint resolves)
+### Per-step verdict
+
+| # | Check | Verdict |
+|---|-------|---------|
+| 1 | Panel wired into `hvac-load-calculator` detail page (SC-5) — Task textarea, file input, indigo Run button, no disabled placeholder | Approved |
+| 2 | Success path (SC-2, SC-3) — "Running…" state, PROGRESS label, timestamped lines (`read data/sample.csv` → `(12 lines)` → `count rows` → `write output/result.txt` → `agent settled (clean exit)`) reading as an authentic tool-call log, Download button appears | Approved |
+| 3 | Download (SC-3) — `.txt` file downloaded, contents include task text and agent slug | Approved |
+| 4 | File attachment — throwaway file attached, re-run, artifact's `attached file:` line names the file | Approved |
+| 5 | Failure path (SC-4) — red "Job failed" block, verbatim error string, "Adjust your task and try again.", no Download button, error renders as plain text (no raw HTML) | Approved |
+| 6 | **Overflow backstop** (UI-SPEC) — log box stays height-capped and scrolls internally; page does not grow indefinitely | Approved |
+| 7 | **Long-text backstop** (UI-SPEC) — textarea and feed lines wrap on long single-line input; no horizontal scrollbar | Approved |
+| 8 | Cleanup (threat T3) — starting a job then navigating "← Back to catalog" mid-run leaves a clean console, no errors/warnings | Approved |
+| 9 | Phase 5 regression check (D-14) — `rfi-triage-assistant` still shows the external "Try it out →" link to the placeholder URL and no panel; a `none`-mode agent shows no affordance at all | Approved |
+| 10 | Tablet viewport (~820px, UI-01) — panel and controls remain usable, no horizontal page scroll | Approved |
+
+Steps 6 and 7 — the two UI-SPEC backstop items that only a human could confirm (bounded/scrolling log box; line-wrapping instead of horizontal overflow) — were explicitly confirmed, not silently skipped, per the plan's acceptance criteria.
+
+### Defects found
+None.
+
+### Scope-expansion requests captured as follow-ups
+None were raised during this checkpoint. (For reference, the plan pre-identified likely candidates — a dedicated standalone demo route, a "remove selected file" chip, a cancel/retry control, real execution — none of which were requested; they remain out of scope for this phase per the `assumption_delta_decision` and 06-CONTEXT.md's deferred list.)
+
+### Closing note — future runtime swap
+
+Per the `try-it-out-runtime-architecture` project memory, the future runtime phase (in-process `pi --mode rpc` module) replaces only the bodies of the three exported functions in `src/lib/tryItOut.ts` (`submitJob`, `subscribeProgress`, `downloadArtifact`) plus everything below its `MOCK IMPLEMENTATION — DELETE WHOLESALE` banner. No UI change is required — `TryItOutPanel.svelte` and the detail-page wiring are already written against the frozen contract shapes (`JobStatus`, `JobEvent`, `JobUpdate`, `SubmitResult`) and were exercised end-to-end by this checkpoint.
+
+## Files Created/Modified
 - `.planning/phases/06-runnable-try-it-out-flow-mock-backed/COVERAGE.md` (new) - reasoned no-external-API declaration
+- No source files were modified in Task 2 — the checkpoint required no fixes.
 
 ## Issues Encountered
-- Stale orphaned dev server serving a deleted DB inode — see deviation above. Resolved before presenting the checkpoint; no code was broken or handed to the human in a bad state.
+- Stale orphaned dev server serving a deleted DB inode — see deviation above. Resolved before presenting the checkpoint; the human was never handed a broken build.
 
 ## User Setup Required
-None yet — the human's only remaining action is to complete the browser checkpoint walkthrough and report the verdict.
+None. The dev server started for this checkpoint (`http://localhost:5173`) and the killed stale prior-session server were both session-local process management — no durable environment change and nothing further to configure.
+
+## Phase 6 Completion
+
+All six ROADMAP Phase 6 success criteria are now demonstrably true (the two grep/test-verifiable ones from 06-01/06-02, plus the four human-confirmed ones from this checkpoint):
+1. `src/lib/tryItOut.ts` exposes exactly the three mock-backed, contract-shaped functions — grep-verified export surface + delete-wholesale banner (06-01).
+2. Mock progress events read as an authentic live tool-call log — human-confirmed (step 2).
+3. The panel renders every required element and a working download — human-confirmed (steps 1-4).
+4. Both outcomes (succeed/fail) are demoable with no code changes — human-confirmed (steps 2, 5).
+5. The panel is wired into the runnable-mode detail page and works standalone — human-confirmed (step 1) + test-confirmed (06-01).
+6. No real backend exists anywhere in the UI — grep-verified and declared in `COVERAGE.md` (this plan).
+
+Phase 6 (runnable-try-it-out-flow-mock-backed) is complete.
 
 ---
 *Phase: 06-runnable-try-it-out-flow-mock-backed*
-*Status: checkpoint-pending as of 2026-08-19*
+*Completed: 2026-08-19*
+
+## Self-Check: PASSED
+
+- FOUND: `.planning/phases/06-runnable-try-it-out-flow-mock-backed/COVERAGE.md`
+- FOUND: `.planning/phases/06-runnable-try-it-out-flow-mock-backed/06-03-SUMMARY.md` (this file)
+- FOUND commits: `adccc22`, `910bb40`, `839b5b5`
