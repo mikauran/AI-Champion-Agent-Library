@@ -17,8 +17,8 @@ affects: [07-02, 07-03, 07-04, 07-05]
 
 actuals:
   tokens: 2400
-  tasks: 2
-  commits: 2
+  tasks: 4
+  commits: 4
 
 tech-stack:
   added: ["openai ^7.5.0"]
@@ -40,33 +40,37 @@ key-files:
 key-decisions:
   - "gpt-4.1-mini confirmed present in the live client.models.list() response for the deployed key — resolves RESEARCH.md's contradiction between the official pricing page and third-party 404-claim blog posts, for this key specifically"
   - "temperature=0.2 empirically accepted by a real client.responses.create() round-trip — D-07's fixed-low-temperature requirement is met exactly, the gpt-5.6-* fallback-with-omitted-temperature branch was NOT needed"
-  - "Task 4 (D-07 costly-reversibility decision checkpoint) reached and awaiting user confirmation before this plan can be marked complete"
+  - "Task 4 (D-07 costly-reversibility decision checkpoint) resolved: user selected accept-probe — gpt-4.1-mini / temperature=0.2 locked as-is, no override, no D-07 revisit"
 
 patterns-established:
   - "Server-only constants module (tryItOutModel.ts) follows db.ts's two-line header convention verbatim and never imports OPENAI_API_KEY itself — the SDK client lives in the runner (07-03), not here"
 
 requirements-completed: []
 
-# Coverage metadata: Task 4 (D-07 lock decision) still pending human input — no requirement
-# is fully closed until the checkpoint resolves, so requirements-completed stays empty here.
+# Coverage metadata: This plan closes SC-04/SC-09 only partially (per its own
+# must_haves: "SC-04 (partial)", "SC-09 (partial)") — full closure requires
+# plans 07-02/07-03/07-04. requirements-completed intentionally stays empty
+# here; the orchestrator's requirements mark-complete step (shared artifact,
+# not touched by this parallel worktree executor) runs after all phase plans
+# land.
 
 # Metrics
-duration: 15min
-completed: 2026-08-19
-status: halted
+duration: 16min
+completed: 2026-08-20
+status: complete
 ---
 
 # Phase 07 Plan 01: Model Probe and Constants Freeze Summary
 
-**openai SDK installed; live client.models.list() confirmed `gpt-4.1-mini` reachable and `temperature: 0.2` accepted by a real round-trip; frozen into src/lib/server/tryItOutModel.ts — halted at the D-07 decision checkpoint awaiting user confirmation.**
+**openai SDK installed; live client.models.list() confirmed `gpt-4.1-mini` reachable and `temperature: 0.2` accepted by a real round-trip; frozen into src/lib/server/tryItOutModel.ts — user selected `accept-probe` at the D-07 decision checkpoint, closing this plan.**
 
 ## Performance
 
-- **Duration:** ~15 min (this continuation; Task 1 was a separate prior halted session)
-- **Started:** 2026-08-19T21:35:00+03:00 (approx, this continuation)
-- **Completed:** 2026-08-19T21:54:05+03:00
-- **Tasks:** 2/4 completed this session (3/4 total including Task 1's human-action gate resolution)
-- **Files modified:** 7 (2 modified, 5 created)
+- **Duration:** ~16 min total across sessions (Task 1 and Task 4 were separate human-input sessions; Tasks 2-3 were one continuous run)
+- **Started:** 2026-08-19T21:35:00+03:00 (approx, prior continuation)
+- **Completed:** 2026-08-20 (this continuation — Task 4 decision-record only, no code change)
+- **Tasks:** 4/4 completed (all tasks done, plan closed)
+- **Files modified:** 7 (2 modified, 5 created) — unchanged by Task 4, which recorded a decision only
 
 ## Accomplishments
 
@@ -76,7 +80,7 @@ status: halted
 - Recorded the real captured output in `MODEL-PROBE.md` (verified zero `sk-` occurrences)
 - Froze the result into `src/lib/server/tryItOutModel.ts`, exporting `MODEL = 'gpt-4.1-mini'`, `TEMPERATURE = 0.2`, and `modelParams()`, matching `db.ts`'s server-only header convention and never reading `OPENAI_API_KEY` itself
 - Added `src/lib/server/tryItOutModel.test.ts` — all 4 assertions pass
-- Reached Task 4 (the D-07 costly-reversibility decision checkpoint) — halted per plan design, awaiting user confirmation
+- Task 4 (D-07 costly-reversibility decision checkpoint): user selected `accept-probe` — `gpt-4.1-mini` / `temperature: 0.2` locked as-is; decision recorded in `MODEL-PROBE.md`, no code change needed since `tryItOutModel.ts` already encoded exactly this value
 
 ## Task Commits
 
@@ -85,8 +89,7 @@ Each task was committed atomically:
 1. **Task 1: Supply the OpenAI API key (human-only)** — `6aebeb1` (docs; halt record from the prior session — key has since been supplied and verified present in this worktree's `.env`)
 2. **Task 2: Install the openai SDK and run the live model + temperature probe** — `5ea5bed` (feat)
 3. **Task 3: Freeze the choice into src/lib/server/tryItOutModel.ts** — `212bcd2` (feat)
-
-Task 4 (`checkpoint:decision`, D-07 lock) has not been committed — no code changes are made in that task until the user selects an option.
+4. **Task 4: Lock the fixed model + temperature (D-07 decision checkpoint)** — `df5cc8d` (docs; decision-record only — `accept-probe` selected, no code change)
 
 ## Files Created/Modified
 
@@ -100,7 +103,7 @@ Task 4 (`checkpoint:decision`, D-07 lock) has not been committed — no code cha
 ## Decisions Made
 
 - Accepted the probe's primary-recommendation branch: `gpt-4.1-mini` + `temperature: 0.2`, both empirically confirmed against the deployed key — no fallback to the `gpt-5.6-*` family was needed
-- Task 4 itself is a locked decision checkpoint per the plan (D-07 flagged costly reversibility) — this executor does not unilaterally select `accept-probe` on the user's behalf; it is presented below for user confirmation
+- Task 4 (D-07 costly-reversibility decision checkpoint): user selected `accept-probe` — confirming `gpt-4.1-mini` / `temperature: 0.2` as the single fixed model/temperature for all runnable demo agents; no `override-model` and no `revisit-d07`
 
 ## Deviations from Plan
 
@@ -117,7 +120,7 @@ None further — Task 1's `OPENAI_API_KEY` setup is complete and verified presen
 
 ## Next Phase Readiness
 
-**Blocked on Task 4 — a `checkpoint:decision` the plan requires be presented to the user before this plan is marked complete.** See the CHECKPOINT REACHED report below for the exact decision, options, and what MODEL-PROBE.md/tryItOutModel.ts already contain. Once the user selects `accept-probe` (or `override-model <id>` / `revisit-d07`), a fresh execution agent resolves Task 4 and this plan closes out — unblocking 07-02/07-03's consumption of `MODEL`/`TEMPERATURE`/`modelParams()`.
+**Plan complete — 4/4 tasks done.** The D-07 decision is locked: `MODEL = 'gpt-4.1-mini'`, `TEMPERATURE = 0.2`, `modelParams()` exported from `src/lib/server/tryItOutModel.ts`, backed by a live probe recorded in `MODEL-PROBE.md`. Plans 07-02/07-03/07-04 can now consume `MODEL`/`TEMPERATURE`/`modelParams()` without further open questions on the model/temperature axis.
 
 ## Self-Check: PASSED
 
@@ -126,7 +129,9 @@ None further — Task 1's `OPENAI_API_KEY` setup is complete and verified presen
 - `src/lib/server/tryItOutModel.ts` and `src/lib/server/tryItOutModel.test.ts` exist — confirmed, tests pass (4/4)
 - Commit `5ea5bed` found in `git log --oneline`
 - Commit `212bcd2` found in `git log --oneline`
+- Commit `df5cc8d` found in `git log --oneline`
+- `npx vitest run src/lib/server/tryItOutModel.test.ts` re-verified passing (4/4) before finalizing this SUMMARY
 
 ---
 *Phase: 07-fake-demo-backend-no-container-pi-implementing-the-try-it-ou*
-*Completed: 2026-08-19 (halted at Task 4 checkpoint)*
+*Completed: 2026-08-20*
