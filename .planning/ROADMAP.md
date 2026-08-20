@@ -182,7 +182,7 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
   8. `jobId` is persisted on the client and survives a refresh in the same session; the finished result and download remain available
   9. The LLM provider/key are server-side only, never exposed to the client
 
-**Plans:** 3/5 plans executed in 4 waves
+**Plans:** 4/5 plans executed in 4 waves
 
 Plans:
 **Wave 1** *(parallel)*
@@ -196,7 +196,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 07-04-PLAN.md — The three `+server.ts` job routes (POST create / GET status / GET artifact) and the `src/lib/tryItOut.ts` mock-to-`fetch` rewire, with the Phase 6 test suite migrated to a fetch stub and UI components untouched
+- [x] 07-04-PLAN.md — The three `+server.ts` job routes (POST create / GET status / GET artifact) and the `src/lib/tryItOut.ts` mock-to-`fetch` rewire, with the Phase 6 test suite migrated to a fetch stub and UI components untouched
 
 **Wave 4** *(blocked on Wave 3)*
 
