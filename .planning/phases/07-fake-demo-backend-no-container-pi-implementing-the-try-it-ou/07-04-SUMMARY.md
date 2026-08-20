@@ -236,3 +236,9 @@ None - no external service configuration required. All tests mock `fetch`/`opena
 ---
 *Phase: 07-fake-demo-backend-no-container-pi-implementing-the-try-it-ou*
 *Completed: 2026-08-20*
+
+## Self-Check: PASSED
+
+- All 9 claimed files confirmed tracked via `git ls-files --error-unmatch` (three route handlers, `jobs.test.ts`, `tryItOut.ts`, `tryItOut.test.ts`, `fakeJobApi.ts`, `TryItOutPanel.test.ts`, this SUMMARY.md)
+- Commits `917a49c`, `81840a0`, `2dc0a5d`, `fd3f8f3` all confirmed in `git log --oneline --all`
+- `npm test` re-verified passing (173/173 across 17 test files) after all commits
