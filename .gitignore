@@ -7,3 +7,5 @@ db/
 .svelte-kit/
 build/
 .tryitout-work/
+.claude/worktrees/
+.gsd/
