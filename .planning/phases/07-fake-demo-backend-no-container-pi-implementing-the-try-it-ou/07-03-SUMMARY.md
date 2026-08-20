@@ -195,3 +195,11 @@ None - no external service configuration required. This plan's tests mock the `o
 ---
 *Phase: 07-fake-demo-backend-no-container-pi-implementing-the-try-it-ou*
 *Completed: 2026-08-20*
+
+## Self-Check: PASSED
+
+- `src/lib/server/tryItOutJobs.ts`, `tryItOutJobs.test.ts`, `tryItOutPrompts.ts`, `tryItOutPrompts.test.ts`, `tryItOutRunner.ts`, `tryItOutRunner.test.ts` — all confirmed present via `test -f`
+- This SUMMARY.md confirmed present via `test -f`
+- Commits `854ef77`, `70d373d`, `213d273`, `eb5c311` all confirmed in `git log --oneline`
+- `npm test` re-verified passing (148/148 across 16 test files) after all commits
+- `npx tsc --noEmit` re-verified: 22 errors, zero in this plan's files (down from 38 before the tsconfig.json fix)
