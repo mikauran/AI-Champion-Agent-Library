@@ -4,12 +4,18 @@ import { render, fireEvent } from '@testing-library/svelte'
 import { tick } from 'svelte'
 import { readFileSync } from 'node:fs'
 import TryItOutPanel from './TryItOutPanel.svelte'
+import { installFakeJobApi, type InstalledFakeJobApi } from '$lib/testing/fakeJobApi'
+
+let api: InstalledFakeJobApi | undefined
 
 beforeEach(() => {
   vi.useFakeTimers()
+  api = installFakeJobApi()
 })
 
 afterEach(() => {
+  api?.uninstall()
+  api = undefined
   vi.useRealTimers()
 })
 
@@ -68,15 +74,14 @@ describe('TryItOutPanel success flow', () => {
 
     await vi.advanceTimersByTimeAsync(1000)
     await tick()
-    expect(container.textContent).toContain('read data/sample.csv')
-    expect(container.textContent).toMatch(/\d{2}:\d{2}:\d{2}\s+read data\/sample\.csv/)
+    expect(container.textContent).toContain('using task text as input…')
+    expect(container.textContent).toMatch(/\d{2}:\d{2}:\d{2}\s+using task text as input…/)
 
     await vi.advanceTimersByTimeAsync(3000)
     await tick()
-    expect(container.textContent).toContain('read data/sample.csv')
-    expect(container.textContent).toContain('read data/sample.csv (12 lines)')
-    expect(container.textContent).toContain('count rows in data/sample.csv')
-    expect(container.textContent).toContain('write output/result.txt')
+    expect(container.textContent).toContain('using task text as input…')
+    expect(container.textContent).toContain('calling model…')
+    expect(container.textContent).toContain('writing output…')
     expect(container.textContent).toContain('agent settled (clean exit)')
 
     const finalButton = Array.from(container.querySelectorAll('button')).find(
@@ -138,12 +143,12 @@ describe('TryItOutPanel fail path', () => {
     await tick()
 
     expect(container.textContent).toContain('Job failed')
-    expect(container.textContent).toContain('pi exited non-zero: required input file missing')
+    expect(container.textContent).toContain('model returned no output text')
     expect(container.textContent).toContain('Adjust your task and try again.')
     expect(container.querySelector('.bg-red-50')).not.toBeNull()
     expect(findButtonByText(container, 'Download results')).toBeUndefined()
-    expect(container.textContent).toContain('read data/sample.csv (12 lines)')
-    expect(container.textContent).toContain('agent failed (exit 1)')
+    expect(container.textContent).toContain('calling model…')
+    expect(container.textContent).toContain('agent failed')
   })
 })
 
@@ -194,6 +199,9 @@ describe('TryItOutPanel download interaction', () => {
 
     const downloadButton = findButtonByText(container, 'Download results') as HTMLButtonElement
     await fireEvent.click(downloadButton)
+    // downloadArtifact is fire-and-forget from the click handler and now
+    // does a real `await fetch(...)` — flush that microtask chain.
+    await vi.advanceTimersByTimeAsync(0)
 
     expect(createObjectURL).toHaveBeenCalledTimes(1)
     expect(capturedBlob).not.toBeNull()
@@ -203,6 +211,7 @@ describe('TryItOutPanel download interaction', () => {
     expect(revokeObjectURL).toHaveBeenCalledTimes(createObjectURL.mock.calls.length)
 
     await fireEvent.click(downloadButton)
+    await vi.advanceTimersByTimeAsync(0)
     expect(revokeObjectURL).toHaveBeenCalledTimes(createObjectURL.mock.calls.length)
 
     clickSpy.mockRestore()
@@ -221,7 +230,7 @@ describe('TryItOutPanel XSS-shape assertion', () => {
     const failedBlock = container.querySelector('.bg-red-50')
     expect(failedBlock).not.toBeNull()
     expect(failedBlock!.querySelector('script')).toBeNull()
-    expect(failedBlock!.textContent).toContain('pi exited non-zero: required input file missing')
+    expect(failedBlock!.textContent).toContain('model returned no output text')
 
     const src = readFileSync('src/lib/components/TryItOutPanel.svelte', 'utf8')
     expect(src).not.toMatch(/\{@html/)
@@ -263,6 +272,7 @@ describe('TryItOutPanel file input', () => {
 
     const downloadButton = findButtonByText(container, 'Download results') as HTMLButtonElement
     await fireEvent.click(downloadButton)
+    await vi.advanceTimersByTimeAsync(0)
 
     expect(capturedBlob).not.toBeNull()
     const text = await (capturedBlob as unknown as Blob).text()
@@ -334,10 +344,10 @@ describe('TryItOutPanel bounded feed', () => {
 
     const feed = container.querySelector('.font-mono') as HTMLElement
     const lineTexts = Array.from(feed.querySelectorAll('p')).map((p) => p.textContent ?? '')
-    const readIndex = lineTexts.findIndex((t) => t.includes('read data/sample.csv') && !t.includes('12 lines'))
-    const writeIndex = lineTexts.findIndex((t) => t.includes('write output/result.txt'))
-    expect(readIndex).toBeGreaterThanOrEqual(0)
-    expect(writeIndex).toBeGreaterThan(readIndex)
+    const inputIndex = lineTexts.findIndex((t) => t.includes('using task text as input…'))
+    const writeIndex = lineTexts.findIndex((t) => t.includes('writing output…'))
+    expect(inputIndex).toBeGreaterThanOrEqual(0)
+    expect(writeIndex).toBeGreaterThan(inputIndex)
   })
 })
 
@@ -356,7 +366,7 @@ describe('TryItOutPanel re-run reset', () => {
     await tick()
 
     expect(container.querySelector('.bg-red-50')).toBeNull()
-    expect(container.textContent).not.toContain('agent failed (exit 1)')
+    expect(container.textContent).not.toContain('agent failed')
 
     await vi.advanceTimersByTimeAsync(4400)
     await tick()
@@ -433,6 +443,10 @@ describe('TryItOutPanel subscription cleanup', () => {
     await tick()
 
     const feed = container.querySelector('.font-mono') as HTMLElement
-    expect(feed.querySelectorAll('p').length).toBe(5)
+    // 4, not 8: the real runner's frozen stage-line count (input, calling
+    // model, writing output, settled) per job — not Phase 6's 5-event mock
+    // script. Proves re-run replaced the old job's events rather than
+    // appending to them.
+    expect(feed.querySelectorAll('p').length).toBe(4)
   })
 })
