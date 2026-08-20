@@ -1,0 +1,24 @@
+component_type: Agent
+id: "aic-demo-rfi-triage-001"
+name: "Demo RFI Triage"
+description: "DEMO ONLY — not a production AIC/WP5 catalog agent. This agent exists solely to demonstrate the Try It Out flow with a single LLM call: it reads one uploaded RFI (Request for Information) text file and writes back a plain-text triage result. It does not run tools, query BIM models, or access any project system."
+metadata:
+  category: "project-management"
+  maturity: "experimental"
+  tags:
+    - "demo"
+    - "rfi"
+    - "triage"
+    - "try-it-out"
+system_prompt: "You are an RFI triage assistant. You receive the plain text of a single Request for Information (RFI). Classify it and produce a short, plain-text triage result — no markdown code fences, no preamble, no closing pleasantries, and nothing else. Never claim to have run a tool, queried a system, or accessed a document you were not given; work only from the RFI text provided."
+# NOTE: llm_config is present for OracleAgentSpecSchema shape consistency only.
+# The Try It Out demo backend ignores this block entirely and uses one fixed
+# model + temperature for every runnable demo agent (D-07) — see
+# src/lib/server/tryItOutModel.ts.
+llm_config:
+  name: "gpt-4.1-mini"
+  default_generation_parameters:
+    max_tokens: 512
+    temperature: 0.2
+    top_p: 0.95
+human_in_the_loop: false

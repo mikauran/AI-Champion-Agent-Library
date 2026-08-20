@@ -1,0 +1,18 @@
+Subject: Conflict between ceiling-mounted ductwork and structural beam at Level 3 corridor
+
+Project/Area: Riverside Office Tower — Level 3, Corridor C between Grid Lines 4 and 6
+
+Question: During coordination review, the mechanical ductwork routed along the Level 3
+corridor ceiling appears to clash with a structural beam that drops lower than the
+surrounding ceiling grid in this section. The duct run serves two occupied tenant
+suites and is already fabricated to the dimensions shown in the current drawing set.
+
+Additional detail: The beam depth in this bay is greater than in adjacent bays,
+apparently to carry a mechanical equipment platform above. There is roughly 3 inches
+of vertical clearance remaining between the bottom of the beam and the top of the
+duct as currently routed, which is tighter than the coordination standard used
+elsewhere on this floor. The general contractor has paused duct installation in this
+bay pending a decision, but wants to keep sequencing on schedule if possible since
+drywall ceiling work in the adjacent bay is scheduled to start in five business days.
+No response has been received yet on a related question raised informally last week
+about ceiling height in the same corridor.
