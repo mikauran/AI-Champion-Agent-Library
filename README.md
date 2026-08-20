@@ -110,8 +110,8 @@ Re-running ingest on an existing agent ID updates the record — it never create
 
 ## Deploying with Podman
 
-The repo includes a `Containerfile`, `.containerignore`, `docker-entrypoint.sh`,
-and `podman-compose.yml` for running the built server in a container.
+The repo includes a `Containerfile`, `.containerignore`, and `podman-compose.yml`
+for running the built server in a container.
 
 ```bash
 # Build the image (multi-stage: installs deps, runs the full build
@@ -129,12 +129,13 @@ podman-compose up -d --build
 Open [http://localhost:3000](http://localhost:3000).
 
 The catalog data is baked into the image at build time from `data/agents/`.
-To pick up new or changed agent YAML files, rebuild the image — or bind-mount
-`data/agents` and set `RUN_INGEST_ON_START=true` to re-ingest on container
-start (see the commented-out block in `podman-compose.yml`).
+To pick up new or changed agent YAML files, rebuild the image.
 
-Env vars the container respects: `PORT` (default `3000`), `CATALOG_DB_PATH`,
-`INGEST_DATA_DIR`, `RUN_INGEST_ON_START`.
+Env vars the container respects: `PORT` (default `3000`), `CATALOG_DB_PATH`.
+
+The runtime image only ships production dependencies (`npm prune --omit=dev`
+after the build) — build-only tooling like `vite`'s CLI, `drizzle-kit`, and
+`tsx` never reaches the running container.
 
 ---
 

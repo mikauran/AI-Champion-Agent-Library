@@ -16,14 +16,15 @@
   "license": "ISC",
   "description": "AIC Agent Library — catalog of Oracle AgentSpec agents",
   "dependencies": {
+    "@sveltejs/kit": "^2.55.0",
     "better-sqlite3": "^12.8.0",
     "drizzle-orm": "^0.45.1",
+    "svelte": "^5.54.0",
     "yaml": "^2.8.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.5.4",
-    "@sveltejs/kit": "^2.55.0",
     "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@tailwindcss/vite": "^4.2.2",
     "@testing-library/jest-dom": "^6.9.1",
@@ -32,7 +33,6 @@
     "@types/node": "^25.5.0",
     "drizzle-kit": "^0.31.10",
     "jsdom": "^29.0.0",
-    "svelte": "^5.54.0",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
