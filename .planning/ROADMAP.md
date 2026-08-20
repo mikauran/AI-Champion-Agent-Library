@@ -19,6 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 4: Customization Placeholder** - Customize button and visible-but-non-functional menu
 - [x] **Phase 5: Try It Out Field** - Optional try_it_out field (none/external/runnable) threaded through schema, ingest, and detail page (completed 2026-08-19)
 - [x] **Phase 6: Runnable Try It Out Flow (mock-backed)** - Mock-backed job client + panel for runnable mode, contract-shaped for a later real backend swap
+- [x] **Phase 7: No-Container Demo Backend for Try It Out** - Real (no-Docker/no-pi) SvelteKit server routes calling an LLM, replacing the mock client (completed 2026-08-20)
 
 ## Phase Details
 
@@ -164,6 +165,7 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
 | 4. Customization Placeholder | 0/1 | Not started | - |
 | 5. Try It Out Field | 2/2 | Complete    | 2026-08-19 |
 | 6. Runnable Try It Out Flow (mock-backed) | 3/3 | Complete    | 2026-08-19 |
+| 7. No-Container Demo Backend for Try It Out | 5/5 | Complete    | 2026-08-20 |
 
 ### Phase 7: No-Container Demo Backend for Try It Out
 
@@ -182,7 +184,7 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
   8. `jobId` is persisted on the client and survives a refresh in the same session; the finished result and download remain available
   9. The LLM provider/key are server-side only, never exposed to the client
 
-**Plans:** 4/5 plans executed in 4 waves
+**Plans:** 5/5 plans executed in 4 waves
 
 Plans:
 **Wave 1** *(parallel)*
@@ -200,4 +202,4 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3)*
 
-- [ ] 07-05-PLAN.md — `?job=` refresh persistence (SC-08) via a transport-free session helper plus minimal additive panel wiring, then live end-to-end human verification against the real OpenAI API
+- [x] 07-05-PLAN.md — `?job=` refresh persistence (SC-08) via a transport-free session helper plus minimal additive panel wiring, then live end-to-end human verification against the real OpenAI API
