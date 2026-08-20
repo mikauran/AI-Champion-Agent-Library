@@ -3,8 +3,22 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, fireEvent } from '@testing-library/svelte'
 import { tick } from 'svelte'
 import { readFileSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
 import TryItOutPanel from './TryItOutPanel.svelte'
 import { installFakeJobApi, type InstalledFakeJobApi } from '$lib/testing/fakeJobApi'
+
+// The panel's ?job= restore/persist wiring (07-05) calls $app/navigation's
+// replaceState. Without a full SvelteKit router present, the real module
+// throws (caught internally as a no-op — see tryItOutSession.ts), which
+// would hide URL-persistence bugs from these tests. Mock it to actually
+// mutate window.location, mirroring the real replace-semantics behavior, so
+// the new restore describe block below can assert on window.location.search.
+vi.mock('$app/navigation', () => ({
+  replaceState: (url: string | URL) => {
+    const target = url instanceof URL ? url : new URL(url, window.location.origin)
+    window.history.replaceState({}, '', target)
+  },
+}))
 
 let api: InstalledFakeJobApi | undefined
 
@@ -17,6 +31,7 @@ afterEach(() => {
   api?.uninstall()
   api = undefined
   vi.useRealTimers()
+  window.history.replaceState({}, '', '/agents/demo-rfi-triage')
 })
 
 describe('TryItOutPanel idle render', () => {
@@ -448,5 +463,197 @@ describe('TryItOutPanel subscription cleanup', () => {
     // script. Proves re-run replaced the old job's events rather than
     // appending to them.
     expect(feed.querySelectorAll('p').length).toBe(4)
+  })
+})
+
+describe('TryItOutPanel job restore (?job=)', () => {
+  function setUrl(path: string) {
+    window.history.replaceState({}, '', path)
+  }
+
+  it('mounts with no ?job= param and stays idle — identical to Phase 6 behavior', () => {
+    setUrl('/agents/demo-rfi-triage')
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+
+    expect(container.textContent).not.toMatch(/Progress/)
+    expect(api!.requests).toHaveLength(0)
+  })
+
+  it('restores a running job from ?job= without calling submitJob, and reaches the terminal state', async () => {
+    const jobId = randomUUID()
+    api?.uninstall()
+    api = installFakeJobApi({
+      scripts: {
+        [jobId]: [
+          { status: 'running', events: [{ ts: '00:00:00', type: 'info', summary: 'calling model…' }], error: null },
+          {
+            status: 'succeeded',
+            events: [
+              { ts: '00:00:00', type: 'info', summary: 'calling model…' },
+              { ts: '00:00:01', type: 'info', summary: 'writing output…' },
+              { ts: '00:00:02', type: 'info', summary: 'agent settled (clean exit)' },
+            ],
+            error: null,
+          },
+        ],
+      },
+    })
+    setUrl(`/agents/demo-rfi-triage?job=${jobId}`)
+
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    await vi.advanceTimersByTimeAsync(0)
+    await tick()
+
+    expect(container.textContent).toMatch(/Progress/)
+    expect(container.textContent).toContain('calling model…')
+    expect(api.requests.some((r) => r.method === 'POST')).toBe(false)
+
+    await vi.advanceTimersByTimeAsync(1000)
+    await tick()
+
+    expect(container.textContent).toContain('agent settled (clean exit)')
+    expect(findButtonByText(container, 'Download results')).not.toBeUndefined()
+    expect(api.requests.some((r) => r.method === 'POST')).toBe(false)
+  })
+
+  it('restores a succeeded job showing the completed feed and a working Download button, with no re-run', async () => {
+    const jobId = randomUUID()
+    api?.uninstall()
+    api = installFakeJobApi({
+      scripts: {
+        [jobId]: [
+          {
+            status: 'succeeded',
+            events: [{ ts: '00:00:00', type: 'info', summary: 'agent settled (clean exit)' }],
+            error: null,
+          },
+        ],
+      },
+      artifactTextFor: () => 'a real restored triage result',
+    })
+    setUrl(`/agents/demo-rfi-triage?job=${jobId}`)
+
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    await vi.advanceTimersByTimeAsync(0)
+    await tick()
+
+    expect(container.textContent).toContain('agent settled (clean exit)')
+    expect(container.querySelector('.bg-red-50')).toBeNull()
+    expect(api.requests.some((r) => r.method === 'POST')).toBe(false)
+
+    let capturedBlob: Blob | null = null
+    URL.createObjectURL = vi.fn((blob: Blob) => {
+      capturedBlob = blob
+      return 'blob:mock'
+    }) as unknown as typeof URL.createObjectURL
+    URL.revokeObjectURL = vi.fn() as unknown as typeof URL.revokeObjectURL
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+    const downloadButton = findButtonByText(container, 'Download results') as HTMLButtonElement
+    expect(downloadButton).not.toBeUndefined()
+    await fireEvent.click(downloadButton)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(capturedBlob).not.toBeNull()
+    const text = await (capturedBlob as unknown as Blob).text()
+    expect(text).toBe('a real restored triage result')
+
+    clickSpy.mockRestore()
+  })
+
+  it('degrades a stale ?job= id (404 -> unknown job) to idle with no red block, and removes the job param', async () => {
+    const jobId = randomUUID()
+    api?.uninstall()
+    api = installFakeJobApi({ statusPollNotFound: true })
+    setUrl(`/agents/demo-rfi-triage?job=${jobId}`)
+
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    await vi.advanceTimersByTimeAsync(0)
+    await tick()
+
+    expect(container.textContent).not.toMatch(/Progress/)
+    expect(container.textContent).not.toContain('Job failed')
+    expect(container.querySelector('.bg-red-50')).toBeNull()
+    expect(window.location.search).not.toContain('job=')
+  })
+
+  it('treats a malformed ?job= value as no param at all — idle, no network call', () => {
+    setUrl('/agents/demo-rfi-triage?job=not-a-uuid')
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+
+    expect(container.textContent).not.toMatch(/Progress/)
+    expect(api!.requests).toHaveLength(0)
+  })
+
+  it('writes the new jobId into the URL after a successful run()', async () => {
+    setUrl('/agents/demo-rfi-triage')
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+    await vi.advanceTimersByTimeAsync(0)
+    await tick()
+
+    const search = new URLSearchParams(window.location.search)
+    expect(search.get('job')).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+
+    const postReq = api!.requests.find((r) => r.method === 'POST')
+    expect(postReq).toBeDefined()
+  })
+
+  it('clears the previous ?job= before writing the new one on re-run', async () => {
+    setUrl('/agents/demo-rfi-triage')
+    const { container } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+    await vi.advanceTimersByTimeAsync(0)
+    await tick()
+
+    const firstJobId = new URLSearchParams(window.location.search).get('job')
+    expect(firstJobId).not.toBeNull()
+
+    await vi.advanceTimersByTimeAsync(4400)
+    await tick()
+
+    await fireEvent.input(textarea, { target: { value: 'summarize the csv' } })
+    await fireEvent.click(getRunButton(container))
+
+    // Immediately on re-run — before the new submitJob resolves — the
+    // stale previous job's id must already be gone from the URL.
+    expect(window.location.search).not.toContain(`job=${firstJobId}`)
+
+    await vi.advanceTimersByTimeAsync(4400)
+    await tick()
+
+    const secondJobId = new URLSearchParams(window.location.search).get('job')
+    expect(secondJobId).not.toBeNull()
+    expect(secondJobId).not.toBe(firstJobId)
+  })
+
+  it('unmounting mid-restore clears the pending poll timer (extends T2.17 to the restore path)', async () => {
+    const jobId = randomUUID()
+    api?.uninstall()
+    api = installFakeJobApi({
+      scripts: {
+        [jobId]: [
+          { status: 'running', events: [], error: null },
+          { status: 'running', events: [], error: null },
+        ],
+      },
+    })
+    setUrl(`/agents/demo-rfi-triage?job=${jobId}`)
+
+    const { unmount } = render(TryItOutPanel, { props: { agentId: 'demo' } })
+    await vi.advanceTimersByTimeAsync(0)
+    await tick()
+
+    unmount()
+    expect(vi.getTimerCount()).toBe(0)
+
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(vi.getTimerCount()).toBe(0)
   })
 })

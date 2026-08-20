@@ -9,6 +9,7 @@
 // a suite.
 
 import { vi } from 'vitest'
+import { randomUUID } from 'node:crypto'
 import type { JobEvent, JobUpdate } from '$lib/tryItOut'
 
 export interface RecordedRequest {
@@ -110,7 +111,6 @@ export function installFakeJobApi(options: FakeJobApiOptions = {}): InstalledFak
   const scripts = new Map<string, JobUpdate[]>()
   const pollIndex = new Map<string, number>()
   const jobMeta = new Map<string, { task: string; fileName: string | null }>()
-  let nextJobId = 1
 
   if (options.scripts) {
     for (const [jobId, script] of Object.entries(options.scripts)) {
@@ -136,7 +136,12 @@ export function installFakeJobApi(options: FakeJobApiOptions = {}): InstalledFak
         return new Response('', { status: options.submitStatus })
       }
 
-      const jobId = `fake-job-${nextJobId++}`
+      // Real jobIds are crypto.randomUUID() (src/lib/server/tryItOutJobs.ts,
+      // 07-03). The fake stub must match that shape — not an arbitrary
+      // "fake-job-N" string — so that 07-05's ?job= session persistence
+      // (which only accepts RFC-4122 UUIDs, threat T5-1) can be exercised
+      // end to end against this stub.
+      const jobId = randomUUID()
       jobMeta.set(jobId, { task, fileName })
       if (!scripts.has(jobId)) {
         scripts.set(jobId, defaultScript(task, fileName))

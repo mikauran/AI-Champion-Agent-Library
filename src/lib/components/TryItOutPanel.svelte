@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
   import { submitJob, subscribeProgress, downloadArtifact } from '$lib/tryItOut'
   import type { JobEvent, JobStatus } from '$lib/tryItOut'
+  import { readJobIdFromUrl, writeJobIdToUrl, clearJobIdFromUrl } from '$lib/tryItOutSession'
 
   interface Props {
     agentId?: string
@@ -16,21 +18,31 @@
 
   let feedEl: HTMLDivElement | null = $state(null)
   let unsubscribe: (() => void) | null = null
+  let restoreAttempted = false
 
   let inFlight = $derived(status === 'queued' || status === 'running')
 
-  async function run() {
-    unsubscribe?.()
-    unsubscribe = null
-    events = []
-    error = null
-    jobId = null
-    status = 'queued'
+  // Shared subscription-callback body for both a fresh run() and the ?job=
+  // restore-on-mount path (SC-08) — status/events/error/unsubscribe handling
+  // must never diverge between the two call sites.
+  function attach(id: string, isRestore: boolean) {
+    unsubscribe = subscribeProgress(id, (u) => {
+      // Stale-id rule (SC-08): a restored ?job= id the server no longer
+      // recognizes must degrade to idle, not render as a false failure.
+      // Gated on isRestore (a boolean threaded through, not a heuristic on
+      // the error text alone) so a fresh run() that genuinely fails still
+      // renders the real failure block.
+      if (isRestore && u.status === 'failed' && u.error?.startsWith('unknown job:')) {
+        unsubscribe?.()
+        unsubscribe = null
+        status = 'idle'
+        events = []
+        error = null
+        jobId = null
+        clearJobIdFromUrl()
+        return
+      }
 
-    const result = await submitJob(agentId, task, file)
-    jobId = result.jobId
-
-    unsubscribe = subscribeProgress(result.jobId, (u) => {
       status = u.status
       events = u.events
       error = u.error
@@ -40,6 +52,41 @@
       }
     })
   }
+
+  async function run() {
+    unsubscribe?.()
+    unsubscribe = null
+    events = []
+    error = null
+    jobId = null
+    status = 'queued'
+    clearJobIdFromUrl() // a stale id must never be live while a new job is in flight
+
+    const result = await submitJob(agentId, task, file)
+    jobId = result.jobId
+    writeJobIdToUrl(result.jobId)
+
+    attach(result.jobId, false)
+  }
+
+  // Restore-on-mount (SC-08, D-10): resume a valid ?job= id's subscription
+  // without resubmitting. Runs exactly once — `restoreAttempted` short-
+  // circuits every later invocation before any reactive read happens, so
+  // this effect stops tracking dependencies after its first run and is
+  // never re-triggered by the state writes below. `untrack` keeps the
+  // one-time `jobId` check from establishing a dependency either.
+  $effect(() => {
+    if (restoreAttempted) return
+    restoreAttempted = true
+
+    const restoredId = readJobIdFromUrl()
+    const alreadyActive = untrack(() => jobId !== null)
+    if (restoredId && !alreadyActive) {
+      jobId = restoredId
+      status = 'running' // render the Progress feed immediately, not a flash of idle
+      attach(restoredId, true)
+    }
+  })
 
   // Auto-scroll: keep the newest line visible (D-10). Reading events.length is what tracks it.
   $effect(() => {
