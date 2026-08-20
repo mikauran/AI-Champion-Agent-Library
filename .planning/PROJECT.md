@@ -59,4 +59,4 @@ Tech evaluators and executives can find the right AI agent for their use case wi
 | Hybrid agent data ingestion | Structured files in GitHub edited by admins, ingested at deploy time | — Pending |
 
 ---
-*Last updated: 2026-08-19 — Phase 06 complete: mock-backed runnable Try It Out flow (submitJob/subscribeProgress/downloadArtifact client + TryItOutPanel.svelte), demoable end-to-end with no real backend*
+*Last updated: 2026-08-20 — Phase 07 complete: real (no-container) SvelteKit demo backend for Try It Out, replacing Phase 6's mock — three job routes, a single real OpenAI call, and `?job=` refresh persistence, human-verified live against the deployed API*

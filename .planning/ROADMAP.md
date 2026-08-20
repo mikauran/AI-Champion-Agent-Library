@@ -2,7 +2,9 @@
 
 ## Overview
 
-Four phases deliver a public browse-and-discovery catalog for 100+ AI agents. The data pipeline is the foundational dependency — nothing else can be built until normalized agent data flows through the shim layer. Catalog browse and agent detail pages come next, sharing the same component surface. Hybrid search follows once the detail page components and curated semantic summary fields exist. The customization placeholder closes out v1 as an isolated, low-risk addition.
+The original four phases deliver a public browse-and-discovery catalog for 100+ AI agents. The data pipeline is the foundational dependency — nothing else can be built until normalized agent data flows through the shim layer. Catalog browse and agent detail pages come next, sharing the same component surface. Hybrid search follows once the detail page components and curated semantic summary fields exist. The customization placeholder closes out v1 as an isolated, low-risk addition.
+
+Phases 5-7 were added after the fact (see "Roadmap Evolution" in STATE.md) as a self-contained "Try It Out" initiative, branching off Phase 2 rather than blocking on Phase 3/4: Phase 5 adds the optional `try_it_out` field to the catalog shape, Phase 6 builds a mock-backed runnable demo flow against a frozen client contract, and Phase 7 replaces the mock with a real (no-container) SvelteKit backend that calls an LLM directly. All three are complete; Phases 3 and 4 remain not started and are independent of this work.
 
 ## Phases
 
@@ -13,7 +15,7 @@ Four phases deliver a public browse-and-discovery catalog for 100+ AI agents. Th
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Data Pipeline** - Canonical data model, Oracle AgentSpec ingestion, SQLite store
+- [x] **Phase 1: Data Pipeline** - Canonical data model, Oracle AgentSpec ingestion, SQLite store (completed 2026-03-19)
 - [ ] **Phase 2: Catalog and Detail** - Browse page, agent detail page, responsive layout
 - [ ] **Phase 3: Search** - Hybrid keyword + semantic search with live results
 - [ ] **Phase 4: Customization Placeholder** - Customize button and visible-but-non-functional menu
@@ -36,12 +38,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. No Oracle AgentSpec field names appear in `AgentRecord` — the canonical type uses its own naming
   5. The ingestion script runs as part of the build step without manual intervention
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 
-- [ ] 01-01-PLAN.md — AgentRecord canonical type, Oracle AgentSpec Zod schema, adapter registry, and unit tests
-- [ ] 01-02-PLAN.md — Drizzle ORM schema, ingestion script with upsert semantics, build-step integration, and integration tests
+- [x] 01-01-PLAN.md — AgentRecord canonical type, Oracle AgentSpec Zod schema, adapter registry, and unit tests
+- [x] 01-02-PLAN.md — Drizzle ORM schema, ingestion script with upsert semantics, build-step integration, and integration tests
 
 ### Phase 2: Catalog and Detail
 
@@ -61,10 +63,10 @@ Plans:
 
 Plans:
 
-- [ ] 02-01-PLAN.md — SvelteKit scaffold, Tailwind CSS v4, adapter-node, db singleton, tailorable fields config, Wave 0 test skeletons
-- [ ] 02-02-PLAN.md — Catalog browse page with AgentCard, FilterBar (3 filters: category, model, status), Pagination, responsive grid
-- [ ] 02-03-PLAN.md — Agent detail page with progressive disclosure, TechAccordion, CustomizationPanel
-- [ ] 02-04-PLAN.md — Human verification checkpoint for catalog and detail pages
+- [x] 02-01-PLAN.md — SvelteKit scaffold, Tailwind CSS v4, adapter-node, db singleton, tailorable fields config, Wave 0 test skeletons
+- [x] 02-02-PLAN.md — Catalog browse page with AgentCard, FilterBar (3 filters: category, model, status), Pagination, responsive grid
+- [x] 02-03-PLAN.md — Agent detail page with progressive disclosure, TechAccordion, CustomizationPanel
+- [ ] 02-04-PLAN.md — Human verification checkpoint for catalog and detail pages (not yet executed)
 
 ### Phase 3: Search
 
@@ -154,12 +156,12 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
-Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it does not require Phase 3. Phase 5 depends only on Phase 2 and can begin any time after Phase 2 completes. Phase 6 depends on Phase 5 (replaces its disabled runnable button).
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it does not require Phase 3. Phase 5 depends only on Phase 2 and can begin any time after Phase 2 completes. Phase 6 depends on Phase 5 (replaces its disabled runnable button). Phase 7 depends on Phase 6 (rewires the mock client to a real backend). Phases 5, 6, and 7 together form one continuous "Try It Out" initiative (field → mock flow → real demo backend) and were executed as a self-contained branch off Phase 2, independent of — and now ahead of — Phases 3/4.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Pipeline | 1/2 | In Progress|  |
+| 1. Data Pipeline | 2/2 | Complete   | 2026-03-19 |
 | 2. Catalog and Detail | 3/4 | In Progress|  |
 | 3. Search | 0/3 | Not started | - |
 | 4. Customization Placeholder | 0/1 | Not started | - |
