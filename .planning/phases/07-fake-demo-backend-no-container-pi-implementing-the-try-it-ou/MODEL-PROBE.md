@@ -39,3 +39,9 @@ TEMPERATURE_SUPPORTED=true
 - **MODEL:** `gpt-4.1-mini`
 - **TEMPERATURE:** `0.2`
 - **Rationale:** Took the primary-recommendation branch of RESEARCH.md Open Questions §1 — `gpt-4.1-mini` was confirmed present in `models.list()` for the deployed key, so it is used with `temperature: 0.2` as D-07 intends, rather than falling back to the `gpt-5.6-*` family (which RESEARCH.md's cross-corroborated forum/bug-tracker evidence says rejects any non-default `temperature`). No fallback branch was needed; D-07's "fixed low temperature" requirement is met exactly, not best-effort.
+
+## Task 4 checkpoint resolution (D-07 costly-reversibility lock)
+
+**User decision:** `accept-probe`
+
+The user confirmed `CHOSEN_MODEL=gpt-4.1-mini` and `TEMPERATURE_SUPPORTED=true` (both quoted literally from the "Decision" block above) as the single fixed `MODEL`/`TEMPERATURE` pair for all runnable demo agents (D-07). No override and no D-07 revisit was selected. `src/lib/server/tryItOutModel.ts` already encodes this choice exactly as probed — no code change was required to close this task.
