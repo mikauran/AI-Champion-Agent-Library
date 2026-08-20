@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 06
-current_phase_name: Runnable Try It Out Flow (mock-backed)
+current_phase: 07
+current_phase_name: No-Container Demo Backend for Try It Out
 status: ready_for_verification
 stopped_at: Phase 7 context gathered
-last_updated: "2026-08-19T17:55:46.014Z"
+last_updated: "2026-08-19T18:10:22.616Z"
 progress:
   total_phases: 6
   completed_phases: 3
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Tech evaluators and executives can find the right AI agent for their use case within seconds — through semantic search or category browsing — and understand what it does, how it works, and how to get it.
-**Current focus:** Phase 05 — add-an-optional-try-it-out-field-to-the-agent-catalog-shape
+**Current focus:** Phase 07 — No-Container Demo Backend for Try It Out
 
 ## Current Position
 
-Phase: 06 — Runnable Try It Out Flow (mock-backed)
-Plan: Not started
+Phase: 07 (No-Container Demo Backend for Try It Out) — EXECUTING
+Plan: 1 of 5
 
 ## Performance Metrics
 

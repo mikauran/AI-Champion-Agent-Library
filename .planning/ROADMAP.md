@@ -182,13 +182,13 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
   8. `jobId` is persisted on the client and survives a refresh in the same session; the finished result and download remain available
   9. The LLM provider/key are server-side only, never exposed to the client
 
-**Plans:** 5 plans in 4 waves
+**Plans:** 2/5 plans executed in 4 waves
 
 Plans:
 **Wave 1** *(parallel)*
 
-- [ ] 07-01-PLAN.md — Preflight: install the `openai` SDK, probe the deployed key with `models.list()` to resolve the model ID and whether custom `temperature` is accepted, freeze both into `src/lib/server/tryItOutModel.ts` behind a decision checkpoint (D-07 costly reversibility)
-- [ ] 07-02-PLAN.md — Demo assets: `data/agents/demo-rfi-triage.yaml` + shipped `skill.md` + sample RFI, one-off DB `UPDATE` flipping `demo-rfi-triage` to runnable and `hvac-load-calculator` back to none, `.tryitout-work/` gitignore
+- [x] 07-01-PLAN.md — Preflight: install the `openai` SDK, probe the deployed key with `models.list()` to resolve the model ID and whether custom `temperature` is accepted, freeze both into `src/lib/server/tryItOutModel.ts` behind a decision checkpoint (D-07 costly reversibility)
+- [x] 07-02-PLAN.md — Demo assets: `data/agents/demo-rfi-triage.yaml` + shipped `skill.md` + sample RFI, one-off DB `UPDATE` flipping `demo-rfi-triage` to runnable and `hvac-load-calculator` back to none, `.tryitout-work/` gitignore
 
 **Wave 2** *(blocked on Wave 1)*
 
