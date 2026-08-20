@@ -182,7 +182,7 @@ Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it 
   8. `jobId` is persisted on the client and survives a refresh in the same session; the finished result and download remain available
   9. The LLM provider/key are server-side only, never exposed to the client
 
-**Plans:** 2/5 plans executed in 4 waves
+**Plans:** 3/5 plans executed in 4 waves
 
 Plans:
 **Wave 1** *(parallel)*
@@ -192,7 +192,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 07-03-PLAN.md — Server core: in-memory job store with UUID-validated path helpers, base-prompt (DB) + `skill.md` (file) loader with agentId validation, and the staged runner making the single real OpenAI call
+- [x] 07-03-PLAN.md — Server core: in-memory job store with UUID-validated path helpers, base-prompt (DB) + `skill.md` (file) loader with agentId validation, and the staged runner making the single real OpenAI call
 
 **Wave 3** *(blocked on Wave 2)*
 
