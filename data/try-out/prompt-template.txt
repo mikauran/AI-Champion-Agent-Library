@@ -1,0 +1,10 @@
+Agent: {{agentTitle}} ({{agentSlug}})
+Model: {{llmName}}
+Temperature: {{temperature}}
+Available tools: {{tools}}
+
+System instructions:
+{{systemPrompt}}
+
+User input:
+{{userPrompt}}

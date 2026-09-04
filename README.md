@@ -133,6 +133,18 @@ To pick up new or changed agent YAML files, rebuild the image.
 
 Env vars the container respects: `PORT` (default `3000`), `CATALOG_DB_PATH`.
 
+### Trying out an agent
+
+Each catalog card has a **Try out** action. It opens a form populated with the
+agent's system prompt, model, temperature, and tools. Submitting the form creates
+a UUID session and processes requests serially through the current placeholder
+processor. No agent container or language model is started yet.
+
+The server stores both the rendered prompt and a versioned session JSON file.
+The UI can download that JSON and restore it later. With `podman-compose`, these
+files are persisted in the `tryout-sessions` named volume. The relevant env vars
+are `TRYOUT_STORAGE_PATH` and `TRYOUT_TEMPLATE_PATH`.
+
 The runtime image only ships production dependencies (`npm prune --omit=dev`
 after the build) — build-only tooling like `vite`'s CLI, `drizzle-kit`, and
 `tsx` never reaches the running container.

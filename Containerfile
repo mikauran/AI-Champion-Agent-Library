@@ -49,13 +49,17 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3000 \
     HOST=0.0.0.0 \
-    CATALOG_DB_PATH=/app/db/catalog.db
+    CATALOG_DB_PATH=/app/db/catalog.db \
+    TRYOUT_STORAGE_PATH=/app/runtime/try-out-sessions \
+    TRYOUT_TEMPLATE_PATH=/app/data/try-out/prompt-template.txt
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/db ./db
+COPY --from=builder /app/data/try-out ./data/try-out
 COPY --from=builder /app/package.json ./package.json
-RUN chown -R node:node /app
+RUN mkdir -p /app/runtime/try-out-sessions \
+    && chown -R node:node /app
 
 USER node
 EXPOSE 3000

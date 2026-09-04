@@ -1,6 +1,7 @@
 <script lang="ts">
   import TechAccordion from '$lib/components/TechAccordion.svelte'
   import CustomizationPanel from '$lib/components/CustomizationPanel.svelte'
+  import TryOutPanel from '$lib/components/TryOutPanel.svelte'
   import type { PageData } from './$types'
 
   let { data }: { data: PageData } = $props()
@@ -61,6 +62,7 @@
 
     <!-- Collapsible technical spec — collapsed by default (DETL-02) -->
     <TechAccordion {agent} />
+    <TryOutPanel {agent} initiallyOpen={data.openTryOut} />
   </div>
 
   <!-- Right column: Customization panel (DETL-03) -->

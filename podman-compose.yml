@@ -12,4 +12,9 @@ services:
       - "3000:3000"
     environment:
       PORT: "3000"
+    volumes:
+      - tryout-sessions:/app/runtime/try-out-sessions:U
     restart: unless-stopped
+
+volumes:
+  tryout-sessions:
