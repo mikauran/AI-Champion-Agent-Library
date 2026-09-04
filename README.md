@@ -35,7 +35,11 @@ git clone https://github.com/aic-consortium/aic-agent-library
 cd aic-agent-library
 npm install
 
-# 2. Start the development server
+# 2. Configure access and email delivery
+cp .env.example .env
+# Edit .env: add the allowed email addresses, Brevo API key and verified sender.
+
+# 3. Start the development server
 #    (runs db schema push, ingests agent files, starts the web app)
 npm run dev
 ```
@@ -146,7 +150,38 @@ Open [http://localhost:3000](http://localhost:3000).
 The catalog data is baked into the image at build time from `data/agents/`.
 To pick up new or changed agent YAML files, rebuild the image.
 
-Env vars the container respects: `PORT` (default `3000`), `CATALOG_DB_PATH`.
+Before starting with Podman, copy `.env.example` to `.env` and replace its
+placeholder values. `podman-compose` loads this gitignored file at runtime; it
+is not copied into the image.
+
+### Passwordless consortium access
+
+All catalog, agent and Try out routes require a passwordless sign-in. Access is
+limited to the exact addresses listed in `AUTH_ALLOWED_EMAILS`. A whitelisted
+user receives a six-digit, single-use code through Brevo's transactional email
+API. Codes expire after 10 minutes and lock after five failed attempts. Code
+requests are limited to three per email address in a 15-minute window.
+
+Required variables in `.env`:
+
+| Variable | Purpose |
+|----------|---------|
+| `AUTH_ALLOWED_EMAILS` | Comma-separated list of exact allowed addresses |
+| `BREVO_API_KEY` | Brevo API key; keep this only in the local/deployment `.env` |
+| `AUTH_EMAIL_FROM` | A sender address verified in Brevo |
+| `AUTH_EMAIL_FROM_NAME` | Display name for the sender |
+| `ORIGIN` | Public base URL, e.g. `http://localhost:3000` locally or the production HTTPS URL |
+| `AUTH_COOKIE_SECURE` | `false` for local HTTP, `true` for production HTTPS |
+
+Authenticated sessions last seven days. Only a random session token is stored
+in an HttpOnly, SameSite=Lax cookie; the server database stores its SHA-256
+hash. With `podman-compose`, login state and rate-limit data persist in the
+separate `auth-data` volume. The public `/health` endpoint remains available for
+container health checks.
+
+Other env vars the container respects: `PORT` (default `3000`),
+`CATALOG_DB_PATH`, `AUTH_DB_PATH`, `TRYOUT_STORAGE_PATH`, and
+`TRYOUT_TEMPLATE_PATH`.
 
 ### Trying out an agent
 
