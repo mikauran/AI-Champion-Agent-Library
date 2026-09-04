@@ -26,15 +26,22 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-# db:push (schema) -> ingest (data/agents/*.yaml -> db/catalog.db) -> vite build
-RUN npm run build
+# The database directory is excluded from the build context. Create it before
+# running Drizzle; drizzle-kit currently reports a missing directory without a
+# failing exit code, so the final query also guards against an empty database.
+RUN mkdir -p db \
+    && npx --no-install drizzle-kit push --force \
+    && npm run ingest \
+    && npx --no-install vite build \
+    && node --input-type=module -e \
+      "import Database from 'better-sqlite3'; const db = new Database('./db/catalog.db', { readonly: true }); db.prepare('SELECT 1 FROM agents LIMIT 1').get(); db.close()"
 
 # @sveltejs/kit and svelte are real runtime dependencies of the built
 # server (adapter-node externalizes them rather than bundling), so they
 # live in "dependencies" in package.json. Everything left in
 # devDependencies (vite's CLI, drizzle-kit, tsx, tailwindcss, vitest, ...)
 # is build-only tooling — prune it before it ships in the runtime image.
-RUN npm prune --omit=dev
+RUN npm prune --omit=dev --ignore-scripts --no-audit --no-fund --offline
 
 # ---- runtime ----------------------------------------------------------
 FROM node:${NODE_VERSION} AS runtime
