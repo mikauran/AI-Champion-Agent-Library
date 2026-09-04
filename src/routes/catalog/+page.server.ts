@@ -33,11 +33,15 @@ export const load: PageServerLoad = async ({ url }) => {
     .all()
 
   // Deserialize JSON arrays stored as text columns
-  const agentList = rows.map(row => ({
-    ...row,
-    toolNames: JSON.parse(row.toolNames) as string[],
-    tags: JSON.parse(row.tags) as string[],
-  }))
+  const agentList = rows.map(row => {
+    const { inputSchema, ...agentRow } = row
+    return {
+      ...agentRow,
+      toolNames: JSON.parse(row.toolNames) as string[],
+      inputFields: JSON.parse(inputSchema ?? '[]'),
+      tags: JSON.parse(row.tags) as string[],
+    }
+  })
 
   // Distinct filter options from actual data
   const allCategories = db

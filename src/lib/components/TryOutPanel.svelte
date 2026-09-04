@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { AgentInputField } from '$lib/spec/index.js'
   import { isTryOutSessionFile, type TryOutSessionFile } from '$lib/try-out.js'
 
   interface Props {
@@ -9,23 +10,47 @@
       llmName: string
       llmTemperature: number | null
       toolNames: string[]
+      inputFields: AgentInputField[]
     }
     initiallyOpen?: boolean
   }
 
+  function initialInputValues(fields: AgentInputField[]): Record<string, string | number | null> {
+    return Object.fromEntries(fields.map(field => [field.key, field.defaultValue]))
+  }
+
   let { agent, initiallyOpen = false }: Props = $props()
-  let isOpen = $state(initiallyOpen)
-  let systemPrompt = $state(agent.systemPrompt)
-  let userPrompt = $state('')
-  let llmName = $state(agent.llmName)
-  let temperature = $state(agent.llmTemperature?.toString() ?? '')
-  let tools = $state(agent.toolNames.join(', '))
+  function getInitialState() {
+    return {
+      isOpen: initiallyOpen,
+      inputValues: initialInputValues(agent.inputFields),
+      systemPrompt: agent.systemPrompt,
+      llmName: agent.llmName,
+      temperature: agent.llmTemperature?.toString() ?? '',
+      tools: agent.toolNames.join(', '),
+    }
+  }
+  const initial = getInitialState()
+  let isOpen = $state(initial.isOpen)
+  let inputValues = $state<Record<string, string | number | null>>(initial.inputValues)
+  let additionalInstructions = $state('')
+  let systemPrompt = $state(initial.systemPrompt)
+  let llmName = $state(initial.llmName)
+  let temperature = $state(initial.temperature)
+  let tools = $state(initial.tools)
   let isSubmitting = $state(false)
   let message = $state('')
   let session = $state<TryOutSessionFile | null>(null)
 
   function parseTools(): string[] {
     return [...new Set(tools.split(',').map(tool => tool.trim()).filter(Boolean))]
+  }
+
+  function updateInputValue(field: AgentInputField, event: Event) {
+    const rawValue = (event.currentTarget as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value
+    inputValues[field.key] = field.type === 'number'
+      ? rawValue === '' ? null : Number(rawValue)
+      : rawValue
   }
 
   async function submit(event: SubmitEvent) {
@@ -47,7 +72,8 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           agentSlug: agent.slug,
-          userPrompt,
+          inputValues,
+          additionalInstructions,
           customization: {
             systemPrompt,
             llmName,
@@ -96,8 +122,13 @@
         throw new Error(`This session belongs to ${parsed.agent.title}, not ${agent.title}.`)
       }
 
+      const restoredInputs = initialInputValues(agent.inputFields)
+      for (const field of agent.inputFields) {
+        if (field.key in parsed.inputValues) restoredInputs[field.key] = parsed.inputValues[field.key]
+      }
+      inputValues = restoredInputs
+      additionalInstructions = parsed.additionalInstructions
       systemPrompt = parsed.customization.systemPrompt
-      userPrompt = parsed.input.userPrompt
       llmName = parsed.customization.llmName
       temperature = parsed.customization.temperature?.toString() ?? ''
       tools = parsed.customization.toolNames.join(', ')
@@ -117,7 +148,7 @@
     <div>
       <h2 class="text-xl font-semibold text-gray-900">Try out this agent</h2>
       <p class="mt-1 text-sm text-gray-600">
-        Customize a prompt and save a portable placeholder session. No agent container is started.
+        Fill in the inputs required by this agent and save a portable placeholder session.
       </p>
     </div>
     <button
@@ -132,77 +163,124 @@
   </div>
 
   {#if isOpen}
-    <form id="try-out-form" class="mt-6 space-y-5" onsubmit={submit}>
-      <div class="grid gap-5 md:grid-cols-2">
+    <form id="try-out-form" class="mt-6 space-y-6" onsubmit={submit}>
+      <fieldset class="space-y-5">
+        <legend class="text-base font-semibold text-gray-900">Required agent inputs</legend>
+        <p class="text-sm text-gray-600">Fields marked with * are required.</p>
+
+        {#if agent.inputFields.length === 0}
+          <p class="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-900">
+            This agent has not declared structured inputs yet.
+          </p>
+        {:else}
+          <div class="grid gap-5 md:grid-cols-2">
+            {#each agent.inputFields as field (field.key)}
+              <label class="block text-sm font-medium text-gray-800 {field.type === 'textarea' ? 'md:col-span-2' : ''}">
+                {field.label}{field.required ? ' *' : ''}{field.unit ? ` (${field.unit})` : ''}
+
+                {#if field.type === 'textarea'}
+                  <textarea
+                    rows="4"
+                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
+                    value={inputValues[field.key] ?? ''}
+                    placeholder={field.placeholder ?? ''}
+                    maxlength="20000"
+                    required={field.required}
+                    aria-label={field.label}
+                    oninput={(event) => updateInputValue(field, event)}
+                  ></textarea>
+                {:else if field.type === 'select'}
+                  <select
+                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
+                    value={inputValues[field.key] ?? ''}
+                    required={field.required}
+                    aria-label={field.label}
+                    onchange={(event) => updateInputValue(field, event)}
+                  >
+                    <option value="">Select an option</option>
+                    {#each field.options as option (option.value)}
+                      <option value={option.value}>{option.label}</option>
+                    {/each}
+                  </select>
+                {:else if field.type === 'number'}
+                  <input
+                    type="number"
+                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
+                    value={inputValues[field.key] ?? ''}
+                    placeholder={field.placeholder ?? ''}
+                    min={field.min ?? undefined}
+                    max={field.max ?? undefined}
+                    step="any"
+                    required={field.required}
+                    aria-label={field.label}
+                    oninput={(event) => updateInputValue(field, event)}
+                  />
+                {:else}
+                  <input
+                    type="text"
+                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
+                    value={inputValues[field.key] ?? ''}
+                    placeholder={field.placeholder ?? ''}
+                    maxlength="20000"
+                    required={field.required}
+                    aria-label={field.label}
+                    oninput={(event) => updateInputValue(field, event)}
+                  />
+                {/if}
+
+                {#if field.description}
+                  <span class="mt-1 block text-xs font-normal text-gray-500">{field.description}</span>
+                {/if}
+              </label>
+            {/each}
+          </div>
+        {/if}
+
         <label class="block text-sm font-medium text-gray-800">
-          Language model
-          <input
+          Additional instructions
+          <textarea
+            rows="3"
             class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
-            bind:value={llmName}
-            maxlength="200"
-            required
-          />
+            bind:value={additionalInstructions}
+            maxlength="20000"
+            placeholder="Optional context or instructions not covered above"
+          ></textarea>
         </label>
-        <label class="block text-sm font-medium text-gray-800">
-          Temperature
-          <input
-            type="number"
-            min="0"
-            max="2"
-            step="0.1"
-            class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
-            bind:value={temperature}
-            placeholder="Model default"
-          />
-        </label>
-      </div>
+      </fieldset>
 
-      <label class="block text-sm font-medium text-gray-800">
-        Tools <span class="font-normal text-gray-500">(comma-separated)</span>
-        <input
-          class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
-          bind:value={tools}
-        />
-      </label>
-
-      <label class="block text-sm font-medium text-gray-800">
-        System prompt
-        <textarea
-          rows="7"
-          class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm font-normal focus:border-indigo-500 focus:ring-indigo-500"
-          bind:value={systemPrompt}
-          maxlength="20000"
-          required
-        ></textarea>
-      </label>
-
-      <label class="block text-sm font-medium text-gray-800">
-        Your input
-        <textarea
-          rows="4"
-          class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
-          bind:value={userPrompt}
-          maxlength="20000"
-          placeholder="Describe what you want the agent to process..."
-          required
-        ></textarea>
-      </label>
+      <details class="rounded-lg border border-gray-200 bg-white p-4">
+        <summary class="cursor-pointer text-sm font-semibold text-gray-900">Advanced agent settings</summary>
+        <div class="mt-4 space-y-5">
+          <div class="grid gap-5 md:grid-cols-2">
+            <label class="block text-sm font-medium text-gray-800">
+              Language model
+              <input class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal" bind:value={llmName} maxlength="200" required />
+            </label>
+            <label class="block text-sm font-medium text-gray-800">
+              Temperature
+              <input type="number" min="0" max="2" step="0.1" class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal" bind:value={temperature} placeholder="Model default" />
+            </label>
+          </div>
+          <label class="block text-sm font-medium text-gray-800">
+            Tools <span class="font-normal text-gray-500">(comma-separated)</span>
+            <input class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal" bind:value={tools} />
+          </label>
+          <label class="block text-sm font-medium text-gray-800">
+            System prompt
+            <textarea rows="7" class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm font-normal" bind:value={systemPrompt} maxlength="20000" required></textarea>
+          </label>
+        </div>
+      </details>
 
       <div class="flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        <button type="submit" disabled={isSubmitting} class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
           {isSubmitting ? 'Processing…' : 'Run placeholder'}
         </button>
         <label class="cursor-pointer rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
           Restore session
           <input type="file" accept="application/json,.json" class="sr-only" onchange={restoreSession} />
         </label>
-        {#if message}
-          <span class="text-sm text-gray-700" role="status">{message}</span>
-        {/if}
+        {#if message}<span class="text-sm text-gray-700" role="status">{message}</span>{/if}
       </div>
     </form>
   {/if}
@@ -211,11 +289,7 @@
     <div class="mt-6 rounded-lg border border-green-200 bg-green-50 p-4">
       <p class="text-sm font-medium text-green-900">Session {session.sessionId}</p>
       <p class="mt-1 text-sm text-green-800">{session.output.content}</p>
-      <button
-        type="button"
-        class="mt-3 rounded-lg border border-green-300 bg-white px-3 py-2 text-sm font-medium text-green-800 hover:bg-green-100"
-        onclick={downloadSession}
-      >
+      <button type="button" class="mt-3 rounded-lg border border-green-300 bg-white px-3 py-2 text-sm font-medium text-green-800 hover:bg-green-100" onclick={downloadSession}>
         Download session JSON
       </button>
     </div>

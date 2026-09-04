@@ -6,5 +6,8 @@ Available tools: {{tools}}
 System instructions:
 {{systemPrompt}}
 
-User input:
-{{userPrompt}}
+Agent inputs:
+{{inputs}}
+
+Additional instructions:
+{{additionalInstructions}}

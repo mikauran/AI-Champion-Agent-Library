@@ -12,6 +12,43 @@ metadata:
     - "bim"
     - "sustainability"
     - "mechanical"
+  input_schema:
+    - key: "bim_snapshot_reference"
+      label: "Current BIM snapshot"
+      type: "text"
+      required: true
+      description: "Model identifier, server path, or URL for the current BIM snapshot"
+    - key: "baseline_model_reference"
+      label: "Baseline energy model"
+      type: "text"
+      required: true
+      description: "Path or URL to the approved IDF or INP baseline"
+    - key: "simulation_engine"
+      label: "Simulation engine"
+      type: "select"
+      required: true
+      default: "energyplus"
+      options:
+        - value: "energyplus"
+          label: "EnergyPlus"
+        - value: "equest"
+          label: "eQUEST"
+    - key: "project_location"
+      label: "Project location"
+      type: "text"
+      required: true
+      placeholder: "City, country"
+    - key: "baseline_eui"
+      label: "Baseline EUI"
+      type: "number"
+      required: false
+      unit: "kWh/m²/year"
+      min: 0
+    - key: "change_scope"
+      label: "Changes to synchronize"
+      type: "textarea"
+      required: true
+      description: "Describe envelope, occupancy, or HVAC changes since the baseline"
 system_prompt: "You are an energy model synchronization agent. Monitor the BIM model for changes to envelope assemblies, window-to-wall ratios, occupancy schedules, and HVAC system assignments. When changes are detected, update the corresponding EnergyPlus IDF or eQUEST INP input files, re-run the simulation, and report EUI delta against the baseline."
 llm_config:
   name: "gpt-4o"

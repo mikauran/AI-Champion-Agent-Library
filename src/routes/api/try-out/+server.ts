@@ -3,11 +3,23 @@ import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { db, agents } from '$lib/server/db.js'
 import { runTryOut } from '$lib/server/try-out.js'
+import { validateInputValues } from '$lib/server/try-out-inputs.js'
+import type { AgentInputField } from '$lib/spec/index.js'
 import type { RequestHandler } from './$types'
+
+const inputValueSchema = z.union([
+  z.string().max(20_000),
+  z.number().finite(),
+  z.null(),
+])
 
 const tryOutRequestSchema = z.object({
   agentSlug: z.string().trim().min(1).max(200),
-  userPrompt: z.string().trim().min(1).max(20_000),
+  inputValues: z.record(z.string(), inputValueSchema).refine(
+    values => Object.keys(values).length <= 100,
+    'Too many input fields',
+  ),
+  additionalInstructions: z.string().max(20_000),
   customization: z.object({
     systemPrompt: z.string().trim().min(1).max(20_000),
     llmName: z.string().trim().min(1).max(200),
@@ -30,7 +42,7 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   const row = db
-    .select({ slug: agents.slug, title: agents.title })
+    .select({ slug: agents.slug, title: agents.title, inputSchema: agents.inputSchema })
     .from(agents)
     .where(eq(agents.slug, parsed.data.agentSlug))
     .get()
@@ -39,8 +51,24 @@ export const POST: RequestHandler = async ({ request }) => {
     return json({ message: 'Agent not found.' }, { status: 404 })
   }
 
+  let inputFields: AgentInputField[]
   try {
-    const session = await runTryOut(row, parsed.data)
+    inputFields = JSON.parse(row.inputSchema) as AgentInputField[]
+  } catch {
+    console.error(`Invalid input schema stored for agent ${row.slug}`)
+    return json({ message: 'The agent input schema is invalid.' }, { status: 500 })
+  }
+
+  const validatedInputs = validateInputValues(inputFields, parsed.data.inputValues)
+  if ('message' in validatedInputs) {
+    return json({ message: validatedInputs.message }, { status: 400 })
+  }
+
+  try {
+    const session = await runTryOut(
+      { slug: row.slug, title: row.title, inputFields },
+      { ...parsed.data, inputValues: validatedInputs.values },
+    )
     return json(session, { status: 201 })
   } catch (err) {
     console.error('Try out processing failed', err)

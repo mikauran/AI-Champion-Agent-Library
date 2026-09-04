@@ -12,6 +12,50 @@ metadata:
     - "nec"
     - "load-calculation"
     - "bim"
+  input_schema:
+    - key: "project_name"
+      label: "Project name"
+      type: "text"
+      required: true
+      placeholder: "e.g. Central Office Renovation"
+    - key: "bim_model_reference"
+      label: "BIM model reference"
+      type: "text"
+      required: true
+      description: "Model identifier, server path, or URL containing circuit data"
+    - key: "panel_identifier"
+      label: "Panel identifier"
+      type: "text"
+      required: true
+      placeholder: "e.g. LP-2A"
+    - key: "code_standard"
+      label: "Electrical code"
+      type: "select"
+      required: true
+      default: "nec-2023"
+      options:
+        - value: "nec-2023"
+          label: "NEC 2023"
+        - value: "nec-2020"
+          label: "NEC 2020"
+        - value: "iec-60364"
+          label: "IEC 60364"
+    - key: "system_voltage"
+      label: "System voltage"
+      type: "select"
+      required: true
+      options:
+        - value: "120-208v-3ph"
+          label: "120/208 V, 3-phase"
+        - value: "277-480v-3ph"
+          label: "277/480 V, 3-phase"
+        - value: "230-400v-3ph"
+          label: "230/400 V, 3-phase"
+    - key: "design_notes"
+      label: "Design notes"
+      type: "textarea"
+      required: false
+      description: "Known demand factors, spare capacity requirements, or exceptions"
 system_prompt: "You are an electrical panel scheduling agent. Extract circuit data from BIM models, apply NEC 2023 demand factors for the load type (lighting, receptacles, HVAC, motors), calculate total connected and demand loads, check against panel ampacity, and flag overloaded panels. Export finalized schedules as structured data and PDF."
 llm_config:
   name: "gpt-4o"

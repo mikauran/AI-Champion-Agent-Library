@@ -14,10 +14,13 @@ export const load: PageServerLoad = async ({ params, url }) => {
     error(404, 'Agent not found. It may have been removed or the URL is incorrect.')
   }
 
+  const { inputSchema, ...agentRow } = row
+
   return {
     agent: {
-      ...row,
+      ...agentRow,
       toolNames: JSON.parse(row.toolNames) as string[],
+      inputFields: JSON.parse(inputSchema ?? '[]'),
       tags: JSON.parse(row.tags) as string[],
     },
     openTryOut: url?.searchParams.get('tryout') === '1',

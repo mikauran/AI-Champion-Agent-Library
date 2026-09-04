@@ -67,6 +67,21 @@ metadata:
   maturity: "experimental"      # experimental | beta | production
   tags:
     - "your-tag"
+  input_schema:
+    - key: "project_name"
+      label: "Project name"
+      type: "text"               # text | textarea | number | select
+      required: true
+      description: "Project to process"
+    - key: "building_type"
+      label: "Building type"
+      type: "select"
+      required: true
+      options:
+        - value: "office"
+          label: "Office"
+        - value: "residential"
+          label: "Residential"
 system_prompt: "You are a ..."
 llm_config:
   name: "claude-sonnet-4-6"
@@ -135,10 +150,11 @@ Env vars the container respects: `PORT` (default `3000`), `CATALOG_DB_PATH`.
 
 ### Trying out an agent
 
-Each catalog card has a **Try out** action. It opens a form populated with the
-agent's system prompt, model, temperature, and tools. Submitting the form creates
-a UUID session and processes requests serially through the current placeholder
-processor. No agent container or language model is started yet.
+Each catalog card has a **Try out** action. It opens a form generated from the
+agent's `metadata.input_schema`, along with advanced settings for the system
+prompt, model, temperature, and tools. Submitting the form creates a UUID session
+and processes requests serially through the current placeholder processor. No
+agent container or language model is started yet.
 
 The server stores both the rendered prompt and a versioned session JSON file.
 The UI can download that JSON and restore it later. With `podman-compose`, these

@@ -2,10 +2,12 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { TryOutRequest, TryOutSessionFile } from '$lib/try-out.js'
+import type { AgentInputField } from '$lib/spec/index.js'
 
 interface TryOutAgent {
   slug: string
   title: string
+  inputFields: AgentInputField[]
 }
 
 interface TryOutServiceOptions {
@@ -17,6 +19,14 @@ const PLACEHOLDER_OUTPUT =
   'Placeholder processing completed. The customized prompt was queued and saved on the server; no agent container or language model was started.'
 
 function renderTemplate(template: string, agent: TryOutAgent, request: TryOutRequest): string {
+  const inputs = agent.inputFields
+    .map(field => {
+      const value = request.inputValues[field.key]
+      const displayValue = value === null || value === '' ? '(not provided)' : String(value)
+      const unit = field.unit && value !== null && value !== '' ? ` ${field.unit}` : ''
+      return `- ${field.label}: ${displayValue}${unit}`
+    })
+    .join('\n')
   const replacements: Record<string, string> = {
     '{{agentTitle}}': agent.title,
     '{{agentSlug}}': agent.slug,
@@ -24,7 +34,8 @@ function renderTemplate(template: string, agent: TryOutAgent, request: TryOutReq
     '{{llmName}}': request.customization.llmName,
     '{{temperature}}': request.customization.temperature?.toString() ?? 'default',
     '{{tools}}': request.customization.toolNames.join(', ') || 'none',
-    '{{userPrompt}}': request.userPrompt,
+    '{{inputs}}': inputs,
+    '{{additionalInstructions}}': request.additionalInstructions || '(none)',
   }
 
   return Object.entries(replacements).reduce(
@@ -51,11 +62,12 @@ export function createTryOutService(options: TryOutServiceOptions) {
       const renderedPrompt = renderTemplate(template, agent, request)
       const completedAt = new Date().toISOString()
       const session: TryOutSessionFile = {
-        formatVersion: 1,
+        formatVersion: 2,
         sessionId,
-        agent,
+        agent: { slug: agent.slug, title: agent.title },
         customization: request.customization,
-        input: { userPrompt: request.userPrompt },
+        inputValues: request.inputValues,
+        additionalInstructions: request.additionalInstructions,
         renderedPrompt,
         output: {
           kind: 'placeholder',
