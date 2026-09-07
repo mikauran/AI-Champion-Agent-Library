@@ -162,10 +162,15 @@ user receives a six-digit, single-use code through Brevo's transactional email
 API. Codes expire after 10 minutes and lock after five failed attempts. Code
 requests are limited to three per email address in a 15-minute window.
 
-Required variables in `.env`:
+Authentication is enabled by default. To allow access without signing in, set
+`AUTH_ENABLED=false` in `.env` and restart the application. When authentication
+is disabled, the email whitelist and Brevo settings are not used.
+
+Authentication variables in `.env`:
 
 | Variable | Purpose |
 |----------|---------|
+| `AUTH_ENABLED` | Optional; set to `false` to disable authentication (default: enabled) |
 | `AUTH_ALLOWED_EMAILS` | Comma-separated list of exact allowed addresses |
 | `BREVO_API_KEY` | Brevo API key; keep this only in the local/deployment `.env` |
 | `AUTH_EMAIL_FROM` | A sender address verified in Brevo |
