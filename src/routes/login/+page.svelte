@@ -43,7 +43,6 @@
             type="text"
             inputmode="numeric"
             autocomplete="one-time-code"
-            pattern="[0-9]{6}"
             maxlength="6"
             required
             class="mt-2 block w-full rounded-md border border-gray-300 px-3 py-2 text-lg tracking-[0.3em] shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
