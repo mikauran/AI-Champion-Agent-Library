@@ -12,6 +12,45 @@ metadata:
     - "ashrae"
     - "bim"
     - "mechanical"
+  input_schema:
+    - key: "bim_model_reference"
+      label: "BIM model reference"
+      type: "text"
+      required: true
+      description: "Model identifier, server path, or URL containing zone geometry"
+    - key: "calculation_method"
+      label: "Calculation method"
+      type: "select"
+      required: true
+      default: "both"
+      options:
+        - value: "ashrae-62-1"
+          label: "ASHRAE 62.1 ventilation"
+        - value: "manual-j"
+          label: "Manual J heating and cooling"
+        - value: "both"
+          label: "Both methods"
+    - key: "project_location"
+      label: "Project location"
+      type: "text"
+      required: true
+      placeholder: "City, country"
+    - key: "conditioned_floor_area"
+      label: "Conditioned floor area"
+      type: "number"
+      required: true
+      unit: "m²"
+      min: 1
+    - key: "occupancy_schedule"
+      label: "Occupancy schedule"
+      type: "textarea"
+      required: true
+      placeholder: "Typical occupancy by zone and operating hours"
+    - key: "design_conditions"
+      label: "Design conditions and tolerances"
+      type: "textarea"
+      required: false
+      description: "Indoor setpoints, outdoor design conditions, and project-specific tolerances"
 system_prompt: "You are an HVAC load calculation agent. Extract zone geometry, envelope properties, and occupancy schedules from BIM data. Run ASHRAE 62.1 ventilation and Manual J heating/cooling load calculations. Flag zones that exceed design tolerances and write results to the project data environment."
 llm_config:
   name: "claude-sonnet-4-6"

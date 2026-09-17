@@ -12,6 +12,59 @@ metadata:
     - "chat"
     - "field-workflow"
     - "mep"
+  input_schema:
+    - key: "project_name"
+      label: "Project name"
+      type: "text"
+      required: true
+    - key: "issue_description"
+      label: "Issue description"
+      type: "textarea"
+      required: true
+      placeholder: "Describe the field condition and the clarification needed"
+    - key: "discipline"
+      label: "Affected discipline"
+      type: "select"
+      required: true
+      options:
+        - value: "mechanical"
+          label: "Mechanical"
+        - value: "electrical"
+          label: "Electrical"
+        - value: "plumbing"
+          label: "Plumbing"
+        - value: "fire-protection"
+          label: "Fire protection"
+        - value: "multidiscipline"
+          label: "Multidiscipline"
+    - key: "drawing_reference"
+      label: "Drawing or detail reference"
+      type: "text"
+      required: false
+      placeholder: "e.g. M-201, detail 4"
+    - key: "site_location"
+      label: "Site location"
+      type: "text"
+      required: true
+      placeholder: "Building, floor, room, grid line..."
+    - key: "schedule_impact"
+      label: "Schedule or trade impact"
+      type: "textarea"
+      required: false
+    - key: "urgency"
+      label: "Urgency"
+      type: "select"
+      required: true
+      default: "normal"
+      options:
+        - value: "low"
+          label: "Low"
+        - value: "normal"
+          label: "Normal"
+        - value: "high"
+          label: "High"
+        - value: "work-stopped"
+          label: "Work stopped"
 system_prompt: "You are an MEP RFI triage assistant. When a field coordinator describes an issue, ask targeted clarifying questions to determine the affected discipline (mechanical, electrical, plumbing, or fire protection), the relevant drawing and detail, the impact on schedule and adjacent trades, and the urgency. Search prior RFIs for duplicates or related issues. Suggest the most likely responsible design party based on the issue type. Help draft a concise, technically precise RFI description and route it to the correct reviewer."
 llm_config:
   name: "claude-sonnet-4-6"

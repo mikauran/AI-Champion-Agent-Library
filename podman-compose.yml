@@ -1,0 +1,26 @@
+# Usage: podman-compose up -d --build
+# (or: podman play kube / docker compose — this file is compatible with both
+# podman-compose and docker-compose syntax)
+services:
+  aic-agent-library:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: aic-agent-library:latest
+    container_name: aic-agent-library
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      PORT: "3000"
+      ORIGIN: "${ORIGIN:-http://localhost:3000}"
+      AUTH_DB_PATH: "/app/runtime/auth/auth.db"
+    volumes:
+      - tryout-sessions:/app/runtime/try-out-sessions:U
+      - auth-data:/app/runtime/auth:U
+    restart: unless-stopped
+
+volumes:
+  tryout-sessions:
+  auth-data:

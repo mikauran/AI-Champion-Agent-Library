@@ -10,6 +10,21 @@ metadata:
     - "nlp"
     - "classification"
     - "customer-support"
+  input_schema:
+    - key: "ticket_text"
+      label: "Ticket text"
+      type: "textarea"
+      required: true
+      description: "The customer message to classify and route"
+    - key: "customer_tier"
+      label: "Customer tier"
+      type: "select"
+      required: false
+      options:
+        - value: "standard"
+          label: "Standard"
+        - value: "priority"
+          label: "Priority"
 system_prompt: "You are a customer support triage agent. Analyze incoming tickets and route them to the correct team."
 llm_config:
   name: "gpt-4o"

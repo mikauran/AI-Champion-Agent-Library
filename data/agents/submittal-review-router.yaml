@@ -12,6 +12,49 @@ metadata:
     - "workflow"
     - "mep"
     - "review"
+  input_schema:
+    - key: "project_name"
+      label: "Project name"
+      type: "text"
+      required: true
+    - key: "submittal_reference"
+      label: "Submittal reference"
+      type: "text"
+      required: true
+      placeholder: "e.g. SUB-23-041"
+    - key: "product_type"
+      label: "Product or equipment type"
+      type: "text"
+      required: true
+      placeholder: "e.g. air handling unit"
+    - key: "discipline"
+      label: "Responsible discipline"
+      type: "select"
+      required: true
+      options:
+        - value: "mechanical"
+          label: "Mechanical"
+        - value: "electrical"
+          label: "Electrical"
+        - value: "plumbing"
+          label: "Plumbing"
+        - value: "fire-protection"
+          label: "Fire protection"
+    - key: "specification_section"
+      label: "Specification section"
+      type: "text"
+      required: true
+      placeholder: "e.g. 23 73 13"
+    - key: "submittal_document_reference"
+      label: "Submittal document reference"
+      type: "text"
+      required: true
+      description: "Document identifier, server path, or URL to the PDF package"
+    - key: "review_notes"
+      label: "Review instructions"
+      type: "textarea"
+      required: false
+      description: "Known substitutions, critical parameters, or routing notes"
 system_prompt: "You are a submittal review routing agent for MEP projects. Parse incoming product submittal PDFs to extract key performance parameters (CFM, BTU, voltage, GPM, etc.). Compare extracted values against the project specification section for that product type. Identify compliant, non-compliant, and unverifiable parameters. Assign to the responsible discipline engineer with a pre-populated checklist and highlighted discrepancies."
 llm_config:
   name: "claude-sonnet-4-6"

@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS agents (
   llm_max_tokens INTEGER,
   llm_top_p REAL,
   tool_names TEXT NOT NULL DEFAULT '[]',
+  input_schema TEXT NOT NULL DEFAULT '[]',
   requires_human_approval INTEGER NOT NULL DEFAULT 0,
   category TEXT,
   github_url TEXT,
@@ -96,6 +97,7 @@ describe('ingest', () => {
     expect(row.llm_name).toBe('gpt-4o')
     expect(row.requires_human_approval).toBe(0)
     expect(JSON.parse(row.tool_names as string).length).toBe(2)
+    expect(JSON.parse(row.input_schema as string).length).toBe(2)
   })
 
   it('fresh insert defaults try_it_out columns to safe values', async () => {

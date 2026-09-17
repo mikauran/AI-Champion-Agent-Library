@@ -13,6 +13,7 @@ export const agents = sqliteTable('agents', {
   llmMaxTokens:          integer('llm_max_tokens'),
   llmTopP:               real('llm_top_p'),
   toolNames:             text('tool_names').notNull().default('[]'),  // JSON-serialized string[]
+  inputSchema:           text('input_schema').notNull().default('[]'), // JSON-serialized AgentInputField[]
   requiresHumanApproval: integer('requires_human_approval', { mode: 'boolean' }).notNull().default(false),
   category:              text('category'),
   githubUrl:             text('github_url'),

@@ -8,6 +8,27 @@ export interface AgentLlm {
   topP: number | null
 }
 
+export type AgentInputFieldType = 'text' | 'textarea' | 'number' | 'select'
+
+export interface AgentInputOption {
+  value: string
+  label: string
+}
+
+export interface AgentInputField {
+  key: string
+  label: string
+  type: AgentInputFieldType
+  required: boolean
+  description: string | null
+  placeholder: string | null
+  unit: string | null
+  defaultValue: string | number | null
+  options: AgentInputOption[]
+  min: number | null
+  max: number | null
+}
+
 export interface AgentRecord {
   // Identity
   slug: string          // URL-safe identifier derived from name; primary key
@@ -23,6 +44,7 @@ export interface AgentRecord {
 
   // Capabilities
   toolNames: string[]              // Names of tools the agent uses
+  inputFields: AgentInputField[]   // Structured inputs required by the agent
   requiresHumanApproval: boolean   // From `human_in_the_loop`
 
   // Catalog metadata (consortium conventions in AgentSpec `metadata`)

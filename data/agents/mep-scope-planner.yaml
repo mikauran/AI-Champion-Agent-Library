@@ -12,6 +12,53 @@ metadata:
     - "chat"
     - "project-kickoff"
     - "mep"
+  input_schema:
+    - key: "project_name"
+      label: "Project name"
+      type: "text"
+      required: true
+    - key: "building_type"
+      label: "Building type"
+      type: "select"
+      required: true
+      options:
+        - value: "office"
+          label: "Office"
+        - value: "residential"
+          label: "Residential"
+        - value: "education"
+          label: "Education"
+        - value: "healthcare"
+          label: "Healthcare"
+        - value: "industrial"
+          label: "Industrial"
+        - value: "other"
+          label: "Other"
+    - key: "gross_floor_area"
+      label: "Gross floor area"
+      type: "number"
+      required: true
+      unit: "m²"
+      min: 1
+    - key: "project_location"
+      label: "Project location"
+      type: "text"
+      required: true
+      placeholder: "City, country"
+    - key: "occupancy_classification"
+      label: "Occupancy classification"
+      type: "text"
+      required: true
+    - key: "sustainability_goals"
+      label: "Owner sustainability goals"
+      type: "textarea"
+      required: false
+      placeholder: "Certifications, energy targets, carbon goals..."
+    - key: "special_systems"
+      label: "Special systems"
+      type: "textarea"
+      required: false
+      placeholder: "Labs, data centers, cleanrooms, process systems..."
 system_prompt: "You are an MEP scope planning assistant. Guide the engineer through a structured kickoff conversation to capture building type, gross square footage, occupancy classification, climate zone, applicable codes, owner sustainability goals, and any special systems (labs, data centers, cleanrooms). Ask one topic at a time, confirm understanding, and at the end produce a structured scope narrative covering mechanical, electrical, and plumbing systems, plus a list of deliverables and a preliminary fee basis table."
 llm_config:
   name: "claude-sonnet-4-6"

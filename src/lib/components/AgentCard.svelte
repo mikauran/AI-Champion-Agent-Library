@@ -12,11 +12,7 @@
   let { agent }: Props = $props()
 </script>
 
-<a
-  href="/agents/{agent.slug}"
-  class="block rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
-  aria-label="{agent.title} — view agent details"
->
+<article class="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
   <div class="flex items-start justify-between gap-2 mb-2">
     <h3 class="font-semibold text-gray-900 text-lg leading-snug">{agent.title}</h3>
     {#if agent.maturityStatus === 'production'}
@@ -38,4 +34,20 @@
       {/each}
     </div>
   {/if}
-</a>
+  <div class="mt-auto flex items-center gap-4 pt-5">
+    <a
+      href="/agents/{agent.slug}"
+      class="text-sm font-medium text-gray-700 hover:text-indigo-700 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-600"
+      aria-label="{agent.title} — view agent details"
+    >
+      View details
+    </a>
+    <a
+      href="/agents/{agent.slug}?tryout=1#try-out"
+      class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+      aria-label="Try out {agent.title}"
+    >
+      Try out
+    </a>
+  </div>
+</article>

@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { error } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, url }) => {
   const row = db
     .select()
     .from(agents)
@@ -14,11 +14,15 @@ export const load: PageServerLoad = async ({ params }) => {
     error(404, 'Agent not found. It may have been removed or the URL is incorrect.')
   }
 
+  const { inputSchema, ...agentRow } = row
+
   return {
     agent: {
-      ...row,
+      ...agentRow,
       toolNames: JSON.parse(row.toolNames) as string[],
+      inputFields: JSON.parse(inputSchema ?? '[]'),
       tags: JSON.parse(row.tags) as string[],
     },
+    openTryOut: url?.searchParams.get('tryout') === '1',
   }
 }

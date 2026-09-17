@@ -12,6 +12,45 @@ metadata:
     - "ipc"
     - "pipe-sizing"
     - "bim"
+  input_schema:
+    - key: "bim_model_reference"
+      label: "BIM model reference"
+      type: "text"
+      required: true
+      description: "Model identifier, server path, or URL containing plumbing fixtures"
+    - key: "plumbing_code"
+      label: "Plumbing code"
+      type: "select"
+      required: true
+      default: "ipc-2024"
+      options:
+        - value: "ipc-2024"
+          label: "IPC 2024"
+        - value: "ipc-2021"
+          label: "IPC 2021"
+        - value: "upc-2024"
+          label: "UPC 2024"
+    - key: "building_type"
+      label: "Building type"
+      type: "text"
+      required: true
+      placeholder: "e.g. office, hospital, residential"
+    - key: "floor_count"
+      label: "Number of floors"
+      type: "number"
+      required: true
+      min: 1
+      max: 200
+    - key: "riser_diagram_reference"
+      label: "Riser diagram reference"
+      type: "text"
+      required: false
+      description: "Document identifier, server path, or URL for comparison"
+    - key: "sizing_notes"
+      label: "Sizing assumptions"
+      type: "textarea"
+      required: false
+      description: "Known diversity factors, pressure constraints, or local amendments"
 system_prompt: "You are a plumbing sizing agent. Extract fixture data from BIM models, assign fixture unit (FU) values per IPC Table 709.1, aggregate FU counts per riser and branch, apply Hunter's curve to determine flow rates, and size supply and drain pipes. Flag undersized pipes and discrepancies between model and riser diagram."
 llm_config:
   name: "claude-sonnet-4-6"

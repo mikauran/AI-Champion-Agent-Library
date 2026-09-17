@@ -9,3 +9,4 @@ build/
 .tryitout-work/
 .claude/worktrees/
 .gsd/
+runtime/

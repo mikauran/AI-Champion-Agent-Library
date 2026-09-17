@@ -35,7 +35,11 @@ git clone https://github.com/aic-consortium/aic-agent-library
 cd aic-agent-library
 npm install
 
-# 2. Start the development server
+# 2. Configure access and email delivery
+cp .env.example .env
+# Edit .env: add the allowed email addresses, Brevo API key and verified sender.
+
+# 3. Start the development server
 #    (runs db schema push, ingests agent files, starts the web app)
 npm run dev
 ```
@@ -67,6 +71,21 @@ metadata:
   maturity: "experimental"      # experimental | beta | production
   tags:
     - "your-tag"
+  input_schema:
+    - key: "project_name"
+      label: "Project name"
+      type: "text"               # text | textarea | number | select
+      required: true
+      description: "Project to process"
+    - key: "building_type"
+      label: "Building type"
+      type: "select"
+      required: true
+      options:
+        - value: "office"
+          label: "Office"
+        - value: "residential"
+          label: "Residential"
 system_prompt: "You are a ..."
 llm_config:
   name: "claude-sonnet-4-6"
@@ -105,6 +124,86 @@ Re-running ingest on an existing agent ID updates the record — it never create
 |-------|-------------|
 | Search | Natural language + keyword search, results update as you type |
 | Customization | "Customize" entry point with wizard flows for well-defined configuration patterns |
+
+---
+
+## Deploying with Podman
+
+The repo includes a `Containerfile`, `.containerignore`, and `podman-compose.yml`
+for running the built server in a container.
+
+```bash
+# Build the image (multi-stage: installs deps, runs the full build
+# pipeline — schema push, YAML ingest, vite build — then copies the
+# result into a slim runtime image)
+podman build -t aic-agent-library -f Containerfile .
+
+# Run it
+podman run -d --name aic-agent-library -p 3000:3000 aic-agent-library
+
+# Or with podman-compose
+podman-compose up -d --build
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+The catalog data is baked into the image at build time from `data/agents/`.
+To pick up new or changed agent YAML files, rebuild the image.
+
+Before starting with Podman, copy `.env.example` to `.env` and replace its
+placeholder values. `podman-compose` loads this gitignored file at runtime; it
+is not copied into the image.
+
+### Passwordless consortium access
+
+All catalog, agent and Try out routes require a passwordless sign-in. Access is
+limited to the exact addresses listed in `AUTH_ALLOWED_EMAILS`. A whitelisted
+user receives a six-digit, single-use code through Brevo's transactional email
+API. Codes expire after 10 minutes and lock after five failed attempts. Code
+requests are limited to three per email address in a 15-minute window.
+
+Authentication is enabled by default. To allow access without signing in, set
+`AUTH_ENABLED=false` in `.env` and restart the application. When authentication
+is disabled, the email whitelist and Brevo settings are not used.
+
+Authentication variables in `.env`:
+
+| Variable | Purpose |
+|----------|---------|
+| `AUTH_ENABLED` | Optional; set to `false` to disable authentication (default: enabled) |
+| `AUTH_ALLOWED_EMAILS` | Comma-separated list of exact allowed addresses |
+| `BREVO_API_KEY` | Brevo API key; keep this only in the local/deployment `.env` |
+| `AUTH_EMAIL_FROM` | A sender address verified in Brevo |
+| `AUTH_EMAIL_FROM_NAME` | Display name for the sender |
+| `ORIGIN` | Public base URL, e.g. `http://localhost:3000` locally or the production HTTPS URL |
+| `AUTH_COOKIE_SECURE` | `false` for local HTTP, `true` for production HTTPS |
+
+Authenticated sessions last seven days. Only a random session token is stored
+in an HttpOnly, SameSite=Lax cookie; the server database stores its SHA-256
+hash. With `podman-compose`, login state and rate-limit data persist in the
+separate `auth-data` volume. The public `/health` endpoint remains available for
+container health checks.
+
+Other env vars the container respects: `PORT` (default `3000`),
+`CATALOG_DB_PATH`, `AUTH_DB_PATH`, `TRYOUT_STORAGE_PATH`, and
+`TRYOUT_TEMPLATE_PATH`.
+
+### Trying out an agent
+
+Each catalog card has a **Try out** action. It opens a form generated from the
+agent's `metadata.input_schema`, along with advanced settings for the system
+prompt, model, temperature, and tools. Submitting the form creates a UUID session
+and processes requests serially through the current placeholder processor. No
+agent container or language model is started yet.
+
+The server stores both the rendered prompt and a versioned session JSON file.
+The UI can download that JSON and restore it later. With `podman-compose`, these
+files are persisted in the `tryout-sessions` named volume. The relevant env vars
+are `TRYOUT_STORAGE_PATH` and `TRYOUT_TEMPLATE_PATH`.
+
+The runtime image only ships production dependencies (`npm prune --omit=dev`
+after the build) — build-only tooling like `vite`'s CLI, `drizzle-kit`, and
+`tsx` never reaches the running container.
 
 ---
 
