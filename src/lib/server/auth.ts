@@ -210,16 +210,20 @@ export class AuthService {
 
   getSession(token: string): { email: string; expiresAt: number } | null {
     if (!token) return null
+    const hash = tokenHash(token)
     const now = this.now()
     const row = this.db
       .prepare('SELECT email, expires_at FROM login_sessions WHERE token_hash = ?')
-      .get(tokenHash(token)) as { email: string; expires_at: number } | undefined
+      .get(hash) as { email: string; expires_at: number } | undefined
     if (!row) return null
     if (row.expires_at < now) {
-      this.db.prepare('DELETE FROM login_sessions WHERE token_hash = ?').run(tokenHash(token))
+      this.db.prepare('DELETE FROM login_sessions WHERE token_hash = ?').run(hash)
       return null
     }
-    return { email: row.email, expiresAt: row.expires_at }
+
+    const expiresAt = now + SESSION_LIFETIME_MS
+    this.db.prepare('UPDATE login_sessions SET expires_at = ? WHERE token_hash = ?').run(expiresAt, hash)
+    return { email: row.email, expiresAt }
   }
 
   deleteSession(token: string): void {

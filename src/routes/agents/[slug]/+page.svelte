@@ -1,12 +1,12 @@
 <script lang="ts">
   import TechAccordion from '$lib/components/TechAccordion.svelte'
   import CustomizationPanel from '$lib/components/CustomizationPanel.svelte'
-  import TryOutPanel from '$lib/components/TryOutPanel.svelte'
+  import TryItOutPanel from '$lib/components/TryItOutPanel.svelte'
   import type { PageData } from './$types'
 
   let { data }: { data: PageData } = $props()
   let { agent } = data
-  let tryItOutOpen = $state(false)
+  let tryItOutOpen = $state(Boolean(data.openTryOut))
 </script>
 
 <svelte:head>
@@ -74,7 +74,7 @@
       </div>
 
       {#if agent.tryItOutMode === 'runnable'}
-        <div class="mt-6">
+        <div id="try-out" class="mt-6">
           <button
             type="button"
             onclick={() => (tryItOutOpen = !tryItOutOpen)}
@@ -100,7 +100,6 @@
 
     <!-- Collapsible technical spec — collapsed by default (DETL-02) -->
     <TechAccordion {agent} />
-    <TryOutPanel {agent} initiallyOpen={data.openTryOut} />
   </div>
 
   <!-- Right column: Customization panel (DETL-03) -->

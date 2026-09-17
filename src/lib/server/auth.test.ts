@@ -55,6 +55,25 @@ describe('AuthService', () => {
     auth.close()
   })
 
+  it('keeps an actively used session alive with sliding expiration', async () => {
+    let now = 1_000_000
+    const { auth, sent } = service({ now: () => now })
+    const challenge = await auth.requestLoginCode('member@example.org')
+    const session = auth.verifyLoginCode(challenge.challengeId, challenge.email, sent[0].code)
+
+    now += 6 * 24 * 60 * 60 * 1000
+    const firstRefresh = auth.getSession(session.token)
+    expect(firstRefresh?.expiresAt).toBe(now + 7 * 24 * 60 * 60 * 1000)
+    expect(firstRefresh?.expiresAt).toBeGreaterThan(session.expiresAt)
+
+    now += 6 * 24 * 60 * 60 * 1000
+    expect(auth.getSession(session.token)).toMatchObject({ email: 'member@example.org' })
+
+    now += 7 * 24 * 60 * 60 * 1000 + 1
+    expect(auth.getSession(session.token)).toBeNull()
+    auth.close()
+  })
+
   it('expires login codes after ten minutes', async () => {
     let now = 1_000_000
     const { auth, sent } = service({ now: () => now })

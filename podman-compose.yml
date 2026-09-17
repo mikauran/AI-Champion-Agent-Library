@@ -17,7 +17,7 @@ services:
       ORIGIN: "${ORIGIN:-http://localhost:3000}"
       AUTH_DB_PATH: "/app/runtime/auth/auth.db"
     volumes:
-      - tryout-sessions:/app/runtime/try-out-sessions:U
+      - tryout-sessions:/app/runtime/tryitout-work:U
       - auth-data:/app/runtime/auth:U
     restart: unless-stopped
 

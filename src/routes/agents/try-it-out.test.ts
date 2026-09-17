@@ -26,8 +26,8 @@ const baseAgent = {
   tryItOutTaskTemplate: null,
 }
 
-function renderPage(overrides: Partial<typeof baseAgent> = {}) {
-  return render(Page, { props: { data: { agent: { ...baseAgent, ...overrides } } } })
+function renderPage(overrides: Partial<typeof baseAgent> = {}, openTryOut = false) {
+  return render(Page, { props: { data: { agent: { ...baseAgent, ...overrides }, openTryOut } } })
 }
 
 describe('Try It Out affordance', () => {
@@ -73,6 +73,13 @@ describe('Try It Out affordance', () => {
     const buttons = Array.from(container.querySelectorAll('button'))
     const runButton = buttons.find((b) => (b.textContent ?? '').trim() === 'Run')
     expect(runButton).toBeUndefined()
+  })
+
+  it('opens the runnable panel from the catalog deep link', () => {
+    const { container } = renderPage({ tryItOutMode: 'runnable' }, true)
+
+    expect(container.querySelector('#tryitout-task')).not.toBeNull()
+    expect(container.querySelector('[aria-expanded="true"]')).not.toBeNull()
   })
 
   it('runnable mode renders an enabled "Try it out" toggle with a down arrow', () => {

@@ -6,10 +6,11 @@
   "scripts": {
     "test": "vitest run",
     "ingest": "tsx scripts/ingest.ts",
+    "tryout:configure": "tsx scripts/set-try-it-out-mode.ts",
     "db:push": "drizzle-kit push",
-    "build": "npm run db:push && npm run ingest && vite build",
+    "build": "npm run db:push && npm run ingest && npm run tryout:configure && vite build",
     "preview": "node build",
-    "dev": "npm run db:push && npm run ingest && vite dev"
+    "dev": "npm run db:push && npm run ingest && npm run tryout:configure && vite dev"
   },
   "keywords": [],
   "author": "",

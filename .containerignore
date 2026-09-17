@@ -11,3 +11,4 @@ dist/
 prototypes/
 docs/
 *.md
+!data/tryitout-prompts/**/skill.md

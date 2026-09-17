@@ -32,6 +32,7 @@ COPY . .
 RUN mkdir -p db \
     && npx --no-install drizzle-kit push --force \
     && npm run ingest \
+    && npm run tryout:configure \
     && npx --no-install vite build \
     && node --input-type=module -e \
       "import Database from 'better-sqlite3'; const db = new Database('./db/catalog.db', { readonly: true }); db.prepare('SELECT 1 FROM agents LIMIT 1').get(); db.close()"
@@ -51,15 +52,15 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     CATALOG_DB_PATH=/app/db/catalog.db \
     AUTH_DB_PATH=/app/runtime/auth/auth.db \
-    TRYOUT_STORAGE_PATH=/app/runtime/try-out-sessions \
-    TRYOUT_TEMPLATE_PATH=/app/data/try-out/prompt-template.txt
+    TRYITOUT_WORK_DIR=/app/runtime/tryitout-work \
+    TRYITOUT_PROMPTS_DIR=/app/data/tryitout-prompts
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/db ./db
-COPY --from=builder /app/data/try-out ./data/try-out
+COPY --from=builder /app/data/tryitout-prompts ./data/tryitout-prompts
 COPY --from=builder /app/package.json ./package.json
-RUN mkdir -p /app/runtime/try-out-sessions /app/runtime/auth \
+RUN mkdir -p /app/runtime/tryitout-work /app/runtime/auth \
     && chown -R node:node /app
 
 USER node

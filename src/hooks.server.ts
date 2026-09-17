@@ -1,5 +1,5 @@
 import { json, redirect, type Handle } from '@sveltejs/kit'
-import { AUTH_COOKIE_NAME, getAuthService } from '$lib/server/auth'
+import { AUTH_COOKIE_NAME, authCookieOptions, getAuthService } from '$lib/server/auth'
 import { isAuthenticationEnabled } from '$lib/server/auth-config'
 
 const PUBLIC_ROUTES = new Set(['/login', '/health'])
@@ -16,6 +16,9 @@ export const handle: Handle = async ({ event, resolve }) => {
   const token = event.cookies.get(AUTH_COOKIE_NAME)
   const session = token ? getAuthService().getSession(token) : null
   event.locals.user = session ? { email: session.email } : null
+  if (token && session) {
+    event.cookies.set(AUTH_COOKIE_NAME, token, authCookieOptions(event.url, session.expiresAt))
+  }
 
   const isPublic = PUBLIC_ROUTES.has(event.url.pathname) || event.route.id === null
   if (!event.locals.user && !isPublic) {

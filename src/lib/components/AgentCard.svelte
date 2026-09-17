@@ -7,6 +7,8 @@
       category: string | null
       maturityStatus: string
       tags: string[]
+      tryItOutMode: string
+      tryItOutUrl: string | null
     }
   }
   let { agent }: Props = $props()
@@ -42,12 +44,24 @@
     >
       View details
     </a>
-    <a
-      href="/agents/{agent.slug}?tryout=1#try-out"
-      class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
-      aria-label="Try out {agent.title}"
-    >
-      Try out
-    </a>
+    {#if agent.tryItOutMode === 'runnable'}
+      <a
+        href="/agents/{agent.slug}?tryout=1#try-out"
+        class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+        aria-label="Try out {agent.title}"
+      >
+        Try out
+      </a>
+    {:else if agent.tryItOutMode === 'external' && agent.tryItOutUrl}
+      <a
+        href={agent.tryItOutUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+        aria-label="Try out {agent.title}"
+      >
+        Try out
+      </a>
+    {/if}
   </div>
 </article>

@@ -185,21 +185,21 @@ separate `auth-data` volume. The public `/health` endpoint remains available for
 container health checks.
 
 Other env vars the container respects: `PORT` (default `3000`),
-`CATALOG_DB_PATH`, `AUTH_DB_PATH`, `TRYOUT_STORAGE_PATH`, and
-`TRYOUT_TEMPLATE_PATH`.
+`CATALOG_DB_PATH`, `AUTH_DB_PATH`, `TRYITOUT_WORK_DIR`, and
+`TRYITOUT_PROMPTS_DIR`.
 
 ### Trying out an agent
 
-Each catalog card has a **Try out** action. It opens a form generated from the
-agent's `metadata.input_schema`, along with advanced settings for the system
-prompt, model, temperature, and tools. Submitting the form creates a UUID session
-and processes requests serially through the current placeholder processor. No
-agent container or language model is started yet.
+Agents configured with `try_it_out_mode = 'runnable'` show the runnable Try it out panel.
+The build configures the `demo-rfi-triage` agent for this mode. A user supplies
+a task and an optional text file; the server queues a job, combines the agent
+prompt with its shipped `skill.md`, calls OpenAI, and exposes progress and a
+plain-text result download through `/api/tryitout/jobs/*`.
 
-The server stores both the rendered prompt and a versioned session JSON file.
-The UI can download that JSON and restore it later. With `podman-compose`, these
-files are persisted in the `tryout-sessions` named volume. The relevant env vars
-are `TRYOUT_STORAGE_PATH` and `TRYOUT_TEMPLATE_PATH`.
+Set `OPENAI_API_KEY` in `.env` before starting the application. With
+`podman-compose`, job files are stored in the `tryout-sessions` named volume at
+`TRYITOUT_WORK_DIR`. Job metadata is kept in memory, so active and completed job
+links do not survive an application restart.
 
 The runtime image only ships production dependencies (`npm prune --omit=dev`
 after the build) — build-only tooling like `vite`'s CLI, `drizzle-kit`, and
