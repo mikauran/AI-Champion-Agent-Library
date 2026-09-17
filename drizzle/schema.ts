@@ -20,6 +20,9 @@ export const agents = sqliteTable('agents', {
   maturityStatus:        text('maturity_status').notNull().default('experimental'),
   tags:                  text('tags').notNull().default('[]'),        // JSON-serialized string[]
   specId:                text('spec_id'),
+  tryItOutMode:          text('try_it_out_mode').notNull().default('none'),  // allowed values: none | external | runnable
+  tryItOutUrl:           text('try_it_out_url'),
+  tryItOutTaskTemplate:  text('try_it_out_task_template'),
   lastIngestedAt:        text('last_ingested_at').notNull()
     .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`),
 })

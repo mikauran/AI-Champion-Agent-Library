@@ -59,4 +59,4 @@ Tech evaluators and executives can find the right AI agent for their use case wi
 | Hybrid agent data ingestion | Structured files in GitHub edited by admins, ingested at deploy time | — Pending |
 
 ---
-*Last updated: 2026-03-19 — Phase 01 complete: data pipeline operational (YAML→SQLite ingestion, 30 tests passing)*
+*Last updated: 2026-08-20 — Phase 07 complete: real (no-container) SvelteKit demo backend for Try It Out, replacing Phase 6's mock — three job routes, a single real OpenAI call, and `?job=` refresh persistence, human-verified live against the deployed API*

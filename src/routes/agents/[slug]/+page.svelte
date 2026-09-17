@@ -6,6 +6,7 @@
 
   let { data }: { data: PageData } = $props()
   let { agent } = data
+  let tryItOutOpen = $state(false)
 </script>
 
 <svelte:head>
@@ -48,15 +49,52 @@
         </div>
       {/if}
 
-      {#if agent.githubUrl}
-        <a
-          href={agent.githubUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:underline"
-        >
-          View on GitHub &rarr;
-        </a>
+      <div class="flex flex-wrap items-center gap-4">
+        {#if agent.githubUrl}
+          <a
+            href={agent.githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:underline"
+          >
+            View on GitHub &rarr;
+          </a>
+        {/if}
+
+        {#if agent.tryItOutMode === 'external' && agent.tryItOutUrl}
+          <a
+            href={agent.tryItOutUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:underline"
+          >
+            Try it out &rarr;
+          </a>
+        {/if}
+      </div>
+
+      {#if agent.tryItOutMode === 'runnable'}
+        <div class="mt-6">
+          <button
+            type="button"
+            onclick={() => (tryItOutOpen = !tryItOutOpen)}
+            aria-expanded={tryItOutOpen}
+            class="inline-flex items-center gap-2 rounded text-sm font-medium text-indigo-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+          >
+            Try it out
+            <span
+              class="inline-block transition-transform"
+              class:rotate-180={tryItOutOpen}
+              aria-hidden="true">&darr;</span
+            >
+          </button>
+
+          {#if tryItOutOpen}
+            <div class="mt-4">
+              <TryItOutPanel agentId={agent.slug} />
+            </div>
+          {/if}
+        </div>
       {/if}
     </section>
 

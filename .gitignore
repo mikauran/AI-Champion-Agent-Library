@@ -6,4 +6,7 @@ db/
 .env.local
 .svelte-kit/
 build/
+.tryitout-work/
+.claude/worktrees/
+.gsd/
 runtime/
