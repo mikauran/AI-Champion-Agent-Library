@@ -37,7 +37,7 @@ npm install
 
 # 2. Configure access and email delivery
 cp .env.example .env
-# Edit .env: add the allowed email addresses, Brevo API key and verified sender.
+# Edit .env: add allowed addresses and either Brevo settings or SMTP_SERVER.
 
 # 3. Start the development server
 #    (runs db schema push, ingests agent files, starts the web app)
@@ -158,13 +158,14 @@ is not copied into the image.
 
 All catalog, agent and Try out routes require a passwordless sign-in. Access is
 limited to the exact addresses listed in `AUTH_ALLOWED_EMAILS`. A whitelisted
-user receives a six-digit, single-use code through Brevo's transactional email
-API. Codes expire after 10 minutes and lock after five failed attempts. Code
-requests are limited to three per email address in a 15-minute window.
+user receives a six-digit, single-use code through Brevo by default. If
+`SMTP_SERVER` is configured, the code is sent through that unauthenticated SMTP
+relay instead. Codes expire after 10 minutes and lock after five failed attempts.
+Code requests are limited to three per email address in a 15-minute window.
 
 Authentication is enabled by default. To allow access without signing in, set
 `AUTH_ENABLED=false` in `.env` and restart the application. When authentication
-is disabled, the email whitelist and Brevo settings are not used.
+is disabled, the email whitelist and email transport settings are not used.
 
 Authentication variables in `.env`:
 
@@ -172,8 +173,10 @@ Authentication variables in `.env`:
 |----------|---------|
 | `AUTH_ENABLED` | Optional; set to `false` to disable authentication (default: enabled) |
 | `AUTH_ALLOWED_EMAILS` | Comma-separated list of exact allowed addresses |
-| `BREVO_API_KEY` | Brevo API key; keep this only in the local/deployment `.env` |
-| `AUTH_EMAIL_FROM` | A sender address verified in Brevo |
+| `BREVO_API_KEY` | Brevo API key used by default; not required when `SMTP_SERVER` is set |
+| `SMTP_SERVER` | Optional hostname for an unauthenticated plain-TCP SMTP relay; overrides Brevo |
+| `SMTP_PORT` | Optional SMTP relay port (default: `25`) |
+| `AUTH_EMAIL_FROM` | Sender address; must be verified in Brevo when Brevo is used |
 | `AUTH_EMAIL_FROM_NAME` | Display name for the sender |
 | `ORIGIN` | Public base URL, e.g. `http://localhost:3000` locally or the production HTTPS URL |
 | `AUTH_COOKIE_SECURE` | `false` for local HTTP, `true` for production HTTPS |

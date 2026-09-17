@@ -135,7 +135,7 @@ export class AuthService {
     try {
       await this.sendCode(email, code)
     } catch (error) {
-      console.error('Brevo login email delivery failed', error)
+      console.error('Login email delivery failed', error)
       throw new AuthError('email_delivery', 'The login email could not be sent. Please try again later.')
     }
 
@@ -250,8 +250,8 @@ export function getAuthService(): AuthService {
       dbPath: env.AUTH_DB_PATH ?? 'runtime/auth/auth.db',
       allowedEmails,
       sendCode: async (email, code) => {
-        const { sendLoginCodeWithBrevo } = await import('./brevo')
-        await sendLoginCodeWithBrevo(email, code)
+        const { sendLoginCode } = await import('./mail')
+        await sendLoginCode(email, code)
       },
     })
   }
