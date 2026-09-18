@@ -157,11 +157,15 @@ is not copied into the image.
 ### Passwordless consortium access
 
 All catalog, agent and Try out routes require a passwordless sign-in. Access is
-limited to the exact addresses listed in `AUTH_ALLOWED_EMAILS`. A whitelisted
-user receives a six-digit, single-use code through Brevo by default. If
+limited to the exact addresses listed in `AUTH_ALLOWED_EMAILS` and addresses in
+the domains listed in `AUTH_ALLOWED_EMAIL_DOMAINS`. A whitelisted user receives
+a six-digit, single-use code through Brevo by default. If
 `SMTP_SERVER` is configured, the code is sent through that unauthenticated SMTP
 relay instead. Codes expire after 10 minutes and lock after five failed attempts.
 Code requests are limited to three per email address in a 15-minute window.
+Every address to which a code was successfully sent is retained in the
+`login_code_recipients` table of the authentication database, along with the
+first and latest send timestamps and the total send count.
 
 Authentication is enabled by default. To allow access without signing in, set
 `AUTH_ENABLED=false` in `.env` and restart the application. When authentication
@@ -173,6 +177,7 @@ Authentication variables in `.env`:
 |----------|---------|
 | `AUTH_ENABLED` | Optional; set to `false` to disable authentication (default: enabled) |
 | `AUTH_ALLOWED_EMAILS` | Comma-separated list of exact allowed addresses |
+| `AUTH_ALLOWED_EMAIL_DOMAINS` | Optional comma-separated list of allowed domains, e.g. `example.org,partner.example.org` |
 | `BREVO_API_KEY` | Brevo API key used by default; not required when `SMTP_SERVER` is set |
 | `SMTP_SERVER` | Optional hostname for an unauthenticated plain-TCP SMTP relay; overrides Brevo |
 | `SMTP_PORT` | Optional SMTP relay port (default: `25`) |

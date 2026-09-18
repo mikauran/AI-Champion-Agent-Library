@@ -39,6 +39,7 @@ export type LoginChallenge = {
 type AuthServiceOptions = {
   dbPath: string
   allowedEmails: string[]
+  allowedEmailDomains?: string[]
   sendCode: (email: string, code: string) => Promise<void>
   now?: () => number
 }
@@ -49,6 +50,10 @@ function normalizeEmail(email: string): string {
 
 function isEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+function normalizeEmailDomain(domain: string): string {
+  return domain.trim().toLowerCase().replace(/^@/, '')
 }
 
 function tokenHash(token: string): string {
@@ -62,6 +67,7 @@ function codeHash(code: string, salt: Buffer): Buffer {
 export class AuthService {
   private readonly db: Database.Database
   private readonly allowedEmails: Set<string>
+  private readonly allowedEmailDomains: Set<string>
   private readonly sendCode: AuthServiceOptions['sendCode']
   private readonly now: () => number
 
@@ -71,6 +77,9 @@ export class AuthService {
     this.db.pragma('journal_mode = WAL')
     this.db.pragma('foreign_keys = ON')
     this.allowedEmails = new Set(options.allowedEmails.map(normalizeEmail).filter(Boolean))
+    this.allowedEmailDomains = new Set(
+      (options.allowedEmailDomains ?? []).map(normalizeEmailDomain).filter(Boolean),
+    )
     this.sendCode = options.sendCode
     this.now = options.now ?? Date.now
     this.createSchema()
@@ -97,6 +106,13 @@ export class AuthService {
       );
       CREATE INDEX IF NOT EXISTS auth_request_log_email_idx ON auth_request_log(email, requested_at);
 
+      CREATE TABLE IF NOT EXISTS login_code_recipients (
+        email TEXT PRIMARY KEY,
+        first_sent_at INTEGER NOT NULL,
+        last_sent_at INTEGER NOT NULL,
+        send_count INTEGER NOT NULL DEFAULT 1
+      );
+
       CREATE TABLE IF NOT EXISTS login_sessions (
         token_hash TEXT PRIMARY KEY,
         email TEXT NOT NULL,
@@ -110,10 +126,11 @@ export class AuthService {
   async requestLoginCode(rawEmail: string): Promise<LoginChallenge> {
     const email = normalizeEmail(rawEmail)
     if (!isEmail(email)) throw new AuthError('invalid_email', 'Enter a valid email address.')
-    if (this.allowedEmails.size === 0) {
+    if (this.allowedEmails.size === 0 && this.allowedEmailDomains.size === 0) {
       throw new AuthError('configuration', 'The email whitelist has not been configured.')
     }
-    if (!this.allowedEmails.has(email)) {
+    const emailDomain = email.slice(email.lastIndexOf('@') + 1)
+    if (!this.allowedEmails.has(email) && !this.allowedEmailDomains.has(emailDomain)) {
       throw new AuthError('not_allowed', 'This email address is not authorized for the consortium library.')
     }
 
@@ -149,6 +166,15 @@ export class AuthService {
           VALUES (?, ?, ?, ?, ?, ?)
         `)
         .run(id, email, codeHash(code, salt), salt, expiresAt, now)
+      this.db
+        .prepare(`
+          INSERT INTO login_code_recipients (email, first_sent_at, last_sent_at, send_count)
+          VALUES (?, ?, ?, 1)
+          ON CONFLICT(email) DO UPDATE SET
+            last_sent_at = excluded.last_sent_at,
+            send_count = login_code_recipients.send_count + 1
+        `)
+        .run(email, now, now)
     })
     saveChallenge()
 
@@ -246,9 +272,11 @@ let service: AuthService | undefined
 export function getAuthService(): AuthService {
   if (!service) {
     const allowedEmails = (env.AUTH_ALLOWED_EMAILS ?? '').split(',')
+    const allowedEmailDomains = (env.AUTH_ALLOWED_EMAIL_DOMAINS ?? '').split(',')
     service = new AuthService({
       dbPath: env.AUTH_DB_PATH ?? 'runtime/auth/auth.db',
       allowedEmails,
+      allowedEmailDomains,
       sendCode: async (email, code) => {
         const { sendLoginCode } = await import('./mail')
         await sendLoginCode(email, code)
