@@ -225,11 +225,12 @@ export function createLeaseManager(deps: LeaseManagerDeps): LeaseManager {
         throw new TryItOutRuntimeError('session_busy', 'a job is already running in your session')
       }
       await awaitReady(lease)
-      if (lease.state === 'idle' && leases.get(sessionKey) === lease) {
+      const after = lease.state as LeaseState // mutated by other callers during the await
+      if (after === 'idle' && leases.get(sessionKey) === lease) {
         lease.state = 'claimed'
         return { lease, warm: false }
       }
-      if (lease.state === 'claimed' || lease.state === 'running') {
+      if (after === 'claimed' || after === 'running') {
         throw new TryItOutRuntimeError('session_busy', 'a job is already running in your session')
       }
       throw new TryItOutRuntimeError('container_start_failed', 'container was removed while warming')
