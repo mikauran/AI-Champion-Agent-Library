@@ -19,9 +19,12 @@
   "dependencies": {
     "@sveltejs/kit": "^2.55.0",
     "better-sqlite3": "^12.8.0",
+    "dockerode": "^5.0.1",
     "drizzle-orm": "^0.45.1",
+    "fflate": "^0.8.3",
     "openai": "^7.5.0",
     "svelte": "^5.54.0",
+    "tar-stream": "^3.2.2",
     "yaml": "^2.8.2",
     "zod": "^4.3.6"
   },
@@ -32,7 +35,9 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/svelte": "^5.3.1",
     "@types/better-sqlite3": "^7.6.13",
+    "@types/dockerode": "^4.0.1",
     "@types/node": "^25.5.0",
+    "@types/tar-stream": "^3.1.5",
     "drizzle-kit": "^0.31.10",
     "jsdom": "^29.0.0",
     "tailwindcss": "^4.2.2",
