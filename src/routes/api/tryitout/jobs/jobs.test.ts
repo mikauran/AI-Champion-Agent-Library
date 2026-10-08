@@ -25,6 +25,18 @@ vi.mock('$lib/server/tryItOutJobs', async (importOriginal) => {
   return { ...actual, createJob: vi.fn(actual.createJob) }
 })
 
+// Only the Pi skill loader is mocked; the real loadPromptFor stays for the fallback.
+vi.mock('$lib/server/tryItOutPrompts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('$lib/server/tryItOutPrompts')>()
+  return {
+    ...actual,
+    loadPiSkill: vi.fn(async (slug: string) => ({
+      basePrompt: 'BASE',
+      skillMarkdown: `---\nname: ${slug}\ndescription: d\n---\nBODY`,
+    })),
+  }
+})
+
 // Populated in beforeAll, AFTER TRYITOUT_WORK_DIR is pointed at a throwaway
 // tmpdir — tryItOutJobs.ts reads that env var once at module load, so every
 // module under test must be imported (dynamically) only after the env var
@@ -34,12 +46,22 @@ let jobsMod: typeof import('$lib/server/tryItOutJobs')
 let POST: typeof import('./+server').POST
 let GET_STATUS: typeof import('./[id]/+server').GET
 let GET_ARTIFACT: typeof import('./[id]/artifact/+server').GET
+let svcMod: typeof import('$lib/server/tryitout/service')
+let runtimeMod: typeof import('$lib/server/tryitout/runtime')
+let fakeMod: typeof import('$lib/server/tryitout/runtimeFake')
+let cfgMod: typeof import('$lib/server/tryitout/runnerConfig')
+let fixtures: typeof import('$lib/server/tryitout/piFixtures')
 
 beforeAll(async () => {
   tmpDir = await mkdtemp(join(tmpdir(), 'tryitout-jobs-route-test-'))
   process.env.TRYITOUT_WORK_DIR = tmpDir
 
   jobsMod = await import('$lib/server/tryItOutJobs')
+  svcMod = await import('$lib/server/tryitout/service')
+  runtimeMod = await import('$lib/server/tryitout/runtime')
+  fakeMod = await import('$lib/server/tryitout/runtimeFake')
+  cfgMod = await import('$lib/server/tryitout/runnerConfig')
+  fixtures = await import('$lib/server/tryitout/piFixtures')
   ;({ POST } = await import('./+server'))
   ;({ GET: GET_STATUS } = await import('./[id]/+server'))
   ;({ GET: GET_ARTIFACT } = await import('./[id]/artifact/+server'))
@@ -50,10 +72,26 @@ afterAll(async () => {
   await rm(tmpDir, { recursive: true, force: true })
 })
 
+function installService(runtime: import('$lib/server/tryitout/runtimeFake').FakeRuntime) {
+  svcMod.__setTryItOutServiceForTests(
+    svcMod.createTryItOutService({ runtime, config: cfgMod.parseRunnerConfig({}), instanceId: 't' }),
+  )
+}
+
+// Default: engine unreachable, so the mocked OpenAI fallback produces the output.
+function installUnavailableEngine() {
+  const rt = fakeMod.createFakeRuntime()
+  const err = () => new runtimeMod.TryItOutRuntimeError('engine_unavailable', 'engine down')
+  rt.failNext('ping', err())
+  for (let i = 0; i < 20; i++) rt.failNext('createAndStart', err())
+  installService(rt)
+}
+
 beforeEach(() => {
   jobsMod.__resetJobs()
   vi.clearAllMocks()
   mockCreate.mockResolvedValue({ output_text: 'mock model output' })
+  installUnavailableEngine()
 })
 
 function makeForm(fields: Record<string, string | File | undefined>): Request {
@@ -66,7 +104,12 @@ function makeForm(fields: Record<string, string | File | undefined>): Request {
 }
 
 function asPostEvent(request: Request): Parameters<typeof POST>[0] {
-  return { request } as Parameters<typeof POST>[0]
+  return {
+    request,
+    locals: { user: null },
+    cookies: { get: () => 'AAAAAAAAAAAAAAAAAAAAAA', set: vi.fn() },
+    url: new URL(request.url),
+  } as unknown as Parameters<typeof POST>[0]
 }
 
 // Loosely typed (`any`) on purpose: this same `{ params }` shape is passed
@@ -318,5 +361,64 @@ describe('GET /api/tryitout/jobs/[id]/artifact', () => {
     await waitForStatus(jobId, ['succeeded', 'failed'])
     await rm(jobsMod.artifactZipPath(jobId))
     await expectHttpError(() => GET_ARTIFACT(asGetEvent(jobId)), 404)
+  })
+})
+
+describe('container path', () => {
+  it('runs the job in the session container and zips what Pi wrote', async () => {
+    const rt = fakeMod.createFakeRuntime()
+    let seenCmd: string[] = []
+    let seenDir = ''
+    const filesAtExec: Record<string, string> = {}
+    rt.scriptExec((ctx) => {
+      if (ctx.cmd[0] === 'pi' || ctx.cmd[0] === 'timeout') {
+        seenCmd = ctx.cmd
+        seenDir = ctx.workingDir
+        for (const [k, v] of ctx.files) {
+          if (v !== 'dir' && k.startsWith(ctx.workingDir + '/input/')) filesAtExec[k] = new TextDecoder().decode(v)
+        }
+        ctx.files.set(`${ctx.workingDir}/output/result.txt`, new TextEncoder().encode('Urgency: high'))
+        ctx.stdout(fixtures.PI_SUCCESS_STREAM)
+        return 0
+      }
+      if (ctx.cmd[0] === 'rm') {
+        for (const k of [...ctx.files.keys()]) if (k.startsWith(ctx.cmd[2])) ctx.files.delete(k)
+      }
+      return 0
+    })
+    installService(rt)
+
+    const file = new File(['uploaded rfi text'], 'rfi.txt', { type: 'text/plain' })
+    const res = await POST(asPostEvent(makeForm({ agentId: AGENT_ID, task: 'triage this', file })))
+    const body = await res.json()
+    expect(body.status).toBe('queued')
+    const job = await waitForStatus(body.jobId, ['succeeded', 'failed'])
+    expect(job.error).toBeNull()
+    expect(job.status).toBe('succeeded')
+
+    expect(job.events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'tool_start', tool: 'read' }),
+        expect.objectContaining({ type: 'tool_end', tool: 'write' }),
+      ]),
+    )
+    expect(job.events.some((e) => /using warm container|started a fresh container/.test(e.summary))).toBe(true)
+    expect(mockCreate).not.toHaveBeenCalled()
+
+    const art = await GET_ARTIFACT(asGetEvent(body.jobId))
+    const entries = unzipSync(new Uint8Array(await art.arrayBuffer()))
+    expect(Object.keys(entries)).toEqual(['result.txt'])
+    expect(strFromU8(entries['result.txt'])).toBe('Urgency: high')
+
+    expect(seenCmd.slice(0, 6)).toEqual(['timeout', '--signal=KILL', '300', 'pi', '--mode', 'json'])
+    expect(seenCmd).toContain('--offline')
+    expect(seenCmd).toContain('--no-session')
+    expect(seenCmd.some((a) => a.includes('triage this') || a.includes('uploaded rfi text'))).toBe(false)
+    expect(seenDir).toBe(`/work/${body.jobId}`)
+    expect(filesAtExec[`/work/${body.jobId}/input/task.txt`]).toBe('triage this')
+    expect(filesAtExec[`/work/${body.jobId}/input/upload.txt`]).toBe('uploaded rfi text')
+
+    const cid = rt.containers()[0]
+    expect([...rt.filesOf(cid).keys()].filter((k) => k.startsWith(`/work/${body.jobId}`))).toEqual([])
   })
 })

@@ -11,6 +11,7 @@ import type { RequestHandler } from './$types'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { createJob, inputDir, inputFilePath } from '$lib/server/tryItOutJobs'
 import { runJob } from '$lib/server/tryItOutRunner'
+import { sessionKey } from '$lib/server/tryitout/session'
 import { AgentIdSchema } from '$lib/server/tryItOutPrompts'
 
 // Threat T4-3: hard cap enforced BEFORE createJob/mkdir/runJob — an
@@ -18,7 +19,7 @@ import { AgentIdSchema } from '$lib/server/tryItOutPrompts'
 // runaway model bill via an oversized request.
 const MAX_UPLOAD_BYTES = 200 * 1024
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals, cookies, url }) => {
   const form = await request.formData()
   const agentId = form.get('agentId')
   const task = form.get('task')
@@ -43,7 +44,7 @@ export const POST: RequestHandler = async ({ request }) => {
     error(413, 'upload too large')
   }
 
-  const job = createJob(agentId, task, file)
+  const job = createJob(agentId, task, file, sessionKey({ locals, cookies, url }))
   // Captured immediately after creation — createJob always sets 'queued'.
   // `runJob`, invoked below, flips the store's status to 'running'
   // synchronously (before its first `await`), so `job.status` read AFTER

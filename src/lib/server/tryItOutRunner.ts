@@ -20,6 +20,9 @@ import {
 import { loadPromptFor, composePrompt } from './tryItOutPrompts'
 import { MODEL, modelParams } from './tryItOutModel'
 import { zipOutputDir } from './tryitout/artifact'
+import { runJobInContainer } from './tryitout/piRunner'
+import { getTryItOutService } from './tryitout/service'
+import { TryItOutRuntimeError } from './tryitout/runtime'
 
 // Constructed lazily and memoized — NOT at module top level, so importing
 // this file without OPENAI_API_KEY set never throws (needed for tests and
@@ -34,9 +37,46 @@ function getClient(): OpenAI {
   return client
 }
 
+/**
+ * Single entry point. Runs the job in the session's Pi container; only an
+ * unreachable engine or a container start failure may fall back to the direct
+ * model call (D-14). Cap hit ('busy') and every post-claim failure never do.
+ * Never rejects.
+ */
 export async function runJob(jobId: string): Promise<void> {
   const job = getJob(jobId)
   if (!job) return // unknown jobId — nothing to run, nothing to mutate
+
+  setStatus(jobId, 'running')
+
+  try {
+    await runJobInContainer(jobId)
+  } catch (err) {
+    const fallbackEnabled = getTryItOutService().config.fallbackEnabled
+    if (
+      err instanceof TryItOutRuntimeError &&
+      (err.code === 'engine_unavailable' || err.code === 'container_start_failed') &&
+      fallbackEnabled
+    ) {
+      console.warn('Try It Out fallback for job', jobId, err.message)
+      pushEvent(jobId, 'container unavailable, falling back to direct model call')
+      try {
+        await runDirectLlmJob(jobId)
+      } catch (e) {
+        pushEvent(jobId, 'agent failed')
+        setStatus(jobId, 'failed', e instanceof Error ? e.message : String(e))
+      }
+      return
+    }
+    pushEvent(jobId, 'agent failed')
+    setStatus(jobId, 'failed', err instanceof Error ? err.message : String(err))
+  }
+}
+
+/** The Phase 7 direct model call; reachable only from the runJob fallback. */
+export async function runDirectLlmJob(jobId: string): Promise<void> {
+  const job = getJob(jobId)
+  if (!job) return
 
   setStatus(jobId, 'running')
 

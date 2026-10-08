@@ -1,0 +1,215 @@
+// src/lib/server/tryitout/piRunner.ts
+// Server-only module — SvelteKit enforces that src/lib/server/ cannot be imported client-side.
+//
+// Runs one Try It Out job inside the session's warm Pi container (D-06/D-07,
+// D-11..D-16, D-20, D-22). The task text and uploaded file reach the container
+// ONLY as files (putFiles); argv is a constant built from config and the
+// validated slug (T8-06-1).
+
+import { readFile } from 'node:fs/promises'
+import { AgentIdSchema } from '../tryItOutPrompts'
+import { MODEL } from '../tryItOutModel'
+import { getJob, inputFilePath, isValidJobId, pushEvent, setStatus } from '../tryItOutJobs'
+import { AGENT_DIR, WORK_ROOT_IN_CONTAINER, type ExecResult } from './runtime'
+import type { RunnerConfig } from './runnerConfig'
+import { getTryItOutService } from './service'
+import { beginJob, endJob, getJobUsage } from './llmProxy'
+import { createCompletionTracker, createJsonlParser, createPiEventMapper } from './piEvents'
+import { writeArtifactZip } from './artifact'
+
+export const PI_INSTRUCTION =
+  'Follow the skill. Inputs are in ./input (task.txt, optional upload.txt). Write all deliverables as files in ./output.'
+
+// App-side backstop beyond the in-container `timeout` (covers a hung exec stream).
+export const TIMEOUT_GRACE_MS = 5000
+
+export function buildPiArgs(cfg: RunnerConfig, slug: string): string[] {
+  return [
+    'timeout',
+    '--signal=KILL',
+    String(Math.ceil(cfg.jobTimeoutMs / 1000)),
+    'pi',
+    '--mode',
+    'json',
+    '--no-session',
+    '--offline',
+    '--no-extensions',
+    '--no-mcp',
+    '--no-prompt-templates',
+    '--no-themes',
+    '--no-context-files',
+    '--no-approve',
+    '-ns',
+    '--skill',
+    `${AGENT_DIR}/skills/${slug}`,
+    '--provider',
+    'aic',
+    '--model',
+    MODEL,
+    '--tools',
+    cfg.tools.join(','),
+    '--append-system-prompt',
+    `${AGENT_DIR}/base-prompt.md`,
+    '--',
+    `/skill:${slug} ${PI_INSTRUCTION}`,
+  ]
+}
+
+const STDERR_TAIL_BYTES = 4096
+
+/**
+ * Throws TryItOutRuntimeError only for claim-phase failures. After a successful
+ * claim it records its own terminal status and never rethrows.
+ */
+export async function runJobInContainer(jobId: string): Promise<void> {
+  const job = getJob(jobId)
+  if (!job) return
+  if (!isValidJobId(jobId)) throw new Error('invalid job id')
+  const slug = AgentIdSchema.parse(job.agentId)
+
+  const svc = getTryItOutService()
+  const cfg = svc.config
+  const runtime = svc.runtime
+
+  pushEvent(jobId, 'claiming container…')
+  const { lease, warm } = await svc.leases.claim(job.sessionKey ?? `job:${jobId}`, slug)
+  pushEvent(jobId, warm ? 'using warm container' : 'started a fresh container')
+
+  let timedOut = false
+  let broken = false
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let proxyJobBegun = false
+  const jobDir = `${WORK_ROOT_IN_CONTAINER}/${jobId}`
+
+  try {
+    const containerId = lease.containerId
+    if (!containerId) throw new Error('container is not available')
+    svc.leases.markRunning(lease)
+    beginJob(lease.id, jobId, { maxTotalTokens: cfg.jobTokenBudget, maxRequests: cfg.jobRequestBudget })
+    proxyJobBegun = true
+
+    // Task and upload are written as FILES only (T8-06-1).
+    const staged: Parameters<typeof runtime.putFiles>[2] = [
+      { path: jobId, type: 'dir' },
+      { path: `${jobId}/input`, type: 'dir' },
+      { path: `${jobId}/output`, type: 'dir' },
+      { path: `${jobId}/input/task.txt`, content: job.task },
+    ]
+    if (job.fileName !== null) {
+      staged.push({ path: `${jobId}/input/upload.txt`, content: new Uint8Array(await readFile(inputFilePath(jobId))) })
+    }
+    await runtime.putFiles(containerId, WORK_ROOT_IN_CONTAINER, staged)
+
+    pushEvent(jobId, 'starting pi…')
+    const tracker = createCompletionTracker()
+    const mapper = createPiEventMapper()
+    const parser = createJsonlParser((record) => {
+      tracker.observe(record)
+      const mapped = mapper.map(record)
+      if (mapped) pushEvent(jobId, mapped.summary, mapped.type, mapped.tool)
+    })
+    let stderrTail = ''
+
+    const started = Date.now()
+    let onTimeout: (r: ExecResult) => void = () => {}
+    const timeoutSignal = new Promise<ExecResult>((resolve) => {
+      onTimeout = resolve
+    })
+    timer = setTimeout(() => {
+      timedOut = true
+      void svc.leases.discard(lease)
+      onTimeout({ exitCode: null })
+    }, cfg.jobTimeoutMs + TIMEOUT_GRACE_MS)
+
+    let result: ExecResult
+    try {
+      result = await Promise.race([
+        runtime.exec(containerId, {
+          cmd: buildPiArgs(cfg, slug),
+          workingDir: jobDir,
+          onStdout: (chunk) => parser.push(chunk),
+          onStderr: (chunk) => {
+            stderrTail = (stderrTail + chunk.toString('utf8')).slice(-STDERR_TAIL_BYTES)
+          },
+        }),
+        timeoutSignal,
+      ])
+    } catch (err) {
+      broken = true
+      throw err
+    }
+    parser.end()
+    if (!timedOut && result.exitCode === 137 && Date.now() - started >= cfg.jobTimeoutMs) {
+      timedOut = true
+    }
+
+    const verdict = tracker.verdict({
+      exitCode: result.exitCode,
+      timedOut,
+      timeoutMs: cfg.jobTimeoutMs,
+      stderrTail,
+    })
+    const usage = endJob(lease.id) ?? getJobUsage(jobId)
+    proxyJobBegun = false
+
+    if (usage?.budgetExceeded) {
+      pushEvent(jobId, 'agent failed')
+      setStatus(
+        jobId,
+        'failed',
+        `job token budget exceeded (${usage.totalTokens} tokens, ${usage.requests} requests)`,
+      )
+      return
+    }
+    if (!verdict.ok) {
+      pushEvent(jobId, 'agent failed')
+      setStatus(jobId, 'failed', verdict.error)
+      return
+    }
+
+    let files = await runtime.getFiles(containerId, `${jobDir}/output`, {
+      maxBytes: cfg.maxOutputBytes,
+      maxFiles: cfg.maxOutputFiles,
+    })
+    if (Object.keys(files).length === 0) {
+      const text = tracker.lastAssistantText()
+      if (text) files = { 'result.txt': new TextEncoder().encode(text) }
+    }
+    if (Object.keys(files).length === 0) {
+      pushEvent(jobId, 'agent failed')
+      setStatus(jobId, 'failed', 'agent finished without producing output')
+      return
+    }
+    await writeArtifactZip(jobId, files)
+    pushEvent(jobId, 'agent settled (clean exit)')
+    setStatus(jobId, 'succeeded')
+  } catch (err) {
+    if (!(err instanceof Error && 'code' in err && (err as { code?: string }).code === 'output_invalid')) {
+      broken = true
+    }
+    pushEvent(jobId, 'agent failed')
+    setStatus(jobId, 'failed', err instanceof Error ? err.message : String(err))
+  } finally {
+    if (timer) clearTimeout(timer)
+    if (proxyJobBegun) endJob(lease.id)
+    if (timedOut || broken) {
+      await svc.leases.discard(lease).catch(() => {})
+    } else {
+      // Best-effort cleanup of this job's directory (D-07, T8-06-4).
+      try {
+        const cid = lease.containerId
+        if (cid) {
+          await runtime.exec(cid, {
+            cmd: ['rm', '-rf', jobDir],
+            workingDir: '/',
+            onStdout: () => {},
+            onStderr: () => {},
+          })
+        }
+      } catch {
+        // cleanup failure must not affect the recorded result
+      }
+      svc.leases.release(lease)
+    }
+  }
+}
