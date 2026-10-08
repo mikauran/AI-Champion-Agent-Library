@@ -3,6 +3,8 @@ import { AUTH_COOKIE_NAME, authCookieOptions, getAuthService } from '$lib/server
 import { isAuthenticationEnabled } from '$lib/server/auth-config'
 
 const PUBLIC_ROUTES = new Set(['/login', '/health'])
+// The LLM proxy authenticates with per-lease bearer tokens (D-17); containers carry no user cookie.
+const PUBLIC_PREFIXES = ['/api/llm/']
 
 export const handle: Handle = async ({ event, resolve }) => {
   if (!isAuthenticationEnabled()) {
@@ -20,7 +22,11 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.cookies.set(AUTH_COOKIE_NAME, token, authCookieOptions(event.url, session.expiresAt))
   }
 
-  const isPublic = PUBLIC_ROUTES.has(event.url.pathname) || event.route.id === null
+  const pathname = event.url.pathname
+  const isPublic =
+    PUBLIC_ROUTES.has(pathname) ||
+    PUBLIC_PREFIXES.some((p) => pathname.startsWith(p)) ||
+    event.route.id === null
   if (!event.locals.user && !isPublic) {
     if (event.url.pathname.startsWith('/api/')) {
       return json({ error: 'Authentication required' }, { status: 401 })
