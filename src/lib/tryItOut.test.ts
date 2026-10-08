@@ -248,7 +248,7 @@ describe('downloadArtifact', () => {
     clickSpy.mockRestore()
   })
 
-  it('sets a sanitized download filename matching aic-job-<id>.txt', async () => {
+  it('sets a sanitized download filename matching aic-job-<id>.zip', async () => {
     api = installFakeJobApi()
     let capturedDownload: string | null = null
     const clickSpy = vi
@@ -260,7 +260,7 @@ describe('downloadArtifact', () => {
     const { jobId } = await submitJob('a', 'summarize the csv')
     await downloadArtifact(jobId)
 
-    expect(capturedDownload).toMatch(/^aic-job-[A-Za-z0-9._-]+\.txt$/)
+    expect(capturedDownload).toMatch(/^aic-job-[A-Za-z0-9._-]+\.zip$/)
 
     clickSpy.mockRestore()
   })

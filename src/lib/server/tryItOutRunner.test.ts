@@ -104,6 +104,9 @@ describe('runJob happy path', () => {
     expect(updated.error).toBeNull()
     const output = await readFile(jobsMod.outputFilePath(job.jobId), 'utf-8')
     expect(output).toBe('triage result: high urgency, structural')
+    const { unzipSync, strFromU8 } = await import('fflate')
+    const zipped = unzipSync(new Uint8Array(await readFile(jobsMod.artifactZipPath(job.jobId))))
+    expect(strFromU8(zipped['result.txt'])).toBe('triage result: high urgency, structural')
   })
 
   it('emits event summaries in order: reading input, calling model, writing output, agent settled', async () => {

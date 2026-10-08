@@ -29,6 +29,8 @@ export interface JobRecord {
   events: JobEvent[]
   error: string | null
   createdAt: number
+  // Per-visitor session key (e.g. 'anon:abc'); server-side only, never returned by GET status.
+  sessionKey: string | null
 }
 
 // Module-level singleton — every importer of this file gets this same Map
@@ -78,7 +80,17 @@ export function outputFilePath(jobId: string): string {
   return join(outputDir(jobId), 'result.txt')
 }
 
-export function createJob(agentId: string, task: string, file: File | null): JobRecord {
+export function artifactZipPath(jobId: string): string {
+  assertValidJobId(jobId)
+  return join(workDir(jobId), 'artifact.zip')
+}
+
+export function createJob(
+  agentId: string,
+  task: string,
+  file: File | null,
+  sessionKey: string | null = null,
+): JobRecord {
   const jobId = randomUUID() // RESEARCH.md "Don't Hand-Roll" — never a hand-rolled random id
   const record: JobRecord = {
     jobId,
@@ -89,6 +101,7 @@ export function createJob(agentId: string, task: string, file: File | null): Job
     events: [],
     error: null,
     createdAt: Date.now(),
+    sessionKey,
   }
   jobs.set(jobId, record)
   return record
@@ -98,12 +111,19 @@ export function getJob(jobId: string): JobRecord | undefined {
   return jobs.get(jobId)
 }
 
-export function pushEvent(jobId: string, summary: string): void {
+export function pushEvent(
+  jobId: string,
+  summary: string,
+  type: JobEvent['type'] = 'info',
+  tool?: string,
+): void {
   const job = jobs.get(jobId)
   if (!job) return // silent no-op on unknown jobId
-  // D-11: real runs only ever emit `type: 'info'` — there is no live
-  // tool-call stream to fake here, unlike Phase 6's mock.
-  job.events.push({ ts: nowTs(), type: 'info', summary })
+  // Phase 8 D-12: container runs may emit tool_start/tool_end; the direct-LLM
+  // path keeps emitting plain `info` events.
+  const ev: JobEvent = { ts: nowTs(), type, summary }
+  if (tool !== undefined) ev.tool = tool
+  job.events.push(ev)
 }
 
 export function setStatus(jobId: string, status: JobStatus, error: string | null = null): void {

@@ -9,7 +9,7 @@
 import { error } from '@sveltejs/kit'
 import { readFile } from 'node:fs/promises'
 import type { RequestHandler } from './$types'
-import { isValidJobId, getJob, outputFilePath } from '$lib/server/tryItOutJobs'
+import { isValidJobId, getJob, artifactZipPath } from '$lib/server/tryItOutJobs'
 
 export const GET: RequestHandler = async ({ params }) => {
   if (!isValidJobId(params.id)) {
@@ -27,17 +27,17 @@ export const GET: RequestHandler = async ({ params }) => {
 
   let buf: Buffer
   try {
-    buf = await readFile(outputFilePath(params.id))
+    buf = await readFile(artifactZipPath(params.id))
   } catch {
     error(404, `artifact missing for job: ${params.id}`)
   }
 
   return new Response(new Uint8Array(buf), {
     headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
+      'Content-Type': 'application/zip',
       // T4-6: the filename is built from a validated UUID only — no
       // user-controlled substring reaches this header.
-      'Content-Disposition': `attachment; filename="aic-job-${params.id}.txt"`,
+      'Content-Disposition': `attachment; filename="aic-job-${params.id}.zip"`,
     },
   })
 }

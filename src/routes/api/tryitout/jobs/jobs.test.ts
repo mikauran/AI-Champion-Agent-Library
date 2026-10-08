@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest'
 import { mkdtemp, rm, readdir, readFile as fsReadFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { unzipSync, strFromU8 } from 'fflate'
 import { join } from 'node:path'
 
 // Hoisted so the vi.mock factory below (hoisted above all imports) can
@@ -237,8 +238,12 @@ describe('POST /api/tryitout/jobs', () => {
     expect(status1.status).toBe('succeeded')
     expect(status2.status).toBe('succeeded')
 
-    const artifact1 = await (await GET_ARTIFACT(asGetEvent(body1.jobId))).text()
-    const artifact2 = await (await GET_ARTIFACT(asGetEvent(body2.jobId))).text()
+    const readResult = async (id: string) =>
+      strFromU8(
+        unzipSync(new Uint8Array(await (await GET_ARTIFACT(asGetEvent(id))).arrayBuffer()))['result.txt']
+      )
+    const artifact1 = await readResult(body1.jobId)
+    const artifact2 = await readResult(body2.jobId)
     expect(artifact1).toBe('result for A')
     expect(artifact2).toBe('result for B')
   })
@@ -278,10 +283,11 @@ describe('GET /api/tryitout/jobs/[id]/artifact', () => {
 
     const artifactRes = await GET_ARTIFACT(asGetEvent(jobId))
     expect(artifactRes.status).toBe(200)
-    expect(artifactRes.headers.get('Content-Type')).toBe('text/plain; charset=utf-8')
-    expect(artifactRes.headers.get('Content-Disposition')).toBe(`attachment; filename="aic-job-${jobId}.txt"`)
-    const text = await artifactRes.text()
-    expect(text).toBe('artifact content here')
+    expect(artifactRes.headers.get('Content-Type')).toBe('application/zip')
+    expect(artifactRes.headers.get('Content-Disposition')).toBe(`attachment; filename="aic-job-${jobId}.zip"`)
+    const entries = unzipSync(new Uint8Array(await artifactRes.arrayBuffer()))
+    expect(Object.keys(entries)).toEqual(['result.txt'])
+    expect(strFromU8(entries['result.txt'])).toBe('artifact content here')
   })
 
   it('returns 409 for a running job', async () => {
@@ -305,12 +311,12 @@ describe('GET /api/tryitout/jobs/[id]/artifact', () => {
     await expectHttpError(() => GET_ARTIFACT(asGetEvent('00000000-0000-0000-0000-000000000000')), 404)
   })
 
-  it('returns 404, not an unhandled ENOENT, for a succeeded job whose output file was deleted', async () => {
+  it('returns 404, not an unhandled ENOENT, for a succeeded job whose artifact.zip was deleted', async () => {
     mockCreate.mockResolvedValueOnce({ output_text: 'will be deleted' })
     const res = await POST(asPostEvent(makeForm({ agentId: AGENT_ID, task: 'triage this' })))
     const { jobId } = await res.json()
     await waitForStatus(jobId, ['succeeded', 'failed'])
-    await rm(jobsMod.outputFilePath(jobId))
+    await rm(jobsMod.artifactZipPath(jobId))
     await expectHttpError(() => GET_ARTIFACT(asGetEvent(jobId)), 404)
   })
 })

@@ -96,7 +96,7 @@ export async function downloadArtifact(jobId: string): Promise<void> {
     throw new Error(`downloadArtifact failed: ${res.status}`)
   }
   const blob = await res.blob()
-  triggerBlobDownload(blob, `aic-job-${safeFileToken(jobId)}.txt`)
+  triggerBlobDownload(blob, `aic-job-${safeFileToken(jobId)}.zip`)
 }
 
 function triggerBlobDownload(blob: Blob, filename: string): void {

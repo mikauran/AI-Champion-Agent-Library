@@ -19,6 +19,7 @@ import {
 } from './tryItOutJobs'
 import { loadPromptFor, composePrompt } from './tryItOutPrompts'
 import { MODEL, modelParams } from './tryItOutModel'
+import { zipOutputDir } from './tryitout/artifact'
 
 // Constructed lazily and memoized — NOT at module top level, so importing
 // this file without OPENAI_API_KEY set never throws (needed for tests and
@@ -71,6 +72,8 @@ export async function runJob(jobId: string): Promise<void> {
     pushEvent(jobId, 'writing output…')
     await mkdir(outputDir(jobId), { recursive: true })
     await writeFile(outputFilePath(jobId), text, 'utf-8')
+
+    await zipOutputDir(jobId)
 
     pushEvent(jobId, 'agent settled (clean exit)')
     setStatus(jobId, 'succeeded')
