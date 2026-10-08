@@ -10,6 +10,7 @@ import {
   outputDir,
   inputFilePath,
   outputFilePath,
+  artifactZipPath,
   __resetJobs,
 } from './tryItOutJobs'
 
@@ -125,5 +126,28 @@ describe('path helpers', () => {
     const a = createJob('demo-rfi-triage', 'a', null)
     const b = createJob('demo-rfi-triage', 'b', null)
     expect(workDir(a.jobId)).not.toBe(workDir(b.jobId))
+  })
+})
+
+describe('Phase 8 additions', () => {
+  it('pushEvent defaults to info with no tool key; typed events carry tool', () => {
+    const job = createJob('a', 't', null)
+    pushEvent(job.jobId, 'x')
+    pushEvent(job.jobId, 'read a', 'tool_start', 'read')
+    const [e1, e2] = getJob(job.jobId)!.events
+    expect(e1).toMatchObject({ type: 'info', summary: 'x' })
+    expect('tool' in e1).toBe(false)
+    expect(e2).toMatchObject({ type: 'tool_start', tool: 'read', summary: 'read a' })
+  })
+
+  it('createJob records an optional sessionKey (default null)', () => {
+    expect(createJob('a', 't', null).sessionKey).toBeNull()
+    expect(createJob('a', 't', null, 'anon:abc').sessionKey).toBe('anon:abc')
+  })
+
+  it('artifactZipPath ends in artifact.zip and rejects invalid ids', () => {
+    const job = createJob('a', 't', null)
+    expect(artifactZipPath(job.jobId).replace(/\\/g, '/')).toMatch(/\/artifact\.zip$/)
+    expect(() => artifactZipPath('../x')).toThrow(/invalid jobId/)
   })
 })
