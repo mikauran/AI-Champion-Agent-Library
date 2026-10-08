@@ -13,6 +13,8 @@ vi.mock('$lib/server/db', () => {
   }
 })
 
+vi.mock('$lib/server/tryitout/service', () => ({ warmForSession: vi.fn() }))
+
 // Mock drizzle-orm eq
 vi.mock('drizzle-orm', () => ({
   eq: vi.fn(),
