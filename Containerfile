@@ -53,7 +53,8 @@ ENV NODE_ENV=production \
     CATALOG_DB_PATH=/app/db/catalog.db \
     AUTH_DB_PATH=/app/runtime/auth/auth.db \
     TRYITOUT_WORK_DIR=/app/runtime/tryitout-work \
-    TRYITOUT_PROMPTS_DIR=/app/data/tryitout-prompts
+    TRYITOUT_PROMPTS_DIR=/app/data/tryitout-prompts \
+    PI_RUNNER_SOCKET=/run/podman/podman.sock
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/build ./build

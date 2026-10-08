@@ -193,21 +193,49 @@ separate `auth-data` volume. The public `/health` endpoint remains available for
 container health checks.
 
 Other env vars the container respects: `PORT` (default `3000`),
-`CATALOG_DB_PATH`, `AUTH_DB_PATH`, `TRYITOUT_WORK_DIR`, and
-`TRYITOUT_PROMPTS_DIR`.
+`CATALOG_DB_PATH`, `AUTH_DB_PATH`, `TRYITOUT_WORK_DIR`,
+`TRYITOUT_PROMPTS_DIR`, and the `PI_*` runner knobs (see `.env.example`).
 
 ### Trying out an agent
 
 Agents configured with `try_it_out_mode = 'runnable'` show the runnable Try it out panel.
-The build configures the `demo-rfi-triage` agent for this mode. A user supplies
-a task and an optional text file; the server queues a job, combines the agent
-prompt with its shipped `skill.md`, calls OpenAI, and exposes progress and a
-plain-text result download through `/api/tryitout/jobs/*`.
+The build configures the `demo-rfi-triage` agent for this mode. Opening a runnable
+agent's page warms a per-session Pi container (from the generic `pi-runner` image).
+A user supplies a task and an optional text file; jobs run `pi --mode json` inside
+that container, progress (including Pi tool calls) streams to the feed through
+`/api/tryitout/jobs/*`, and the download is a zip of the job's `output/` directory.
 
-Set `OPENAI_API_KEY` in `.env` before starting the application. With
-`podman-compose`, job files are stored in the `tryout-sessions` named volume at
-`TRYITOUT_WORK_DIR`. Job metadata is kept in memory, so active and completed job
-links do not survive an application restart.
+Pi's LLM calls go through the app's `/api/llm` proxy using a per-lease token; the
+real `OPENAI_API_KEY` stays in the app and is never given to a container. If the
+container engine is unreachable or a container fails to start, the job falls back
+to the direct model call (never when the runner is merely busy). Toggle with
+`PI_FALLBACK_ENABLED`. All `PI_*` knobs are documented in `.env.example`.
+
+Set `OPENAI_API_KEY` in `.env` before starting the application. Job metadata is
+kept in memory, so active and completed job links do not survive an application
+restart.
+
+#### Setting up the Pi runner
+
+1. Enable the user socket: `systemctl --user enable --now podman.socket`
+2. Build the image: `podman build -t localhost/pi-runner:latest -f Containerfile.pi-runner .`
+3. Start the app: `podman-compose up -d --build`. The compose file mounts the host
+   Podman socket into the app, and attaches it to the internal network
+   `aic-pi-internal` (alias `aic-agent-library`); Pi containers get no external egress.
+4. Check the host with the smoke script: `npx tsx scripts/smoke-pi-runner.ts`
+   (add `--proxy-host aic-agent-library` once the app is running). It prints the
+   `PI_RUNNER_FS_MODE` to use (`tmpfs` preferred, `layer` if the host needs it).
+
+Local development with `npm run dev` (to be confirmed by the smoke run): socket from
+`$XDG_RUNTIME_DIR`, `PI_RUNNER_NETWORK=podman`, `PI_RUNNER_ALLOW_OPEN_EGRESS=true`,
+`PI_LLM_PROXY_URL=http://host.containers.internal:5173/api/llm/v1`, and start Vite
+with `npx vite dev --host`.
+
+Operational notes: run a single app replica per engine user (orphaned containers are
+cleaned up at start-up on that assumption). Mounting the socket gives the app control
+over that user's containers, so use a dedicated host user. A dedicated runner user
+would need a relay container and only `PI_LLM_PROXY_URL` changes; that variant is not
+built in this phase. Resource limits need cgroup v2 delegation for rootless Podman.
 
 The runtime image only ships production dependencies (`npm prune --omit=dev`
 after the build) — build-only tooling like `vite`'s CLI, `drizzle-kit`, and
