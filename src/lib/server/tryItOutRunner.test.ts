@@ -38,6 +38,11 @@ let tmpDir: string
 let jobsMod: typeof import('./tryItOutJobs')
 let promptsMod: typeof import('./tryItOutPrompts')
 let runJob: typeof import('./tryItOutRunner').runJob
+let runDirectLlmJob: typeof import('./tryItOutRunner').runJob
+let svcMod: typeof import('./tryitout/service')
+let rtMod: typeof import('./tryitout/runtime')
+let fakeMod: typeof import('./tryitout/runtimeFake')
+let cfgMod: typeof import('./tryitout/runnerConfig')
 
 beforeAll(async () => {
   tmpDir = await mkdtemp(join(tmpdir(), 'tryitout-runner-test-'))
@@ -46,7 +51,11 @@ beforeAll(async () => {
 
   jobsMod = await import('./tryItOutJobs')
   promptsMod = await import('./tryItOutPrompts')
-  ;({ runJob } = await import('./tryItOutRunner'))
+  ;({ runJob, runDirectLlmJob } = await import('./tryItOutRunner'))
+  svcMod = await import('./tryitout/service')
+  rtMod = await import('./tryitout/runtime')
+  fakeMod = await import('./tryitout/runtimeFake')
+  cfgMod = await import('./tryitout/runnerConfig')
 })
 
 afterAll(async () => {
@@ -82,7 +91,7 @@ async function waitForEvent(jobId: string, summary: string, maxMs = 2000): Promi
 
 describe('module import / lazy client construction (SC-09)', () => {
   it('constructs the OpenAI client lazily — importing the module without OPENAI_API_KEY never throws and never constructs the client', () => {
-    expect(typeof runJob).toBe('function')
+    expect(typeof runDirectLlmJob).toBe('function')
     expect(OpenAICtorSpy).not.toHaveBeenCalled()
   })
 })
@@ -97,7 +106,7 @@ describe('runJob happy path', () => {
     )
     await writeInputFile(job.jobId, 'RFI: beam clash with ductwork, urgent')
 
-    await runJob(job.jobId)
+    await runDirectLlmJob(job.jobId)
 
     const updated = jobsMod.getJob(job.jobId)!
     expect(updated.status).toBe('succeeded')
@@ -114,7 +123,7 @@ describe('runJob happy path', () => {
     const job = jobsMod.createJob('demo-rfi-triage', 'task', new File(['x'], 'in.txt'))
     await writeInputFile(job.jobId, 'input content')
 
-    await runJob(job.jobId)
+    await runDirectLlmJob(job.jobId)
 
     const updated = jobsMod.getJob(job.jobId)!
     expect(updated.events.map((e) => e.summary)).toEqual([
@@ -130,7 +139,7 @@ describe('runJob happy path', () => {
     const job = jobsMod.createJob('demo-rfi-triage', 'task', new File(['x'], 'in.txt'))
     await writeInputFile(job.jobId, 'input content')
 
-    await runJob(job.jobId)
+    await runDirectLlmJob(job.jobId)
 
     const updated = jobsMod.getJob(job.jobId)!
     expect(updated.events.length).toBeGreaterThan(0)
@@ -143,7 +152,7 @@ describe('runJob happy path', () => {
     mockCreate.mockResolvedValueOnce({ output_text: 'result from task text' })
     const job = jobsMod.createJob('demo-rfi-triage', 'triage this task text directly', null)
 
-    await runJob(job.jobId)
+    await runDirectLlmJob(job.jobId)
 
     const updated = jobsMod.getJob(job.jobId)!
     expect(updated.status).toBe('succeeded')
@@ -162,7 +171,7 @@ describe('D-12: real-phase staged ordering', () => {
     })
     mockCreate.mockImplementationOnce(() => pending)
 
-    const runPromise = runJob(job.jobId)
+    const runPromise = runDirectLlmJob(job.jobId)
 
     await waitForEvent(job.jobId, 'calling model…')
     const midFlight = jobsMod.getJob(job.jobId)!
@@ -184,7 +193,7 @@ describe('runJob failure paths', () => {
     mockCreate.mockRejectedValueOnce(new Error('rate limit exceeded'))
     const job = jobsMod.createJob('demo-rfi-triage', 'task', null)
 
-    await runJob(job.jobId)
+    await runDirectLlmJob(job.jobId)
 
     const updated = jobsMod.getJob(job.jobId)!
     expect(updated.status).toBe('failed')
@@ -198,7 +207,7 @@ describe('runJob failure paths', () => {
     )
     const job = jobsMod.createJob('demo-rfi-triage', 'task', null)
 
-    await runJob(job.jobId)
+    await runDirectLlmJob(job.jobId)
 
     const updated = jobsMod.getJob(job.jobId)!
     expect(updated.status).toBe('failed')
@@ -209,11 +218,11 @@ describe('runJob failure paths', () => {
     mockCreate.mockRejectedValueOnce(new Error('boom'))
     const job = jobsMod.createJob('demo-rfi-triage', 'task', null)
 
-    await expect(runJob(job.jobId)).resolves.toBeUndefined()
+    await expect(runDirectLlmJob(job.jobId)).resolves.toBeUndefined()
   })
 
   it('runJob on an unknown jobId resolves without throwing and mutates nothing', async () => {
-    await expect(runJob('00000000-0000-0000-0000-000000000000')).resolves.toBeUndefined()
+    await expect(runDirectLlmJob('00000000-0000-0000-0000-000000000000')).resolves.toBeUndefined()
     expect(jobsMod.getJob('00000000-0000-0000-0000-000000000000')).toBeUndefined()
   })
 })
@@ -227,7 +236,7 @@ describe('concurrency (A-1)', () => {
     const jobA = jobsMod.createJob('demo-rfi-triage', 'JOB_A task', null)
     const jobB = jobsMod.createJob('demo-rfi-triage', 'JOB_B task', null)
 
-    await Promise.all([runJob(jobA.jobId), runJob(jobB.jobId)])
+    await Promise.all([runDirectLlmJob(jobA.jobId), runDirectLlmJob(jobB.jobId)])
 
     const doneA = jobsMod.getJob(jobA.jobId)!
     const doneB = jobsMod.getJob(jobB.jobId)!
@@ -240,5 +249,102 @@ describe('concurrency (A-1)', () => {
     expect(outputB).toContain('B')
     expect(outputA).not.toBe(outputB)
     expect(jobsMod.outputFilePath(jobA.jobId)).not.toBe(jobsMod.outputFilePath(jobB.jobId))
+  })
+})
+
+
+describe('dispatcher (D-14)', () => {
+  const MSG: Record<string, string> = {
+    engine_unavailable: 'engine down',
+    container_start_failed: 'start failed',
+    busy: 'all Try It Out slots are busy, try again shortly',
+    session_busy: 'a job is already running in your session',
+    exec_failed: 'exec failed',
+    output_invalid: 'output invalid',
+  }
+
+  function install(code: string, env: Record<string, string> = {}) {
+    const runtime = fakeMod.createFakeRuntime()
+    const config = cfgMod.parseRunnerConfig(env)
+    const svc = svcMod.createTryItOutService({ runtime, config, instanceId: 't' })
+    svc.leases.claim = async () => {
+      throw new rtMod.TryItOutRuntimeError(code as never, MSG[code])
+    }
+    svcMod.__setTryItOutServiceForTests(svc)
+  }
+
+  async function run(): Promise<ReturnType<typeof jobsMod.createJob>> {
+    mockCreate.mockResolvedValue({ output_text: 'direct output' })
+    const job = jobsMod.createJob('demo-rfi-triage', 'triage this', null)
+    await expect(runJob(job.jobId)).resolves.toBeUndefined()
+    return jobsMod.getJob(job.jobId)!
+  }
+
+  afterEach(() => {
+    svcMod.__setTryItOutServiceForTests(null)
+    vi.restoreAllMocks()
+  })
+
+  it('engine_unavailable falls back: warns once, notice precedes the model call, zip has result.txt', async () => {
+    install('engine_unavailable')
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const job = await run()
+    expect(warn).toHaveBeenCalledTimes(1)
+    const summaries = job.events.map((e) => e.summary)
+    const notice = summaries.indexOf('container unavailable, falling back to direct model call')
+    expect(notice).toBeGreaterThanOrEqual(0)
+    expect(summaries.indexOf('calling model…')).toBeGreaterThan(notice)
+    expect(job.status).toBe('succeeded')
+    const { unzipSync } = await import('fflate')
+    const entries = unzipSync(new Uint8Array(await readFile(jobsMod.artifactZipPath(job.jobId))))
+    expect(Object.keys(entries)).toEqual(['result.txt'])
+  })
+
+  it('container_start_failed falls back the same way', async () => {
+    install('container_start_failed')
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const job = await run()
+    expect(job.status).toBe('succeeded')
+    expect(job.events.some((e) => e.summary.startsWith('container unavailable'))).toBe(true)
+  })
+
+  it('busy fails with the slots message and never calls OpenAI', async () => {
+    install('busy')
+    const job = await run()
+    expect(job.status).toBe('failed')
+    expect(job.error).toBe('all Try It Out slots are busy, try again shortly')
+    expect(mockCreate).not.toHaveBeenCalled()
+    expect(job.events.some((e) => e.summary.startsWith('container unavailable'))).toBe(false)
+  })
+
+  it('session_busy fails and never calls OpenAI', async () => {
+    install('session_busy')
+    const job = await run()
+    expect(job.status).toBe('failed')
+    expect(job.error).toBe('a job is already running in your session')
+    expect(mockCreate).not.toHaveBeenCalled()
+  })
+
+  it('fallback disabled: engine_unavailable fails with the real cause', async () => {
+    install('engine_unavailable', { PI_FALLBACK_ENABLED: 'false' })
+    const job = await run()
+    expect(job.status).toBe('failed')
+    expect(job.error).toBe('engine down')
+    expect(mockCreate).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['engine_unavailable', true],
+    ['container_start_failed', true],
+    ['busy', false],
+    ['session_busy', false],
+    ['exec_failed', false],
+    ['output_invalid', false],
+  ])('invariant: %s falls back = %s', async (code, falls) => {
+    install(code)
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const job = await run()
+    expect(mockCreate.mock.calls.length > 0).toBe(falls)
+    expect(job.status).toBe(falls ? 'succeeded' : 'failed')
   })
 })
