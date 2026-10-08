@@ -5,7 +5,7 @@
 //   - the base prompt: `agents.system_prompt` (already ingested from the
 //     agent's YAML at deploy time — reused here rather than inventing a
 //     second prompt-storage mechanism, per 07-RESEARCH.md Open Questions §2)
-//   - the skill text: `data/tryitout-prompts/<agentId>/skill.md`, a file
+//   - the skill text: `data/tryitout-prompts/<agentId>/SKILL.md`, a file
 //     shipped with the app, deliberately outside `data/agents/` so it can
 //     never collide with scripts/ingest.ts's .yaml/.yml/.json extension
 //     filter.
@@ -15,6 +15,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { eq } from 'drizzle-orm'
+import { parse as parseYaml } from 'yaml'
 import { z } from 'zod'
 import { db, agents } from './db'
 
@@ -50,17 +51,53 @@ export async function loadPromptFor(agentId: string): Promise<LoadedPrompt> {
     throw new Error(`agent ${agentId} has an empty system prompt`)
   }
 
-  const skillPath = join(PROMPTS_DIR, agentId, 'skill.md')
-  let skill: string
+  const { text } = await readSkillFile(agentId)
+  return { basePrompt: row.systemPrompt, skill: parseSkillFrontmatter(text).body }
+}
+
+async function readSkillFile(agentId: string): Promise<{ text: string; path: string }> {
+  const skillPath = join(PROMPTS_DIR, agentId, 'SKILL.md')
   try {
-    skill = await readFile(skillPath, 'utf-8')
+    return { text: await readFile(skillPath, 'utf-8'), path: skillPath }
   } catch {
     // Failed runs must report the REAL cause (CONTEXT.md discretion rule),
     // never an unhandled ENOENT.
     throw new Error(`missing skill file for agent ${agentId}: ${skillPath}`)
   }
+}
 
-  return { basePrompt: row.systemPrompt, skill }
+// Splits a leading `---` YAML frontmatter block off a skill file.
+export function parseSkillFrontmatter(text: string): { name: string | null; description: string | null; body: string } {
+  const m = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/.exec(text)
+  if (!m) return { name: null, description: null, body: text }
+  let meta: unknown = null
+  try {
+    meta = parseYaml(m[1])
+  } catch {
+    meta = null
+  }
+  const rec = meta && typeof meta === 'object' ? (meta as Record<string, unknown>) : {}
+  const name = typeof rec.name === 'string' ? rec.name : null
+  const description = typeof rec.description === 'string' ? rec.description : null
+  return { name, description, body: text.slice(m[0].length).replace(/^\r?\n/, '') }
+}
+
+// Loads the raw SKILL.md (frontmatter included) for the container, validated
+// so Pi will actually load it (R-05).
+export async function loadPiSkill(agentId: string): Promise<{ basePrompt: string; skillMarkdown: string }> {
+  AgentIdSchema.parse(agentId) // T3-2 guard before any path join
+  const row = db.select().from(agents).where(eq(agents.slug, agentId)).get()
+  if (!row) throw new Error(`unknown agent: ${agentId}`)
+  if (!row.systemPrompt) throw new Error(`agent ${agentId} has an empty system prompt`)
+  const { text, path } = await readSkillFile(agentId)
+  const fm = parseSkillFrontmatter(text)
+  if (fm.name !== agentId) {
+    throw new Error(`invalid skill file ${path}: frontmatter name must be ${agentId}`)
+  }
+  if (!fm.description || !fm.description.trim() || fm.description.length > 1024) {
+    throw new Error(`invalid skill file ${path}: description must be 1-1024 characters`)
+  }
+  return { basePrompt: row.systemPrompt, skillMarkdown: text }
 }
 
 export function composePrompt(parts: { basePrompt: string; skill: string; inputText: string }): string {

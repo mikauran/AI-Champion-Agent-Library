@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { readFile } from 'node:fs/promises'
 import { eq } from 'drizzle-orm'
 import { db, agents } from './db'
-import { AgentIdSchema, loadPromptFor, composePrompt } from './tryItOutPrompts'
+import { AgentIdSchema, loadPromptFor, loadPiSkill, parseSkillFrontmatter, composePrompt } from './tryItOutPrompts'
 
 vi.mock('node:fs/promises', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs/promises')>()
@@ -35,7 +35,7 @@ describe('AgentIdSchema', () => {
 })
 
 describe('loadPromptFor', () => {
-  it('loads both the DB base prompt and the skill.md file for demo-rfi-triage', async () => {
+  it('loads both the DB base prompt and the SKILL.md file for demo-rfi-triage', async () => {
     const row = db.select().from(agents).where(eq(agents.slug, 'demo-rfi-triage')).get()
     if (!row) {
       throw new Error(
@@ -47,6 +47,9 @@ describe('loadPromptFor', () => {
     expect(result.basePrompt).toBe(row.systemPrompt)
     expect(result.basePrompt.length).toBeGreaterThan(0)
     expect(result.skill.length).toBeGreaterThan(0)
+    expect(result.skill).not.toMatch(/^---/)
+    expect(result.skill).not.toContain('name: demo-rfi-triage')
+    expect(result.skill).toContain('Output format')
   })
 
   it('rejects a traversal agentId with no filesystem read', async () => {
@@ -61,11 +64,50 @@ describe('loadPromptFor', () => {
         "rfi-triage-assistant row not found in the dev DB — run 'npm run ingest' before running this test suite"
       )
     }
-    await expect(loadPromptFor('rfi-triage-assistant')).rejects.toThrow(/missing skill file/)
+    await expect(loadPromptFor('rfi-triage-assistant')).rejects.toThrow(/missing skill file.*SKILL\.md/)
   })
 
   it('rejects an unknown agent, naming it', async () => {
     await expect(loadPromptFor('no-such-agent')).rejects.toThrow(/unknown agent: no-such-agent/)
+  })
+})
+
+describe('parseSkillFrontmatter', () => {
+  it('parses name, description and body', () => {
+    expect(parseSkillFrontmatter('---\nname: x\ndescription: d\n---\nBODY')).toEqual({
+      name: 'x',
+      description: 'd',
+      body: 'BODY',
+    })
+  })
+  it('returns the text unchanged without frontmatter', () => {
+    expect(parseSkillFrontmatter('just text')).toEqual({ name: null, description: null, body: 'just text' })
+  })
+})
+
+describe('loadPiSkill', () => {
+  it('returns raw SKILL.md with valid frontmatter for demo-rfi-triage', async () => {
+    const row = db.select().from(agents).where(eq(agents.slug, 'demo-rfi-triage')).get()
+    const r = await loadPiSkill('demo-rfi-triage')
+    expect(r.basePrompt).toBe(row!.systemPrompt)
+    expect(r.skillMarkdown.startsWith('---')).toBe(true)
+    const fm = parseSkillFrontmatter(r.skillMarkdown)
+    expect(fm.name).toBe('demo-rfi-triage')
+    expect(fm.description!.length).toBeGreaterThan(0)
+    expect(fm.description!.length).toBeLessThanOrEqual(1024)
+    expect(() => AgentIdSchema.parse(fm.name)).not.toThrow()
+  })
+  it('rejects a name mismatch, naming the file', async () => {
+    mockedReadFile.mockResolvedValueOnce('---\nname: other\ndescription: d\n---\nbody' as never)
+    await expect(loadPiSkill('demo-rfi-triage')).rejects.toThrow(/SKILL\.md/)
+  })
+  it('rejects an empty description, naming the file', async () => {
+    mockedReadFile.mockResolvedValueOnce('---\nname: demo-rfi-triage\ndescription: ""\n---\nbody' as never)
+    await expect(loadPiSkill('demo-rfi-triage')).rejects.toThrow(/SKILL\.md/)
+  })
+  it('rejects a traversal id with no filesystem read', async () => {
+    await expect(loadPiSkill('../etc')).rejects.toThrow()
+    expect(mockedReadFile).not.toHaveBeenCalled()
   })
 })
 
