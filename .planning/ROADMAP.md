@@ -212,13 +212,13 @@ Plans:
 **Goal:** Opening an agent's detail page warms a container running Pi with that agent's skill, so Try It Out runs in it behind the existing job API with no cold-start wait. Replaces the direct-LLM runner from Phase 7, which stays as fallback.
 **Requirements**: Derived from 08-CONTEXT.md decisions D-01..D-22 (no REQ-IDs mapped)
 **Depends on:** Phase 7
-**Plans:** 8 plans
+**Plans:** 1/8 plans executed
 
 Plans:
 
 **Wave 1**
 
-- [ ] 08-01-PLAN.md — Container runtime layer: `ContainerRuntime` contract, dockerode runtime over the Podman socket, fake runtime, env config, D-21 limits, internal-network guard; npm deps
+- [x] 08-01-PLAN.md — Container runtime layer: `ContainerRuntime` contract, dockerode runtime over the Podman socket, fake runtime, env config, D-21 limits, internal-network guard; npm deps
 - [ ] 08-02-PLAN.md — Pi JSONL parser, event mapper and completion rule; `skill.md` -> Pi `SKILL.md` with frontmatter, fallback loader kept working
 - [ ] 08-03-PLAN.md — LLM proxy `/api/llm/v1/chat/completions` (per-lease token, per-job budget, server-side key, SSE pass-through) and the `/api/llm/` auth-hook exemption
 

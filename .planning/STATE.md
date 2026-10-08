@@ -2,18 +2,18 @@
 gsd_state_version: "1.0"
 milestone: v1.0
 current_phase: 08
-current_phase_name: container-backed-try-it-out-warm-on-visit
-status: paused
-stopped_at: Phase 8 context gathered
-last_updated: "2026-10-08T05:32:38.513Z"
-last_activity: 2026-08-20
-last_activity_desc: Phase 7 Plan 5 (`?job=` session persistence + live E2E verification) completed and human-approved
-state_head: 2f17e65014d130fcb8b914dcb004a459d8ac0c46
+current_phase_name: Container-backed Try It Out (warm on visit)
+status: executing
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-10-08T06:01:15.038Z"
+last_activity: 2026-10-08
+last_activity_desc: Phase 08 execution started
+state_head: 3233cfe3ed8e636c8ad425a67adac529824121d3
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 24
-  completed_plans: 15
+  completed_plans: 16
 milestone_name: milestone
 ---
 
@@ -24,14 +24,14 @@ milestone_name: milestone
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Tech evaluators and executives can find the right AI agent for their use case within seconds — through semantic search or category browsing — and understand what it does, how it works, and how to get it.
-**Current focus:** Phases 1, 5, 6, and 7 are complete. Phase 2 is functionally done (3/4 plans) but its human-verification checkpoint (02-04) was never executed. Phases 3 (Search) and 4 (Customization Placeholder) are not started — no plans exist yet for either.
+**Current focus:** Phase 08 — Container-backed Try It Out (warm on visit)
 
 ## Current Position
 
-Phase: 08 (container-backed-try-it-out-warm-on-visit) — READY TO EXECUTE
-Plan: 5 of 5 in Phase 7
-Status: Paused — all assigned plans across Phases 1, 5, 6, 7 complete. Phase 2 has an unexecuted checkpoint (02-04-PLAN.md); Phases 3/4 not started.
-Last activity: 2026-08-20 — Phase 7 Plan 5 (`?job=` session persistence + live E2E verification) completed and human-approved
+Phase: 08 (Container-backed Try It Out (warm on visit)) — EXECUTING
+Plan: 2 of 8
+Status: Ready to execute
+Last activity: 2026-10-08 — Phase 08 execution started
 
 Progress: [█████████░] 94%
 
@@ -86,6 +86,7 @@ Not "missing" in the sense of lost work — these are legitimate gaps in the roa
 | 07-03 | 20 min | 3 | 7 |
 | 07-04 | 24 min | 3 | 9 |
 | 07-05 | ~22 min | 3 | 5 |
+| Phase 08 P01 | 10 min | 2 tasks | 10 files |
 
 *Updated after each plan completion. 02-04 has no row — it was never executed (see "Missing / Open Work").*
 
@@ -129,6 +130,7 @@ Recent decisions affecting current work:
 - [Phase 07-05]: `writeJobIdToUrl`/`clearJobIdFromUrl` kept synchronous per the frozen `?job=` helper signatures by importing `$app/navigation`'s `replaceState` statically and wrapping only the call site in try/catch (never the import) — preserves SSR/router-optional safety without forcing an async signature
 - [Phase 07-05]: `fakeJobApi.ts`'s test-stub jobId generation switched from an arbitrary `"fake-job-N"` string to `crypto.randomUUID()` to match the real backend's actual ID scheme — required for the UUID-validated `?job=` write path to be testable at all
 - [Post-Phase 7 housekeeping]: Fixed a latent bug in `.claude/get-shit-done/bin/lib/state.cjs`'s `cmdStateUpdateProgress` — its plain `Progress:` regex was unanchored to the document body and could match this file's own YAML frontmatter `progress:` key, clobbering it on write. Now scoped to the body only.
+- [Phase 08]: Runtime exec drains demuxed streams before reading exit code; builtin networks treated non-internal for egress guard — Avoid lost output; enforce D-19 uniformly
 
 ### Pending Todos
 
@@ -156,6 +158,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-10-06T07:54:53.578Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-container-backed-try-it-out-warm-on-visit/08-CONTEXT.md
+Last session: 2026-10-08T06:01:14.850Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: None
