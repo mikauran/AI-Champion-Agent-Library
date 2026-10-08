@@ -212,7 +212,7 @@ Plans:
 **Goal:** Opening an agent's detail page warms a container running Pi with that agent's skill, so Try It Out runs in it behind the existing job API with no cold-start wait. Replaces the direct-LLM runner from Phase 7, which stays as fallback.
 **Requirements**: Derived from 08-CONTEXT.md decisions D-01..D-22 (no REQ-IDs mapped)
 **Depends on:** Phase 7
-**Plans:** 4/8 plans executed
+**Plans:** 5/8 plans executed
 
 Plans:
 
@@ -225,7 +225,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 08-04-PLAN.md — Zip artifact end to end (store, route, client `.zip`), typed `pushEvent`, `sessionKey` on jobs
-- [ ] 08-05-PLAN.md — Lease manager (per-session, CAS states, cap/evict/busy, TTL reaper, orphan sweep), session identity, service wiring with warm-time staging of models.json + skill
+- [x] 08-05-PLAN.md — Lease manager (per-session, CAS states, cap/evict/busy, TTL reaper, orphan sweep), session identity, service wiring with warm-time staging of models.json + skill
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
