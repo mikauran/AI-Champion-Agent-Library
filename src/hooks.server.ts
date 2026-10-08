@@ -1,10 +1,20 @@
-import { json, redirect, type Handle } from '@sveltejs/kit'
+import { json, redirect, type Handle, type ServerInit } from '@sveltejs/kit'
 import { AUTH_COOKIE_NAME, authCookieOptions, getAuthService } from '$lib/server/auth'
 import { isAuthenticationEnabled } from '$lib/server/auth-config'
+import { startTryItOutService } from '$lib/server/tryitout/service'
 
 const PUBLIC_ROUTES = new Set(['/login', '/health'])
 // The LLM proxy authenticates with per-lease bearer tokens (D-17); containers carry no user cookie.
 const PUBLIC_PREFIXES = ['/api/llm/']
+
+// Runs once at server start (not at import): orphan sweep + idle reaper.
+export const init: ServerInit = async () => {
+  try {
+    startTryItOutService()
+  } catch (err) {
+    console.warn('Try It Out service failed to start:', err instanceof Error ? err.message : err)
+  }
+}
 
 export const handle: Handle = async ({ event, resolve }) => {
   if (!isAuthenticationEnabled()) {

@@ -8,7 +8,16 @@ vi.mock('$lib/server/auth', () => ({
   getAuthService: () => ({ getSession: () => null }),
 }))
 
-import { handle } from './hooks.server'
+// Plain function (not a spy) so a deliberate throw is not reported as a test error by the mock tracker.
+const svc = vi.hoisted(() => ({ calls: 0, fail: false }))
+vi.mock('$lib/server/tryitout/service', () => ({
+  startTryItOutService: () => {
+    svc.calls++
+    if (svc.fail) throw new Error('boom')
+  },
+}))
+
+import { handle, init } from './hooks.server'
 
 function makeEvent(path: string, method = 'POST') {
   return {
@@ -69,5 +78,30 @@ describe('hooks.server auth handling', () => {
     expect(resolve).toHaveBeenCalled()
     expect(res?.status).toBe(200)
     expect(event.locals.user).toBeNull()
+  })
+})
+
+describe('hooks.server init', () => {
+  beforeEach(() => {
+    svc.calls = 0
+    svc.fail = false
+  })
+
+  it('does not start the service merely by importing', () => {
+    expect(svc.calls).toBe(0)
+  })
+
+  it('init starts the service once', async () => {
+    await init()
+    expect(svc.calls).toBe(1)
+  })
+
+  it('init resolves even if the service throws', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    svc.fail = true
+    await expect(init()).resolves.toBeUndefined()
+    expect(svc.calls).toBe(1)
+    expect(warn).toHaveBeenCalled()
+    warn.mockRestore()
   })
 })
