@@ -212,7 +212,7 @@ Plans:
 **Goal:** Opening an agent's detail page warms a container running Pi with that agent's skill, so Try It Out runs in it behind the existing job API with no cold-start wait. Replaces the direct-LLM runner from Phase 7, which stays as fallback.
 **Requirements**: Derived from 08-CONTEXT.md decisions D-01..D-22 (no REQ-IDs mapped)
 **Depends on:** Phase 7
-**Plans:** 6/8 plans executed
+**Plans:** 7/8 plans executed
 
 Plans:
 
@@ -230,7 +230,7 @@ Plans:
 **Wave 3** *(blocked on Wave 2 completion)*
 
 - [x] 08-06-PLAN.md — Jobs run `pi --mode json` in the session's container; `runJob` dispatcher with fallback only on engine/start failure; timeout/budget/failure modes
-- [ ] 08-07-PLAN.md — Warm on visit from the agent page load (non-blocking) and service start via the `init` hook
+- [x] 08-07-PLAN.md — Warm on visit from the agent page load (non-blocking) and service start via the `init` hook
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
