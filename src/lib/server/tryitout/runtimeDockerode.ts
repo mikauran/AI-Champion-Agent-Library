@@ -7,7 +7,7 @@
 // import time, so importing this module never opens the socket.
 //
 // Files move in and out through the archive API (putArchive/getArchive), never
-// bind mounts (Pitfall 2), and exec never uses stdin (R-01).
+// host-path mounts (Pitfall 2), and exec never attaches stdin (R-01).
 
 import Docker from 'dockerode'
 import tar from 'tar-stream'
@@ -30,10 +30,21 @@ import type { RunnerConfig } from './runnerConfig'
 const MB = 1024 * 1024
 
 /**
- * Pure create-options builder (D-21). Never emits Binds, PortBindings,
- * ExposedPorts, Privileged or CapAdd; caller data is limited to name, labels, env.
+ * Pure create-options builder (D-21). Never emits host mounts, published
+ * ports, privileged mode or added capabilities; caller data is limited to name, labels, env.
  */
 export function buildCreateOptions(cfg: RunnerConfig, spec: ContainerSpec): Docker.ContainerCreateOptions {
+  const layer = cfg.fsMode === 'layer'
+  // 'layer' fallback (Pattern 3): archive writes cannot target tmpfs or a
+  // read-only rootfs on every engine, so work and agent dirs live in the
+  // writable layer and only /tmp stays tmpfs.
+  const Tmpfs: Record<string, string> = layer
+    ? { '/tmp': `rw,size=${cfg.tmpTmpfsMb}m,mode=1777` }
+    : {
+        '/work': `rw,size=${cfg.workTmpfsMb}m,mode=1777`,
+        '/tmp': `rw,size=${cfg.tmpTmpfsMb}m,mode=1777`,
+        '/home/pi/agent': `rw,size=${cfg.agentTmpfsMb}m,uid=1000,gid=1000,mode=0700`,
+      }
   return {
     Image: cfg.image,
     name: spec.name,
@@ -49,17 +60,25 @@ export function buildCreateOptions(cfg: RunnerConfig, spec: ContainerSpec): Dock
       SecurityOpt: ['no-new-privileges'],
       Init: true,
       NetworkMode: cfg.network,
-      ReadonlyRootfs: true,
-      Tmpfs: {
-        '/work': `rw,size=${cfg.workTmpfsMb}m,mode=1777`,
-        '/tmp': `rw,size=${cfg.tmpTmpfsMb}m,mode=1777`,
-        '/home/pi/agent': `rw,size=${cfg.agentTmpfsMb}m,uid=1000,gid=1000,mode=0700`,
-      },
+      ReadonlyRootfs: !layer,
+      Tmpfs,
     },
   }
 }
 
-async function collect(stream: NodeJS.ReadableStream): Promise<Buffer> {
+const ENGINE_ERRNOS = new Set(['ENOENT', 'ECONNREFUSED', 'EACCES', 'EPERM'])
+
+/** True for socket-level connection failures (engine not running / not reachable). */
+export function isEngineConnectionError(err: unknown): boolean {
+  const code = (err as { code?: unknown } | null)?.code
+  return typeof code === 'string' && ENGINE_ERRNOS.has(code)
+}
+
+function messageOf(err: unknown): string {
+  return err instanceof Error ? err.message : String(err)
+}
+
+async function collect(stream: AsyncIterable<unknown>): Promise<Buffer> {
   const chunks: Buffer[] = []
   for await (const chunk of stream) {
     chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Uint8Array))
@@ -79,7 +98,7 @@ async function buildTar(files: StagedFile[]): Promise<Buffer> {
       pack.entry({ name: f.path, type: 'directory', mode: f.mode ?? 0o755, uid: 1000, gid: 1000 })
     } else {
       const raw = f.content ?? ''
-      const body = typeof raw === 'string' ? Buffer.from(raw) : Buffer.from(raw)
+      const body = Buffer.from(raw)
       pack.entry({ name: f.path, type: 'file', mode: f.mode ?? 0o644, uid: 1000, gid: 1000, size: body.length }, body)
     }
   }
@@ -94,29 +113,79 @@ export function createDockerodeRuntime(cfg: RunnerConfig, instanceId: string): C
     if (!docker) docker = new Docker({ socketPath: cfg.socketPath })
     return docker
   }
+  const mapEngineError = (err: unknown): Error =>
+    isEngineConnectionError(err)
+      ? new TryItOutRuntimeError(
+          'engine_unavailable',
+          `container engine not reachable at ${cfg.socketPath}: ${messageOf(err)}`,
+        )
+      : err instanceof Error
+        ? err
+        : new Error(String(err))
 
   return {
     async ping() {
-      await client().ping()
+      try {
+        await client().ping()
+      } catch (err) {
+        throw mapEngineError(err)
+      }
     },
 
     async ensureNetwork() {
       const d = client()
-      try {
-        await d.getNetwork(cfg.network).inspect()
-      } catch (err) {
-        if ((err as { statusCode?: number }).statusCode !== 404) throw err
+      const builtin = cfg.network === 'podman' || cfg.network === 'bridge' || cfg.network === 'host'
+      let internal = false
+      if (!builtin) {
         try {
-          await d.createNetwork({ Name: cfg.network, Internal: true, Labels: { [LABEL_MANAGED]: '1' } })
-        } catch (createErr) {
-          if ((createErr as { statusCode?: number }).statusCode !== 409) throw createErr
+          const info = await d.getNetwork(cfg.network).inspect()
+          internal = info?.Internal === true
+        } catch (err) {
+          if (isEngineConnectionError(err)) throw mapEngineError(err)
+          if ((err as { statusCode?: number }).statusCode !== 404) throw err
+          try {
+            await d.createNetwork({ Name: cfg.network, Internal: true, Labels: { [LABEL_MANAGED]: '1' } })
+            internal = true
+          } catch (createErr) {
+            if (isEngineConnectionError(createErr)) throw mapEngineError(createErr)
+            if ((createErr as { statusCode?: number }).statusCode !== 409) throw createErr
+            // Lost a creation race: re-inspect the network someone else created.
+            const info = await d.getNetwork(cfg.network).inspect()
+            internal = info?.Internal === true
+          }
         }
+      }
+      if (!internal && !cfg.allowOpenEgress) {
+        throw new TryItOutRuntimeError(
+          'container_start_failed',
+          `network "${cfg.network}" is not internal; refusing to run Pi with open egress. ` +
+            'Use an internal network, or set PI_RUNNER_ALLOW_OPEN_EGRESS=true for local development only.',
+        )
       }
     },
 
     async createAndStart(spec) {
-      const container = await client().createContainer(buildCreateOptions(cfg, spec))
-      await container.start()
+      const d = client()
+      let container: Docker.Container
+      try {
+        container = await d.createContainer(buildCreateOptions(cfg, spec))
+      } catch (err) {
+        if (isEngineConnectionError(err)) throw mapEngineError(err)
+        if ((err as { statusCode?: number }).statusCode === 404) {
+          throw new TryItOutRuntimeError(
+            'container_start_failed',
+            `image ${cfg.image} not found; build it with: podman build -t pi-runner -f Containerfile.pi-runner . (${messageOf(err)})`,
+          )
+        }
+        throw new TryItOutRuntimeError('container_start_failed', messageOf(err))
+      }
+      try {
+        await container.start()
+      } catch (err) {
+        await container.remove({ force: true }).catch(() => {})
+        if (isEngineConnectionError(err)) throw mapEngineError(err)
+        throw new TryItOutRuntimeError('container_start_failed', messageOf(err))
+      }
       return container.id
     },
 

@@ -15,7 +15,7 @@ vi.mock('dockerode', async () => {
   const tar = (await import('tar-stream')).default
   const { PassThrough } = await import('node:stream')
 
-  async function readAll(stream: NodeJS.ReadableStream): Promise<Buffer> {
+  async function readAll(stream: AsyncIterable<unknown>): Promise<Buffer> {
     const chunks: Buffer[] = []
     for await (const c of stream) chunks.push(Buffer.from(c as Uint8Array))
     return Buffer.concat(chunks)

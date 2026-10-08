@@ -1,7 +1,7 @@
 // src/lib/server/tryitout/runnerConfig.ts
 // Server-only module — SvelteKit enforces that src/lib/server/ cannot be imported client-side.
 //
-// Pure env parser (no $env import) so tsx scripts can use it too. The
+// Pure env parser (does not read SvelteKit env) so tsx scripts can use it too. The
 // SvelteKit-aware wrapper lives in config.ts.
 
 import { z } from 'zod'
