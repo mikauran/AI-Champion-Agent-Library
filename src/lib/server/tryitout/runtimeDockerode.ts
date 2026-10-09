@@ -43,7 +43,9 @@ export function buildCreateOptions(cfg: RunnerConfig, spec: ContainerSpec): Dock
     : {
         '/work': `rw,size=${cfg.workTmpfsMb}m,mode=1777`,
         '/tmp': `rw,size=${cfg.tmpTmpfsMb}m,mode=1777`,
-        '/home/pi/agent': `rw,size=${cfg.agentTmpfsMb}m,uid=1000,gid=1000,mode=0700`,
+        // Podman 4.9 rejects the uid=/gid= tmpfs options (verified by the live smoke run), so
+        // the agent dir is sticky world-writable instead; only the pi user exists in the container.
+        '/home/pi/agent': `rw,size=${cfg.agentTmpfsMb}m,mode=1777`,
       }
   return {
     Image: cfg.image,

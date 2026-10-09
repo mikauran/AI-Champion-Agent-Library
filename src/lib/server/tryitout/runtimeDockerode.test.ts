@@ -63,7 +63,8 @@ describe('buildCreateOptions', () => {
     expect(hc.Tmpfs!['/work']).toContain('size=256m')
     expect(hc.Tmpfs!['/tmp']).toContain('size=64m')
     expect(hc.Tmpfs!['/home/pi/agent']).toContain('size=16m')
-    expect(hc.Tmpfs!['/home/pi/agent']).toContain('uid=1000')
+    expect(hc.Tmpfs!['/home/pi/agent']).toContain('mode=1777')
+    expect(hc.Tmpfs!['/home/pi/agent']).not.toMatch(/uid=|gid=/)
   })
 
   it('never emits ports, mounts or privilege escalation keys', () => {
