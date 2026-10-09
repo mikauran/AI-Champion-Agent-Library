@@ -226,10 +226,12 @@ restart.
    (add `--proxy-host aic-agent-library` once the app is running). It prints the
    `PI_RUNNER_FS_MODE` to use (`tmpfs` preferred, `layer` if the host needs it).
 
-Local development with `npm run dev` (to be confirmed by the smoke run): socket from
-`$XDG_RUNTIME_DIR`, `PI_RUNNER_NETWORK=podman`, `PI_RUNNER_ALLOW_OPEN_EGRESS=true`,
-`PI_LLM_PROXY_URL=http://host.containers.internal:5173/api/llm/v1`, and start Vite
-with `npx vite dev --host`.
+Local development with `npm run dev` (verified on rootless Podman 4.9.3, Ubuntu 24.04): the
+socket comes from `$XDG_RUNTIME_DIR`; set `PI_RUNNER_NETWORK=podman`,
+`PI_RUNNER_ALLOW_OPEN_EGRESS=true` and
+`PI_LLM_PROXY_URL=http://host.containers.internal:5173/api/llm/v1`, and start Vite with
+`npm run dev -- --host` (it binds all interfaces so containers can reach it;
+`vite.config.ts` allows the `host.containers.internal` Host header in dev).
 
 Operational notes: run a single app replica per engine user (orphaned containers are
 cleaned up at start-up on that assumption). Mounting the socket gives the app control

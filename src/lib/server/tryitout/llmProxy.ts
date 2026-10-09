@@ -30,10 +30,22 @@ interface ActiveJob {
   usage: JobUsage
 }
 
-const tokensByHex = new Map<string, TokenEntry>()
-const hexByLease = new Map<string, string>()
-const activeJobs = new Map<string, ActiveJob>()
-const finishedUsage = new Map<string, JobUsage>()
+// Held on globalThis, like the lease service (service.ts), so a Vite dev reload of this module
+// cannot drop tokens while the surviving lease manager still hands them to running containers.
+interface ProxyState {
+  tokensByHex: Map<string, TokenEntry>
+  hexByLease: Map<string, string>
+  activeJobs: Map<string, ActiveJob>
+  finishedUsage: Map<string, JobUsage>
+}
+const proxyGlobal = globalThis as typeof globalThis & { __aicLlmProxyState?: ProxyState }
+proxyGlobal.__aicLlmProxyState ??= {
+  tokensByHex: new Map(),
+  hexByLease: new Map(),
+  activeJobs: new Map(),
+  finishedUsage: new Map(),
+}
+const { tokensByHex, hexByLease, activeJobs, finishedUsage } = proxyGlobal.__aicLlmProxyState
 
 function digestOf(token: string): Buffer {
   return createHash('sha256').update(token).digest()
