@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS agents (
   llm_max_tokens INTEGER,
   llm_top_p REAL,
   tool_names TEXT NOT NULL DEFAULT '[]',
+  input_schema TEXT NOT NULL DEFAULT '[]',
   requires_human_approval INTEGER NOT NULL DEFAULT 0,
   category TEXT,
   github_url TEXT,
