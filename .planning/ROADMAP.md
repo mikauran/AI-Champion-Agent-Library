@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 9: Try It Out Hardening** - Adversarial review and chaos tests of the Phase 8 lease/proxy/container code
 - [x] **Phase 10: Accessibility (UI-03)** - WCAG AA keyboard navigation and screen-reader labels across catalog and detail
 - [x] **Phase 11: Related Agents (DISC-01)** - Similar-agents panel on the detail page using Phase 3 embeddings
-- [ ] **Phase 12: Agent Types and Intake Research** - Taxonomy of hostable agent types/systems, per-format capability matrix, author intake guide
+- [x] **Phase 12: Agent Types and Intake Research** - Taxonomy of hostable agent types/systems, per-format capability matrix, author intake guide
 - [ ] **Phase 13: Multi-Agent and Multi-Format Hosting (flagged)** - Canonical model extension, adapters, validate-submission CLI, system detail rendering, all behind a feature flag
 - [ ] **Phase 14: MCP Generator (generalized from research, flagged)** - Research synthesis first, then input-adapter generator (DB schema/CUST-02 is one adapter among OpenAPI, tabular catalogs, ...)
 - [ ] **Phase 15: MCP Test Platform (flagged)** - Port the existing benchmark harness (offline mock pattern, D1-D6 scoring, tier gates) to score any MCP server
