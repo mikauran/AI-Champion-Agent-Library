@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Data Pipeline** - Canonical data model, Oracle AgentSpec ingestion, SQLite store (completed 2026-03-19)
 - [ ] **Phase 2: Catalog and Detail** - Browse page, agent detail page, responsive layout
-- [ ] **Phase 2.1: Green Baseline (INSERTED)** - Zero type errors, zero failing tests before further work
+- [x] **Phase 2.1: Green Baseline (INSERTED)** - Zero type errors, zero failing tests before further work
 - [ ] **Phase 2.2: Scale and Seed Data (INSERTED)** - Synthetic 150-agent fixture set for search, pagination and ingest scale tests
 - [ ] **Phase 3: Search** - Hybrid keyword + semantic search with live results
 - [ ] **Phase 4: Customization Placeholder** - Customize button and visible-but-non-functional menu
@@ -259,8 +259,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02.1-01-PLAN.md — Fix 22 tsc errors in 4 test files (typing only)
-- [ ] 02.1-02-PLAN.md — Fix stale test DDL (set-try-it-out-mode) and add `npm run check`
+- [x] 02.1-01-PLAN.md — Fix 22 tsc errors in 4 test files (typing only)
+- [x] 02.1-02-PLAN.md — Fix stale test DDL (set-try-it-out-mode) and add `npm run check`
 
 ### Phase 2.2: Scale and Seed Data (INSERTED)
 
