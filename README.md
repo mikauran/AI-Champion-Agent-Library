@@ -249,6 +249,16 @@ over that user's containers, so use a dedicated host user. A dedicated runner us
 would need a relay container and only `PI_LLM_PROXY_URL` changes; that variant is not
 built in this phase. Resource limits need cgroup v2 delegation for rootless Podman.
 
+Hardening notes (Phase 9): set `APP_INSTANCE_NAME` (for example `aic-prod`) in compose
+deployments. Pi containers are labelled with it (`aic.owner`) and the start-up orphan
+sweep only removes leftovers with the same owner, so a dev server and the compose stack can
+share one Podman socket; without it the container hostname is used and changes whenever the
+container is recreated, so leftovers are not swept. Built-in limits (not env-configurable):
+every proxied model call is capped at 4096 completion tokens (and charged that amount when
+the provider reports no usage), a job keeps at most 2000 progress events, a Pi output line
+over 1 MiB is skipped, and a hung engine call is abandoned after 15 s (container remove) or
+60 s (job staging and output fetch).
+
 The runtime image only ships production dependencies (`npm prune --omit=dev`
 after the build) — build-only tooling like `vite`'s CLI, `drizzle-kit`, and
 `tsx` never reaches the running container.

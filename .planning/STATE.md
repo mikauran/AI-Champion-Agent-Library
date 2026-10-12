@@ -44,6 +44,7 @@ Not "missing" in the sense of lost work — these are legitimate gaps in the roa
 - **02-04-PLAN.md** (Phase 2, human-verification checkpoint for catalog and detail pages) has a PLAN.md but no SUMMARY.md — it was never executed. Phase 2 is otherwise functionally complete (browse, filter, detail page, responsive layout all shipped and tested in 02-01..02-03).
 - **Phase 3 (Search)** has a phase directory (`.planning/phases/03-search/`) but it is empty — no CONTEXT/RESEARCH/PLAN files exist yet. Requirements SRCH-01..03 are defined in REQUIREMENTS.md but unmapped to any plan.
 - **Phase 4 (Customization Placeholder)**: 04-01 done (CUST-01 complete); browser check of the menu is pending human (`.planning/phases/04-customization-placeholder/04-HUMAN-UAT.md`).
+- **Phase 9 (Try It Out hardening)**: plans 09-01..09-04 executed (security review, chaos tests, pending-human live checklist); phase not marked complete, verification and the live Podman checks in `.planning/phases/09-try-it-out-hardening/09-HUMAN-UAT.md` are pending human.
 - Neither gap blocks Phases 5-7 (the Try It Out initiative), which branched off Phase 2 and does not depend on Phase 3 or 4.
 
 ## Performance Metrics

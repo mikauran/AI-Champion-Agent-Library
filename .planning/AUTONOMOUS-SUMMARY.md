@@ -10,15 +10,17 @@
 - Phase 3 Search (code complete, verification human_needed): hybrid BM25 + embeddings (RRF), /api/search, catalog `?q=`, debounced SearchBar, 46-query labeled set (BM25 hit@3 1.00 on keyword/NL). Code review (1 critical, 8 warnings) all fixed, security audit SECURED. 58 files / 554 tests green. Decisions D-009..D-014.
 - Phase 4 Customization Placeholder done (04-01): `CustomizeMenu` (accessible disabled "Coming soon" menu) on every detail page, CUST-01 complete, D-015. `npm run check` exits 0 (60 files passed, 1 skipped, 565 tests).
 - Phase 9 plan 09-01 (security review of Try It Out code): `09-SECURITY-REVIEW.md` with 15 findings, 13 fixed test-first (budget cap + reserve-then-reconcile, owner-scoped orphan sweep, archive size/stream/proto/entry-cap handling, unhandled rejection, dot segments, MemorySwap, JSONL line cap) and 2 accepted. Deferred Phase 8 items WR-05, WR-08, WR-09, IN-01, IN-02, IN-04, IN-05 closed. Decisions D-016..D-018. `npm run check` exits 0 (60 files passed, 1 skipped, 581 tests). Operator note: set `APP_INSTANCE_NAME` in compose deployments (D-017).
+- Phase 9 plans 09-02, 09-03, 09-04 (chaos tests and live-check list): 5 chaos test files (lease races incl. 200 seeded interleavings, hung/failing engine, reaper timing, proxy budget/token reuse, malformed/oversized Pi JSONL), all offline (fake runtime, fake timers, mocked fetch). They exposed 8 defects, all fixed: double container removal, unbounded hung `remove`/`putFiles`/`getFiles`, NaN/negative/missing upstream usage defeating the token budget, unbounded mapper memory and job event list, throwing parser consumer. Decisions D-019..D-022; security findings overall: 15 (13 fixed, 2 accepted). `npm run check` exits 0. Live Podman checks are listed, unchecked, in `.planning/phases/09-try-it-out-hardening/09-HUMAN-UAT.md`. README documents `APP_INSTANCE_NAME` and the new limits.
 
 ## Pending human
 - Phase 2 checkpoint 02-04 (see D-001): the only remaining Phase 2 item; Phase 2 is not marked complete.
 - Phase 4: browser check of the Customize menu (`.planning/phases/04-customization-placeholder/04-HUMAN-UAT.md`).
 - Phase 3: real-model accuracy run + SIM_FLOOR tuning, real-embedding ingest, browser feel (03-HUMAN-UAT.md).
 - Phase 3 real-model accuracy run, real-embedding ingest, SIM_FLOOR retune, live-typing browser feel (item 3): `.planning/phases/03-search/03-HUMAN-UAT.md`.
+- Phase 9: nine live Podman checks (smoke, hardening inspect, network guard, owner-scoped sweep, hostile archive, hung engine, budget with real model, reaper timing, cleanup): `.planning/phases/09-try-it-out-hardening/09-HUMAN-UAT.md`.
 
 ## Questions for Ville
-- None yet.
+- None yet. (Phase 9 note: compose deployments should set `APP_INSTANCE_NAME`; decide whether to add it to `podman-compose.yml`.)
 
 ## Look at first
 - `.planning/phases/02.2-scale-and-seed-data-inserted/02.2-0*-SUMMARY.md`, D-007.
