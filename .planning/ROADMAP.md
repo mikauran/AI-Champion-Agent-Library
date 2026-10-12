@@ -30,6 +30,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 11: Related Agents (DISC-01)** - Similar-agents panel on the detail page using Phase 3 embeddings
 - [ ] **Phase 12: Agent Types and Intake Research** - Taxonomy of hostable agent types/systems, per-format capability matrix, author intake guide
 - [ ] **Phase 13: Multi-Agent and Multi-Format Hosting (flagged)** - Canonical model extension, adapters, validate-submission CLI, system detail rendering, all behind a feature flag
+- [ ] **Phase 14: MCP Generation (CUST-02, flagged)** - Generate a configured MCP server from a database schema; schema-only input, no credentials stored
+- [ ] **Phase 15: MCP Test Platform (flagged)** - Sandbox that runs a generated MCP server against a seeded fixture DB, calls its tools and reports pass/fail
 
 ## Phase Details
 
@@ -337,5 +339,35 @@ Plans:
   3. `npm run validate-submission -- <path>` reports ingestible / partial / missing-from-author for any folder, never throws on unknown formats
   4. Detail page renders member agents and orchestration topology for system-type agents
   5. Each adapter documents its assumptions; unknown fields are preserved, not dropped
+
+**Plans**: TBD
+
+### Phase 14: MCP Generation (CUST-02, flagged)
+
+**Goal:** A user supplies a database schema (DDL or introspected description) and the platform generates a configured MCP server for it (tool definitions per table/query, config, README), downloadable as a package. Behind a feature flag, default off.
+**Requirements**: CUST-02
+**Depends on:** Phase 12, Phase 4
+**Success Criteria** (what must be TRUE):
+
+  1. Input is schema only (SQL DDL paste/upload); credentials are never accepted, stored, logged or placed in generated artifacts (generated config uses env-var placeholders)
+  2. Generator is a pure, deterministic function (schema -> MCP package) with unit tests over SQLite, Postgres-style and MySQL-style DDL fixtures; read-only tools by default, write tools opt-in
+  3. The Phase 4 Customize menu gains a working "Generate MCP" entry when the flag is on; flag off leaves the placeholder unchanged
+  4. Generated output documents its assumptions and limits; unsupported DDL is reported, not guessed
+  5. Design choices (language/SDK of the generated server, tool naming, safety defaults) logged as decisions with revert notes
+
+**Plans**: TBD
+
+### Phase 15: MCP Test Platform (flagged)
+
+**Goal:** A test platform that takes a generated (or submitted) MCP server, runs it in an isolated sandbox against a seeded synthetic database, exercises every declared tool, and reports a structured pass/fail result in the UI and as a downloadable report. Behind a feature flag, default off.
+**Requirements**: Derived from Phase 14 and Phase 12 (no REQ-IDs yet)
+**Depends on:** Phase 14, Phase 8
+**Success Criteria** (what must be TRUE):
+
+  1. Test runner abstraction with a fake runtime for unit tests and the Phase 8 container runtime for real runs; no real container needed for CI
+  2. For each tool: schema validity, call with generated sample arguments against a seeded fixture DB, error handling, timeout, and output-shape checks, aggregated into a report (JSON + human-readable)
+  3. Sandbox is network-isolated with CPU/memory/time limits reused from Phase 8; no external credentials or real databases ever used
+  4. UI panel shows run progress and results; flag off hides it
+  5. Real-container runs that cannot be verified unattended are listed as "pending human" with exact commands
 
 **Plans**: TBD

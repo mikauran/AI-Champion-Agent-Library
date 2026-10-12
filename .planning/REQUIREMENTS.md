@@ -50,7 +50,7 @@ Added mid-project (see STATE.md "Roadmap Evolution") as a self-contained initiat
 
 ### Customization (Functional)
 
-- **CUST-02**: MCP config wizard — user provides database schema and credentials, platform generates a configured MCP variant of the agent
+- **CUST-02** *(planned: Phase 14, flagged)*: MCP config wizard — user provides database schema and credentials, platform generates a configured MCP variant of the agent
 - **CUST-03**: Additional customization wizard flows for other well-defined agent types
 
 ### Discovery Enhancements

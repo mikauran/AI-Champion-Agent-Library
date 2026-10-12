@@ -19,10 +19,11 @@ Goal: spend leftover token budget on reviewable, low-risk improvements. The huma
 4. Phase 9 Try It Out hardening.
 5. Phase 10 Accessibility, Phase 11 Related agents.
 6. Phase 12 Agent types and intake research (use WebSearch for framework formats; docs only), then Phase 13 build behind a feature flag (default off, additive DB changes only). Phase 13 data-model decisions must each be logged with revert steps.
-7. Per completed phase: code review + fix, security audit (`/gsd-secure-phase`), test-gap fill (`/gsd-add-tests`).
-8. Repo-wide: dependency health (no major bumps), README/TECHNICAL_DOCUMENTATION/PROJECT.md/STATE.md sync with the code, deploy runbook.
-9. Free exploration: further improvements you judge valuable (UX polish incl. dark mode/spec viewer, perf, tests, DX). Each gets a D-NNN entry with rationale and revert steps.
-10. Final: milestone audit + `.planning/AUTONOMOUS-SUMMARY.md`.
+7. Phase 14 MCP generation, then Phase 15 MCP test platform (both flagged, default off). Schema-only input; never accept, store or log credentials; test only against synthetic seeded DBs; real-container runs are 'pending human'.
+8. Per completed phase: code review + fix, security audit (`/gsd-secure-phase`), test-gap fill (`/gsd-add-tests`).
+9. Repo-wide: dependency health (no major bumps), README/TECHNICAL_DOCUMENTATION/PROJECT.md/STATE.md sync with the code, deploy runbook.
+10. Free exploration: further improvements you judge valuable (UX polish incl. dark mode/spec viewer, perf, tests, DX). Each gets a D-NNN entry with rationale and revert steps.
+11. Final: milestone audit + `.planning/AUTONOMOUS-SUMMARY.md`.
 
 ## Progress at handoff
 - Phase 3: CONTEXT, RESEARCH, VALIDATION, PATTERNS done and committed. Next step is `gsd-planner` (then plan-checker, execute). Do not redo discuss/research.
