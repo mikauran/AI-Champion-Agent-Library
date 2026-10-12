@@ -150,6 +150,8 @@ components:
           type: string
         leadTimeDays:
           type: integer
+        currency:
+          type: string
     Feature:
       type: object
       properties:
