@@ -23,7 +23,7 @@ type CloseInfo = { code?: number | null; signal?: string | null }
 export function lineChannel(
   input: Readable,
   output: Writable,
-  opts: { maxLineBytes?: number; onClose?: () => Promise<void> } = {}
+  opts: { maxLineBytes?: number; onClose?: () => Promise<void>; closeOnEnd?: boolean } = {}
 ): Channel & { emitClose(info?: CloseInfo): void } {
   const max = opts.maxLineBytes ?? DEFAULT_MAX_LINE_BYTES
   const msgCbs: ((m: unknown) => void)[] = []
@@ -82,8 +82,10 @@ export function lineChannel(
     closed = true
     for (const cb of closeCbs) cb(info)
   }
-  input.on('end', () => emitClose())
-  input.on('close', () => emitClose())
+  if (opts.closeOnEnd !== false) {
+    input.on('end', () => emitClose())
+    input.on('close', () => emitClose())
+  }
   output.on('error', () => {})
 
   return {
