@@ -2,6 +2,7 @@
 // Relative imports only; nothing is constructed at import time.
 import { buildBm25Index, type Bm25Index } from './bm25.js'
 import { hybridSearch } from './hybrid.js'
+import { relatedAgents, type RelatedAgent, type RelatedInput } from './related.js'
 import { sql } from 'drizzle-orm'
 import { buildSearchText, contentHash, rowToSearchable } from './documents.js'
 import { EMBEDDING_DIM, blobToVector, createTransformersEmbedder, type Embedder } from './embedder.js'
@@ -15,6 +16,7 @@ export interface AgentRowForSearch {
   category: string | null
   tags: string
   toolNames: string
+  llmName?: string | null
 }
 
 export interface SearchOptions {
@@ -28,6 +30,8 @@ export interface SearchService {
     opts?: SearchOptions,
   ): Promise<{ results: { slug: string; score: number }[]; mode: SearchMode }>
   warmUp(): Promise<void>
+  /** Up to k agents related to `slug` (embedding cosine when valid vectors exist, else tag/category fallback). Never throws. */
+  related(slug: string, k?: number): Promise<RelatedAgent[]>
 }
 
 export interface SearchServiceDeps {
@@ -67,6 +71,7 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
   let bm25: Bm25Index | null = null
   let fingerprint: string | null = null
   let rowTexts = new Map<string, string>()
+  let relatedInputs: RelatedInput[] = []
   let vectorFingerprint: string | null = null
   let lastCheck = -Infinity
   let vectorCache: { model: string; vectors: Map<string, Float32Array> } | null = null
@@ -114,6 +119,7 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
     })
     bm25 = buildBm25Index(docs)
     rowTexts = new Map(docs.map((d) => [d.slug, d.text]))
+    relatedInputs = rows.map((r) => ({ ...rowToSearchable(r), ...(r.llmName ? { llm: r.llmName } : {}) }))
     fingerprint = fp
     vectorCache = null
     return bm25
@@ -188,6 +194,21 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
       const { results, mode } = hybridSearch({ query, bm25: index, vectors, queryVector, limit: opts?.limit })
       return { results, mode }
     },
+    async related(slug: string, k = 4) {
+      try {
+        refresh()
+        let vectors: Map<string, Float32Array> | undefined
+        try {
+          const embedder = await withTimeout(ensureEmbedder(), embedTimeoutMs)
+          if (embedder && embedder !== TIMED_OUT) vectors = vectorsFor(embedder.id)
+        } catch {
+          vectors = undefined
+        }
+        return relatedAgents(slug, relatedInputs, vectors && vectors.size > 0 ? vectors : undefined, k)
+      } catch {
+        return []
+      }
+    },
   }
 }
 
@@ -242,6 +263,11 @@ function getSingleton(): SearchService {
 export async function search(q: string, opts?: SearchOptions): ReturnType<SearchService['search']> {
   if (!cachedDb) cachedDb = await import('../db.js')
   return getSingleton().search(q, opts)
+}
+
+export async function related(slug: string, k?: number): Promise<RelatedAgent[]> {
+  if (!cachedDb) cachedDb = await import('../db.js')
+  return getSingleton().related(slug, k)
 }
 
 export async function warmUp(): Promise<void> {

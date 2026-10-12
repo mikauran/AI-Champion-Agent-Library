@@ -310,3 +310,64 @@ describe('createSearchService', () => {
     expect(getEmbedder).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('createSearchService.related', () => {
+  const rel: AgentRowForSearch[] = [
+    { slug: 'a', title: 'A', summary: 'alpha sql queries', category: 'data', tags: '["sql","db"]', toolNames: '[]' },
+    { slug: 'b', title: 'B', summary: 'beta sql queries', category: 'data', tags: '["sql","db"]', toolNames: '[]' },
+    { slug: 'c', title: 'C', summary: 'gamma heating', category: 'mep', tags: '["hvac"]', toolNames: '[]' },
+  ]
+  async function relVectors(model: string, hashSuffix = '') {
+    const e = createFakeEmbedder()
+    const out: { model: string; slug: string; vector: Buffer; contentHash: string }[] = []
+    for (const r of rel) {
+      const text = buildSearchText(rowToSearchable(r))
+      const [v] = await e.embed([text])
+      out.push({ model, slug: r.slug, vector: vectorToBlob(v), contentHash: contentHash(model, text + hashSuffix) })
+    }
+    return out
+  }
+  function makeRel(over: Partial<Parameters<typeof createSearchService>[0]> = {}) {
+    return createSearchService({
+      loadAgents: () => ({ rows: rel, fingerprint: 'r' }),
+      loadVectors: () => [],
+      getEmbedder: async () => null,
+      ...over,
+    })
+  }
+
+  it('uses embeddings when vectors are valid', async () => {
+    const vecs = await relVectors('fake-hash')
+    const r = await makeRel({ getEmbedder: async () => createFakeEmbedder(), loadVectors: () => vecs }).related('a')
+    expect(r[0].slug).toBe('b')
+    expect(r[0].via).toBe('embedding')
+  })
+
+  it('falls back without an embedder', async () => {
+    const r = await makeRel().related('a')
+    expect(r.map((x) => x.slug)).toEqual(['b'])
+    expect(r[0].via).toBe('fallback')
+  })
+
+  it('falls back when the stored content hash is stale', async () => {
+    const vecs = await relVectors('fake-hash', ' stale')
+    const r = await makeRel({ getEmbedder: async () => createFakeEmbedder(), loadVectors: () => vecs }).related('a')
+    expect(r.every((x) => x.via === 'fallback')).toBe(true)
+  })
+
+  it('returns [] for an unknown slug and does not hang on a stuck embedder', async () => {
+    expect(await makeRel().related('nope')).toEqual([])
+    const r = await makeRel({ getEmbedder: () => new Promise(() => {}), embedTimeoutMs: 20 }).related('a')
+    expect(r.map((x) => x.slug)).toEqual(['b'])
+  })
+
+  it('never throws when loaders fail', async () => {
+    const svc = makeRel({
+      loadAgents: () => {
+        throw new Error('db down')
+      },
+    })
+    expect(await svc.related('a')).toEqual([])
+  })
+})
+
