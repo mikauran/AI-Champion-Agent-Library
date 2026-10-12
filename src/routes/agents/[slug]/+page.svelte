@@ -1,4 +1,6 @@
 <script lang="ts">
+  import KindBadge from '$lib/components/KindBadge.svelte'
+  import SystemMembers from '$lib/components/SystemMembers.svelte'
   import RelatedAgents from '$lib/components/RelatedAgents.svelte'
   import TechAccordion from '$lib/components/TechAccordion.svelte'
   import CustomizationPanel from '$lib/components/CustomizationPanel.svelte'
@@ -8,6 +10,13 @@
 
   let { data }: { data: PageData } = $props()
   let agent = $derived(data.agent)
+  // Phase 13 (flag AGENT_KINDS): data.kindInfo exists only when the flag is on.
+  let kindInfo = $derived(data.kindInfo && data.kindInfo.kind !== 'agent' ? data.kindInfo : null)
+  let isSystem = $derived(kindInfo !== null)
+  // Systems carry the 'n/a' LLM placeholder: hide the LLM line instead of showing it.
+  let techAgent = $derived(
+    isSystem && agent.llmName === 'n/a' ? { ...agent, fixedFields: [...agent.fixedFields, 'llm.name'] } : agent
+  )
   let tryItOutOpen = $state(Boolean(data.openTryOut))
 </script>
 
@@ -36,6 +45,10 @@
           <span class="shrink-0 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full mt-1">Experimental</span>
         {/if}
       </div>
+
+      {#if kindInfo}
+        <p class="mb-3"><KindBadge kind={kindInfo.kind} framework={kindInfo.framework} /></p>
+      {/if}
 
       {#if agent.category}
         <p class="text-xs text-indigo-600 font-medium mb-3">{agent.category}</p>
@@ -104,7 +117,11 @@
     </section>
 
     <!-- Collapsible technical spec — collapsed by default (DETL-02) -->
-    <TechAccordion {agent} />
+    {#if kindInfo}
+      <SystemMembers members={kindInfo.members} topology={kindInfo.topology} framework={kindInfo.framework} />
+    {/if}
+
+    <TechAccordion agent={techAgent} />
 
     <RelatedAgents agents={data.related} />
   </div>

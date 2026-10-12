@@ -5,6 +5,8 @@ import type { PageServerLoad } from './$types'
 import { warmForSession } from '$lib/server/tryitout/service'
 import { related } from '$lib/server/search/index.js'
 import { sessionKey } from '$lib/server/tryitout/session'
+import { agentKindsEnabled } from '$lib/flags.js'
+import { defaultKindInfo } from '$lib/spec/kinds.js'
 
 export const load: PageServerLoad = async ({ params, url, locals, cookies, getClientAddress }) => {
   const row = db
@@ -17,8 +19,18 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
     error(404, 'Agent not found. It may have been removed or the URL is incorrect.')
   }
 
+  // Phase 13 (flag AGENT_KINDS, default off): kind sidecar. Flag off: nothing below runs.
+  const kindsOn = agentKindsEnabled()
+  // Lazy import: flag-off never loads the sidecar reader (and its schema import).
+  const kindInfo = kindsOn
+    ? ((await import('$lib/server/kinds.js')).loadKindInfo(db as never, [row.slug]).get(row.slug) ?? defaultKindInfo())
+    : null
+  // Non-agent kinds (systems, skills, ...) are never runnable; 'external' links stay.
+  const effectiveMode =
+    kindInfo && kindInfo.kind !== 'agent' && row.tryItOutMode !== 'external' ? 'none' : row.tryItOutMode
+
   // D-05: warm the visitor's container in the background; never awaited, never fatal.
-  if (row.tryItOutMode === 'runnable') {
+  if (effectiveMode === 'runnable') {
     let clientKey: string | undefined
     try {
       clientKey = getClientAddress?.()
@@ -49,9 +61,10 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
 
   const { inputSchema, ...agentRow } = row
 
-  return {
+  const base = {
     agent: {
       ...agentRow,
+      ...(effectiveMode !== row.tryItOutMode ? { tryItOutMode: effectiveMode } : {}),
       toolNames: JSON.parse(row.toolNames) as string[],
       inputFields: JSON.parse(inputSchema ?? '[]'),
       tags: JSON.parse(row.tags) as string[],
@@ -61,4 +74,8 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
     related: relatedAgents,
     openTryOut: url?.searchParams.get('tryout') === '1',
   }
+  if (!kindInfo) return base
+  // extras are never sent to the client.
+  const { kind, framework, topology, members, sourceFormat } = kindInfo
+  return { ...base, kindInfo: { kind, framework, topology, members, sourceFormat } }
 }
