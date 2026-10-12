@@ -10,7 +10,9 @@ export const WORK_ROOT_IN_CONTAINER = '/work'
 
 export const LABEL_MANAGED = 'aic.tryitout'
 export const LABEL_INSTANCE = 'aic.instance'
-export const LABEL_AGENT = 'aic.agent'
+/** Stable deployment id (WR-08): the orphan sweep only removes containers of the same owner. */
+export const LABEL_OWNER = 'aic.owner'
+export const LABEL_AGENT ='aic.agent'
 export const LABEL_CREATED = 'aic.created'
 
 export type RuntimeErrorCode =

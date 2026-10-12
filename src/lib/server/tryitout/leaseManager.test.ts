@@ -259,6 +259,33 @@ describe('reaper, failures, sweep, shutdown', () => {
     expect(runtime.containers()).not.toContain(foreign)
   })
 
+  it('owner-scoped sweep spares containers of a different owner and unlabelled legacy ones (WR-08)', async () => {
+    runtime = createFakeRuntime()
+    mgr = createLeaseManager({
+      runtime,
+      config: parseRunnerConfig({ PI_RUNNER_MAX_CONTAINERS: '2' }),
+      tokens: { mint: registerLeaseToken, revoke: revokeLeaseToken },
+      stage: async () => {},
+      instanceId: 'inst-1',
+      ownerId: 'deploy-a',
+      now: () => clock,
+    })
+    const mine = await warm('A')
+    const listed = await runtime.listManaged()
+    expect(listed.find((c) => c.id === mine.containerId)?.labels['aic.owner']).toBe('deploy-a')
+    const mk = (labels: Record<string, string>) =>
+      runtime.createAndStart({ name: 'x', labels: { 'aic.tryitout': '1', ...labels }, env: [] })
+    const sameOwnerOld = await mk({ 'aic.instance': 'old', 'aic.owner': 'deploy-a' })
+    const otherOwner = await mk({ 'aic.instance': 'old', 'aic.owner': 'deploy-b' })
+    const legacy = await mk({ 'aic.instance': 'old' })
+    await mgr.sweepOrphans()
+    const left = runtime.containers()
+    expect(left).toContain(mine.containerId)
+    expect(left).not.toContain(sameOwnerOld)
+    expect(left).toContain(otherOwner)
+    expect(left).toContain(legacy)
+  })
+
   it('shutdown removes all of this instance containers', async () => {
     await warm('A')
     await warm('B')

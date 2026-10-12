@@ -16,6 +16,7 @@ import {
   LABEL_CREATED,
   LABEL_INSTANCE,
   LABEL_MANAGED,
+  LABEL_OWNER,
   TryItOutRuntimeError,
   isTryItOutRuntimeError,
   type ContainerRuntime,
@@ -66,6 +67,11 @@ export interface LeaseManagerDeps {
   /** Awaited before every container create (WR-03): the open-egress/network guard. */
   beforeCreate?: () => Promise<void>
   instanceId: string
+  /**
+   * Stable deployment id (WR-08). When set, containers are labelled with it and the orphan sweep
+   * only touches containers carrying the same owner (unlabelled legacy containers are left alone).
+   */
+  ownerId?: string
   now?: () => number
 }
 
@@ -122,6 +128,7 @@ export function createLeaseManager(deps: LeaseManagerDeps): LeaseManager {
         labels: {
           [LABEL_MANAGED]: '1',
           [LABEL_INSTANCE]: instanceId,
+          ...(deps.ownerId ? { [LABEL_OWNER]: deps.ownerId } : {}),
           [LABEL_AGENT]: lease.slug,
           [LABEL_CREATED]: String(lease.createdAt),
         },
@@ -289,7 +296,11 @@ export function createLeaseManager(deps: LeaseManagerDeps): LeaseManager {
 
     async sweepOrphans() {
       const managed = await runtime.listManaged()
-      const orphans = managed.filter((c) => c.labels[LABEL_INSTANCE] !== instanceId)
+      const orphans = managed.filter(
+        (c) =>
+          c.labels[LABEL_INSTANCE] !== instanceId &&
+          (!deps.ownerId || c.labels[LABEL_OWNER] === deps.ownerId),
+      )
       await Promise.allSettled(orphans.map((c) => runtime.remove(c.id)))
     },
 

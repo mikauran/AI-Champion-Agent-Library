@@ -7,6 +7,7 @@
 // globalThis so Vite HMR does not duplicate it. Nothing connects at import time.
 
 import { randomBytes } from 'node:crypto'
+import { hostname } from 'node:os'
 import { AgentIdSchema, loadPiSkill } from '../tryItOutPrompts'
 import { MODEL } from '../tryItOutModel'
 import { getRunnerConfig } from './config'
@@ -86,6 +87,8 @@ export function createTryItOutService(opts: {
   runtime: ContainerRuntime
   config: RunnerConfig
   instanceId?: string
+  /** Stable deployment id for the orphan sweep (WR-08). Omit to keep the unscoped sweep. */
+  ownerId?: string
   now?: () => number
 }): TryItOutService {
   const { runtime, config } = opts
@@ -139,6 +142,7 @@ export function createTryItOutService(opts: {
     tokens: { mint: registerLeaseToken, revoke: revokeLeaseToken },
     stage,
     instanceId,
+    ownerId: opts.ownerId,
     now: opts.now,
   })
   const limiter = createClientLimiter({
@@ -163,6 +167,7 @@ export function getTryItOutService(): TryItOutService {
       runtime: createDockerodeRuntime(config, instanceId),
       config,
       instanceId,
+      ownerId: process.env.APP_INSTANCE_NAME?.trim() || hostname(),
     })
   }
   return s.service
