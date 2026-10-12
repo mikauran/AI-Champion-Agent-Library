@@ -167,3 +167,7 @@ Phase 13 must log each decision in `.planning/AUTONOMOUS-DECISIONS.md` with reve
 - `edges` deferred (no revert needed).
 - Embedding text gated by the flag (revert: remove the flag branch; hashes revert to the old text).
 - Zod discriminated union behind the flag (revert: restore the single literal path).
+
+## 9. Phase 13 outcome
+
+Implemented behind `AGENT_KINDS` (default off); see `docs/phase13-adapters.md`. One deviation from section 3 and step 3 of section 5: kind data lives in a new sidecar table `agent_kinds` instead of `ALTER TABLE agents ADD COLUMN` (D-033), so SQL, row shapes and legacy test DDL stay identical with the flag off. Adapters 1 to 6 shipped, plus `validate-submission`; ranks 7 and beyond remain deferred.

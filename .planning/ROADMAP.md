@@ -375,15 +375,15 @@ Plans:
 
 Plans:
 
-- [ ] 13-01-PLAN.md — Flag-off golden captured first, AGENT_KINDS flag, kind contracts, additive agent_kinds sidecar table + tolerant reader (wave 1)
-- [ ] 13-02-PLAN.md — Adapter registry (never throws), scanner with caps, secret scan, Oracle AgentSpec Swarm/ManagerWorkers/Flow/A2A adapter + synthetic fixtures (wave 2)
-- [ ] 13-06-PLAN.md — Detail page: kind badge, members, topology, Try It Out restriction, axe (wave 2)
-- [ ] 13-03-PLAN.md — Flag-gated ingest branch, gated search text, flag-on search loader and related weight (wave 3)
-- [ ] 13-04-PLAN.md — catalog.yaml manifest, SKILL.md and Claude subagent adapters (wave 3)
-- [ ] 13-05-PLAN.md — CrewAI, MCP server.json, langgraph.json detector adapters (wave 3)
-- [ ] 13-07-PLAN.md — Catalog kind badge, Type filter, ?kind= param (wave 3)
-- [ ] 13-08-PLAN.md — `npm run validate-submission` CLI (wave 4)
-- [ ] 13-09-PLAN.md — Flag-off regression suite, all-formats ingest test, docs, decisions, verification (wave 5)
+- [x] 13-01-PLAN.md — Flag-off golden captured first, AGENT_KINDS flag, kind contracts, additive agent_kinds sidecar table + tolerant reader (wave 1)
+- [x] 13-02-PLAN.md — Adapter registry (never throws), scanner with caps, secret scan, Oracle AgentSpec Swarm/ManagerWorkers/Flow/A2A adapter + synthetic fixtures (wave 2)
+- [x] 13-06-PLAN.md — Detail page: kind badge, members, topology, Try It Out restriction, axe (wave 2)
+- [x] 13-03-PLAN.md — Flag-gated ingest branch, gated search text, flag-on search loader and related weight (wave 3)
+- [x] 13-04-PLAN.md — catalog.yaml manifest, SKILL.md and Claude subagent adapters (wave 3)
+- [x] 13-05-PLAN.md — CrewAI, MCP server.json, langgraph.json detector adapters (wave 3)
+- [x] 13-07-PLAN.md — Catalog kind badge, Type filter, ?kind= param (wave 3)
+- [x] 13-08-PLAN.md — `npm run validate-submission` CLI (wave 4)
+- [x] 13-09-PLAN.md — Flag-off regression suite, all-formats ingest test, docs, decisions, verification (wave 5)
 
 
 ### Phase 14: MCP Generator (generalized from research, flagged)

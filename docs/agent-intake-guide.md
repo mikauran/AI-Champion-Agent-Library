@@ -1,6 +1,6 @@
 # Agent intake guide: what to send us
 
-For authors who want their agent listed in the catalog. Plain language first, technical notes after. Research date and web sources: accessed 2026-10-12. This guide is research output; the `catalog.yaml` convention is proposed and not yet implemented.
+For authors who want their agent listed in the catalog. Plain language first, technical notes after. Research date and web sources: accessed 2026-10-12. This guide is research output; the `catalog.yaml` convention and the `validate-submission` check are implemented behind the `AGENT_KINDS` flag (Phase 13).
 
 ## 1. The short answer
 
@@ -57,10 +57,10 @@ Never send API keys, `.env` files, or unstripped workflow exports.
 
 For systems, also list the member agents with a role (manager, worker, peer, step, participant) and the topology type. For MCP servers, also give transport, package or install command, tool names, required environment variable names and a data-source description.
 
-`catalog.yaml` is a PROPOSED convention, not yet implemented (it is planned for Phase 13). Until then, a reply with the same answers is equivalent. An illustrative example (all values synthetic):
+`catalog.yaml` is implemented behind `AGENT_KINDS` (Phase 13); a reply with the same answers is equivalent. Supported fields: `name`, `kind`, `summary`, `category`, `tags`, `maturity`, `repo_url`, `link_label`, `framework`, `topology`, `members`, `tools`, `model`; unknown keys are kept as extras. Authors can check a submission with `npm run validate-submission -- <path>` (reports ingestible, partial or missing-from-author; see `docs/phase13-adapters.md`). An illustrative example (all values synthetic):
 
 ```yaml
-# catalog.yaml (proposed AIC intake manifest; all values synthetic)
+# catalog.yaml (AIC intake manifest; all values synthetic)
 kind: system            # agent | system | workflow | skill | mcp-server | external-agent
 framework: crewai
 topology: manager-workers

@@ -126,6 +126,10 @@ Re-running ingest on an existing agent ID updates the record — it never create
 - Click **Technical Specification** to expand LLM config, tools, and system prompt details
 - The **Customization Options** panel lists which fields of the agent are tailorable for your environment
 
+### Multi-agent and multi-format hosting (flagged)
+
+Off by default. Set `AGENT_KINDS=on` and re-run `npm run ingest` to host multi-agent systems, skills, MCP servers and other formats (Oracle AgentSpec systems, `catalog.yaml`, SKILL.md, CrewAI, MCP `server.json`, `langgraph.json`) alongside normal agents. Authors can check a submission with `npm run validate-submission -- <path>`. Details: `docs/phase13-adapters.md`.
+
 ---
 
 ## What's coming
