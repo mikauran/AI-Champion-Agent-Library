@@ -130,6 +130,11 @@ Re-running ingest on an existing agent ID updates the record — it never create
 
 Off by default. Set `AGENT_KINDS=on` and re-run `npm run ingest` to host multi-agent systems, skills, MCP servers and other formats (Oracle AgentSpec systems, `catalog.yaml`, SKILL.md, CrewAI, MCP `server.json`, `langgraph.json`) alongside normal agents. Authors can check a submission with `npm run validate-submission -- <path>`. Details: `docs/phase13-adapters.md`.
 
+
+### MCP generator (flagged)
+
+Off by default. Set `MCP_GENERATOR=1` to enable a "Generate MCP" entry in the Customize menu and the `POST /api/mcp-generate` route. Authors can also run `npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|auto> <input-file> --out <dir>` (works without the flag). It turns an OpenAPI 3.x spec, a tabular catalog header or `CREATE TABLE` DDL into a Python FastMCP stdio server package with generated tests; schema or spec only, never credentials or data. Details: `docs/mcp-generator.md`.
+
 ---
 
 ## What's coming

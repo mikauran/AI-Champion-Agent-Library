@@ -400,3 +400,7 @@ No other files need to change.
 ---
 
 *Last updated: 2026-03-19*
+
+## MCP Generator (flagged, Phase 14)
+
+`src/lib/mcpgen/` holds a deterministic generator that turns a schema or specification (OpenAPI 3.x, tabular catalog header text, SQL DDL) into a Python FastMCP stdio package. Input adapters sit behind one `InputAdapter` interface and are listed only in `src/lib/mcpgen/adapters/index.ts`; the core planner and emitters never import an adapter. It is exposed through `npm run generate-mcp`, the `MCP_GENERATOR`-gated `POST /api/mcp-generate` route and a flag-gated Customize menu panel. Full documentation, including the extension point for synthesized tools: `docs/mcp-generator.md` (design: `docs/mcp-generator-design.md`).
