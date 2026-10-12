@@ -41,6 +41,10 @@ Tech evaluators and executives can find the right AI agent for their use case wi
 - Audience is dual: technical evaluators (primary) and executives (must be legible to both — executive summary first, technical details on demand)
 - Agent pages link to GitHub for full implementation; platform is the front door, not the runtime
 
+## Research docs
+
+Phase 12 research on agent types and intake (research output; not yet implemented): [agent-types](../docs/agent-types.md), [capability matrix](../docs/agent-capability-matrix.md), [intake guide](../docs/agent-intake-guide.md), [decision memo](../docs/agent-hosting-decision-memo.md).
+
 ## Constraints
 
 - **Tech Stack**: Modern frameworks only — prefer solutions with minimal dependency surface (e.g. SvelteKit, Astro); avoid vanilla JS/CSS sprawl or npm dependency explosions

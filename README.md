@@ -269,6 +269,15 @@ after the build) — build-only tooling like `vite`'s CLI, `drizzle-kit`, and
 
 For stack choices, data model, ingestion pipeline, component structure, and contribution guidelines, see [TECHNICAL_DOCUMENTATION.md](TECHNICAL_DOCUMENTATION.md).
 
+### Agent types and intake
+
+Research output from Phase 12; hosting of multi-agent systems and other formats is not yet implemented.
+
+- [docs/agent-types.md](docs/agent-types.md): taxonomy of agent kinds, topologies and frameworks with per-format findings.
+- [docs/agent-capability-matrix.md](docs/agent-capability-matrix.md): what each type needs, stores and shows, and Try It Out suitability.
+- [docs/agent-intake-guide.md](docs/agent-intake-guide.md): what authors should send, readiness checklist and a reply template.
+- [docs/agent-hosting-decision-memo.md](docs/agent-hosting-decision-memo.md): recommended model changes, ranked adapters and open questions.
+
 ---
 
 *Part of the AI Champion (AIC) consortium project.*
