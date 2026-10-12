@@ -17,13 +17,16 @@ import { beginJob, endJob, getJobUsage } from './llmProxy'
 import { createCompletionTracker, createJsonlParser, createPiEventMapper } from './piEvents'
 import { writeArtifactZip } from './artifact'
 
-export const PI_INSTRUCTION =
-  'Follow the skill. Inputs are in ./input (task.txt, optional upload.txt). Write all deliverables as files in ./output.'
+/** Names only the input files that were actually staged, so Pi never tries to read a missing upload. */
+export function piInstruction(hasUpload: boolean): string {
+  const inputs = hasUpload ? 'task.txt and upload.txt' : 'task.txt only; no file was uploaded'
+  return `Follow the skill. Inputs are in ./input (${inputs}). Write all deliverables as files in ./output.`
+}
 
 // App-side backstop beyond the in-container `timeout` (covers a hung exec stream).
 export const TIMEOUT_GRACE_MS = 5000
 
-export function buildPiArgs(cfg: RunnerConfig, slug: string): string[] {
+export function buildPiArgs(cfg: RunnerConfig, slug: string, hasUpload = true): string[] {
   return [
     'timeout',
     '--signal=KILL',
@@ -51,7 +54,7 @@ export function buildPiArgs(cfg: RunnerConfig, slug: string): string[] {
     '--append-system-prompt',
     `${AGENT_DIR}/base-prompt.md`,
     '--',
-    `/skill:${slug} ${PI_INSTRUCTION}`,
+    `/skill:${slug} ${piInstruction(hasUpload)}`,
   ]
 }
 
@@ -125,7 +128,7 @@ export async function runJobInContainer(jobId: string): Promise<void> {
     try {
       result = await Promise.race([
         runtime.exec(containerId, {
-          cmd: buildPiArgs(cfg, slug),
+          cmd: buildPiArgs(cfg, slug, job.fileName !== null),
           workingDir: jobDir,
           onStdout: (chunk) => parser.push(chunk),
           onStderr: (chunk) => {
