@@ -16,3 +16,11 @@ export function mcpGeneratorEnabled(
   const v = env.MCP_GENERATOR
   return typeof v === 'string' && TRUTHY.has(v.trim().toLowerCase())
 }
+
+/** Phase 15 MCP tester flag (MCP_TESTER), default off. */
+export function mcpTesterEnabled(
+  env: Record<string, string | undefined> = process.env
+): boolean {
+  const v = env.MCP_TESTER
+  return typeof v === 'string' && TRUTHY.has(v.trim().toLowerCase())
+}
