@@ -53,6 +53,16 @@ npm run build
 npm run preview
 ```
 
+### Search / embeddings
+
+Catalog search uses local sentence embeddings (`@huggingface/transformers`, no external API) next to keyword search.
+
+- Install with `ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm install` (or `npm ci`); without it the onnxruntime-node postinstall hangs on a CUDA download.
+- The first ingest downloads the ~90 MB model once (about 90 s) into `HF_CACHE_DIR` (default `./db/models`).
+- `SEARCH_EMBEDDINGS=off` forces keyword-only (BM25) search and skips the model entirely.
+- Offline or model unavailable: ingest logs a warning and search falls back to BM25 only.
+- Tests never download or load a model (`SEARCH_EMBEDDINGS=off` is set in the vitest config).
+
 ---
 
 ## Adding agents

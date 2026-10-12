@@ -23,9 +23,13 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci
 
 COPY . .
+# Embedding model cache lives under db/ so the COPY of /app/db below carries it
+# into the runtime image. If the builder has no network, ingest warns and the
+# image runs BM25-only search (by design).
+ENV HF_CACHE_DIR=/app/db/models
 # The database directory is excluded from the build context. Create it before
 # running Drizzle; drizzle-kit currently reports a missing directory without a
 # failing exit code, so the final query also guards against an empty database.
@@ -51,6 +55,7 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOST=0.0.0.0 \
     CATALOG_DB_PATH=/app/db/catalog.db \
+    HF_CACHE_DIR=/app/db/models \
     AUTH_DB_PATH=/app/runtime/auth/auth.db \
     TRYITOUT_WORK_DIR=/app/runtime/tryitout-work \
     TRYITOUT_PROMPTS_DIR=/app/data/tryitout-prompts \
