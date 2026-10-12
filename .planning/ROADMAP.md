@@ -25,7 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Runnable Try It Out Flow (mock-backed)** - Mock-backed job client + panel for runnable mode, contract-shaped for a later real backend swap
 - [x] **Phase 7: No-Container Demo Backend for Try It Out** - Real (no-Docker/no-pi) SvelteKit server routes calling an LLM, replacing the mock client (completed 2026-08-20)
 - [x] **Phase 8: Container-backed Try It Out (warm on visit)** - Pi + skill container warmed when an agent page is opened; runs behind the existing job API (completed 2026-10-12)
-- [ ] **Phase 9: Try It Out Hardening** - Adversarial review and chaos tests of the Phase 8 lease/proxy/container code
+- [x] **Phase 9: Try It Out Hardening** - Adversarial review and chaos tests of the Phase 8 lease/proxy/container code
 - [ ] **Phase 10: Accessibility (UI-03)** - WCAG AA keyboard navigation and screen-reader labels across catalog and detail
 - [ ] **Phase 11: Related Agents (DISC-01)** - Similar-agents panel on the detail page using Phase 3 embeddings
 - [ ] **Phase 12: Agent Types and Intake Research** - Taxonomy of hostable agent types/systems, per-format capability matrix, author intake guide
