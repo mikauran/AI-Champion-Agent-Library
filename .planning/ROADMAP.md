@@ -361,7 +361,7 @@ Plans:
 ### Phase 13: Multi-Agent and Multi-Format Hosting (flagged)
 
 **Goal:** Implement the Phase 12 recommendations behind a feature flag (default off): canonical model extension for agent kind and multi-agent topology, adapters for Oracle AgentSpec multi-agent, MCP manifests, LangGraph/CrewAI/AutoGen configs and SKILL.md packages, a validate-submission CLI, and detail-page rendering of systems.
-**Requirements**: Derived from Phase 12 memo
+**Requirements**: P13-FLAG, P13-SCHEMA, P13-ADAPT, P13-SECURITY, P13-SEARCH, P13-CLI, P13-UI, P13-DOCS (derived from Phase 12 memo)
 **Depends on:** Phase 12, Phase 3
 **Success Criteria** (what must be TRUE):
 
@@ -371,7 +371,20 @@ Plans:
   4. Detail page renders member agents and orchestration topology for system-type agents
   5. Each adapter documents its assumptions; unknown fields are preserved, not dropped
 
-**Plans**: TBD
+**Plans:** 9 plans
+
+Plans:
+
+- [ ] 13-01-PLAN.md — Flag-off golden captured first, AGENT_KINDS flag, kind contracts, additive agent_kinds sidecar table + tolerant reader (wave 1)
+- [ ] 13-02-PLAN.md — Adapter registry (never throws), scanner with caps, secret scan, Oracle AgentSpec Swarm/ManagerWorkers/Flow/A2A adapter + synthetic fixtures (wave 2)
+- [ ] 13-06-PLAN.md — Detail page: kind badge, members, topology, Try It Out restriction, axe (wave 2)
+- [ ] 13-03-PLAN.md — Flag-gated ingest branch, gated search text, flag-on search loader and related weight (wave 3)
+- [ ] 13-04-PLAN.md — catalog.yaml manifest, SKILL.md and Claude subagent adapters (wave 3)
+- [ ] 13-05-PLAN.md — CrewAI, MCP server.json, langgraph.json detector adapters (wave 3)
+- [ ] 13-07-PLAN.md — Catalog kind badge, Type filter, ?kind= param (wave 3)
+- [ ] 13-08-PLAN.md — `npm run validate-submission` CLI (wave 4)
+- [ ] 13-09-PLAN.md — Flag-off regression suite, all-formats ingest test, docs, decisions, verification (wave 5)
+
 
 ### Phase 14: MCP Generator (generalized from research, flagged)
 
