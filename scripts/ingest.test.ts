@@ -1,7 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { ingest } from './ingest.js'
 import Database from 'better-sqlite3'
-import { existsSync, rmSync } from 'node:fs'
+import { existsSync, rmSync, mkdtempSync, cpSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { createFakeEmbedder } from '../src/lib/server/search/embedder.fake.js'
+import type { Embedder } from '../src/lib/server/search/embedder.js'
 
 const TEST_DB = './db/test-catalog.db'
 const FIXTURES_DIR = './data/agents/fixtures'
@@ -32,6 +36,13 @@ CREATE TABLE IF NOT EXISTS agents (
   try_it_out_url TEXT,
   try_it_out_task_template TEXT,
   last_ingested_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+CREATE TABLE IF NOT EXISTS agent_embeddings (
+  slug TEXT PRIMARY KEY,
+  model TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  vector BLOB NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 )
 `
 
@@ -138,5 +149,99 @@ describe('ingest', () => {
     expect(rowAfter.try_it_out_mode).toBe('external')
     expect(rowAfter.try_it_out_url).toBe('https://example.com/try/x')
     expect(rowAfter.last_ingested_at as string > tsBefore).toBe(true)
+  })
+})
+
+describe('embeddings', () => {
+  function spied(): { embedder: Embedder; calls: string[][] } {
+    const fake = createFakeEmbedder()
+    const calls: string[][] = []
+    const embed = vi.fn(async (texts: string[]) => {
+      calls.push(texts)
+      return fake.embed(texts)
+    })
+    return { embedder: { id: fake.id, embed }, calls }
+  }
+
+  function rows() {
+    const db = new Database(TEST_DB)
+    const r = db.prepare('SELECT slug, model, length(vector) as n FROM agent_embeddings ORDER BY slug').all() as {
+      slug: string
+      model: string
+      n: number
+    }[]
+    db.close()
+    return r
+  }
+
+  it('writes one embedding row per succeeded agent', async () => {
+    const { embedder } = spied()
+    const res = await ingest(FIXTURES_DIR, TEST_DB, { embedder })
+    expect(res).toEqual({ succeeded: 2, failed: 1 })
+    const r = rows()
+    expect(r.length).toBe(2)
+    for (const row of r) {
+      expect(row.model).toBe('fake-hash')
+      expect(row.n).toBe(384 * 4)
+    }
+  })
+
+  it('skips unchanged text on re-ingest and re-embeds only changed text', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'ingest-emb-'))
+    try {
+      cpSync(FIXTURES_DIR, tmp, { recursive: true })
+      const { embedder, calls } = spied()
+      await ingest(tmp, TEST_DB, { embedder })
+      expect(calls.length).toBe(1)
+      expect(calls[0].length).toBe(2)
+
+      await ingest(tmp, TEST_DB, { embedder })
+      expect(calls.length).toBe(1)
+
+      const f = join(tmp, 'valid-agent.yaml')
+      writeFileSync(f, readFileSync(f, 'utf-8').replace('Routes incoming', 'Dispatches incoming'))
+      await ingest(tmp, TEST_DB, { embedder })
+      expect(calls.length).toBe(2)
+      expect(calls[1].length).toBe(1)
+      expect(calls[1][0]).toContain('Dispatches incoming')
+    } finally {
+      rmSync(tmp, { recursive: true, force: true })
+    }
+  })
+
+  it('deletes embeddings whose slug is absent from agents', async () => {
+    const { embedder } = spied()
+    await ingest(FIXTURES_DIR, TEST_DB, { embedder })
+    const db = new Database(TEST_DB)
+    db.prepare(
+      `INSERT INTO agent_embeddings (slug, model, content_hash, vector) VALUES ('ghost', 'fake-hash', 'x', x'00')`,
+    ).run()
+    db.close()
+    await ingest(FIXTURES_DIR, TEST_DB, { embedder })
+    expect(rows().map(r => r.slug)).not.toContain('ghost')
+    expect(rows().length).toBe(2)
+  })
+
+  it('null embedder: no rows, same counts, no throw', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const res = await ingest(FIXTURES_DIR, TEST_DB, { embedder: null })
+    warn.mockRestore()
+    expect(res).toEqual({ succeeded: 2, failed: 1 })
+    expect(rows().length).toBe(0)
+  })
+
+  it('default (SEARCH_EMBEDDINGS=off) writes no embeddings', async () => {
+    await ingest(FIXTURES_DIR, TEST_DB)
+    expect(rows().length).toBe(0)
+  })
+
+  it('DB without agent_embeddings table skips silently', async () => {
+    const db = new Database(TEST_DB)
+    db.exec('DROP TABLE agent_embeddings')
+    db.close()
+    const { embedder, calls } = spied()
+    const res = await ingest(FIXTURES_DIR, TEST_DB, { embedder })
+    expect(res.succeeded).toBe(2)
+    expect(calls.length).toBe(0)
   })
 })

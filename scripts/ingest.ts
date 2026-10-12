@@ -4,10 +4,14 @@ import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { sql } from 'drizzle-orm'
 import { parse as parseYaml } from 'yaml'
-import { agents } from '../drizzle/schema.js'
+import { agents, agentEmbeddings } from '../drizzle/schema.js'
 import type { NewAgentRow } from '../drizzle/schema.js'
 import { detectFormat, normalize } from '../src/lib/spec/index.js'
 import type { AgentRecord } from '../src/lib/spec/types.js'
+import { buildSearchText, contentHash, recordToSearchable } from '../src/lib/server/search/documents.js'
+import type { Searchable } from '../src/lib/server/search/documents.js'
+import { createTransformersEmbedder, vectorToBlob } from '../src/lib/server/search/embedder.js'
+import type { Embedder } from '../src/lib/server/search/embedder.js'
 
 const DATA_DIR = process.env.INGEST_DATA_DIR ?? './data/agents'
 const DB_PATH = process.env.INGEST_DB_PATH ?? './db/catalog.db'
@@ -45,7 +49,85 @@ function flattenRecord(record: AgentRecord): NewAgentRow {
   }
 }
 
-async function ingest(dataDir: string, dbPath: string): Promise<{ succeeded: number; failed: number }> {
+type Db = ReturnType<typeof drizzle>
+
+// Embedding step: never throws, never changes ingest counts.
+async function embedAgents(
+  sqlite: Database.Database,
+  db: Db,
+  searchables: Searchable[],
+  opts?: { embedder?: Embedder | null },
+): Promise<void> {
+  try {
+    const hasTable = sqlite
+      .prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='agent_embeddings'`)
+      .get()
+    if (!hasTable) return
+
+    let embedder: Embedder | null
+    if (opts?.embedder !== undefined) {
+      embedder = opts.embedder
+      if (!embedder) console.warn('[search] no embedder available; skipping embeddings (BM25-only)')
+    } else if (process.env.SEARCH_EMBEDDINGS === 'off') {
+      return
+    } else {
+      embedder = await createTransformersEmbedder()
+      if (!embedder) console.warn('[search] no embedder available; skipping embeddings (BM25-only)')
+    }
+    if (!embedder) return
+
+    const existing = new Map<string, { model: string; hash: string }>()
+    for (const r of sqlite
+      .prepare('SELECT slug, model, content_hash FROM agent_embeddings')
+      .all() as { slug: string; model: string; content_hash: string }[]) {
+      existing.set(r.slug, { model: r.model, hash: r.content_hash })
+    }
+
+    const unique = new Map<string, Searchable>()
+    for (const s of searchables) unique.set(s.slug, s)
+
+    const stale: { slug: string; text: string; hash: string }[] = []
+    for (const s of unique.values()) {
+      const text = buildSearchText(s)
+      const hash = contentHash(embedder.id, text)
+      const prev = existing.get(s.slug)
+      if (!prev || prev.model !== embedder.id || prev.hash !== hash) {
+        stale.push({ slug: s.slug, text, hash })
+      }
+    }
+
+    if (stale.length > 0) {
+      const vectors = await embedder.embed(stale.map(x => x.text))
+      for (let i = 0; i < stale.length; i++) {
+        const row = {
+          slug: stale[i].slug,
+          model: embedder.id,
+          contentHash: stale[i].hash,
+          vector: vectorToBlob(vectors[i]),
+          updatedAt: new Date().toISOString(),
+        }
+        await db
+          .insert(agentEmbeddings)
+          .values(row)
+          .onConflictDoUpdate({
+            target: agentEmbeddings.slug,
+            set: {
+              model: sql`excluded.model`,
+              contentHash: sql`excluded.content_hash`,
+              vector: sql`excluded.vector`,
+              updatedAt: sql`excluded.updated_at`,
+            },
+          })
+      }
+    }
+
+    sqlite.prepare('DELETE FROM agent_embeddings WHERE slug NOT IN (SELECT slug FROM agents)').run()
+  } catch (err) {
+    console.warn(`[search] embedding step failed: ${(err as Error).message}`)
+  }
+}
+
+async function ingest( dataDir: string, dbPath: string, opts?: { embedder?: Embedder | null }): Promise<{ succeeded: number; failed: number }> {
   await mkdir(dirname(dbPath), { recursive: true })
   const sqlite = new Database(dbPath)
   sqlite.pragma('journal_mode = WAL')
@@ -57,6 +139,7 @@ async function ingest(dataDir: string, dbPath: string): Promise<{ succeeded: num
 
   let succeeded = 0
   let failed = 0
+  const searchables: Searchable[] = []
 
   for (const file of files) {
     const content = await readFile(join(dataDir, file), 'utf-8')
@@ -101,12 +184,15 @@ async function ingest(dataDir: string, dbPath: string): Promise<{ succeeded: num
           },
         })
 
+      searchables.push(recordToSearchable(record))
       succeeded++
     } catch (err) {
       console.error(`[SKIP] ${file}: ${(err as Error).message}`)
       failed++
     }
   }
+
+  await embedAgents(sqlite, db, searchables, opts)
 
   console.log(`Ingestion complete: ${succeeded} succeeded, ${failed} failed`)
   sqlite.close()
