@@ -16,7 +16,7 @@ key-files:
 
 # Phase 8 Plan 08: pi-runner image, compose wiring and smoke script (checkpoint-pending)
 
-Status: Tasks 1 and 2 are done and committed. Task 3 (live verification on a Podman host) is AWAITING HUMAN VERIFICATION. Nothing in this summary claims the live check passed; Podman is not installed on the dev machine.
+Status: Tasks 1 and 2 are done and committed. Task 3 (live verification on a Podman host) is AWAITING HUMAN VERIFICATION. Live verification was run on 2026-10-12 on rootless Podman 4.9.3 (Linux Mint 22.3, Ubuntu 24.04 base, cgroup v2, netavark, crun); results are in "Live verification" below. The compose-with-socket run is still open, so the plan stays checkpoint-pending.
 
 ## Completed
 
@@ -37,3 +37,20 @@ None in scope. (A self-introduced type error in the smoke script was fixed befor
 ## Pending: Task 3
 
 Human must run the plan's "how-to-verify" steps 1-11 on a rootless Podman host with a real OPENAI_API_KEY, then record the smoke output and the RECOMMENDED PI_RUNNER_FS_MODE here. If the result is `layer`, change the compose default to `${PI_RUNNER_FS_MODE:-layer}` and update the .env.example comment.
+
+## Live verification (2026-10-12, rootless Podman 4.9.3, host Linux Mint 22.3)
+
+Passed:
+- Image builds (`localhost/pi-runner:latest`, 387 MB). `scripts/smoke-pi-runner.ts` passes every step in **`PI_RUNNER_FS_MODE=tmpfs`** (the preferred mode, so no `layer` fallback is needed): ping, internal network, create, putFiles into tmpfs and a read-only rootfs, `pi --version` offline (1.0.4), exec demux and exit code, external egress blocked on `aic-pi-internal`, timeout kill (exit 137), getFiles round trip, cleanup. DNS to the app alias skipped (needs the compose run).
+- Dev mode (`npm run dev -- --host`, Podman socket from `$XDG_RUNTIME_DIR`): opening `/agents/demo-rfi-triage` starts one `aic-pi-*` container; a reload adds none. A job with the sample RFI succeeds (real Pi tool events in the feed, `agent settled (clean exit)`), the download is `application/zip` containing `result.txt`, a second job reuses the same container.
+- `podman inspect`: user pi, `ReadonlyRootfs=true`, all capabilities dropped, `no-new-privileges`, Memory 1073741824, NanoCpus 500000000, PidsLimit 200, no published ports, tmpfs `/work` 256m, `/tmp` 64m, agent dir 16m; the container env holds only `AIC_LLM_TOKEN` (no OpenAI key); `models.json` points at the app proxy.
+- Fallback: with the Podman socket stopped, the job falls back to the direct model call (feed says so, warning logged) and still returns a zip with `result.txt`.
+- Idle TTL: with `PI_RUNNER_IDLE_TTL_MS=15000`, the container was removed 16 s after the job finished (reaper interval 30 s).
+- Restart cleanup: after a SIGKILL crash the orphan container stays up, and is removed at the next start (orphan sweep). With a graceful SIGTERM, the production build (`node build`) removed the container within about 1 s; under `vite dev` the container survives SIGTERM (Vite exits first) and is swept at the next start.
+
+Defects found by the live run and fixed: `e396564` (Podman rejects tmpfs `uid=`/`gid=` options; agent dir now `mode=1777`), `f1a0dfa` (Vite `allowedHosts` for `host.containers.internal`; proxy token store on globalThis so a dev reload cannot drop tokens), `50187b4` (reload-safe `isTryItOutRuntimeError` so the D-14 fallback survives a dev reload; proxy test isolated from a developer's real `.env`).
+
+Still open (why this plan stays checkpoint-pending):
+- `podman-compose up -d --build` run: app container with the socket mounted (`keep-id`, `label=disable`), the `aic-agent-library` alias resolving from a Pi container on `aic-pi-internal`, and a full job through that network (smoke `--proxy-host aic-agent-library`). `podman-compose` is not installed on the test host.
+- Minor: a job without an uploaded file makes Pi try to read the absent `input/upload.txt` (harmless ENOENT in the feed); the skill could state the upload is optional.
+
