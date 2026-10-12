@@ -28,7 +28,7 @@ const MAX_RETRY_AFTER_MS = 2000
 const LARGE_SHOWN = 100
 const LARGE_BYTE_BUDGET = 48 * 1024
 /** The huge variant stays under the 1 MiB line cap of the client so the failure is "too big", not "dropped". */
-const HUGE_ITEMS = 1500
+const HUGE_ITEMS = 600
 const SILENT_CAP_ITEMS = 100
 /** Result window of the documented upstream; the derived filter stays inside it. */
 const CEILING_PROBE = 200
@@ -453,7 +453,7 @@ const lookupByGtin: Handler = async (c, a) => {
 }
 
 const listWidgets: Handler = async (c) => {
-  if (!c.b.grounded) await c.get('/widgets/featured') // undocumented route, result ignored
+  if (!c.b.grounded) await c.get('/widgets/featured/list') // undocumented route, result ignored
   const up = await c.get(ROUTES.widgets)
   if (up.t !== 'ok') return upFail(c, up, 'Widgets')
   const body = up.body
