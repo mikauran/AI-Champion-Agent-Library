@@ -16,3 +16,12 @@ export function buildCatalogParams(input: CatalogParamsInput): URLSearchParams {
   params.set('page', '1')
   return params
 }
+
+const MAX_PAGE = 1_000_000
+
+/** Parse the `page` query param: NaN, non-numeric and < 1 become 1; huge values are capped so OFFSET stays a safe integer. */
+export function parsePage(raw: string | null | undefined): number {
+  const n = Number.parseInt(raw ?? '1', 10)
+  if (!Number.isFinite(n) || n < 1) return 1
+  return Math.min(n, MAX_PAGE)
+}

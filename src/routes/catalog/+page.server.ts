@@ -1,13 +1,14 @@
 import { db, agents } from '$lib/server/db.js'
 import { eq, and, asc, inArray } from 'drizzle-orm'
 import { search } from '$lib/server/search/index.js'
+import { parsePage } from '$lib/catalogUrl'
 import type { PageServerLoad } from './$types'
 
 const PAGE_SIZE = 24
 const SLUG_CHUNK = 500
 
 export const load: PageServerLoad = async ({ url }) => {
-  const page = parseInt(url.searchParams.get('page') ?? '1')
+  const page = parsePage(url.searchParams.get('page'))
   const category = url.searchParams.get('category') ?? null
   const llm = url.searchParams.get('llm') ?? null
   const maturity = url.searchParams.get('maturity') ?? null

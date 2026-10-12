@@ -147,3 +147,27 @@ describe('catalog load() with q at scale (CR-01: no top-50 truncation)', () => {
     expect(d.filters.q).toBeNull()
   })
 })
+
+describe('catalog load() page clamping against a real DB (WR-03)', () => {
+  it('does not throw for non-numeric, zero, negative or huge pages (no q)', async () => {
+    const first = await run()
+    for (const page of ['abc', '0', '-4', '99999999999999999999']) {
+      const d = await run(`?page=${page}`)
+      if (page === '99999999999999999999') {
+        expect(d.agents).toHaveLength(0)
+      } else {
+        expect(d.page, page).toBe(1)
+        expect(d.agents.map((a: { slug: string }) => a.slug)).toEqual(first.agents.map((a: { slug: string }) => a.slug))
+      }
+    }
+  })
+
+  it('clamps in the search branch too', async () => {
+    const first = await run('?q=review')
+    for (const page of ['abc', '0', '-4']) {
+      const d = await run(`?q=review&page=${page}`)
+      expect(d.page, page).toBe(1)
+      expect(d.agents.map((a: { slug: string }) => a.slug)).toEqual(first.agents.map((a: { slug: string }) => a.slug))
+    }
+  })
+})

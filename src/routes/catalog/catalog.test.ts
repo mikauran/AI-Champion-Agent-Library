@@ -437,6 +437,31 @@ describe('Catalog load function', () => {
     expect(result.maturityStatuses).toContain('production')
   })
 
+  it('clamps invalid page to 1 and never passes NaN/negative to offset (WR-03)', async () => {
+    const { db } = await import('$lib/server/db.js')
+    for (const page of ['abc', '0', '-2', '']) {
+      const offsetSpy = vi.fn().mockReturnThis()
+      const allChain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        offset: offsetSpy,
+        all: vi.fn().mockReturnValue([]),
+      }
+      ;(db.select as ReturnType<typeof vi.fn>).mockReset()
+      ;(db.select as ReturnType<typeof vi.fn>).mockReturnValue(allChain)
+      ;(db.selectDistinct as ReturnType<typeof vi.fn>).mockReturnValue({
+        from: vi.fn().mockReturnThis(),
+        all: vi.fn().mockReturnValue([]),
+      })
+      const { load } = await import('./+page.server.js')
+      const r = (await load({ url: new URL(`http://localhost/catalog?page=${page}`) } as Parameters<typeof load>[0])) as CatalogData
+      expect(r.page, page).toBe(1)
+      expect(offsetSpy, page).toHaveBeenCalledWith(0)
+    }
+  })
+
   describe('with q', () => {
     const mk = (slug: string, title: string, category = 'productivity') => ({
       slug, title, summary: 's', systemPrompt: 'p', llmName: 'gpt-4o', llmTemperature: null,
@@ -520,6 +545,17 @@ describe('Catalog load function', () => {
       const lists = (inArray as unknown as ReturnType<typeof vi.fn>).mock.calls.map((c) => (c[1] as string[]).length)
       expect(lists).toEqual([500, 500, 200])
       expect(r.agents.map((a: { slug: string }) => a.slug)).toEqual(slugs.slice(48, 72))
+    })
+
+    it('clamps invalid page to 1 in the search branch (WR-03)', async () => {
+      const slugs = Array.from({ length: 30 }, (_, i) => `a${i}`)
+      await setup(slugs.map((s) => mk(s, s)), slugs)
+      const { load } = await import('./+page.server.js')
+      for (const page of ['abc', '0', '-3', 'NaN']) {
+        const r = (await load({ url: new URL(`http://localhost/catalog?q=x&page=${page}`) } as Parameters<typeof load>[0])) as CatalogData
+        expect(r.page, page).toBe(1)
+        expect(r.agents.map((a: { slug: string }) => a.slug), page).toEqual(slugs.slice(0, 24))
+      }
     })
 
     it('returns empty when nothing matches', async () => {
