@@ -24,3 +24,11 @@ SEARCH_REAL_EMBEDDINGS=1 npx vitest run src/lib/server/search/accuracy.real.test
 1. With network access, run `npm run db:push && npm run ingest` once (without `SEARCH_EMBEDDINGS=off`) to fill `agent_embeddings` in `db/catalog.db`.
 2. Start the app and open `/catalog`; type a paraphrase query such as "how much air does each room need" and confirm the HVAC agent ranks near the top; check `GET /api/search?q=...` reports `mode: "hybrid"`.
 3. Confirm a keyword query (for example `rfi`) still returns exact matches first.
+
+## 3. Live typing feel in the browser (pending human)
+
+Not verified autonomously (no browser): run `npm run dev`, open `/catalog`, and type "hvac" quickly.
+- [ ] List narrows about 200 ms after the last keystroke, input keeps focus and caret, page does not jump (keepFocus/noScroll).
+- [ ] URL shows `?q=hvac&page=1`; changing a filter keeps q; clearing the box (or "Clear search") restores the full catalog.
+- [ ] No-results query shows `No agents match "..."`; screen reader announces "N agents found" after results update.
+- [ ] Visual pass of the search box (spacing, focus ring) above the filters.
