@@ -1,0 +1,102 @@
+// generate(model, options, extraDerived?) -> GenerationResult. Pure and deterministic: no network,
+// no file reads, no clock. The generated Python is text only; it is never executed here.
+import { MAX_OUTPUT_BYTES } from './api-contract.js'
+import { gap } from './diagnostics.js'
+import { emitPython } from './emit/python.js'
+import { emitRequirements } from './emit/requirements.js'
+import { cleanText } from './emit/pyutil.js'
+import { buildPlan, resolveEnv, serverSlug } from './plan.js'
+import { buildReport } from './report.js'
+import type { DerivedTool, GenerateOptions, GeneratedFile, GenerationResult, ServerPlan, SourceModel } from './types.js'
+
+/** JSON with sorted keys and a trailing newline, so equal data gives equal bytes. */
+export function stableJson(value: unknown): string {
+  const sort = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(sort)
+    if (v && typeof v === 'object') {
+      return Object.fromEntries(
+        Object.keys(v as object)
+          .sort()
+          .map((k) => [k, sort((v as Record<string, unknown>)[k])]),
+      )
+    }
+    return v
+  }
+  return JSON.stringify(sort(value), null, 2) + '\n'
+}
+
+function emitReadme(plan: ServerPlan): string {
+  const m = plan.model
+  const env = resolveEnv(m)
+  const slug = serverSlug(m)
+  const envNames = [env.baseUrl, env.auth, env.dataFile, env.dsn].filter((x): x is string => !!x)
+  const purposes: Record<string, string> = {}
+  if (env.baseUrl) purposes[env.baseUrl] = 'Base address of the upstream service'
+  if (env.auth) purposes[env.auth] = 'API key for the upstream service'
+  if (env.dataFile) purposes[env.dataFile] = 'Location of the CSV data file'
+  if (env.dsn) purposes[env.dsn] = 'Location of the SQLite database file'
+  const snippet = {
+    mcpServers: {
+      [slug]: {
+        command: 'python',
+        args: ['server.py'],
+        env: Object.fromEntries(envNames.map((n) => [n, `<set ${n}>`])),
+      },
+    },
+  }
+  const out: string[] = [
+    `# ${cleanText(m.name, 80)} MCP server (generated)`,
+    '',
+    'Read-only MCP server over stdio, generated deterministically from a source description.',
+    'Review it before use. The generator never executed this code.',
+    '',
+    '## Tools',
+    '',
+    ...plan.tools.map((t) => `- \`${t.name}\`: ${cleanText(t.description, 200)}`),
+    '',
+    '## Environment variables',
+    '',
+    'Values are read from the environment only and are never stored in this package.',
+    '',
+    '| Name | Purpose |',
+    '| --- | --- |',
+    ...envNames.map((n) => `| ${n} | ${purposes[n]} |`),
+    '',
+    '## Setup',
+    '',
+    '1. Install the requirements (the fastmcp pin is unverified; confirm it first).',
+    '2. Set the environment variables above.',
+    '3. Run `python server.py` (stdio transport), or register it with an MCP client:',
+    '',
+    '```json',
+    JSON.stringify(snippet, null, 2),
+    '```',
+    '',
+    '## Tests',
+    '',
+    '`test_server.py` stubs the upstream or data source and checks the server behaviours. Run `pytest test_server.py`.',
+    '',
+    'See `report.json` for dropped operations, gaps and assumptions.',
+  ]
+  return out.join('\n') + '\n'
+}
+
+export function generate(model: SourceModel, options: GenerateOptions = {}, extraDerived: DerivedTool[] = []): GenerationResult {
+  const plan = buildPlan(model, options, extraDerived)
+  const report = buildReport(plan)
+  if (plan.gaps.some((g) => g.severity === 'error' && g.code === 'no-tools')) {
+    return { files: [], report }
+  }
+  const files: GeneratedFile[] = [
+    { path: 'server.py', content: emitPython(plan) },
+    { path: 'requirements.txt', content: emitRequirements(plan) },
+    { path: 'README.generated.md', content: emitReadme(plan) },
+    { path: 'report.json', content: stableJson(report) },
+  ]
+  const bytes = files.reduce((n, f) => n + Buffer.byteLength(f.content, 'utf8'), 0)
+  if (bytes > MAX_OUTPUT_BYTES) {
+    const g = gap('output-too-large', `Generated package exceeds the ${MAX_OUTPUT_BYTES} byte limit.`, { severity: 'error' })
+    return { files: [], report: { ...report, gaps: [...report.gaps, g] } }
+  }
+  return { files, report }
+}
