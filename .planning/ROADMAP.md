@@ -345,7 +345,7 @@ Plans:
 ### Phase 14: MCP Generator (generalized from research, flagged)
 
 **Goal:** A general MCP generator whose design is derived from the prior comparison research, not assumed. A database schema (CUST-02) is one input adapter among several, not the scope. Behind a feature flag, default off.
-**Prerequisite (first deliverable):** read `~/projects/mcp-gen-comparison` and `~/projects/mcp-gen-comparison-2` (read-only) and write `RESEARCH-SYNTHESIS.md` in the phase directory BEFORE any design or code: which approach(es) scored best on D1-D6, which input types were covered (OpenAPI, Excel/TTxxx catalogs, docs-only, data dumps, profiles, ...), and known failure modes. The generator design must cite this synthesis.
+**Prerequisite (first deliverable):** read `~/projects/mcp-gen-comparison` and `~/projects/mcp-gen-comparison-2` (read-only) and write `RESEARCH-SYNTHESIS.md` in the phase directory BEFORE any design or code (starting points already seen: results.csv scores per arm across handauthored, from_openapi, gsd, plain, mcpybarra, openapi-mcp-generator; the ETIM-style 'synthesize what the API lacks' discriminator; wp5-bench arm registry incl. automcp/code2mcp/bioinfomcp install failures; and the second project's FastMCP+GSD Excel/TTxxx catalog server): which approach(es) scored best on D1-D6, which input types were covered (OpenAPI, Excel/TTxxx catalogs, docs-only, data dumps, profiles, ...), and known failure modes. The generator design must cite this synthesis.
 **Requirements**: CUST-02 (as one adapter)
 **Depends on:** Phase 12, Phase 4
 **Success Criteria** (what must be TRUE):
@@ -367,7 +367,7 @@ Plans:
 **Depends on:** Phase 14, Phase 8
 **Success Criteria** (what must be TRUE):
 
-  1. A port-fidelity map lists each existing harness/bench component and case (12 cases, D1-D6 scoring, tier gate/risk-flag semantics, leak guard, structure-searching validators, 3x rerun median+spread) and how it was ported or why deliberately not; the existing runner/harness is reused or wrapped where possible, not rewritten
+  1. A port-fidelity map lists each existing component and case and how it was ported or why deliberately not. Ground truth from the references: `harness/harness.py` (537 lines, 10 checks, live LVI-INFO API, real key - NOT portable as-is) and `wp5-bench/` (runner.py, base.py, report.py, leak_guard.py, arm adapters + registry, offline mock T2-STK-API case with case.yaml/golden.jsonl/rubric.yaml - the portable pattern). The suite design doc defines 12 cases (T1x1, T2x3, T3x4, T4x4) but only T2-STK-API has fixtures/golden/rubric; the map separates "implemented" from "designed only", and the remaining cases are implemented with synthetic offline mock fixtures where feasible, else listed as designed-only gaps. Existing runner/harness logic is reused or wrapped where possible, not rewritten
   2. Cases and scoring match the source suite's semantics: Tier 1 gate, Tier 2+3 carry the score, Tier 4 raises risk flags; only synthetic fixtures and mock upstreams (including fault injection) are used
   3. Safety rules kept from the existing project: no credentials, fake data only, container runs are "pending human"; the runner never touches real APIs or real keys
   4. Black-box MCP client over stdio (HTTP/SSE where declared); fake runtime for CI, Phase 8 container runtime for real runs
