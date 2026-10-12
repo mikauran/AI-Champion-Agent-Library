@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Data Pipeline** - Canonical data model, Oracle AgentSpec ingestion, SQLite store (completed 2026-03-19)
 - [ ] **Phase 2: Catalog and Detail** - Browse page, agent detail page, responsive layout
 - [x] **Phase 2.1: Green Baseline (INSERTED)** - Zero type errors, zero failing tests before further work
-- [ ] **Phase 2.2: Scale and Seed Data (INSERTED)** - Synthetic 150-agent fixture set for search, pagination and ingest scale tests
+- [x] **Phase 2.2: Scale and Seed Data (INSERTED)** - Synthetic 150-agent fixture set for search, pagination and ingest scale tests
 - [ ] **Phase 3: Search** - Hybrid keyword + semantic search with live results
 - [ ] **Phase 4: Customization Placeholder** - Customize button and visible-but-non-functional menu
 - [x] **Phase 5: Try It Out Field** - Optional try_it_out field (none/external/runnable) threaded through schema, ingest, and detail page (completed 2026-08-19)
@@ -277,8 +277,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02.2-01-PLAN.md — Seeded synthetic AgentSpec generator, `fixtures:scale` script, gitignored output dir
-- [ ] 02.2-02-PLAN.md — 150-agent ingest/idempotency/timing test and unmocked catalog filter/pagination tests
+- [x] 02.2-01-PLAN.md — Seeded synthetic AgentSpec generator, `fixtures:scale` script, gitignored output dir
+- [x] 02.2-02-PLAN.md — 150-agent ingest/idempotency/timing test and unmocked catalog filter/pagination tests
 
 ### Phase 9: Try It Out Hardening
 
