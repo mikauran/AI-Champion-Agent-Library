@@ -1,6 +1,7 @@
 // Server-only module — SvelteKit enforces that src/lib/server/ cannot be imported client-side.
 // LLM proxy for Pi containers (D-17): per-lease bearer tokens, per-job budget, real key injected server-side.
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
+import { redactSecrets } from './redact'
 
 export interface JobBudget {
   maxTotalTokens: number
@@ -275,13 +276,14 @@ export async function handleChatCompletions(
     })
 
     if (!upstream.ok) {
-      const errText = await upstream.text()
-      return new Response(errText, {
-        status: upstream.status,
-        headers: {
-          'Content-Type': upstream.headers.get('content-type') ?? 'application/json',
-        },
-      })
+      // WR-06: the upstream body can echo the masked key; log it redacted, tell Pi only the status.
+      const errText = await upstream.text().catch(() => '')
+      console.error('llm proxy upstream error', upstream.status, redactSecrets(errText).slice(0, 500))
+      return errorResponse(
+        upstream.status,
+        `model request failed (${upstream.status})`,
+        'server_error',
+      )
     }
 
     if (upstreamBody.stream === true && upstream.body) {
@@ -303,7 +305,10 @@ export async function handleChatCompletions(
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    console.error('llm proxy failed', err instanceof Error ? err.message : 'unknown error')
+    console.error(
+      'llm proxy failed',
+      redactSecrets(err instanceof Error ? err.message : 'unknown error'),
+    )
     return errorResponse(502, 'upstream request failed', 'server_error')
   }
 }

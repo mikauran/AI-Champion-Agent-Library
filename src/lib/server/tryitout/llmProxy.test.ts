@@ -147,20 +147,28 @@ describe('request handling', () => {
     })
   })
 
-  it('upstream error passthrough, usage request still counted', async () => {
+  it('upstream error is replaced by a generic message, usage request still counted (WR-06)', async () => {
     const t = registerLeaseToken('lease-1')
     beginJob('lease-1', 'job-u', { maxTotalTokens: 100, maxRequests: 5 })
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     fetchImpl.mockImplementationOnce(
       async () =>
-        new Response(JSON.stringify({ error: { message: 'bad' } }), {
-          status: 400,
-          headers: { 'content-type': 'application/json' },
-        }),
+        new Response(
+          JSON.stringify({ error: { message: 'Incorrect API key provided: sk-proj-****abcd' } }),
+          { status: 401, headers: { 'content-type': 'application/json' } },
+        ),
     )
     const r = await call(`Bearer ${t}`)
-    expect(r.status).toBe(400)
-    expect(await r.json()).toEqual({ error: { message: 'bad' } })
+    expect(r.status).toBe(401)
+    const text = await r.text()
+    expect(JSON.parse(text).error.message).toBe('model request failed (401)')
+    expect(text).not.toContain('sk-')
+    expect(text).not.toContain('Incorrect API key')
     expect(getJobUsage('job-u')?.requests).toBe(1)
+    // Server-side log keeps the detail but never a key-like string.
+    const logged = errSpy.mock.calls.flat().join(' ')
+    expect(logged).not.toContain('sk-proj')
+    errSpy.mockRestore()
   })
 
   it('500 when apiKey missing, message leaks nothing', async () => {

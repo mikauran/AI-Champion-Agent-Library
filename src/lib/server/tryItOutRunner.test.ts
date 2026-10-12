@@ -329,7 +329,8 @@ describe('dispatcher (D-14)', () => {
     install('engine_unavailable', { PI_FALLBACK_ENABLED: 'false' })
     const job = await run()
     expect(job.status).toBe('failed')
-    expect(job.error).toBe('engine down')
+    expect(job.error).toBe('container engine unavailable')
+    expect(job.error).not.toContain('engine down')
     expect(mockCreate).not.toHaveBeenCalled()
   })
 

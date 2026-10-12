@@ -16,6 +16,7 @@ import { getTryItOutService } from './service'
 import { beginJob, endJob, getJobUsage } from './llmProxy'
 import { createCompletionTracker, createJsonlParser, createPiEventMapper } from './piEvents'
 import { writeArtifactZip } from './artifact'
+import { logDetail, publicErrorMessage } from './redact'
 
 /** Names only the input files that were actually staged, so Pi never tries to read a missing upload. */
 export function piInstruction(hasUpload: boolean): string {
@@ -165,6 +166,7 @@ export async function runJobInContainer(jobId: string): Promise<void> {
       return
     }
     if (!verdict.ok) {
+      if (stderrTail.trim()) logDetail(`pi job ${jobId} stderr:`, stderrTail.trim().slice(-500))
       pushEvent(jobId, 'agent failed')
       setStatus(jobId, 'failed', verdict.error)
       return
@@ -190,8 +192,10 @@ export async function runJobInContainer(jobId: string): Promise<void> {
     if (!(err instanceof Error && 'code' in err && (err as { code?: string }).code === 'output_invalid')) {
       broken = true
     }
+    // WR-06: engine/socket/image detail stays server-side; the visitor gets a generic message.
+    logDetail(`pi job ${jobId} failed:`, err)
     pushEvent(jobId, 'agent failed')
-    setStatus(jobId, 'failed', err instanceof Error ? err.message : String(err))
+    setStatus(jobId, 'failed', publicErrorMessage(err))
   } finally {
     if (timer) clearTimeout(timer)
     if (proxyJobBegun) endJob(lease.id)

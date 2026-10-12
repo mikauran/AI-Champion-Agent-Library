@@ -114,7 +114,7 @@ describe('runJobInContainer failure modes', () => {
     expect(jobsMod.getJob(job.jobId)!.error).toBe('rate limited after 3 attempts')
   })
 
-  it('non-zero exit includes the stderr tail', async () => {
+  it('non-zero exit does not expose the stderr tail to the job (WR-06)', async () => {
     const { runtime } = setup()
     scriptPi(runtime, (ctx) => {
       ctx.stderr('fatal: x')
@@ -124,7 +124,27 @@ describe('runJobInContainer failure modes', () => {
     await runJobInContainer(job.jobId)
     const j = jobsMod.getJob(job.jobId)!
     expect(j.status).toBe('failed')
-    expect(j.error).toContain('fatal: x')
+    expect(j.error).toBe('pi exited with code 1')
+    expect(j.error).not.toContain('fatal: x')
+  })
+
+  it('engine errors are replaced by a generic message and never carry socket/image detail (WR-06)', async () => {
+    const { runtime, svc } = setup()
+    scriptPi(runtime, () => 0)
+    await svc.leases.ensureWarm('anon:s1', SLUG)
+    const { TryItOutRuntimeError } = await import('./runtime')
+    runtime.failNext(
+      'putFiles',
+      new TryItOutRuntimeError('container_start_failed', 'image pi-runner not found at /run/user/1000/podman/podman.sock'),
+    )
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const job = newJob()
+    await runJobInContainer(job.jobId)
+    const j = jobsMod.getJob(job.jobId)!
+    expect(j.status).toBe('failed')
+    expect(j.error).toBe('container engine error')
+    expect(errSpy.mock.calls.flat().join(' ')).toContain('podman.sock')
+    errSpy.mockRestore()
   })
 
   it('timeout (exit 137 after the limit) fails with a timeout message and discards the container', async () => {

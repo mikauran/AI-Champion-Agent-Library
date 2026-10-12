@@ -23,6 +23,7 @@ import { zipOutputDir } from './tryitout/artifact'
 import { runJobInContainer } from './tryitout/piRunner'
 import { getTryItOutService } from './tryitout/service'
 import { isTryItOutRuntimeError } from './tryitout/runtime'
+import { logDetail, publicErrorMessage } from './tryitout/redact'
 
 // Constructed lazily and memoized — NOT at module top level, so importing
 // this file without OPENAI_API_KEY set never throws (needed for tests and
@@ -63,13 +64,15 @@ export async function runJob(jobId: string): Promise<void> {
       try {
         await runDirectLlmJob(jobId)
       } catch (e) {
+        logDetail(`Try It Out fallback job ${jobId} failed:`, e)
         pushEvent(jobId, 'agent failed')
-        setStatus(jobId, 'failed', e instanceof Error ? e.message : String(e))
+        setStatus(jobId, 'failed', publicErrorMessage(e))
       }
       return
     }
+    logDetail(`Try It Out job ${jobId} failed:`, err)
     pushEvent(jobId, 'agent failed')
-    setStatus(jobId, 'failed', err instanceof Error ? err.message : String(err))
+    setStatus(jobId, 'failed', publicErrorMessage(err))
   }
 }
 
@@ -120,7 +123,8 @@ export async function runDirectLlmJob(jobId: string): Promise<void> {
   } catch (err) {
     // Real error strings only — never a fabricated container/CLI-style
     // failure message, since this backend never pretends to run one.
+    logDetail(`Try It Out direct job ${jobId} failed:`, err)
     pushEvent(jobId, 'agent failed')
-    setStatus(jobId, 'failed', err instanceof Error ? err.message : String(err))
+    setStatus(jobId, 'failed', publicErrorMessage(err))
   }
 }

@@ -50,18 +50,33 @@ describe('failure verdicts', () => {
     const { tracker } = run(PI_RETRY_FAILURE_STREAM)
     expect(tracker.verdict({ ...base, exitCode: 0 })).toEqual({ ok: false, error: 'rate limited after 3 attempts' })
   })
-  it('nonzero exit uses stderr, or a generic message when empty', () => {
+  it('nonzero exit never includes container stderr (WR-06)', () => {
     const { tracker } = run(PI_SUCCESS_STREAM)
-    const v = tracker.verdict({ ...base, exitCode: 1, stderrTail: 'boom' })
-    expect(v.ok).toBe(false)
-    expect(!v.ok && v.error).toContain('boom')
+    const v = tracker.verdict({ ...base, exitCode: 1, stderrTail: 'boom /run/user/1000/podman.sock sk-proj-abcdef' })
+    expect(v).toEqual({ ok: false, error: 'pi exited with code 1' })
     expect(tracker.verdict({ ...base, exitCode: 1 })).toEqual({ ok: false, error: 'pi exited with code 1' })
   })
-  it('limits stderr to the last 500 characters', () => {
-    const { tracker } = run(PI_SUCCESS_STREAM)
-    const v = tracker.verdict({ ...base, exitCode: 2, stderrTail: 'a'.repeat(600) + 'END' })
-    expect(!v.ok && v.error.length).toBe(500)
-    expect(!v.ok && v.error.endsWith('END')).toBe(true)
+  it('redacts key-like strings from model errors and retry failures (WR-06)', () => {
+    const a = createCompletionTracker()
+    a.observe({
+      type: 'message_end',
+      message: { role: 'assistant', stopReason: 'error', errorMessage: '401 Incorrect API key provided: sk-proj-****abcd' },
+    })
+    const va = a.verdict({ ...base, exitCode: 0 })
+    expect(!va.ok && va.error).not.toContain('sk-')
+    const b = createCompletionTracker()
+    b.observe({ type: 'auto_retry_end', success: false, finalError: 'bad key sk-live-1234567890' })
+    const vb = b.verdict({ ...base, exitCode: 0 })
+    expect(!vb.ok && vb.error).not.toContain('sk-')
+  })
+  it('auto_retry_start summary omits the upstream error text (WR-06)', () => {
+    const m = createPiEventMapper().map({
+      type: 'auto_retry_start',
+      attempt: 1,
+      maxAttempts: 3,
+      errorMessage: 'Incorrect API key provided: sk-proj-****abcd',
+    })
+    expect(m).toEqual({ type: 'info', summary: 'retrying model call (attempt 1/3)' })
   })
   it('missing agent_settled fails', () => {
     const t = createCompletionTracker()

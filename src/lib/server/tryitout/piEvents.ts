@@ -10,6 +10,7 @@
 
 import { StringDecoder } from 'node:string_decoder'
 import type { JobEvent } from '../../tryItOut'
+import { publicText } from './redact'
 
 export const MAX_SUMMARY_CHARS = 120
 
@@ -131,7 +132,8 @@ export function createPiEventMapper(): { map(record: unknown): MappedJobEvent | 
           const m = typeof record.maxAttempts === 'number' ? record.maxAttempts : '?'
           return {
             type: 'info',
-            summary: clean(`retrying model call (attempt ${n}/${m}): ${str(record.errorMessage) ?? ''}`),
+            // The upstream error text stays out of the visitor-readable feed (WR-06).
+            summary: clean(`retrying model call (attempt ${n}/${m})`),
           }
         }
         case 'agent_settled':
@@ -170,11 +172,12 @@ export function createCompletionTracker(): {
       if (record.type === 'agent_settled') settled = true
       if (record.type === 'message_end' && isRec(record.message) && record.message.role === 'assistant') {
         lastStop = str(record.message.stopReason)
-        lastErr = str(record.message.errorMessage)
+        const em = str(record.message.errorMessage)
+        lastErr = em === undefined ? undefined : publicText(em)
         text = assistantText(record.message)
       }
       if (record.type === 'auto_retry_end' && record.success === false) {
-        retryFailed = str(record.finalError) ?? 'model call failed after retries'
+        retryFailed = publicText(str(record.finalError) ?? 'model call failed after retries')
       }
     },
     verdict({ exitCode, timedOut, timeoutMs, stderrTail }) {
@@ -184,8 +187,9 @@ export function createCompletionTracker(): {
       if (modelFailed && lastErr) return { ok: false, error: lastErr }
       if (retryFailed) return { ok: false, error: retryFailed }
       if (exitCode !== 0) {
-        const tail = stderrTail.trim().slice(-500)
-        return { ok: false, error: tail || `pi exited with code ${exitCode}` }
+        // Container stderr is never shown to the visitor (WR-06); the runner logs it server-side.
+        void stderrTail
+        return { ok: false, error: `pi exited with code ${exitCode}` }
       }
       if (!settled) return { ok: false, error: 'pi exited before the agent settled' }
       if (modelFailed) return { ok: false, error: `model call ended with stopReason ${lastStop}` }
