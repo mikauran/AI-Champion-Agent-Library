@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// SvelteKit's load() is typed as void | data; the catalog load always returns data.
+type CatalogData = Exclude<Awaited<ReturnType<typeof import('./+page.server.js').load>>, void>
+
 // Mock the db module before importing the load function
 vi.mock('$lib/server/db.js', () => {
   const makeMockRows = (overrides: Record<string, unknown>[] = []) =>
@@ -122,7 +125,7 @@ describe('Catalog load function', () => {
 
     const url = new URL('http://localhost/catalog')
     const { load } = await import('./+page.server.js')
-    const result = await load({ url } as Parameters<typeof load>[0])
+    const result = (await load({ url } as Parameters<typeof load>[0])) as CatalogData
 
     expect(result.agents).toHaveLength(1)
     expect(result.agents[0].slug).toBe('my-agent')
@@ -181,7 +184,7 @@ describe('Catalog load function', () => {
 
     const url = new URL('http://localhost/catalog?page=2')
     const { load } = await import('./+page.server.js')
-    const result = await load({ url } as Parameters<typeof load>[0])
+    const result = (await load({ url } as Parameters<typeof load>[0])) as CatalogData
 
     expect(result.page).toBe(2)
     expect(result.pageSize).toBe(24)
@@ -221,7 +224,7 @@ describe('Catalog load function', () => {
 
     const url = new URL('http://localhost/catalog?category=productivity')
     const { load } = await import('./+page.server.js')
-    const result = await load({ url } as Parameters<typeof load>[0])
+    const result = (await load({ url } as Parameters<typeof load>[0])) as CatalogData
 
     expect(result.filters.category).toBe('productivity')
     expect(eq).toHaveBeenCalledWith(expect.anything(), 'productivity')
@@ -258,7 +261,7 @@ describe('Catalog load function', () => {
 
     const url = new URL('http://localhost/catalog?llm=gpt-4o')
     const { load } = await import('./+page.server.js')
-    const result = await load({ url } as Parameters<typeof load>[0])
+    const result = (await load({ url } as Parameters<typeof load>[0])) as CatalogData
 
     expect(result.filters.llm).toBe('gpt-4o')
     expect(eq).toHaveBeenCalledWith(expect.anything(), 'gpt-4o')
@@ -295,7 +298,7 @@ describe('Catalog load function', () => {
 
     const url = new URL('http://localhost/catalog?maturity=production')
     const { load } = await import('./+page.server.js')
-    const result = await load({ url } as Parameters<typeof load>[0])
+    const result = (await load({ url } as Parameters<typeof load>[0])) as CatalogData
 
     expect(result.filters.maturity).toBe('production')
     expect(eq).toHaveBeenCalledWith(expect.anything(), 'production')
@@ -338,7 +341,7 @@ describe('Catalog load function', () => {
 
     const url = new URL('http://localhost/catalog')
     const { load } = await import('./+page.server.js')
-    const result = await load({ url } as Parameters<typeof load>[0])
+    const result = (await load({ url } as Parameters<typeof load>[0])) as CatalogData
 
     expect(result.categories).toContain('productivity')
     expect(result.categories).toContain('devops')
@@ -381,7 +384,7 @@ describe('Catalog load function', () => {
 
     const url = new URL('http://localhost/catalog')
     const { load } = await import('./+page.server.js')
-    const result = await load({ url } as Parameters<typeof load>[0])
+    const result = (await load({ url } as Parameters<typeof load>[0])) as CatalogData
 
     expect(result.llms).toContain('gpt-4o')
     expect(result.llms).toContain('claude-3-5-sonnet')
@@ -424,7 +427,7 @@ describe('Catalog load function', () => {
 
     const url = new URL('http://localhost/catalog')
     const { load } = await import('./+page.server.js')
-    const result = await load({ url } as Parameters<typeof load>[0])
+    const result = (await load({ url } as Parameters<typeof load>[0])) as CatalogData
 
     expect(result.maturityStatuses).toContain('experimental')
     expect(result.maturityStatuses).toContain('beta')
