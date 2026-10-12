@@ -10,3 +10,4 @@ build/
 .claude/worktrees/
 .gsd/
 runtime/
+data/fixtures-scale/
