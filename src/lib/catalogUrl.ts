@@ -1,8 +1,17 @@
+import { AGENT_KIND_VALUES, type AgentKind } from './spec/kinds.js'
+
 export interface CatalogParamsInput {
   category?: string
   llm?: string
   maturity?: string
   q?: string | null
+  kind?: string
+}
+
+/** Validate a `kind` query param against the allowed kinds (case-sensitive); null otherwise. */
+export function parseKind(raw: string | null | undefined): AgentKind | null {
+  if (typeof raw !== 'string') return null
+  return (AGENT_KIND_VALUES as readonly string[]).includes(raw) ? (raw as AgentKind) : null
 }
 
 /** Build catalog query params; empty values are omitted and page always resets to 1. */
@@ -13,6 +22,7 @@ export function buildCatalogParams(input: CatalogParamsInput): URLSearchParams {
   if (input.maturity) params.set('maturity', input.maturity)
   const q = (input.q ?? '').trim()
   if (q) params.set('q', q)
+  if (input.kind) params.set('kind', input.kind)
   params.set('page', '1')
   return params
 }
