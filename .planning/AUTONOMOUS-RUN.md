@@ -19,7 +19,7 @@ Goal: spend leftover token budget on reviewable, low-risk improvements. The huma
 4. Phase 9 Try It Out hardening.
 5. Phase 10 Accessibility, Phase 11 Related agents.
 6. Phase 12 Agent types and intake research (use WebSearch for framework formats; docs only), then Phase 13 build behind a feature flag (default off, additive DB changes only). Phase 13 data-model decisions must each be logged with revert steps.
-7. Phase 14 MCP generation, then Phase 15 MCP test platform (both flagged, default off). Schema-only input; never accept, store or log credentials; test only against synthetic seeded DBs; real-container runs are 'pending human'.
+7. Phase 14 MCP generator, then Phase 15 MCP test platform (both flagged, default off). Phase 14 starts by reading both reference projects (read-only) and writing RESEARCH-SYNTHESIS.md (best D1-D6 approaches, input types covered, failure modes) before any design; a DB schema is one input adapter, not the scope. Phase 15 ports the existing benchmark harness (12 cases, D1-D6) instead of building a new sandbox. Safety rules: no credentials, fake data only, container runs are 'pending human'.
 8. Per completed phase: code review + fix, security audit (`/gsd-secure-phase`), test-gap fill (`/gsd-add-tests`).
 9. Repo-wide: dependency health (no major bumps), README/TECHNICAL_DOCUMENTATION/PROJECT.md/STATE.md sync with the code, deploy runbook.
 10. Free exploration: further improvements you judge valuable (UX polish incl. dark mode/spec viewer, perf, tests, DX). Each gets a D-NNN entry with rationale and revert steps.
