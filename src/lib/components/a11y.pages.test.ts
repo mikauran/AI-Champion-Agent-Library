@@ -149,6 +149,10 @@ describe('detail page composition', () => {
       fixedNote: null,
       ...overrides,
     },
+    related: [
+      { slug: 'other-agent', title: 'Other Agent', summary: 'Another one.', category: 'ops' },
+      { slug: 'third-agent', title: 'Third Agent', summary: 'Yet another.', category: null },
+    ],
     openTryOut: false,
   })
 
@@ -172,6 +176,14 @@ describe('detail page composition', () => {
       props: { data: { ...detail({ tryItOutMode: 'runnable' }), openTryOut: true } } as never,
     })
     expect(container.querySelector('#try-it-out-panel')).not.toBeNull()
+    expect(headingLevelsOk(container)).toBe(true)
+    await expectNoAxeViolations(container, { landmarks: true })
+  })
+
+  it('related agents section: h2 in order, links, no axe violations', async () => {
+    const container = mountDetail({})
+    expect(container.querySelector('#related-agents-heading')).not.toBeNull()
+    expect(container.querySelectorAll('a[href="/agents/other-agent"]')).toHaveLength(1)
     expect(headingLevelsOk(container)).toBe(true)
     await expectNoAxeViolations(container, { landmarks: true })
   })

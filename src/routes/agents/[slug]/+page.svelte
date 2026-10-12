@@ -1,4 +1,5 @@
 <script lang="ts">
+  import RelatedAgents from '$lib/components/RelatedAgents.svelte'
   import TechAccordion from '$lib/components/TechAccordion.svelte'
   import CustomizationPanel from '$lib/components/CustomizationPanel.svelte'
   import CustomizeMenu from '$lib/components/CustomizeMenu.svelte'
@@ -6,7 +7,7 @@
   import type { PageData } from './$types'
 
   let { data }: { data: PageData } = $props()
-  let { agent } = data
+  let agent = $derived(data.agent)
   let tryItOutOpen = $state(Boolean(data.openTryOut))
 </script>
 
@@ -104,6 +105,8 @@
 
     <!-- Collapsible technical spec — collapsed by default (DETL-02) -->
     <TechAccordion {agent} />
+
+    <RelatedAgents agents={data.related} />
   </div>
 
   <!-- Right column: Customization panel (DETL-03) -->
