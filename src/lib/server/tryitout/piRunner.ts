@@ -76,6 +76,9 @@ export function buildPiArgs(cfg: RunnerConfig, slug: string, hasUpload = true): 
   ]
 }
 
+/** Most mapped Pi events kept on one job; the rest are dropped after one "truncated" marker (09-03). */
+export const MAX_JOB_EVENTS = 2000
+
 const STDERR_TAIL_BYTES = 4096
 
 /**
@@ -124,10 +127,14 @@ export async function runJobInContainer(jobId: string): Promise<void> {
     pushEvent(jobId, 'starting pi…')
     const tracker = createCompletionTracker()
     const mapper = createPiEventMapper()
+    let mappedEvents = 0
     const parser = createJsonlParser((record) => {
       tracker.observe(record)
       const mapped = mapper.map(record)
-      if (mapped) pushEvent(jobId, mapped.summary, mapped.type, mapped.tool)
+      if (!mapped) return
+      mappedEvents++
+      if (mappedEvents <= MAX_JOB_EVENTS) pushEvent(jobId, mapped.summary, mapped.type, mapped.tool)
+      else if (mappedEvents === MAX_JOB_EVENTS + 1) pushEvent(jobId, 'further progress events omitted')
     })
     let stderrTail = ''
 

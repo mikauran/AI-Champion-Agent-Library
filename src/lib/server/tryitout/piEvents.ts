@@ -50,7 +50,11 @@ export function createJsonlParser(onRecord: (r: unknown) => void): {
     } catch {
       return // ignore garbage lines
     }
-    onRecord(parsed)
+    try {
+      onRecord(parsed)
+    } catch {
+      // A throwing consumer must not break the exec stream handler that feeds this parser.
+    }
   }
   return {
     push(chunk: Buffer) {
@@ -145,8 +149,16 @@ function resultText(result: unknown): string {
   return ''
 }
 
+/** Open tool calls remembered for their end event; older ones are forgotten (09-03: bounded memory). */
+export const MAX_TRACKED_TOOL_CALLS = 1000
+const MAX_TOOL_CALL_ID_CHARS = 200
+
 export function createPiEventMapper(): { map(record: unknown): MappedJobEvent | null } {
   const summaries = new Map<string, string>()
+  const toolCallId = (v: unknown): string | undefined => {
+    const id = str(v)
+    return id && id.length <= MAX_TOOL_CALL_ID_CHARS ? id : undefined
+  }
   return {
     map(record) {
       if (!isRec(record)) return null
@@ -156,13 +168,19 @@ export function createPiEventMapper(): { map(record: unknown): MappedJobEvent | 
         case 'tool_execution_start': {
           const tool = str(record.toolName) ?? 'tool'
           const summary = summarizeToolCall(tool, record.args)
-          const id = str(record.toolCallId)
-          if (id) summaries.set(id, summary)
+          const id = toolCallId(record.toolCallId)
+          if (id) {
+            if (summaries.size >= MAX_TRACKED_TOOL_CALLS && !summaries.has(id)) {
+              const oldest = summaries.keys().next().value
+              if (oldest !== undefined) summaries.delete(oldest)
+            }
+            summaries.set(id, summary)
+          }
           return { type: 'tool_start', tool, summary }
         }
         case 'tool_execution_end': {
           const tool = str(record.toolName) ?? 'tool'
-          const id = str(record.toolCallId)
+          const id = toolCallId(record.toolCallId)
           const start = (id && summaries.get(id)) || summarizeToolCall(tool, undefined)
           if (id) summaries.delete(id)
           if (record.isError === true) {
