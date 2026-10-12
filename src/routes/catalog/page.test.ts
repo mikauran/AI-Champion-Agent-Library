@@ -128,9 +128,12 @@ describe('catalog +page.svelte', () => {
 
   it('shows the degraded-search notice only when flagged (WR-07)', () => {
     const a = mount()
-    expect(a.container.querySelector('[role="status"]')).toBeNull()
+    expect(a.container.textContent).not.toContain('Search is temporarily limited')
+    expect(a.container.querySelector('[aria-live="polite"]')!.textContent).not.toContain('temporarily limited')
     a.unmount()
     const b = render(Page, { data: { ...makeData(), searchDegraded: true } } as never)
-    expect(b.container.querySelector('[role="status"]')!.textContent).toContain('Search is temporarily limited')
+    expect(b.container.textContent).toContain('Search is temporarily limited')
+    // Announced through the persistent live region (exists before the content changes).
+    expect(b.container.querySelector('[aria-live="polite"]')!.textContent).toContain('Search is temporarily limited')
   })
 })

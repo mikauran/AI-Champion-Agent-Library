@@ -181,7 +181,7 @@
                 {#if field.type === 'textarea'}
                   <textarea
                     rows="4"
-                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
+                    class="mt-1 block w-full rounded-lg border border-gray-500 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
                     value={inputValues[field.key] ?? ''}
                     placeholder={field.placeholder ?? ''}
                     maxlength="20000"
@@ -191,7 +191,7 @@
                   ></textarea>
                 {:else if field.type === 'select'}
                   <select
-                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
+                    class="mt-1 block w-full rounded-lg border border-gray-500 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
                     value={inputValues[field.key] ?? ''}
                     required={field.required}
                     aria-label={field.label}
@@ -205,7 +205,7 @@
                 {:else if field.type === 'number'}
                   <input
                     type="number"
-                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
+                    class="mt-1 block w-full rounded-lg border border-gray-500 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
                     value={inputValues[field.key] ?? ''}
                     placeholder={field.placeholder ?? ''}
                     min={field.min ?? undefined}
@@ -218,7 +218,7 @@
                 {:else}
                   <input
                     type="text"
-                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
+                    class="mt-1 block w-full rounded-lg border border-gray-500 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
                     value={inputValues[field.key] ?? ''}
                     placeholder={field.placeholder ?? ''}
                     maxlength="20000"
@@ -240,7 +240,7 @@
           Additional instructions
           <textarea
             rows="3"
-            class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
+            class="mt-1 block w-full rounded-lg border border-gray-500 bg-white px-3 py-2 font-normal focus:border-indigo-500 focus:ring-indigo-500"
             bind:value={additionalInstructions}
             maxlength="20000"
             placeholder="Optional context or instructions not covered above"
@@ -254,20 +254,20 @@
           <div class="grid gap-5 md:grid-cols-2">
             <label class="block text-sm font-medium text-gray-800">
               Language model
-              <input class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal" bind:value={llmName} maxlength="200" required />
+              <input class="mt-1 block w-full rounded-lg border border-gray-500 bg-white px-3 py-2 font-normal" bind:value={llmName} maxlength="200" required />
             </label>
             <label class="block text-sm font-medium text-gray-800">
               Temperature
-              <input type="number" min="0" max="2" step="0.1" class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal" bind:value={temperature} placeholder="Model default" />
+              <input type="number" min="0" max="2" step="0.1" class="mt-1 block w-full rounded-lg border border-gray-500 bg-white px-3 py-2 font-normal" bind:value={temperature} placeholder="Model default" />
             </label>
           </div>
           <label class="block text-sm font-medium text-gray-800">
             Tools <span class="font-normal text-gray-500">(comma-separated)</span>
-            <input class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-normal" bind:value={tools} />
+            <input class="mt-1 block w-full rounded-lg border border-gray-500 bg-white px-3 py-2 font-normal" bind:value={tools} />
           </label>
           <label class="block text-sm font-medium text-gray-800">
             System prompt
-            <textarea rows="7" class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm font-normal" bind:value={systemPrompt} maxlength="20000" required></textarea>
+            <textarea rows="7" class="mt-1 block w-full rounded-lg border border-gray-500 bg-white px-3 py-2 font-mono text-sm font-normal" bind:value={systemPrompt} maxlength="20000" required></textarea>
           </label>
         </div>
       </details>

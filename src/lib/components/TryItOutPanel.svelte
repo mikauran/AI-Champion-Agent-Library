@@ -20,6 +20,13 @@
   let unsubscribe: (() => void) | null = null
   let restoreAttempted = false
 
+  const statusText: Record<string, string> = {
+    queued: 'Job queued',
+    running: 'Job running',
+    succeeded: 'Job succeeded',
+    failed: 'Job failed'
+  }
+
   let inFlight = $derived(status === 'queued' || status === 'running')
 
   // Shared subscription-callback body for both a fresh run() and the ?job=
@@ -101,15 +108,15 @@
   })
 </script>
 
-<aside class="rounded-xl border border-gray-200 bg-white p-6">
-  <h2 class="font-semibold text-gray-900 mb-2">Try it out</h2>
+<aside class="rounded-xl border border-gray-200 bg-white p-6" aria-labelledby="tryitout-heading">
+  <h2 id="tryitout-heading" class="font-semibold text-gray-900 mb-2">Try it out</h2>
 
   <label for="tryitout-task" class="block text-xs font-semibold text-gray-700 mb-1">Task</label>
   <textarea
     id="tryitout-task"
     rows="3"
     placeholder="Describe the task you want this agent to do…"
-    class="w-full rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:ring-2 focus-visible:ring-indigo-600"
+    class="w-full rounded border border-gray-500 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:ring-2 focus-visible:ring-indigo-600"
     value={task}
     oninput={(e) => (task = e.currentTarget.value)}
   ></textarea>
@@ -118,7 +125,7 @@
   <input
     id="tryitout-file"
     type="file"
-    class="block w-full rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600 focus-visible:ring-2 focus-visible:ring-indigo-600"
+    class="block w-full rounded border border-gray-500 bg-white px-3 py-2 text-sm text-gray-600 focus-visible:ring-2 focus-visible:ring-indigo-600"
     onchange={(e) => (file = e.currentTarget.files?.[0] ?? null)}
   />
 
@@ -131,10 +138,16 @@
     {inFlight ? 'Running…' : 'Run'}
   </button>
 
+  <!-- Persistent live region: always in the DOM so status changes are announced. -->
+  <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{statusText[status] ?? ''}</p>
+
   {#if status !== 'idle'}
-    <p class="mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Progress</p>
+    <p id="tryitout-progress-label" class="mt-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Progress</p>
     <div
       bind:this={feedEl}
+      role="log"
+      tabindex="0"
+      aria-labelledby="tryitout-progress-label"
       class="max-h-64 overflow-y-auto rounded border border-gray-200 bg-gray-50 p-3 font-mono text-sm text-gray-900"
     >
       {#each events as event}
@@ -156,7 +169,7 @@
   {/if}
 
   {#if status === 'failed'}
-    <div class="mt-4 rounded border border-red-200 bg-red-50 p-4">
+    <div class="mt-4 rounded border border-red-200 bg-red-50 p-4" role="alert">
       <p class="text-xs font-semibold text-red-700">Job failed</p>
       <p class="mt-1 text-sm text-red-700">{error}</p>
       <p class="mt-1 text-sm text-red-700">Adjust your task and try again.</p>

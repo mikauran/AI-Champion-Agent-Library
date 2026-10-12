@@ -18,7 +18,7 @@
 </script>
 
 <details class="mt-8 border-t border-gray-200">
-  <summary class="cursor-pointer font-semibold text-gray-700 py-3 select-none">
+  <summary class="cursor-pointer rounded font-semibold text-gray-700 py-3 select-none focus-visible:ring-2 focus-visible:ring-indigo-600">
     Technical Specification
   </summary>
   <div class="pt-4 pb-6 space-y-3 text-sm text-gray-600">
@@ -59,7 +59,7 @@
     {#if !shownInPanel('systemPrompt')}
       <div>
         <span class="font-medium text-gray-900">System Prompt:</span>
-        <pre class="mt-1 whitespace-pre-wrap bg-gray-50 rounded p-3 text-xs text-gray-700 max-h-48 overflow-y-auto">{agent.systemPrompt}</pre>
+        <pre tabindex="0" role="region" aria-label="System prompt" class="mt-1 whitespace-pre-wrap bg-gray-50 rounded p-3 text-xs text-gray-700 max-h-48 overflow-y-auto">{agent.systemPrompt}</pre>
       </div>
     {/if}
   </div>

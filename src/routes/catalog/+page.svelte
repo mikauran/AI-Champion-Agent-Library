@@ -24,6 +24,8 @@
     if (type === 'link' || type === 'popstate') searchKey++
   })
 
+  const degradedMessage = 'Search is temporarily limited. Showing basic text matches only.'
+
   let noResultsQuery = $derived(truncateQuery(data.filters.q ?? ''))
 
   function updateCategory(value: string) {
@@ -64,10 +66,19 @@
   }
 </script>
 
+<svelte:head>
+  <title>Agent Catalog — AIC Agent Library</title>
+</svelte:head>
+
 <h1 class="text-3xl font-semibold text-gray-900 mb-6">Agent Catalog</h1>
 
 {#key searchKey}
-  <SearchBar value={data.filters.q ?? ''} onsearch={updateQuery} count={data.total} />
+  <SearchBar
+    value={data.filters.q ?? ''}
+    onsearch={updateQuery}
+    count={data.total}
+    message={data.searchDegraded ? degradedMessage : ''}
+  />
 {/key}
 
 <FilterBar
@@ -84,8 +95,9 @@
 />
 
 {#if data.searchDegraded}
-  <p class="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
-    Search is temporarily limited. Showing basic text matches only.
+  <!-- Announced through SearchBar's persistent live region (message prop), not role=status here. -->
+  <p class="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+    {degradedMessage}
   </p>
 {/if}
 

@@ -21,8 +21,8 @@
   const fixedFields = $derived(TAILORABLE_FIELDS.filter((f) => fixed.includes(f.key)))
 </script>
 
-<aside class="rounded-xl border border-gray-200 bg-white p-6">
-  <h2 class="font-semibold text-gray-900 mb-2">Customization Options</h2>
+<aside class="rounded-xl border border-gray-200 bg-white p-6" aria-labelledby="customization-heading">
+  <h2 id="customization-heading" class="font-semibold text-gray-900 mb-2">Customization Options</h2>
   {#if customizable.length > 0}
     <p class="text-sm text-gray-600 mb-4">These fields can be tailored when you customize this agent.</p>
     <ul class="space-y-3">

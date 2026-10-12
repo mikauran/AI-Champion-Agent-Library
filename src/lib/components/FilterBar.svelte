@@ -13,15 +13,24 @@
   }
   let { categories, llms, maturityStatuses, selectedCategory, selectedLlm, selectedMaturity, onCategoryChange, onLlmChange, onMaturityChange, onClear }: Props = $props()
 
+  let categoryEl: HTMLSelectElement | undefined = $state()
+
+  function clear() {
+    onClear()
+    // The Clear button unmounts once no filter is active, so move focus to the first control.
+    categoryEl?.focus()
+  }
+
   let hasActiveFilters = $derived(selectedCategory !== '' || selectedLlm !== '' || selectedMaturity !== '')
 </script>
 
-<div class="flex flex-wrap items-end gap-4 mb-6">
+<div class="flex flex-wrap items-end gap-4 mb-6" role="group" aria-label="Filter agents">
   <div>
     <label for="filter-category" class="block text-xs font-medium text-gray-700 mb-1">Category</label>
     <select
       id="filter-category"
-      class="min-h-[44px] rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
+      bind:this={categoryEl}
+      class="min-h-[44px] rounded border border-gray-500 bg-white px-3 py-2 text-sm text-gray-900"
       value={selectedCategory}
       onchange={(e) => onCategoryChange(e.currentTarget.value)}
     >
@@ -36,7 +45,7 @@
     <label for="filter-llm" class="block text-xs font-medium text-gray-700 mb-1">Model</label>
     <select
       id="filter-llm"
-      class="min-h-[44px] rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
+      class="min-h-[44px] rounded border border-gray-500 bg-white px-3 py-2 text-sm text-gray-900"
       value={selectedLlm}
       onchange={(e) => onLlmChange(e.currentTarget.value)}
     >
@@ -51,7 +60,7 @@
     <label for="filter-maturity" class="block text-xs font-medium text-gray-700 mb-1">Status</label>
     <select
       id="filter-maturity"
-      class="min-h-[44px] rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
+      class="min-h-[44px] rounded border border-gray-500 bg-white px-3 py-2 text-sm text-gray-900"
       value={selectedMaturity}
       onchange={(e) => onMaturityChange(e.currentTarget.value)}
     >
@@ -64,8 +73,9 @@
 
   {#if hasActiveFilters}
     <button
-      onclick={onClear}
-      class="text-sm text-indigo-600 hover:underline min-h-[44px] px-2"
+      type="button"
+      onclick={clear}
+      class="rounded text-sm text-indigo-600 hover:underline min-h-[44px] px-2 focus-visible:ring-2 focus-visible:ring-indigo-600"
     >
       Clear filters
     </button>
