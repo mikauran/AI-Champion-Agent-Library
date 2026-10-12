@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 11: Related Agents (DISC-01)** - Similar-agents panel on the detail page using Phase 3 embeddings
 - [x] **Phase 12: Agent Types and Intake Research** - Taxonomy of hostable agent types/systems, per-format capability matrix, author intake guide
 - [ ] **Phase 13: Multi-Agent and Multi-Format Hosting (flagged)** - Canonical model extension, adapters, validate-submission CLI, system detail rendering, all behind a feature flag
-- [ ] **Phase 14: MCP Generator (generalized from research, flagged)** - Research synthesis first, then input-adapter generator (DB schema/CUST-02 is one adapter among OpenAPI, tabular catalogs, ...)
+- [ ] **Phase 14: MCP Generator (generalized from research, flagged)** - Research synthesis first, then input-adapter generator (DB schema/CUST-02 is one adapter among OpenAPI, tabular catalogs, ...) (code complete 2026-10-12, verification human_needed: see 14-HUMAN-UAT.md)
 - [ ] **Phase 15: MCP Test Platform (flagged)** - Port the existing benchmark harness (offline mock pattern, D1-D6 scoring, tier gates) to score any MCP server
 
 ## Phase Details
@@ -406,13 +406,13 @@ Plans:
 
 Plans:
 
-- [ ] 14-01-PLAN.md — Design doc (cites RESEARCH-SYNTHESIS), MCP_GENERATOR flag, SourceModel/InputAdapter contract, adapter registry, credential scanner, diagnostics
-- [ ] 14-02-PLAN.md — Core emitter: tool synthesis, Python FastMCP templates, checklist behaviours, derived-filter extension point, golden tests
-- [ ] 14-03-PLAN.md — OpenAPI adapter with fixtures and golden
-- [ ] 14-04-PLAN.md — Tabular-catalog and SQL DDL (CUST-02) adapters with fixtures and goldens
-- [ ] 14-05-PLAN.md — Pipeline, zip bundle, `generate-mcp` CLI, flag-gated /api/mcp-generate route with size caps
-- [ ] 14-06-PLAN.md — Customize menu "Generate MCP" panel (flag-gated), flag-off regression, axe test
-- [ ] 14-07-PLAN.md — docs/mcp-generator.md (extension point), 14-HUMAN-UAT.md, decisions, VERIFICATION, invariant self-check
+- [x] 14-01-PLAN.md — Design doc (cites RESEARCH-SYNTHESIS), MCP_GENERATOR flag, SourceModel/InputAdapter contract, adapter registry, credential scanner, diagnostics
+- [x] 14-02-PLAN.md — Core emitter: tool synthesis, Python FastMCP templates, checklist behaviours, derived-filter extension point, golden tests
+- [x] 14-03-PLAN.md — OpenAPI adapter with fixtures and golden
+- [x] 14-04-PLAN.md — Tabular-catalog and SQL DDL (CUST-02) adapters with fixtures and goldens
+- [x] 14-05-PLAN.md — Pipeline, zip bundle, `generate-mcp` CLI, flag-gated /api/mcp-generate route with size caps
+- [x] 14-06-PLAN.md — Customize menu "Generate MCP" panel (flag-gated), flag-off regression, axe test
+- [x] 14-07-PLAN.md — docs/mcp-generator.md (extension point), 14-HUMAN-UAT.md, decisions, VERIFICATION, invariant self-check
 
 ### Phase 15: MCP Test Platform (flagged)
 
