@@ -50,7 +50,14 @@ Passed:
 
 Defects found by the live run and fixed: `e396564` (Podman rejects tmpfs `uid=`/`gid=` options; agent dir now `mode=1777`), `f1a0dfa` (Vite `allowedHosts` for `host.containers.internal`; proxy token store on globalThis so a dev reload cannot drop tokens), `50187b4` (reload-safe `isTryItOutRuntimeError` so the D-14 fallback survives a dev reload; proxy test isolated from a developer's real `.env`).
 
-Still open (why this plan stays checkpoint-pending):
-- `podman-compose up -d --build` run: app container with the socket mounted (`keep-id`, `label=disable`), the `aic-agent-library` alias resolving from a Pi container on `aic-pi-internal`, and a full job through that network (smoke `--proxy-host aic-agent-library`). `podman-compose` is not installed on the test host.
-- Minor: a job without an uploaded file makes Pi try to read the absent `input/upload.txt` (harmless ENOENT in the feed); the skill could state the upload is optional.
+Compose run (also 2026-10-12, `podman-compose` 1.0.6 from apt, `podman-compose up -d --build`): passed.
+- App image builds and starts; no `EACCES`: with `userns_mode: keep-id:uid=1000,gid=1000` and `label=disable` the `node` user in the app container reads the mounted host socket (`/run/podman/podman.sock`).
+- App is attached to `aic-agent-library_default` and `aic-pi-internal` (alias `aic-agent-library`). `scripts/smoke-pi-runner.ts --proxy-host aic-agent-library` now passes every step including DNS (alias resolves to the app container).
+- Opening `/agents/demo-rfi-triage` on port 3000 started a Pi container on `aic-pi-internal` only; a job completed through the internal network (real model call via the proxy, real Pi tool events, zip with `result.txt`).
+- From the live warm container: `https://api.openai.com` fails with `ENETUNREACH` (no internet), `http://aic-agent-library:3000/health` returns 200.
+- `podman-compose down` (SIGTERM to the app) left 0 `aic.tryitout` containers.
+- Finding fixed: podman-compose lets a developer's `.env` override the interpolated defaults, so dev-only values (`PI_LLM_PROXY_URL=http://host.containers.internal:5173/...`, `PI_RUNNER_ALLOW_OPEN_EGRESS=true`) leaked into the compose stack. `podman-compose.yml` now pins `PI_LLM_PROXY_URL` to the internal alias and `PI_RUNNER_ALLOW_OPEN_EGRESS` to false. `ORIGIN` must match the public URL (`http://localhost:3000` for compose); a dev-only value in `.env` makes the CSRF check reject POSTs.
 
+Awaiting: the human sign-off for Task 3 (resume signal `approved fs-mode=tmpfs`).
+
+Minor, not blocking: a job without an uploaded file makes Pi try to read the absent `input/upload.txt` (harmless ENOENT in the feed); the skill could state the upload is optional.
