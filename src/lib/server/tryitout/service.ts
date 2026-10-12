@@ -27,6 +27,8 @@ export interface TryItOutService {
    * hold a lease always may; a NEW anonymous session consumes one of the client's per-window slots.
    */
   admitSession(sessionKey: string, clientKey: string | undefined): boolean
+  /** Memoised network guard (D-19/D-20); a failed check is retried on the next call. */
+  verifyNetwork(): Promise<void>
 }
 
 /** Window for the per-client cap on new anonymous sessions. */
@@ -116,9 +118,24 @@ export function createTryItOutService(opts: {
     }
   }
 
+  // WR-03: the open-egress refusal must hold even when the startup sequence failed, so every
+  // container create waits on this (cached once it has succeeded, retried after a failure).
+  let networkVerified: Promise<void> | null = null
+  const verifyNetwork = (): Promise<void> => {
+    if (!networkVerified) {
+      const attempt = runtime.ensureNetwork()
+      networkVerified = attempt
+      attempt.catch(() => {
+        if (networkVerified === attempt) networkVerified = null
+      })
+    }
+    return networkVerified
+  }
+
   const leases = createLeaseManager({
     runtime,
     config,
+    beforeCreate: verifyNetwork,
     tokens: { mint: registerLeaseToken, revoke: revokeLeaseToken },
     stage,
     instanceId,
@@ -134,7 +151,7 @@ export function createTryItOutService(opts: {
     if (leases.snapshot().some((l) => l.sessionKey === sessionKey)) return true
     return limiter.tryAdmit(clientKey ?? 'unknown')
   }
-  return { config, runtime, leases, instanceId, admitSession }
+  return { config, runtime, leases, instanceId, admitSession, verifyNetwork }
 }
 
 export function getTryItOutService(): TryItOutService {
@@ -175,7 +192,17 @@ export async function warmForSession(
   }
 }
 
-/** Idempotent, never throws. Ping, network, orphan sweep, reaper, signal cleanup. */
+// Delays between startup attempts (ping, network guard, orphan sweep); the first runs at once.
+const STARTUP_RETRY_DELAYS_MS = [0, 2_000, 6_000, 20_000]
+
+function sleepUnref(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    const t = setTimeout(resolve, ms)
+    t.unref?.()
+  })
+}
+
+/** Idempotent, never throws. Reaper, ping, network, orphan sweep (retried), signal cleanup. */
 export function startTryItOutService(): void {
   const s = state()
   if (s.started) return
@@ -183,18 +210,26 @@ export function startTryItOutService(): void {
   try {
     const svc = getTryItOutService()
     if (!svc.config.enabled) return
+    // The reaper is independent of the engine being reachable now: it only touches known leases.
+    svc.leases.startReaper()
     void (async () => {
-      try {
-        await svc.runtime.ping()
-        await svc.runtime.ensureNetwork()
-        await svc.leases.sweepOrphans()
-        svc.leases.startReaper()
-      } catch (err) {
-        console.warn(
-          'Try It Out container engine unavailable (falling back to direct model calls when enabled):',
-          err instanceof Error ? err.message : String(err),
-        )
+      for (let attempt = 0; attempt < STARTUP_RETRY_DELAYS_MS.length; attempt++) {
+        if (attempt > 0) await sleepUnref(STARTUP_RETRY_DELAYS_MS[attempt])
+        try {
+          await svc.runtime.ping()
+          await svc.verifyNetwork()
+          await svc.leases.sweepOrphans()
+          return
+        } catch (err) {
+          if (attempt === 0) {
+            console.warn(
+              'Try It Out container engine unavailable (falling back to direct model calls when enabled):',
+              err instanceof Error ? err.message : String(err),
+            )
+          }
+        }
       }
+      console.warn('Try It Out startup checks did not complete; the network guard still runs before every container create')
     })()
     let stopping = false
     const stop = () => {

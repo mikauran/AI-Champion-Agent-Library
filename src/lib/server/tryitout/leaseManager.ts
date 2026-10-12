@@ -63,6 +63,8 @@ export interface LeaseManagerDeps {
   config: RunnerConfig
   tokens: TokenIssuer
   stage: (lease: Lease, containerId: string) => Promise<void>
+  /** Awaited before every container create (WR-03): the open-egress/network guard. */
+  beforeCreate?: () => Promise<void>
   instanceId: string
   now?: () => number
 }
@@ -114,6 +116,7 @@ export function createLeaseManager(deps: LeaseManagerDeps): LeaseManager {
   async function startLease(lease: Lease): Promise<void> {
     try {
       const token = tokens.mint(lease.id)
+      await deps.beforeCreate?.()
       const id = await runtime.createAndStart({
         name: 'aic-pi-' + randomBytes(6).toString('hex'),
         labels: {

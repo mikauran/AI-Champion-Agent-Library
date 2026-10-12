@@ -144,7 +144,8 @@ describe('startTryItOutService and warmForSession', () => {
     __setTryItOutServiceForTests(svc)
     startTryItOutService()
     startTryItOutService()
-    await vi.waitFor(() => expect(reaper).toHaveBeenCalledTimes(1))
+    await vi.waitFor(() => expect(sweep).toHaveBeenCalledTimes(1))
+    expect(reaper).toHaveBeenCalledTimes(1)
     expect(runtime.calls.filter((c) => c === 'ping')).toHaveLength(1)
     expect(runtime.calls).toContain('ensureNetwork')
     expect(sweep).toHaveBeenCalledTimes(1)
@@ -209,5 +210,43 @@ describe('per-client cap on new anonymous sessions (WR-07)', () => {
     expect(svc.admitSession('anon:b', 'ip')).toBe(false)
     t += 11 * 60 * 1000
     expect(svc.admitSession('anon:c', 'ip')).toBe(true)
+  })
+})
+
+describe('network guard and reaper independent of startup (WR-03)', () => {
+  const refusal = () =>
+    new TryItOutRuntimeError('container_start_failed', 'network "x" is not internal; refusing to run Pi with open egress.')
+
+  it('starts the reaper even when the startup ping fails', async () => {
+    const { runtime, svc } = make()
+    runtime.failNext('ping', new TryItOutRuntimeError('engine_unavailable', 'no socket'))
+    const reaper = vi.spyOn(svc.leases, 'startReaper').mockImplementation(() => {})
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    __setTryItOutServiceForTests(svc)
+    startTryItOutService()
+    expect(reaper).toHaveBeenCalledTimes(1)
+    await vi.waitFor(() => expect(runtime.calls).toContain('ping'))
+    process.removeAllListeners('SIGTERM')
+    process.removeAllListeners('SIGINT')
+  })
+
+  it('refuses to create a container on a non-internal network even though startup never ran the check', async () => {
+    const { runtime, svc } = make()
+    runtime.failNext('ensureNetwork', refusal())
+    const lease = svc.leases.ensureWarm('anon:a', SLUG)
+    await expect(lease).rejects.toMatchObject({ code: 'container_start_failed' })
+    expect(runtime.calls).not.toContain('createAndStart')
+    expect(runtime.containers()).toHaveLength(0)
+    expect(svc.leases.snapshot()).toHaveLength(0)
+  })
+
+  it('verifies the network once on success and re-checks after a failure', async () => {
+    const { runtime, svc } = make()
+    runtime.failNext('ensureNetwork', refusal())
+    await expect(svc.leases.ensureWarm('anon:a', SLUG)).rejects.toBeTruthy()
+    await svc.leases.ensureWarm('anon:b', SLUG)
+    await svc.leases.ensureWarm('anon:c', SLUG)
+    expect(runtime.calls.filter((c) => c === 'ensureNetwork')).toHaveLength(2) // failed once, then cached
+    expect(runtime.containers()).toHaveLength(2)
   })
 })
