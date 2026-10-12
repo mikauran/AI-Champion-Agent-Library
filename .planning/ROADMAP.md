@@ -212,7 +212,7 @@ Plans:
 **Goal:** Opening an agent's detail page warms a container running Pi with that agent's skill, so Try It Out runs in it behind the existing job API with no cold-start wait. Replaces the direct-LLM runner from Phase 7, which stays as fallback.
 **Requirements**: Derived from 08-CONTEXT.md decisions D-01..D-22 (no REQ-IDs mapped)
 **Depends on:** Phase 7
-**Plans:** 7/8 plans executed
+**Plans:** 8/8 plans executed
 
 Plans:
 
@@ -234,4 +234,4 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 08-08-PLAN.md — `pi-runner` image, smoke script, compose socket/internal network, docs; live verification checkpoint on a Podman host
+- [x] 08-08-PLAN.md — `pi-runner` image, smoke script, compose socket/internal network, docs; live verification checkpoint on a Podman host

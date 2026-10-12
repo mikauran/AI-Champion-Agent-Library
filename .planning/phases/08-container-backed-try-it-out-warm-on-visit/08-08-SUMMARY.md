@@ -1,7 +1,7 @@
 ---
 phase: 08-container-backed-try-it-out-warm-on-visit
 plan: 08
-status: checkpoint-pending
+status: complete
 subsystem: deployment
 tags: [podman, containerfile, compose, smoke]
 requires: ["08-01", "08-05", "08-06", "08-07"]
@@ -14,9 +14,9 @@ key-files:
   modified: [podman-compose.yml, Containerfile, .env.example, README.md]
 ---
 
-# Phase 8 Plan 08: pi-runner image, compose wiring and smoke script (checkpoint-pending)
+# Phase 8 Plan 08: pi-runner image, compose wiring and smoke script
 
-Status: Tasks 1 and 2 are done and committed. Task 3 (live verification on a Podman host) is AWAITING HUMAN VERIFICATION. Live verification was run on 2026-10-12 on rootless Podman 4.9.3 (Linux Mint 22.3, Ubuntu 24.04 base, cgroup v2, netavark, crun); results are in "Live verification" below. The compose-with-socket run is still open, so the plan stays checkpoint-pending.
+Status: complete. Tasks 1 and 2 are done and committed. Task 3 (live verification on a Podman host) was run and approved by the user on 2026-10-12 with `approved fs-mode=tmpfs`. Live verification was run on 2026-10-12 on rootless Podman 4.9.3 (Linux Mint 22.3, Ubuntu 24.04 base, cgroup v2, netavark, crun); results are in "Live verification" below. The compose-with-socket run is still open, 
 
 ## Completed
 
@@ -58,6 +58,6 @@ Compose run (also 2026-10-12, `podman-compose` 1.0.6 from apt, `podman-compose u
 - `podman-compose down` (SIGTERM to the app) left 0 `aic.tryitout` containers.
 - Finding fixed: podman-compose lets a developer's `.env` override the interpolated defaults, so dev-only values (`PI_LLM_PROXY_URL=http://host.containers.internal:5173/...`, `PI_RUNNER_ALLOW_OPEN_EGRESS=true`) leaked into the compose stack. `podman-compose.yml` now pins `PI_LLM_PROXY_URL` to the internal alias and `PI_RUNNER_ALLOW_OPEN_EGRESS` to false. `ORIGIN` must match the public URL (`http://localhost:3000` for compose); a dev-only value in `.env` makes the CSRF check reject POSTs.
 
-Awaiting: the human sign-off for Task 3 (resume signal `approved fs-mode=tmpfs`).
+Task 3 sign-off: the user approved with `approved fs-mode=tmpfs` after also running the browser flow themselves (warm on visit, job with Pi tool events, zip download, container reuse, and the direct-model fallback when the engine socket was off and a new session was used). One observation from their run: a job in a session that already holds a warm container, with the engine stopped afterwards, fails with `ECONNREFUSED` instead of falling back (by design: only claim-phase failures fall back, D-14).
 
-Minor, not blocking: a job without an uploaded file makes Pi try to read the absent `input/upload.txt` (harmless ENOENT in the feed); the skill could state the upload is optional.
+Fixed after sign-off: a job without an upload no longer makes Pi read the absent `input/upload.txt` (the runner's instruction now names only staged files).
