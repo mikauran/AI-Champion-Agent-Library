@@ -18,7 +18,11 @@ services:
       AUTH_DB_PATH: "/app/runtime/auth/auth.db"
       PI_RUNNER_SOCKET: "/run/podman/podman.sock"
       PI_RUNNER_NETWORK: "aic-pi-internal"
-      PI_LLM_PROXY_URL: "${PI_LLM_PROXY_URL:-http://aic-agent-library:3000/api/llm/v1}"
+      # Pinned (not interpolated from .env): a developer's dev-mode .env (host.containers.internal,
+      # open egress) must not leak into this production-like stack, where Pi containers only reach
+      # the app through the internal network alias.
+      PI_LLM_PROXY_URL: "http://aic-agent-library:3000/api/llm/v1"
+      PI_RUNNER_ALLOW_OPEN_EGRESS: "false"
       PI_RUNNER_IMAGE: "${PI_RUNNER_IMAGE:-localhost/pi-runner:latest}"
       PI_RUNNER_FS_MODE: "${PI_RUNNER_FS_MODE:-tmpfs}"
       PI_FALLBACK_ENABLED: "${PI_FALLBACK_ENABLED:-true}"
