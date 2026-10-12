@@ -238,6 +238,70 @@ describe('createSearchService', () => {
     expect(loadVectors).toHaveBeenCalledTimes(1) // cached, not re-parsed per query
   })
 
+  it('times out a hung embed() call and falls back to bm25 (WR-08)', async () => {
+    const vecs = await vectorsFor('fake-hash')
+    const embedder = { id: 'fake-hash', embed: vi.fn(() => new Promise<Float32Array[]>(() => {})) }
+    const { svc } = make({ getEmbedder: async () => embedder, loadVectors: () => vecs, embedTimeoutMs: 30 })
+    const start = Date.now()
+    const r = await svc.search('sql')
+    expect(Date.now() - start).toBeLessThan(1000)
+    expect(embedder.embed).toHaveBeenCalledTimes(1)
+    expect(r.mode).toBe('bm25')
+    expect(r.results[0].slug).toBe('sql-helper')
+  })
+
+  it('treats a rejecting embed() as bm25 (WR-08)', async () => {
+    const vecs = await vectorsFor('fake-hash')
+    const embedder = { id: 'fake-hash', embed: vi.fn(async () => { throw new Error('onnx') }) }
+    const { svc } = make({ getEmbedder: async () => embedder, loadVectors: () => vecs })
+    expect((await svc.search('sql')).mode).toBe('bm25')
+  })
+
+  it('caps concurrent embeddings: extra queries skip the semantic leg, slot frees on settle (WR-08)', async () => {
+    const vecs = await vectorsFor('fake-hash')
+    const fake = createFakeEmbedder()
+    let release: () => void = () => {}
+    const gate = new Promise<void>((r) => { release = r })
+    const embed = vi.fn(async (texts: string[]) => {
+      await gate
+      return fake.embed(texts)
+    })
+    const { svc } = make({
+      getEmbedder: async () => ({ id: 'fake-hash', embed }),
+      loadVectors: () => vecs,
+      embedTimeoutMs: 200,
+      maxConcurrentEmbeds: 2,
+    })
+    const pending = [svc.search('sql'), svc.search('hvac'), svc.search('heating'), svc.search('queries')]
+    // Let the first two run into the gate; the other two must not start an inference.
+    await new Promise((r) => setTimeout(r, 20))
+    expect(embed).toHaveBeenCalledTimes(2)
+    release()
+    const out = await Promise.all(pending)
+    expect(out.map((o) => o.mode)).toEqual(['hybrid', 'hybrid', 'bm25', 'bm25'])
+    // Slots were released when the inferences settled.
+    expect((await svc.search('sql')).mode).toBe('hybrid')
+  })
+
+  it('caps the query length inside the service, not only in the routes (WR-08)', async () => {
+    const vecs = await vectorsFor('fake-hash')
+    const fake = createFakeEmbedder()
+    const seen: string[] = []
+    const embedder = {
+      id: 'fake-hash',
+      embed: async (texts: string[]) => {
+        seen.push(...texts)
+        return fake.embed(texts)
+      },
+    }
+    const { svc } = make({ getEmbedder: async () => embedder, loadVectors: () => vecs })
+    const r = await svc.search(`sql ${'x'.repeat(5000)}`)
+    expect(seen).toHaveLength(1)
+    expect(seen[0].length).toBeLessThanOrEqual(200)
+    expect(seen[0].startsWith('sql x')).toBe(true)
+    expect(r.mode).toBe('hybrid')
+  })
+
   it('requests the embedder once', async () => {
     const getEmbedder = vi.fn(async () => createFakeEmbedder())
     const { svc } = make({ getEmbedder })

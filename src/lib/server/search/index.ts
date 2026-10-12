@@ -41,6 +41,8 @@ export interface SearchServiceDeps {
   loadVectorFingerprint?: () => string
   getEmbedder: () => Promise<Embedder | null>
   embedTimeoutMs?: number
+  /** Max query embeddings running at once; extra queries skip the semantic leg (BM25-only). Default 4. */
+  maxConcurrentEmbeds?: number
   recheckMs?: number
   /** First retry delay after the embedder fails to load; doubles per failure up to embedderRetryMaxMs. */
   embedderRetryMs?: number
@@ -50,9 +52,14 @@ export interface SearchServiceDeps {
 
 const TIMED_OUT = Symbol('timeout')
 
+/** Longest query the service will rank or embed; callers need not (but may) cap it themselves. */
+export const MAX_QUERY_CHARS = 200
+
 export function createSearchService(deps: SearchServiceDeps): SearchService {
   const embedTimeoutMs = deps.embedTimeoutMs ?? 1500
   const recheckMs = deps.recheckMs ?? 30000
+  const maxConcurrentEmbeds = deps.maxConcurrentEmbeds ?? 4
+  let inflightEmbeds = 0
   const now = deps.now ?? Date.now
   const embedderRetryMs = deps.embedderRetryMs ?? 60_000
   const embedderRetryMaxMs = deps.embedderRetryMaxMs ?? 15 * 60_000
@@ -133,17 +140,30 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
     return vectors
   }
 
-  async function raceEmbedder(): Promise<Embedder | null> {
+  async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | typeof TIMED_OUT> {
     let timer: ReturnType<typeof setTimeout> | undefined
     const timeout = new Promise<typeof TIMED_OUT>((resolve) => {
-      timer = setTimeout(() => resolve(TIMED_OUT), embedTimeoutMs)
+      timer = setTimeout(() => resolve(TIMED_OUT), ms)
     })
     try {
-      const r = await Promise.race([ensureEmbedder(), timeout])
-      return r === TIMED_OUT ? null : r
+      return await Promise.race([p, timeout])
     } finally {
       if (timer) clearTimeout(timer)
     }
+  }
+
+  // Embed one query with a timeout and a concurrency cap. The slot is released when the
+  // inference actually settles (not when we stop waiting), so a stuck inference cannot pile up.
+  async function embedQuery(embedder: Embedder, query: string): Promise<Float32Array | null> {
+    if (inflightEmbeds >= maxConcurrentEmbeds) return null
+    inflightEmbeds++
+    const work = Promise.resolve().then(() => embedder.embed([query]))
+    const release = () => {
+      inflightEmbeds--
+    }
+    work.then(release, release)
+    const r = await withTimeout(work, embedTimeoutMs)
+    return r === TIMED_OUT ? null : (r[0] ?? null)
   }
 
   return {
@@ -151,19 +171,16 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
       await ensureEmbedder()
     },
     async search(q: string, opts?: SearchOptions) {
-      const query = q.trim()
+      const query = q.trim().slice(0, MAX_QUERY_CHARS).trim()
       if (!query) return { results: [], mode: 'bm25' }
       const index = refresh()
       let queryVector: Float32Array | null = null
       let vectors = new Map<string, Float32Array>()
       try {
-        const embedder = await raceEmbedder()
-        if (embedder) {
+        const embedder = await withTimeout(ensureEmbedder(), embedTimeoutMs)
+        if (embedder && embedder !== TIMED_OUT) {
           vectors = vectorsFor(embedder.id)
-          if (vectors.size > 0) {
-            const [v] = await embedder.embed([query])
-            queryVector = v ?? null
-          }
+          if (vectors.size > 0) queryVector = await embedQuery(embedder, query)
         }
       } catch {
         queryVector = null
