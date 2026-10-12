@@ -42,3 +42,17 @@ export const agentEmbeddings = sqliteTable('agent_embeddings', {
   updatedAt:   text('updated_at').notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`),
 })
 export type AgentEmbeddingRow = typeof agentEmbeddings.$inferSelect
+
+// Phase 13 (flag AGENT_KINDS): additive sidecar for agent kind data. `agents` is untouched.
+// Keep in sync with AGENT_KINDS_DDL in src/lib/spec/kinds-ddl.ts (guarded by a test).
+export const agentKinds = sqliteTable('agent_kinds', {
+  slug:         text('slug').primaryKey().references(() => agents.slug, { onDelete: 'cascade' }),
+  kind:         text('kind').notNull().default('agent'),
+  framework:    text('framework'),
+  topology:     text('topology'),
+  members:      text('members').notNull().default('[]'),   // JSON-serialized AgentMember[]
+  sourceFormat: text('source_format'),
+  extras:       text('extras').notNull().default('{}'),    // JSON object, capped
+  updatedAt:    text('updated_at').notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`),
+})
+export type AgentKindRow = typeof agentKinds.$inferSelect
