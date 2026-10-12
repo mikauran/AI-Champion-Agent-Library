@@ -90,13 +90,13 @@
   </button>
 
   {#if open}
+    <div class="absolute z-10 mt-2 w-72 rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
     <div
       id={menuId}
       role="menu"
       tabindex="-1"
       aria-label="Customization options"
       onkeydown={onMenuKeydown}
-      class="absolute z-10 mt-2 w-72 rounded-xl border border-gray-200 bg-white p-2 shadow-sm"
     >
       {#each items as item, i (item.id)}
         <button
@@ -114,7 +114,9 @@
           <span class="text-xs text-gray-500">{item.description}</span>
         </button>
       {/each}
-      <p role="status" class="px-3 pt-1 text-xs text-gray-600">{note}</p>
+    </div>
+    <!-- Outside role="menu": a menu may only contain menu items (axe aria-required-children). -->
+    <p role="status" class="px-3 pt-1 text-xs text-gray-600">{note}</p>
     </div>
   {/if}
 </div>
