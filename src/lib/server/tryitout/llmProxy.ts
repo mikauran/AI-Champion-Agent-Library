@@ -169,13 +169,17 @@ function errorResponse(
   })
 }
 
+/** A usable token count: finite and non-negative. Anything else counts as "not reported". */
+function tokenCount(v: unknown): number | null {
+  return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null
+}
+
 function usageTotal(usage: unknown): number {
   if (!usage || typeof usage !== 'object') return 0
   const u = usage as Record<string, unknown>
-  if (typeof u.total_tokens === 'number') return u.total_tokens
-  const p = typeof u.prompt_tokens === 'number' ? u.prompt_tokens : 0
-  const c = typeof u.completion_tokens === 'number' ? u.completion_tokens : 0
-  return p + c
+  const total = tokenCount(u.total_tokens)
+  if (total !== null) return total
+  return (tokenCount(u.prompt_tokens) ?? 0) + (tokenCount(u.completion_tokens) ?? 0)
 }
 
 async function readCappedText(request: Request): Promise<string | null> {
@@ -328,8 +332,10 @@ export async function handleChatCompletions(
       })
     }
 
-    const payload = (await upstream.json()) as { usage?: unknown }
-    job.usage.totalTokens += usageTotal(payload.usage)
+    const payload = (await upstream.json()) as { usage?: unknown } | null
+    // Missing/invalid usage is charged the reservation, like a stream without a usage chunk.
+    const used = usageTotal(payload?.usage)
+    job.usage.totalTokens += used > 0 ? used : reserve
     return new Response(JSON.stringify(payload), {
       status: upstream.status,
       headers: { 'Content-Type': 'application/json' },
