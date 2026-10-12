@@ -108,6 +108,83 @@ describe('jobs and budget', () => {
   })
 })
 
+describe('budget hardening (WR-05)', () => {
+  it('sends the default completion cap when none (or a non-number) is given', () => {
+    expect(buildUpstreamBody({ messages: [] }, 'm').max_tokens).toBe(MAX_COMPLETION_TOKENS)
+    const odd = buildUpstreamBody({ messages: [], max_tokens: 'lots', max_completion_tokens: {} }, 'm')
+    expect(odd.max_tokens).toBe(MAX_COMPLETION_TOKENS)
+    expect(odd.max_completion_tokens).toBeUndefined()
+    const small = buildUpstreamBody({ messages: [], max_completion_tokens: 50 }, 'm')
+    expect(small.max_completion_tokens).toBe(50)
+    expect(small.max_tokens).toBeUndefined()
+  })
+
+  it('only forwards include_usage from stream_options', () => {
+    const out = buildUpstreamBody(
+      { messages: [], stream: true, stream_options: { include_usage: false, x: 1 } },
+      'm',
+    )
+    expect(out.stream_options).toEqual({ include_usage: true })
+  })
+
+  it('concurrent requests cannot all pass the token budget check', async () => {
+    const t = registerLeaseToken('lease-1')
+    beginJob('lease-1', 'job-c', { maxTotalTokens: 100, maxRequests: 10 })
+    fetchImpl.mockImplementation(async () => {
+      await new Promise((r) => setTimeout(r, 10))
+      return okJson(150)
+    })
+    const results = await Promise.all([call(`Bearer ${t}`), call(`Bearer ${t}`), call(`Bearer ${t}`)])
+    expect(results.map((r) => r.status).sort()).toEqual([200, 429, 429])
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect(getJobUsage('job-c')?.totalTokens).toBe(150)
+    expect(getJobUsage('job-c')?.budgetExceeded).toBe(true)
+  })
+
+  it('releases the reservation after a failed upstream call', async () => {
+    const t = registerLeaseToken('lease-1')
+    beginJob('lease-1', 'job-f', { maxTotalTokens: 100, maxRequests: 10 })
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    fetchImpl.mockImplementationOnce(async () => new Response('{}', { status: 500 }))
+    expect((await call(`Bearer ${t}`)).status).toBe(500)
+    expect((await call(`Bearer ${t}`)).status).toBe(200)
+  })
+
+  it('charges the reservation when a stream ends without usage', async () => {
+    const t = registerLeaseToken('lease-1')
+    beginJob('lease-1', 'job-s', { maxTotalTokens: 100000, maxRequests: 10 })
+    fetchImpl.mockImplementationOnce(
+      async () =>
+        new Response('data: {"choices":[]}\n\ndata: [DONE]\n\n', {
+          status: 200,
+          headers: { 'content-type': 'text/event-stream' },
+        }),
+    )
+    const r = await call(`Bearer ${t}`, { messages: [], stream: true, max_tokens: 300 })
+    await r.text()
+    await new Promise((res) => setTimeout(res, 20))
+    expect(getJobUsage('job-s')?.totalTokens).toBe(300)
+  })
+
+  it('charges the reservation when a stream errors midway', async () => {
+    const t = registerLeaseToken('lease-1')
+    beginJob('lease-1', 'job-a', { maxTotalTokens: 100000, maxRequests: 10 })
+    fetchImpl.mockImplementationOnce(async () => {
+      const body = new ReadableStream<Uint8Array>({
+        start(c) {
+          c.enqueue(new TextEncoder().encode('data: {"choices":[]}\n\n'))
+          c.error(new Error('aborted'))
+        },
+      })
+      return new Response(body, { status: 200, headers: { 'content-type': 'text/event-stream' } })
+    })
+    const r = await call(`Bearer ${t}`, { messages: [], stream: true, max_tokens: 200 })
+    await r.text().catch(() => undefined)
+    await new Promise((res) => setTimeout(res, 20))
+    expect(getJobUsage('job-a')?.totalTokens).toBe(200)
+  })
+})
+
 describe('request handling', () => {
   it('413 oversized body, fetch not called', async () => {
     const t = registerLeaseToken('lease-1')

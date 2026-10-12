@@ -29,6 +29,8 @@ interface ActiveJob {
   jobId: string
   budget: JobBudget
   usage: JobUsage
+  /** Completion tokens reserved by in-flight requests (WR-05): spent + reserved gates new requests. */
+  reserved: number
 }
 
 // Held on globalThis, like the lease service (service.ts), so a Vite dev reload of this module
@@ -83,7 +85,7 @@ export function revokeLeaseToken(leaseId: string): void {
 
 export function beginJob(leaseId: string, jobId: string, budget: JobBudget): void {
   const usage: JobUsage = { jobId, totalTokens: 0, requests: 0, budgetExceeded: false }
-  activeJobs.set(leaseId, { jobId, budget, usage })
+  activeJobs.set(leaseId, { jobId, budget, usage, reserved: 0 })
   rememberFinished(usage)
 }
 
@@ -137,16 +139,21 @@ export function buildUpstreamBody(
   }
   out.model = model
   out.store = false
+  // WR-05: always bound the completion; a missing or non-numeric limit gets the cap.
   for (const key of ['max_tokens', 'max_completion_tokens'] as const) {
     const v = out[key]
-    if (typeof v === 'number') out[key] = Math.min(v, MAX_COMPLETION_TOKENS)
+    if (v === undefined) continue
+    if (typeof v === 'number' && Number.isFinite(v) && v > 0) out[key] = Math.min(v, MAX_COMPLETION_TOKENS)
+    else delete out[key]
+  }
+  if (out.max_tokens === undefined && out.max_completion_tokens === undefined) {
+    out.max_tokens = MAX_COMPLETION_TOKENS
   }
   if (out.stream === true) {
-    const existing =
-      out.stream_options && typeof out.stream_options === 'object'
-        ? (out.stream_options as Record<string, unknown>)
-        : {}
-    out.stream_options = { ...existing, include_usage: true }
+    // Only include_usage is ours to set; other client stream_options keys are not forwarded.
+    out.stream_options = { include_usage: true }
+  } else {
+    delete out.stream_options
   }
   return out
 }
@@ -191,7 +198,19 @@ async function readCappedText(request: Request): Promise<string | null> {
   return Buffer.concat(chunks).toString('utf8')
 }
 
-async function meterStream(stream: ReadableStream<Uint8Array>, job: ActiveJob): Promise<void> {
+function completionCap(body: Record<string, unknown>): number {
+  const caps = [body.max_tokens, body.max_completion_tokens].filter(
+    (v): v is number => typeof v === 'number',
+  )
+  return caps.length ? Math.min(...caps) : MAX_COMPLETION_TOKENS
+}
+
+async function meterStream(
+  stream: ReadableStream<Uint8Array>,
+  job: ActiveJob,
+  reserved: number,
+): Promise<void> {
+  let charged = false
   try {
     const reader = stream.getReader()
     const decoder = new TextDecoder()
@@ -217,9 +236,15 @@ async function meterStream(stream: ReadableStream<Uint8Array>, job: ActiveJob): 
       lines.forEach(scan)
     }
     if (buffer) scan(buffer)
-    job.usage.totalTokens += usageTotal(lastUsage)
+    const used = usageTotal(lastUsage)
+    // No usage chunk (provider omitted it): charge the reservation.
+    job.usage.totalTokens += used > 0 ? used : reserved
+    charged = true
   } catch {
-    // client aborted; usage unknown
+    // aborted or failed stream: usage unknown, charge the reservation (WR-05)
+  } finally {
+    if (!charged) job.usage.totalTokens += reserved
+    job.reserved = Math.max(0, job.reserved - reserved)
   }
 }
 
@@ -253,7 +278,7 @@ export async function handleChatCompletions(
 
   if (
     job.usage.requests >= job.budget.maxRequests ||
-    job.usage.totalTokens >= job.budget.maxTotalTokens
+    job.usage.totalTokens + job.reserved >= job.budget.maxTotalTokens
   ) {
     job.usage.budgetExceeded = true
     return errorResponse(429, 'job token budget exceeded', 'insufficient_quota')
@@ -263,6 +288,10 @@ export async function handleChatCompletions(
 
   const upstreamBody = buildUpstreamBody(parsed as Record<string, unknown>, deps.model)
   job.usage.requests++
+  // Reserve before the first await so concurrent requests see it (check and reserve are synchronous).
+  const reserve = completionCap(upstreamBody)
+  job.reserved += reserve
+  let reservationHandedToMeter = false
 
   try {
     const upstream = await deps.fetchImpl(`${deps.upstreamBaseUrl}/chat/completions`, {
@@ -288,7 +317,8 @@ export async function handleChatCompletions(
 
     if (upstreamBody.stream === true && upstream.body) {
       const [toClient, toMeter] = upstream.body.tee()
-      void meterStream(toMeter, job)
+      reservationHandedToMeter = true
+      void meterStream(toMeter, job, reserve)
       return new Response(toClient, {
         status: upstream.status,
         headers: {
@@ -310,6 +340,8 @@ export async function handleChatCompletions(
       redactSecrets(err instanceof Error ? err.message : 'unknown error'),
     )
     return errorResponse(502, 'upstream request failed', 'server_error')
+  } finally {
+    if (!reservationHandedToMeter) job.reserved = Math.max(0, job.reserved - reserve)
   }
 }
 
