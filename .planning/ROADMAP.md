@@ -256,7 +256,11 @@ Plans:
   2. `npx vitest run` exits 0 (currently 3 failures in scripts/set-try-it-out-mode.test.ts); fixes address root cause (test isolation / typing), not deleting tests
   3. A `npm run check` script runs typecheck + tests
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02.1-01-PLAN.md — Fix 22 tsc errors in 4 test files (typing only)
+- [ ] 02.1-02-PLAN.md — Fix stale test DDL (set-try-it-out-mode) and add `npm run check`
 
 ### Phase 2.2: Scale and Seed Data (INSERTED)
 
