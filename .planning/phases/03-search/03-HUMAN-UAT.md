@@ -32,3 +32,5 @@ Not verified autonomously (no browser): run `npm run dev`, open `/catalog`, and 
 - [ ] URL shows `?q=hvac&page=1`; changing a filter keeps q; clearing the box (or "Clear search") restores the full catalog.
 - [ ] No-results query shows `No agents match "..."`; screen reader announces "N agents found" after results update.
 - [ ] Visual pass of the search box (spacing, focus ring) above the filters.
+
+- [ ] 4. Browser check of WR-06 fix: after typing a query, use back/forward and confirm the input shows the right query, focus is kept while typing, and filters don't hide server results.

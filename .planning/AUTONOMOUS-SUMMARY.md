@@ -7,8 +7,11 @@
 - Phase 3 plans 03-03 and 03-05 (wave 2) done: refreshable search service with timeout-guarded hybrid (BM25 never blocked by model load), `GET /api/search`, `/catalog?q=` server-side ranked results (D-010); labeled accuracy set of 46 queries with BM25 hit@3 = 1.00 enforced in CI and a skip-by-default real-model test (D-011). `npm run check` exits 0 (54 files passed, 1 skipped, 489 tests).
 - Phase 3 plan 03-04 (wave 3) done: debounced SearchBar, `buildCatalogParams`, catalog wiring with q in URL, query-specific no-results copy, aria-live count (D-012). `npm run check` now runs `svelte-kit sync` first (D-013); exits 0 (56 files passed, 1 skipped, 498 tests).
 
+- Phase 3 Search (code complete, verification human_needed): hybrid BM25 + embeddings (RRF), /api/search, catalog `?q=`, debounced SearchBar, 46-query labeled set (BM25 hit@3 1.00 on keyword/NL). Code review (1 critical, 8 warnings) all fixed, security audit SECURED. 58 files / 554 tests green. Decisions D-009..D-014.
+
 ## Pending human
 - Phase 2 checkpoint 02-04 (see D-001).
+- Phase 3: real-model accuracy run + SIM_FLOOR tuning, real-embedding ingest, browser feel (03-HUMAN-UAT.md).
 - Phase 3 real-model accuracy run, real-embedding ingest, SIM_FLOOR retune, live-typing browser feel (item 3): `.planning/phases/03-search/03-HUMAN-UAT.md`.
 
 ## Questions for Ville
