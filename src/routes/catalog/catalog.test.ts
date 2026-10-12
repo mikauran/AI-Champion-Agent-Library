@@ -558,6 +558,28 @@ describe('Catalog load function', () => {
       }
     })
 
+    it('falls back to a basic text match when search throws instead of 500 (WR-07)', async () => {
+      const rows = [mk('sql-helper', 'SQL Helper'), mk('hvac', 'HVAC Sizer'), mk('sql-tuner', 'Query Tuner')]
+      const { search } = await setup(rows, [])
+      ;(search as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('index build failed'))
+      const err = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { load } = await import('./+page.server.js')
+      const r = (await load({ url: new URL('http://localhost/catalog?q=sql') } as Parameters<typeof load>[0])) as CatalogData
+      expect(err).toHaveBeenCalled()
+      err.mockRestore()
+      expect(r.searchDegraded).toBe(true)
+      expect(r.agents.map((a: { slug: string }) => a.slug)).toEqual(['sql-helper'])
+      expect(r.total).toBe(1)
+      expect(r.filters.q).toBe('sql')
+    })
+
+    it('searchDegraded is false when search works', async () => {
+      await setup([mk('a', 'A')], ['a'])
+      const { load } = await import('./+page.server.js')
+      const r = (await load({ url: new URL('http://localhost/catalog?q=a') } as Parameters<typeof load>[0])) as CatalogData
+      expect(r.searchDegraded).toBe(false)
+    })
+
     it('returns empty when nothing matches', async () => {
       const { chain } = await setup([], [])
       const { load } = await import('./+page.server.js')

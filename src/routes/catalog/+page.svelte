@@ -80,6 +80,12 @@
   onClear={clearFilters}
 />
 
+{#if data.searchDegraded}
+  <p class="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+    Search is temporarily limited. Showing basic text matches only.
+  </p>
+{/if}
+
 {#if filteredAgents.length === 0}
   <div class="text-center py-16">
     {#if query.trim()}

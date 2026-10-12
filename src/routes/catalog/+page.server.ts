@@ -34,13 +34,37 @@ export const load: PageServerLoad = async ({ url }) => {
 
   let agentList: ReturnType<typeof toAgent>[]
   let total: number
+  let searchDegraded = false
 
   if (q) {
-    // Rank everything (no top-N cut): filters and pagination happen afterwards, so
-    // a filtered query must not lose matches that rank below the default cut-off.
-    const { results } = await search(q, { limit: Infinity })
-    const slugs = results.map((r) => r.slug)
-    if (slugs.length === 0) {
+    let slugs: string[] | null
+    try {
+      // Rank everything (no top-N cut): filters and pagination happen afterwards, so
+      // a filtered query must not lose matches that rank below the default cut-off.
+      const { results } = await search(q, { limit: Infinity })
+      slugs = results.map((r) => r.slug)
+    } catch (err) {
+      // A broken search dependency must degrade search, not take down browsing.
+      console.error('Catalog search failed; falling back to basic text match', err)
+      searchDegraded = true
+      slugs = null
+    }
+
+    if (slugs === null) {
+      const terms = q.toLowerCase().split(/\s+/).filter(Boolean)
+      const matched = db
+        .select()
+        .from(agents)
+        .where(whereClause)
+        .all()
+        .filter((row) => {
+          const hay = `${row.title} ${row.summary} ${row.category ?? ''} ${row.tags}`.toLowerCase()
+          return terms.every((t) => hay.includes(t))
+        })
+        .sort((a, b) => a.title.localeCompare(b.title))
+      total = matched.length
+      agentList = matched.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(toAgent)
+    } else if (slugs.length === 0) {
       agentList = []
       total = 0
     } else {
@@ -105,6 +129,7 @@ export const load: PageServerLoad = async ({ url }) => {
   return {
     agents: agentList,
     total,
+    searchDegraded,
     page,
     pageSize: PAGE_SIZE,
     totalPages: Math.ceil(total / PAGE_SIZE),
