@@ -31,6 +31,20 @@ export class TryItOutRuntimeError extends Error {
   }
 }
 
+/**
+ * Reload-safe check. The lease service lives on globalThis and survives a Vite dev reload, so the
+ * error class it throws can come from an older copy of this module; `instanceof` then fails and
+ * the D-14 fallback silently stops working. Match on the name and a string code as well.
+ */
+export function isTryItOutRuntimeError(err: unknown): err is TryItOutRuntimeError {
+  return (
+    err instanceof TryItOutRuntimeError ||
+    (err instanceof Error &&
+      err.name === 'TryItOutRuntimeError' &&
+      typeof (err as { code?: unknown }).code === 'string')
+  )
+}
+
 /** Image, limits and network come from the runtime's RunnerConfig, never from the caller. */
 export interface ContainerSpec {
   name: string

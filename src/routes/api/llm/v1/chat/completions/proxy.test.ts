@@ -7,6 +7,11 @@ import {
 } from '$lib/server/tryitout/llmProxy.js'
 import { POST } from './+server'
 
+// A developer's real .env (OPENAI_API_KEY) must never leak into these tests: the route reads
+// `env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY`, so keep SvelteKit's dynamic env empty and
+// let each test control process.env alone.
+vi.mock('$env/dynamic/private', () => ({ env: {} }))
+
 const SSE =
   'data: {"choices":[{"delta":{"content":"hi"}}]}\n\n' +
   'data: {"choices":[],"usage":{"prompt_tokens":11,"completion_tokens":7,"total_tokens":18}}\n\n' +

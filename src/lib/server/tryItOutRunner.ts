@@ -22,7 +22,7 @@ import { MODEL, modelParams } from './tryItOutModel'
 import { zipOutputDir } from './tryitout/artifact'
 import { runJobInContainer } from './tryitout/piRunner'
 import { getTryItOutService } from './tryitout/service'
-import { TryItOutRuntimeError } from './tryitout/runtime'
+import { isTryItOutRuntimeError } from './tryitout/runtime'
 
 // Constructed lazily and memoized — NOT at module top level, so importing
 // this file without OPENAI_API_KEY set never throws (needed for tests and
@@ -54,7 +54,7 @@ export async function runJob(jobId: string): Promise<void> {
   } catch (err) {
     const fallbackEnabled = getTryItOutService().config.fallbackEnabled
     if (
-      err instanceof TryItOutRuntimeError &&
+      isTryItOutRuntimeError(err) &&
       (err.code === 'engine_unavailable' || err.code === 'container_start_failed') &&
       fallbackEnabled
     ) {

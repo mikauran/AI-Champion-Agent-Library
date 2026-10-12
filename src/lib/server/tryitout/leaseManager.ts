@@ -17,6 +17,7 @@ import {
   LABEL_INSTANCE,
   LABEL_MANAGED,
   TryItOutRuntimeError,
+  isTryItOutRuntimeError,
   type ContainerRuntime,
 } from './runtime'
 import type { RunnerConfig } from './runnerConfig'
@@ -137,7 +138,7 @@ export function createLeaseManager(deps: LeaseManagerDeps): LeaseManager {
       if (lease.state === 'warming') {
         void evictSync(lease, 'expired')
       }
-      if (err instanceof TryItOutRuntimeError) throw err
+      if (isTryItOutRuntimeError(err)) throw err
       throw new TryItOutRuntimeError(
         'container_start_failed',
         err instanceof Error ? err.message : 'container start failed',
@@ -198,7 +199,7 @@ export function createLeaseManager(deps: LeaseManagerDeps): LeaseManager {
       try {
         lease = acquire(sessionKey, slug)
       } catch (err) {
-        if (err instanceof TryItOutRuntimeError && err.code === 'busy') {
+        if (isTryItOutRuntimeError(err) && err.code === 'busy') {
           console.info('Try It Out: no free slot to warm a container')
           return 'busy'
         }
