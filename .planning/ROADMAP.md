@@ -110,11 +110,11 @@ Plans:
   1. User can see a "Customize" button on every agent detail page
   2. Clicking "Customize" opens a menu showing available customization options — items are clearly labeled but clicking them produces a "coming soon" or disabled state, not an error
 
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
 
-- [ ] 04-01: Customize button, dropdown menu with placeholder items, and disabled state handling
+- [ ] 04-01-PLAN.md — CustomizeMenu component (button + accessible disabled placeholder menu), wired into detail page, with tests
 
 ### Phase 5: Try It Out Field
 
