@@ -10,11 +10,20 @@ import { detectFormat, normalize } from '../src/lib/spec/index.js'
 import type { AgentRecord } from '../src/lib/spec/types.js'
 import { buildSearchText, contentHash, recordToSearchable } from '../src/lib/server/search/documents.js'
 import type { Searchable } from '../src/lib/server/search/documents.js'
-import { createTransformersEmbedder, vectorToBlob } from '../src/lib/server/search/embedder.js'
+import { EMBEDDING_DIM, createTransformersEmbedder, vectorToBlob } from '../src/lib/server/search/embedder.js'
 import type { Embedder } from '../src/lib/server/search/embedder.js'
 
 const DATA_DIR = process.env.INGEST_DATA_DIR ?? './data/agents'
 const DB_PATH = process.env.INGEST_DB_PATH ?? './db/catalog.db'
+
+/** Texts per embedder call: bounds padding and peak memory on large catalogs. */
+export const EMBED_BATCH_SIZE = 16
+
+function isValidVector(v: unknown): v is Float32Array {
+  if (!(v instanceof Float32Array) || v.length !== EMBEDDING_DIM) return false
+  for (let i = 0; i < v.length; i++) if (!Number.isFinite(v[i])) return false
+  return true
+}
 
 function flattenRecord(record: AgentRecord): NewAgentRow {
   return {
@@ -97,28 +106,68 @@ async function embedAgents(
     }
 
     if (stale.length > 0) {
-      const vectors = await embedder.embed(stale.map(x => x.text))
-      for (let i = 0; i < stale.length; i++) {
-        const row = {
-          slug: stale[i].slug,
-          model: embedder.id,
-          contentHash: stale[i].hash,
-          vector: vectorToBlob(vectors[i]),
-          updatedAt: new Date().toISOString(),
+      let written = 0
+      let failed = 0
+      for (let start = 0; start < stale.length; start += EMBED_BATCH_SIZE) {
+        const batch = stale.slice(start, start + EMBED_BATCH_SIZE)
+        let vectors: Float32Array[]
+        try {
+          vectors = await embedder.embed(batch.map(x => x.text))
+        } catch (err) {
+          console.warn(`[search] embedding batch failed: ${(err as Error).message}`)
+          failed += batch.length
+          continue
         }
-        await db
-          .insert(agentEmbeddings)
-          .values(row)
-          .onConflictDoUpdate({
-            target: agentEmbeddings.slug,
-            set: {
-              model: sql`excluded.model`,
-              contentHash: sql`excluded.content_hash`,
-              vector: sql`excluded.vector`,
-              updatedAt: sql`excluded.updated_at`,
-            },
+        // Without a 1:1 count the vectors cannot be matched to rows: reject the whole batch.
+        if (!Array.isArray(vectors) || vectors.length !== batch.length) {
+          console.warn(
+            `[search] embedder returned ${Array.isArray(vectors) ? vectors.length : 'no'} vectors for ${batch.length} texts; batch skipped`,
+          )
+          failed += batch.length
+          continue
+        }
+        const rows: (typeof agentEmbeddings.$inferInsert)[] = []
+        batch.forEach((item, k) => {
+          const v = vectors[k]
+          if (!isValidVector(v)) {
+            console.warn(`[search] invalid embedding for ${item.slug} (expected ${EMBEDDING_DIM} finite floats); skipped`)
+            failed++
+            return
+          }
+          rows.push({
+            slug: item.slug,
+            model: embedder.id,
+            contentHash: item.hash,
+            vector: vectorToBlob(v),
+            updatedAt: new Date().toISOString(),
           })
+        })
+        if (rows.length === 0) continue
+        try {
+          // One transaction per batch: a batch is written entirely or not at all.
+          db.transaction(tx => {
+            for (const row of rows) {
+              tx.insert(agentEmbeddings)
+                .values(row)
+                .onConflictDoUpdate({
+                  target: agentEmbeddings.slug,
+                  set: {
+                    model: sql`excluded.model`,
+                    contentHash: sql`excluded.content_hash`,
+                    vector: sql`excluded.vector`,
+                    updatedAt: sql`excluded.updated_at`,
+                  },
+                })
+                .run()
+            }
+          })
+          written += rows.length
+        } catch (err) {
+          console.warn(`[search] writing embeddings failed: ${(err as Error).message}`)
+          failed += rows.length
+        }
       }
+      console.log(`[search] embeddings: ${written} written, ${failed} failed`)
     }
 
     sqlite.prepare('DELETE FROM agent_embeddings WHERE slug NOT IN (SELECT slug FROM agents)').run()

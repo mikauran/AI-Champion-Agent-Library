@@ -42,6 +42,11 @@ export async function createTransformersEmbedder(
         const extractor = await getExtractor()
         const out = await extractor(texts, { pooling: 'mean', normalize: true })
         const data = out.data as Float32Array
+        if (!data || data.length !== texts.length * EMBEDDING_DIM) {
+          throw new Error(
+            `unexpected embedding tensor size ${data?.length} (expected ${texts.length} x ${EMBEDDING_DIM})`,
+          )
+        }
         const vectors: Float32Array[] = []
         for (let i = 0; i < texts.length; i++) {
           vectors.push(Float32Array.from(data.subarray(i * EMBEDDING_DIM, (i + 1) * EMBEDDING_DIM)))

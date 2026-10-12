@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { ingest } from './ingest.js'
+import { ingest, EMBED_BATCH_SIZE } from './ingest.js'
 import Database from 'better-sqlite3'
 import { existsSync, rmSync, mkdtempSync, cpSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createFakeEmbedder } from '../src/lib/server/search/embedder.fake.js'
 import type { Embedder } from '../src/lib/server/search/embedder.js'
+import { writeScaleFixtures } from './fixtures/generate-scale.js'
 
 const TEST_DB = './db/test-catalog.db'
 const FIXTURES_DIR = './data/agents/fixtures'
@@ -244,4 +245,115 @@ describe('embeddings', () => {
     expect(res.succeeded).toBe(2)
     expect(calls.length).toBe(0)
   })
+
+  it('embeds in bounded batches, one transaction per batch (WR-09)', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'ingest-batch-'))
+    try {
+      writeScaleFixtures(tmp, 40)
+      const { embedder, calls } = spied()
+      const res = await ingest(tmp, TEST_DB, { embedder })
+      expect(res.succeeded).toBe(40)
+      expect(calls.length).toBe(Math.ceil(40 / EMBED_BATCH_SIZE))
+      for (const c of calls) expect(c.length).toBeLessThanOrEqual(EMBED_BATCH_SIZE)
+      expect(calls.flat().length).toBe(40)
+      expect(rows().length).toBe(40)
+    } finally {
+      rmSync(tmp, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects a batch whose vector count does not match the texts (WR-09)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const fake = createFakeEmbedder()
+    const embedder: Embedder = {
+      id: fake.id,
+      embed: async (texts: string[]) => (await fake.embed(texts)).slice(0, texts.length - 1),
+    }
+    const res = await ingest(FIXTURES_DIR, TEST_DB, { embedder })
+    expect(res).toEqual({ succeeded: 2, failed: 1 })
+    expect(rows().length).toBe(0)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('batch skipped'))
+    warn.mockRestore()
+  })
+
+  it('stores only vectors of the right dimension; the rest are retried next ingest (WR-09)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const fake = createFakeEmbedder()
+    const embedder: Embedder = {
+      id: fake.id,
+      embed: async (texts: string[]) => {
+        const v = await fake.embed(texts)
+        v[0] = new Float32Array(8) // wrong dimension for the first text
+        return v
+      },
+    }
+    const res = await ingest(FIXTURES_DIR, TEST_DB, { embedder })
+    expect(res).toEqual({ succeeded: 2, failed: 1 })
+    expect(rows().length).toBe(1)
+    expect(rows()[0].n).toBe(384 * 4)
+    warn.mockRestore()
+
+    const { embedder: good, calls } = spied()
+    await ingest(FIXTURES_DIR, TEST_DB, { embedder: good })
+    expect(calls.flat().length).toBe(1) // only the missing one is re-embedded
+    expect(rows().length).toBe(2)
+  })
+
+  it('does not throw on an undefined or non-finite vector (WR-09)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const fake = createFakeEmbedder()
+    const embedder: Embedder = {
+      id: fake.id,
+      embed: async (texts: string[]) => {
+        const v = await fake.embed(texts)
+        v[0] = undefined as unknown as Float32Array
+        v[1] = new Float32Array(384).fill(NaN)
+        return v
+      },
+    }
+    const res = await ingest(FIXTURES_DIR, TEST_DB, { embedder })
+    expect(res).toEqual({ succeeded: 2, failed: 1 })
+    expect(rows().length).toBe(0)
+    warn.mockRestore()
+  })
+
+  it('a failing batch does not stop later batches (WR-09)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const tmp = mkdtempSync(join(tmpdir(), 'ingest-batchfail-'))
+    try {
+      writeScaleFixtures(tmp, EMBED_BATCH_SIZE * 2 + 1)
+      const fake = createFakeEmbedder()
+      let n = 0
+      const embedder: Embedder = {
+        id: fake.id,
+        embed: async (texts: string[]) => {
+          if (++n === 2) throw new Error('oom')
+          return fake.embed(texts)
+        },
+      }
+      await ingest(tmp, TEST_DB, { embedder })
+      expect(n).toBe(3)
+      expect(rows().length).toBe(EMBED_BATCH_SIZE + 1)
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('oom'))
+    } finally {
+      rmSync(tmp, { recursive: true, force: true })
+      warn.mockRestore()
+    }
+  })
+
+  it('writes a batch atomically: a failing row rolls back the whole batch (WR-09)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const db = new Database(TEST_DB)
+    db.exec(
+      `CREATE TRIGGER fail_one BEFORE INSERT ON agent_embeddings WHEN NEW.slug = 'minimal-agent' BEGIN SELECT RAISE(ABORT, 'boom'); END`,
+    )
+    db.close()
+    const { embedder } = spied()
+    const res = await ingest(FIXTURES_DIR, TEST_DB, { embedder })
+    expect(res).toEqual({ succeeded: 2, failed: 1 })
+    expect(rows()).toEqual([]) // the valid sibling in the same batch was rolled back too
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('writing embeddings failed'))
+    warn.mockRestore()
+  })
 })
+
