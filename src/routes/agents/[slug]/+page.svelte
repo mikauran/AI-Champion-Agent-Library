@@ -6,6 +6,7 @@
   import CustomizationPanel from '$lib/components/CustomizationPanel.svelte'
   import CustomizeMenu from '$lib/components/CustomizeMenu.svelte'
   import TryItOutPanel from '$lib/components/TryItOutPanel.svelte'
+  import { TAILORABLE_FIELDS } from '$lib/config/tailorable-fields.js'
   import type { PageData } from './$types'
 
   let { data }: { data: PageData } = $props()
@@ -16,6 +17,16 @@
   // Systems carry the 'n/a' LLM placeholder: hide the LLM line instead of showing it.
   let techAgent = $derived(
     isSystem && agent.llmName === 'n/a' ? { ...agent, fixedFields: [...agent.fixedFields, 'llm.name'] } : agent
+  )
+  // Same placeholder rule for the Customization panel: systems have no LLM or system prompt to tailor.
+  const NA_KEYS = ['llm.name', 'llm.temperature', 'systemPrompt']
+  let panelFields = $derived(
+    isSystem && agent.llmName === 'n/a'
+      ? (agent.customizableFields ?? TAILORABLE_FIELDS.map((f) => f.key)).filter((k) => !NA_KEYS.includes(k))
+      : agent.customizableFields
+  )
+  let panelFixed = $derived(
+    isSystem && agent.llmName === 'n/a' ? agent.fixedFields.filter((k) => !NA_KEYS.includes(k)) : agent.fixedFields
   )
   let tryItOutOpen = $state(Boolean(data.openTryOut))
 </script>
@@ -128,10 +139,10 @@
 
   <!-- Right column: Customization panel (DETL-03) -->
   <div class="lg:sticky lg:top-8 self-start">
-    {#if agent.customizableFields?.length !== 0 || agent.fixedFields.length > 0}
+    {#if panelFields?.length !== 0 || panelFixed.length > 0}
       <CustomizationPanel
-        fields={agent.customizableFields}
-        fixed={agent.fixedFields}
+        fields={panelFields}
+        fixed={panelFixed}
         fixedNote={agent.fixedNote}
         values={{
           'llm.name': agent.llmName,
