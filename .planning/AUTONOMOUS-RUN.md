@@ -23,7 +23,7 @@ Run order: 2.1 -> 2.2 -> 3 -> 4 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 (see AU
 7. Phase 14 MCP generator, then Phase 15 MCP test platform (both flagged, default off). Phase 14 starts by reading both reference projects (read-only) and writing RESEARCH-SYNTHESIS.md (best D1-D6 approaches, input types covered, failure modes) before any design; a DB schema is one input adapter, not the scope. Phase 15 ports the existing benchmark harness (12 cases, D1-D6) instead of building a new sandbox. Safety rules: no credentials, fake data only, container runs are 'pending human'.
 8. Per completed phase: code review + fix, security audit (`/gsd-secure-phase`), test-gap fill (`/gsd-add-tests`).
 9. Repo-wide: dependency health (no major bumps), README/TECHNICAL_DOCUMENTATION/PROJECT.md/STATE.md sync with the code, deploy runbook.
-10. Free exploration: further improvements you judge valuable (UX polish incl. dark mode/spec viewer, perf, tests, DX). Each gets a D-NNN entry with rationale and revert steps.
+10. Free exploration (a loop, not a one-off): backlog = dark mode and raw spec viewer (UI-02, UI-04); comparison view (DISC-02); performance profiling of search and ingest; error and empty-state polish; more tests on Phase 8 code; README and runbook improvements; anything else you judge valuable and low-risk. Loop: pick the highest-value unfinished item, implement it, run tests and typecheck, commit, log a D-NNN decision with rationale and revert steps, repeat. Do NOT finish while backlog items remain that you can do safely; "run out of useful work" means the backlog is empty or every remaining idea needs the user's product decision. Limits: no new dependencies unless logged, no changes to existing behaviour unless behind a flag, anything needing the user's input goes under "Questions for Ville" in the summary.
 11. Final: milestone audit + `.planning/AUTONOMOUS-SUMMARY.md`.
 
 ## Progress at handoff
@@ -35,3 +35,6 @@ Run order: 2.1 -> 2.2 -> 3 -> 4 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 (see AU
 
 ## Review
 One branch, small commits. Entry points for the human: AUTONOMOUS-SUMMARY.md, AUTONOMOUS-DECISIONS.md, AUTONOMOUS-BLOCKERS.md.
+
+## Summary file discipline
+Create `.planning/AUTONOMOUS-SUMMARY.md` after the first completed phase and update it after EVERY phase and every exploration item (what changed, decisions, open questions, pending-human items, what to look at first). The budget is not visible to the session and a crash or hard stop is possible, so the summary must always be current. Section "Questions for Ville" collects anything needing a product decision.
