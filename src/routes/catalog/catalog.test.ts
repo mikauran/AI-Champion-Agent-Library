@@ -74,7 +74,10 @@ vi.mock('drizzle-orm', () => ({
   eq: vi.fn((col, val) => ({ type: 'eq', col, val })),
   and: vi.fn((...conditions) => ({ type: 'and', conditions })),
   asc: vi.fn((col) => ({ type: 'asc', col })),
+  inArray: vi.fn((col, vals) => ({ type: 'inArray', col, vals })),
 }))
+
+vi.mock('$lib/server/search/index.js', () => ({ search: vi.fn() }))
 
 describe('Catalog load function', () => {
   it('returns agents from the database', async () => {
@@ -432,5 +435,87 @@ describe('Catalog load function', () => {
     expect(result.maturityStatuses).toContain('experimental')
     expect(result.maturityStatuses).toContain('beta')
     expect(result.maturityStatuses).toContain('production')
+  })
+
+  describe('with q', () => {
+    const mk = (slug: string, title: string, category = 'productivity') => ({
+      slug, title, summary: 's', systemPrompt: 'p', llmName: 'gpt-4o', llmTemperature: null,
+      llmMaxTokens: null, llmTopP: null, toolNames: '[]', requiresHumanApproval: false,
+      category, githubUrl: null, maturityStatus: 'beta', tags: '[]', specId: null,
+      lastIngestedAt: '2026-01-01T00:00:00Z',
+    })
+
+    async function setup(matched: ReturnType<typeof mk>[], ranked: string[]) {
+      const { db } = await import('$lib/server/db.js')
+      const { search } = await import('$lib/server/search/index.js')
+      ;(search as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+        results: ranked.map((slug, i) => ({ slug, score: 10 - i })),
+        mode: 'bm25',
+      })
+      const chain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        all: vi.fn().mockReturnValue(matched),
+      }
+      ;(db.select as ReturnType<typeof vi.fn>).mockReset()
+      ;(db.select as ReturnType<typeof vi.fn>).mockReturnValue(chain)
+      ;(db.selectDistinct as ReturnType<typeof vi.fn>).mockReturnValue({
+        from: vi.fn().mockReturnThis(),
+        all: vi.fn().mockReturnValue([]),
+      })
+      return { chain, search }
+    }
+
+    it('orders by search rank and returns filters.q', async () => {
+      await setup([mk('a', 'A'), mk('b', 'B'), mk('c', 'C')], ['c', 'a', 'b'])
+      const { load } = await import('./+page.server.js')
+      const url = new URL('http://localhost/catalog?q=sql')
+      const r = (await load({ url } as Parameters<typeof load>[0])) as CatalogData
+      expect(r.agents.map((a: { slug: string }) => a.slug)).toEqual(['c', 'a', 'b'])
+      expect(r.total).toBe(3)
+      expect(r.filters.q).toBe('sql')
+    })
+
+    it('combines with category filter', async () => {
+      await setup([mk('a', 'A')], ['a'])
+      const { eq, inArray } = await import('drizzle-orm')
+      const { load } = await import('./+page.server.js')
+      const url = new URL('http://localhost/catalog?q=sql&category=productivity')
+      await load({ url } as Parameters<typeof load>[0])
+      expect(eq).toHaveBeenCalledWith(expect.anything(), 'productivity')
+      expect(inArray).toHaveBeenCalledWith(expect.anything(), ['a'])
+    })
+
+    it('paginates the ranked list', async () => {
+      const slugs = Array.from({ length: 30 }, (_, i) => `a${i}`)
+      await setup(slugs.map((s) => mk(s, s)), slugs)
+      const { load } = await import('./+page.server.js')
+      const url = new URL('http://localhost/catalog?q=x&page=2')
+      const r = (await load({ url } as Parameters<typeof load>[0])) as CatalogData
+      expect(r.total).toBe(30)
+      expect(r.totalPages).toBe(2)
+      expect(r.agents.map((a: { slug: string }) => a.slug)).toEqual(slugs.slice(24))
+    })
+
+    it('returns empty when nothing matches', async () => {
+      const { chain } = await setup([], [])
+      const { load } = await import('./+page.server.js')
+      const url = new URL('http://localhost/catalog?q=zzz')
+      const r = (await load({ url } as Parameters<typeof load>[0])) as CatalogData
+      expect(r.agents).toEqual([])
+      expect(r.total).toBe(0)
+      expect(chain.all).not.toHaveBeenCalled()
+    })
+
+    it('filters.q is null without q', async () => {
+      const { db } = await import('$lib/server/db.js')
+      const empty = { from: vi.fn().mockReturnThis(), where: vi.fn().mockReturnThis(), orderBy: vi.fn().mockReturnThis(), limit: vi.fn().mockReturnThis(), offset: vi.fn().mockReturnThis(), all: vi.fn().mockReturnValue([]) }
+      ;(db.select as ReturnType<typeof vi.fn>).mockReset()
+      ;(db.select as ReturnType<typeof vi.fn>).mockReturnValue(empty)
+      ;(db.selectDistinct as ReturnType<typeof vi.fn>).mockReturnValue({ from: vi.fn().mockReturnThis(), all: vi.fn().mockReturnValue([]) })
+      const { load } = await import('./+page.server.js')
+      const r = (await load({ url: new URL('http://localhost/catalog') } as Parameters<typeof load>[0])) as CatalogData
+      expect(r.filters.q).toBeNull()
+    })
   })
 })
