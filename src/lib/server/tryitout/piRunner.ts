@@ -10,7 +10,7 @@ import { readFile } from 'node:fs/promises'
 import { AgentIdSchema } from '../tryItOutPrompts'
 import { MODEL } from '../tryItOutModel'
 import { getJob, inputFilePath, isValidJobId, pushEvent, setStatus } from '../tryItOutJobs'
-import { AGENT_DIR, WORK_ROOT_IN_CONTAINER, type ExecResult } from './runtime'
+import { AGENT_DIR, WORK_ROOT_IN_CONTAINER, TryItOutRuntimeError, type ExecResult } from './runtime'
 import type { RunnerConfig } from './runnerConfig'
 import { getTryItOutService } from './service'
 import { beginJob, endJob, getJobUsage } from './llmProxy'
@@ -28,6 +28,21 @@ export function piInstruction(hasUpload: boolean): string {
 export const TIMEOUT_GRACE_MS = 5000
 // Bound on the post-job `rm -rf` exec (WR-02): a hung engine must not leave the lease running.
 export const CLEANUP_TIMEOUT_MS = 10_000
+
+// Bound on the staging (putFiles) and output (getFiles) engine calls (09-02): a hung engine must
+// not leave the job `running` and the lease claimed forever.
+export const ENGINE_CALL_TIMEOUT_MS = 60_000
+
+function bounded<T>(work: Promise<T>, ms: number): Promise<T> {
+  work.catch(() => {}) // a late rejection after the timeout must not be unhandled
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new TryItOutRuntimeError('exec_failed', 'engine call timed out')), ms)
+  })
+  return Promise.race([work, timeout]).finally(() => {
+    if (timer) clearTimeout(timer)
+  })
+}
 
 export function buildPiArgs(cfg: RunnerConfig, slug: string, hasUpload = true): string[] {
   return [
@@ -104,7 +119,7 @@ export async function runJobInContainer(jobId: string): Promise<void> {
     if (job.fileName !== null) {
       staged.push({ path: `${jobId}/input/upload.txt`, content: new Uint8Array(await readFile(inputFilePath(jobId))) })
     }
-    await runtime.putFiles(containerId, WORK_ROOT_IN_CONTAINER, staged)
+    await bounded(runtime.putFiles(containerId, WORK_ROOT_IN_CONTAINER, staged), ENGINE_CALL_TIMEOUT_MS)
 
     pushEvent(jobId, 'starting pi…')
     const tracker = createCompletionTracker()
@@ -174,10 +189,13 @@ export async function runJobInContainer(jobId: string): Promise<void> {
       return
     }
 
-    let files = await runtime.getFiles(containerId, `${jobDir}/output`, {
-      maxBytes: cfg.maxOutputBytes,
-      maxFiles: cfg.maxOutputFiles,
-    })
+    let files = await bounded(
+      runtime.getFiles(containerId, `${jobDir}/output`, {
+        maxBytes: cfg.maxOutputBytes,
+        maxFiles: cfg.maxOutputFiles,
+      }),
+      ENGINE_CALL_TIMEOUT_MS,
+    )
     if (Object.keys(files).length === 0) {
       const text = tracker.lastAssistantText()
       if (text) files = { 'result.txt': new TextEncoder().encode(text) }

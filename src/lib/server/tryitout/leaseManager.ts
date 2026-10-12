@@ -73,7 +73,12 @@ export interface LeaseManagerDeps {
    */
   ownerId?: string
   now?: () => number
+  /** Bound on one engine `remove` call (default REMOVE_TIMEOUT_MS). */
+  removeTimeoutMs?: number
 }
+
+/** A hung engine `remove` must not hold a discard/eviction/shutdown forever (09-02). */
+export const REMOVE_TIMEOUT_MS = 15_000
 
 const REAP_INTERVAL_MS = 30_000
 const SHUTDOWN_CAP_MS = 3_000
@@ -99,8 +104,22 @@ export function createLeaseManager(deps: LeaseManagerDeps): LeaseManager {
     if (!id) return Promise.resolve()
     const existing = removals.get(lease)
     if (existing) return existing
-    const p = runtime.remove(id).catch((err: unknown) => {
-      console.warn('Try It Out: removing container failed:', err instanceof Error ? err.message : String(err))
+    const attempt = runtime.remove(id).then(
+      () => undefined,
+      (err: unknown) => {
+        console.warn('Try It Out: removing container failed:', err instanceof Error ? err.message : String(err))
+      },
+    )
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const bound = new Promise<void>((resolve) => {
+      timer = setTimeout(() => {
+        console.warn('Try It Out: removing container timed out; the orphan sweep will retry')
+        resolve()
+      }, deps.removeTimeoutMs ?? REMOVE_TIMEOUT_MS)
+      timer.unref?.()
+    })
+    const p = Promise.race([attempt, bound]).finally(() => {
+      if (timer) clearTimeout(timer)
     })
     removals.set(lease, p)
     return p
