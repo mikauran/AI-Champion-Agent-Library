@@ -14,6 +14,16 @@ export const init: ServerInit = async () => {
   } catch (err) {
     console.warn('Try It Out service failed to start:', err instanceof Error ? err.message : err)
   }
+  // Fire-and-forget: warm the embedding model in the background; never fatal.
+  if (process.env.SEARCH_EMBEDDINGS !== 'off') {
+    try {
+      void import('$lib/server/search/index.js')
+        .then((m) => m.warmUp())
+        .catch((err) => console.warn('Search warm-up failed:', err instanceof Error ? err.message : err))
+    } catch (err) {
+      console.warn('Search warm-up failed:', err instanceof Error ? err.message : err)
+    }
+  }
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
