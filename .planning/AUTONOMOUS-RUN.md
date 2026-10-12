@@ -13,6 +13,7 @@ Goal: spend leftover token budget on reviewable, low-risk improvements. The huma
 - Human-verification checkpoints (e.g. 02-04): do not fake them. Mark as "pending human" and continue.
 
 ## Work queue (in order; numbers are ROADMAP phases)
+Run order: 2.1 -> 2.2 -> 3 -> 4 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 (see AUTONOMOUS-PROMPT.md; use `--only N` per phase).
 1. Phase 2.1 Green Baseline, then Phase 2.2 Scale and Seed Data.
 2. Phase 3 Search (plan->execute; discuss/research/patterns already done). Offline/local embeddings only, fakes in tests; use the 2.2 scale set for accuracy checks.
 3. Phase 4 Customization placeholder; close Phase 2 gaps except the human checkpoint 02-04.

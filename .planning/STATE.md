@@ -160,6 +160,10 @@ None yet.
 - Phase 6 added: Runnable Try It Out Flow (mock-backed) — src/lib/tryItOut.ts (submitJob/subscribeProgress/downloadArtifact) + TryItOutPanel.svelte, shaped to docs/job-api-contract.md, no real backend
 - Phase 7 added: No-Container Demo Backend for Try It Out — real (but no-Docker/no-pi) SvelteKit server routes that call an LLM with the agent's base prompt + skill.md, replacing tryItOut.ts's mock with real fetch() calls; UI unchanged
 - Phase 8 added: Container-backed Try It Out (warm on visit) — when a user opens an agent page, warm a container with Pi and that agent's skill; Try It Out runs in it behind the existing job API. Inspired by GAISE26_tool_building_pi_agents (idea only, not code). Delegated by Jussi.
+- Phases 2.1 and 2.2 inserted (2026-10-12, autonomous run planning): Green Baseline (fix 22 tsc errors and 3 failing tests) and Scale and Seed Data (synthetic 150-agent fixtures); both run before Phase 3
+- Phases 9-11 added: Try It Out Hardening (adversarial review + chaos tests of Phase 8 code), Accessibility (UI-03), Related Agents (DISC-01)
+- Phases 12-13 added: Agent Types and Intake Research (taxonomy, capability matrix, intake guide), then Multi-Agent and Multi-Format Hosting behind a feature flag
+- Phases 14-15 added: MCP Generator (research synthesis first; DB schema/CUST-02 is one adapter) and MCP Test Platform (ports the benchmark harness from ~/projects/mcp-gen-comparison); both flagged, default off
 - Phases 5, 6, and 7 together form one continuous "Try It Out" initiative, executed as a self-contained branch off Phase 2 — independent of, and completed ahead of, Phases 3 and 4.
 
 ## Session Continuity
