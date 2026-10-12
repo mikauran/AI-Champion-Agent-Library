@@ -274,7 +274,11 @@ Plans:
   3. Catalog filter/pagination tests run against the large set
   4. Shipped `data/agents` is untouched
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02.2-01-PLAN.md — Seeded synthetic AgentSpec generator, `fixtures:scale` script, gitignored output dir
+- [ ] 02.2-02-PLAN.md — 150-agent ingest/idempotency/timing test and unmocked catalog filter/pagination tests
 
 ### Phase 9: Try It Out Hardening
 
