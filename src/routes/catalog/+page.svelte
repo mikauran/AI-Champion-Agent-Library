@@ -1,29 +1,30 @@
 <script lang="ts">
-  import { goto } from '$app/navigation'
+  import { afterNavigate, goto } from '$app/navigation'
   import AgentCard from '$lib/components/AgentCard.svelte'
   import FilterBar from '$lib/components/FilterBar.svelte'
   import SearchBar from '$lib/components/SearchBar.svelte'
-  import { buildCatalogParams } from '$lib/catalogUrl'
+  import { buildCatalogParams, truncateQuery } from '$lib/catalogUrl'
   import Pagination from '$lib/components/Pagination.svelte'
   import type { PageData } from './$types'
 
   let { data }: { data: PageData } = $props()
 
-  // Client-side filter state — initialized from server-provided URL params
-  let selectedCategory = $state(data.filters.category ?? '')
-  let selectedLlm = $state(data.filters.llm ?? '')
-  let selectedMaturity = $state(data.filters.maturity ?? '')
-  let query = $state(data.filters.q ?? '')
+  // Filter state is derived from the server-provided URL params, so it re-seeds whenever
+  // `data` changes (back/forward, nav links). Assigning (optimistic update on change)
+  // overrides the value until the next navigation delivers new data.
+  let selectedCategory = $derived(data.filters.category ?? '')
+  let selectedLlm = $derived(data.filters.llm ?? '')
+  let selectedMaturity = $derived(data.filters.maturity ?? '')
+  let query = $derived(data.filters.q ?? '')
 
-  // Client-side derived filter on already-loaded agents (no server round-trip)
-  let filteredAgents = $derived.by(() => {
-    return data.agents.filter(agent => {
-      const categoryMatch = !selectedCategory || agent.category === selectedCategory
-      const llmMatch = !selectedLlm || agent.llmName === selectedLlm
-      const maturityMatch = !selectedMaturity || agent.maturityStatus === selectedMaturity
-      return categoryMatch && llmMatch && maturityMatch
-    })
+  // The search input owns its text while typing, so it is only re-created (not re-synced)
+  // when navigation came from outside the page (nav link, back/forward).
+  let searchKey = $state(0)
+  afterNavigate(({ type }) => {
+    if (type === 'link' || type === 'popstate') searchKey++
   })
+
+  let noResultsQuery = $derived(truncateQuery(data.filters.q ?? ''))
 
   function updateCategory(value: string) {
     selectedCategory = value
@@ -65,7 +66,9 @@
 
 <h1 class="text-3xl font-semibold text-gray-900 mb-6">Agent Catalog</h1>
 
-<SearchBar value={query} onsearch={updateQuery} count={data.total} />
+{#key searchKey}
+  <SearchBar value={data.filters.q ?? ''} onsearch={updateQuery} count={data.total} />
+{/key}
 
 <FilterBar
   categories={data.categories}
@@ -86,10 +89,10 @@
   </p>
 {/if}
 
-{#if filteredAgents.length === 0}
+{#if data.agents.length === 0}
   <div class="text-center py-16">
-    {#if query.trim()}
-      <h2 class="text-lg font-semibold text-gray-900 mb-2">No agents match "{query.trim()}"</h2>
+    {#if noResultsQuery}
+      <h2 class="text-lg font-semibold text-gray-900 mb-2 break-words">No agents match "{noResultsQuery}"</h2>
       <p class="text-sm text-gray-600">Try different words or remove a filter.</p>
     {:else}
       <h2 class="text-lg font-semibold text-gray-900 mb-2">No agents match your filters</h2>
@@ -98,7 +101,7 @@
   </div>
 {:else}
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {#each filteredAgents as agent (agent.slug)}
+    {#each data.agents as agent (agent.slug)}
       <AgentCard {agent} />
     {/each}
   </div>

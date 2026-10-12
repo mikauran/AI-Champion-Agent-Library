@@ -47,6 +47,7 @@
       oninput={(e) => schedule((e.currentTarget as HTMLInputElement).value)}
       placeholder="Search agents"
       autocomplete="off"
+      maxlength="200"
       class="min-h-[44px] w-full rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus-visible:ring-2 focus-visible:ring-indigo-600"
     />
     {#if text}

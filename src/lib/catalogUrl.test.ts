@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildCatalogParams, parsePage } from './catalogUrl'
+import { buildCatalogParams, parsePage, truncateQuery } from './catalogUrl'
 
 describe('buildCatalogParams', () => {
   it('includes set values, trimmed q, and page=1', () => {
@@ -33,5 +33,22 @@ describe('parsePage', () => {
   it('caps absurdly large pages', () => {
     expect(parsePage('99999999999999999999')).toBe(1_000_000)
     expect(Number.isSafeInteger((parsePage('1e30') - 1) * 24)).toBe(true)
+  })
+})
+
+describe('truncateQuery', () => {
+  it('trims and leaves short queries alone', () => {
+    expect(truncateQuery('  sql  ')).toBe('sql')
+    expect(truncateQuery('')).toBe('')
+  })
+  it('caps at 200 characters and adds an ellipsis', () => {
+    const out = truncateQuery('x'.repeat(500))
+    expect(out).toBe('x'.repeat(200) + '…')
+    expect(truncateQuery('y'.repeat(200))).toBe('y'.repeat(200))
+  })
+  it('does not split surrogate pairs', () => {
+    const out = truncateQuery('😀'.repeat(300))
+    expect(Array.from(out.replace('…', '')).every((c) => c === '😀')).toBe(true)
+    expect(Array.from(out)).toHaveLength(201)
   })
 })

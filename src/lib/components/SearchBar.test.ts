@@ -73,4 +73,10 @@ describe('SearchBar', () => {
     await fireEvent.click(getByText('Clear search'))
     expect(onsearch).toHaveBeenCalledWith('')
   })
+
+  it('limits the input to 200 characters', () => {
+    const { container } = render(SearchBar, { onsearch: vi.fn() })
+    expect(container.querySelector('input')!.getAttribute('maxlength')).toBe('200')
+  })
 })
+

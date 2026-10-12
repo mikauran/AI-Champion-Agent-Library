@@ -25,3 +25,12 @@ export function parsePage(raw: string | null | undefined): number {
   if (!Number.isFinite(n) || n < 1) return 1
   return Math.min(n, MAX_PAGE)
 }
+
+const MAX_DISPLAY_QUERY = 200
+
+/** Trim and cap a user query for display (by code point), adding an ellipsis when cut. */
+export function truncateQuery(q: string, max: number = MAX_DISPLAY_QUERY): string {
+  const t = q.trim()
+  const chars = Array.from(t)
+  return chars.length > max ? `${chars.slice(0, max).join('')}…` : t
+}
