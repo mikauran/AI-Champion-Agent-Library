@@ -178,3 +178,4 @@ Resume file: None
 | Phase | State | Resume |
 |-------|-------|--------|
 | 3 | verification_deferred_human | /gsd-verify-work 3 |
+| 4 | verification_deferred_human | /gsd-verify-work 4 |
