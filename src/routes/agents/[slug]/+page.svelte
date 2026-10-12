@@ -1,6 +1,7 @@
 <script lang="ts">
   import TechAccordion from '$lib/components/TechAccordion.svelte'
   import CustomizationPanel from '$lib/components/CustomizationPanel.svelte'
+  import CustomizeMenu from '$lib/components/CustomizeMenu.svelte'
   import TryItOutPanel from '$lib/components/TryItOutPanel.svelte'
   import type { PageData } from './$types'
 
@@ -71,6 +72,8 @@
             Try it out &rarr;
           </a>
         {/if}
+
+        <CustomizeMenu />
       </div>
 
       {#if agent.tryItOutMode === 'runnable'}
