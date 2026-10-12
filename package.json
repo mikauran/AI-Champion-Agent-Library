@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
+    "check": "tsc --noEmit && vitest run",
     "ingest": "tsx scripts/ingest.ts",
     "tryout:configure": "tsx scripts/set-try-it-out-mode.ts",
     "db:push": "drizzle-kit push",
