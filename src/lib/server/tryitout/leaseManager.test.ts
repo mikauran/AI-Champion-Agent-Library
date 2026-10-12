@@ -194,6 +194,31 @@ describe('reaper, failures, sweep, shutdown', () => {
     expect(runtime.containers()).toHaveLength(1)
   })
 
+  it('WR-01: reaps a lease stuck in warming past 2x warmWaitMs, freeing its slot and token', async () => {
+    build({ PI_RUNNER_WARM_WAIT_MS: '1000', PI_RUNNER_MAX_CONTAINERS: '1' }, () => new Promise<void>(() => {}))
+    void mgr.ensureWarm('A', 'agent-a')
+    await Promise.resolve()
+    const [stuck] = mgr.snapshot()
+    expect(stuck.state).toBe('warming')
+    const token = [...tokensSeen.values()][0]
+    expect(authenticateBearer('Bearer ' + token)).not.toBeNull()
+
+    clock += 1999
+    await mgr.reap()
+    expect(mgr.snapshot()).toHaveLength(1) // not yet past the bound
+    expect(await mgr.ensureWarm('B', 'agent-a')).toBe('busy') // the stuck lease holds the only slot
+    clock += 2
+    await mgr.reap()
+    expect(mgr.snapshot()).toHaveLength(0)
+    expect(authenticateBearer('Bearer ' + token)).toBeNull()
+    expect(runtime.containers()).toHaveLength(0)
+
+    // the slot is free again: a new session gets a lease instead of `busy`
+    void mgr.ensureWarm('B', 'agent-a')
+    await Promise.resolve()
+    expect(mgr.snapshot().map((l) => l.sessionKey)).toEqual(['B'])
+  })
+
   it('startReaper is idempotent and its timer is unref-ed; shutdown stops it', async () => {
     vi.useFakeTimers()
     const spy = vi.spyOn(globalThis, 'setInterval')

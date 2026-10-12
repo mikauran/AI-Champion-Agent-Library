@@ -74,6 +74,9 @@ function busyError(): TryItOutRuntimeError {
   return new TryItOutRuntimeError('busy', 'all Try It Out slots are busy, try again shortly')
 }
 
+// A lease still `warming` after this many warmWaitMs is considered stuck and reaped (WR-01).
+const STUCK_WARMING_FACTOR = 2
+
 export function createLeaseManager(deps: LeaseManagerDeps): LeaseManager {
   const { runtime, config, tokens, instanceId } = deps
   const now = deps.now ?? (() => Date.now())
@@ -264,6 +267,11 @@ export function createLeaseManager(deps: LeaseManagerDeps): LeaseManager {
       const removals: Promise<void>[] = []
       for (const l of [...leases.values()]) {
         if (l.state === 'idle' && t - l.idleSince >= config.idleTtlMs) {
+          removals.push(evictSync(l, 'expired'))
+        } else if (l.state === 'warming' && t - l.createdAt >= config.warmWaitMs * STUCK_WARMING_FACTOR) {
+          // WR-01: a warm-up that stalled (hung engine call) would hold its cap slot and token
+          // forever. Expiring it frees both; if the create call ever returns, startLease sees the
+          // non-warming state and removes the container.
           removals.push(evictSync(l, 'expired'))
         }
       }
