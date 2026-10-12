@@ -38,6 +38,11 @@ interface FakeContainer {
 export interface FakeRuntime extends ContainerRuntime {
   calls: string[]
   failNext(method: keyof ContainerRuntime, err: Error): void
+  /**
+   * Make every subsequent call of `method` block until the returned `release()` is called (or
+   * forever). Releasing lets the pending calls continue as if the engine had answered late.
+   */
+  hang(method: keyof ContainerRuntime): () => void
   scriptExec(fn: FakeExecScript): void
   envOf(id: string): string[]
   filesOf(id: string): FakeFiles
@@ -52,12 +57,15 @@ function joinPosix(dir: string, rel: string): string {
 export function createFakeRuntime(opts: { latencyMs?: number } = {}): FakeRuntime {
   const store = new Map<string, FakeContainer>()
   const failures = new Map<string, Error[]>()
+  const hangs = new Map<string, Promise<void>>()
   let script: FakeExecScript = () => 0
   const calls: string[] = []
   const enc = new TextEncoder()
 
   async function enter(method: keyof ContainerRuntime): Promise<void> {
     calls.push(method)
+    const hung = hangs.get(method)
+    if (hung) await hung
     if (opts.latencyMs && opts.latencyMs > 0) {
       await new Promise((r) => setTimeout(r, opts.latencyMs))
     }
@@ -81,6 +89,20 @@ export function createFakeRuntime(opts: { latencyMs?: number } = {}): FakeRuntim
       const q = failures.get(method) ?? []
       q.push(err)
       failures.set(method, q)
+    },
+    hang(method) {
+      let release!: () => void
+      hangs.set(
+        method,
+        new Promise<void>((resolve) => {
+          release = () => {
+            if (hangs.get(method) === p) hangs.delete(method)
+            resolve()
+          }
+        }),
+      )
+      const p = hangs.get(method)
+      return release
     },
     scriptExec(fn) {
       script = fn
