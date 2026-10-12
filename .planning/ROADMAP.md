@@ -293,7 +293,13 @@ Plans:
   2. Chaos tests cover lease races, hung engine, budget exhaustion, token reuse across leases, oversized/malformed Pi JSONL, and reaper timing
   3. Live Podman checks that cannot run unattended are listed as "pending human" with exact commands
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Security review (09-SECURITY-REVIEW.md) and fixes with tests (budget, sweep scope, tar/zip, JSONL cap)
+- [ ] 09-02-PLAN.md — Chaos tests: lease races, hung engine, reaper timing (fake runtime/timers)
+- [ ] 09-03-PLAN.md — Chaos tests: budget exhaustion, token reuse, malformed/oversized Pi JSONL
+- [ ] 09-04-PLAN.md — Pending-human Podman checklist (09-HUMAN-UAT.md), decision log, docs
 
 ### Phase 10: Accessibility (UI-03)
 
