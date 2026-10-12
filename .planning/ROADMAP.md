@@ -331,7 +331,11 @@ Plans:
   2. Works without embeddings (tag/category fallback)
   3. Related lists validated against the Phase 2.2 scale set and the labeled set
 
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — relatedAgents algorithm (cosine + tag/category fallback), service method, scale-set precision@4 validation
+- [ ] 11-02-PLAN.md — RelatedAgents component, detail page load wiring, axe + load tests
 
 ### Phase 12: Agent Types and Intake Research
 
