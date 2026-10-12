@@ -98,7 +98,7 @@
           </a>
         {/if}
 
-        <CustomizeMenu />
+        <CustomizeMenu generatorEnabled={data.mcpGeneratorEnabled === true} />
       </div>
 
       {#if agent.tryItOutMode === 'runnable'}

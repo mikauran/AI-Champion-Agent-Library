@@ -1,11 +1,45 @@
 <script lang="ts">
   import { tick } from 'svelte'
+  import GenerateMcpPanel from './GenerateMcpPanel.svelte'
 
-  const items = [
+  // Phase 14: generatorEnabled (fed from the detail load, default off) adds a fourth, enabled item.
+  let { generatorEnabled = false }: { generatorEnabled?: boolean } = $props()
+
+  type Item = { id: string; label: string; description: string; action?: 'generate' }
+  const placeholders: Item[] = [
     { id: 'configure-fields', label: 'Configure fields', description: 'Choose which agent fields to tailor' },
     { id: 'connect-data', label: 'Connect your data', description: 'Connect your own data sources' },
     { id: 'change-model', label: 'Change model', description: 'Pick a different language model' },
   ]
+  const items: Item[] = $derived(
+    generatorEnabled
+      ? [
+          ...placeholders,
+          {
+            id: 'generate-mcp',
+            label: 'Generate MCP',
+            description: 'Generate an MCP server from a schema or spec',
+            action: 'generate',
+          },
+        ]
+      : placeholders
+  )
+
+  let panelOpen = $state(false)
+
+  function activate(item: Item) {
+    if (item.action === 'generate') {
+      closeMenu(false)
+      panelOpen = true
+      return
+    }
+    note = `Coming soon: ${item.label} is not available yet.`
+  }
+
+  function closePanel() {
+    panelOpen = false
+    trigger?.focus()
+  }
 
   const uid = $props.id()
   const menuId = `customize-menu-${uid}`
@@ -99,12 +133,24 @@
       onkeydown={onMenuKeydown}
     >
       {#each items as item, i (item.id)}
+        {#if item.action === 'generate'}
+          <button
+            type="button"
+            role="menuitem"
+            bind:this={itemEls[i]}
+            onclick={() => activate(item)}
+            class="flex w-full flex-col items-start gap-1 rounded px-3 py-2 text-left text-gray-900 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+          >
+            <span class="text-sm font-medium">{item.label}</span>
+            <span class="text-xs text-gray-600">{item.description}</span>
+          </button>
+        {:else}
         <button
           type="button"
           role="menuitem"
           aria-disabled="true"
           bind:this={itemEls[i]}
-          onclick={() => (note = `Coming soon: ${item.label} is not available yet.`)}
+          onclick={() => activate(item)}
           class="flex w-full cursor-not-allowed flex-col items-start gap-1 rounded px-3 py-2 text-left text-gray-500 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
         >
           <span class="flex w-full items-center justify-between gap-2">
@@ -113,6 +159,7 @@
           </span>
           <span class="text-xs text-gray-500">{item.description}</span>
         </button>
+        {/if}
       {/each}
     </div>
     <!-- Outside role="menu": a menu may only contain menu items (axe aria-required-children). -->
@@ -120,3 +167,7 @@
     </div>
   {/if}
 </div>
+
+{#if generatorEnabled && panelOpen}
+  <GenerateMcpPanel onclose={closePanel} />
+{/if}
