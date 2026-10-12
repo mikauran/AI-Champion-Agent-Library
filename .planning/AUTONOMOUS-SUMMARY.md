@@ -9,6 +9,7 @@
 
 - Phase 3 Search (code complete, verification human_needed): hybrid BM25 + embeddings (RRF), /api/search, catalog `?q=`, debounced SearchBar, 46-query labeled set (BM25 hit@3 1.00 on keyword/NL). Code review (1 critical, 8 warnings) all fixed, security audit SECURED. 58 files / 554 tests green. Decisions D-009..D-014.
 - Phase 4 Customization Placeholder done (04-01): `CustomizeMenu` (accessible disabled "Coming soon" menu) on every detail page, CUST-01 complete, D-015. `npm run check` exits 0 (60 files passed, 1 skipped, 565 tests).
+- Phase 9 plan 09-01 (security review of Try It Out code): `09-SECURITY-REVIEW.md` with 15 findings, 13 fixed test-first (budget cap + reserve-then-reconcile, owner-scoped orphan sweep, archive size/stream/proto/entry-cap handling, unhandled rejection, dot segments, MemorySwap, JSONL line cap) and 2 accepted. Deferred Phase 8 items WR-05, WR-08, WR-09, IN-01, IN-02, IN-04, IN-05 closed. Decisions D-016..D-018. `npm run check` exits 0 (60 files passed, 1 skipped, 581 tests). Operator note: set `APP_INSTANCE_NAME` in compose deployments (D-017).
 
 ## Pending human
 - Phase 2 checkpoint 02-04 (see D-001): the only remaining Phase 2 item; Phase 2 is not marked complete.
