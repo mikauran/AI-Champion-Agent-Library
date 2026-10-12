@@ -13,13 +13,14 @@ import { createJob, inputDir, inputFilePath } from '$lib/server/tryItOutJobs'
 import { runJob } from '$lib/server/tryItOutRunner'
 import { sessionKey } from '$lib/server/tryitout/session'
 import { AgentIdSchema } from '$lib/server/tryItOutPrompts'
+import { getTryItOutService } from '$lib/server/tryitout/service'
 
 // Threat T4-3: hard cap enforced BEFORE createJob/mkdir/runJob — an
 // unauthenticated public demo endpoint must not allow disk exhaustion or a
 // runaway model bill via an oversized request.
 const MAX_UPLOAD_BYTES = 200 * 1024
 
-export const POST: RequestHandler = async ({ request, locals, cookies, url }) => {
+export const POST: RequestHandler = async ({ request, locals, cookies, url, getClientAddress }) => {
   const form = await request.formData()
   const agentId = form.get('agentId')
   const task = form.get('task')
@@ -44,7 +45,23 @@ export const POST: RequestHandler = async ({ request, locals, cookies, url }) =>
     error(413, 'upload too large')
   }
 
-  const job = createJob(agentId, task, file, sessionKey({ locals, cookies, url }))
+  const key = sessionKey({ locals, cookies, url })
+  // WR-07: with auth off a session is free to mint; cap new anonymous sessions per client.
+  let admitted = true
+  try {
+    let clientKey: string | undefined
+    try {
+      clientKey = getClientAddress?.()
+    } catch {
+      clientKey = undefined
+    }
+    admitted = getTryItOutService().admitSession(key, clientKey)
+  } catch {
+    // invalid runner config etc.: runJob records its own failure; do not block here
+  }
+  if (!admitted) error(429, 'too many new sessions from this client, try again later')
+
+  const job = createJob(agentId, task, file, key)
   // Captured immediately after creation — createJob always sets 'queued'.
   // `runJob`, invoked below, flips the store's status to 'running'
   // synchronously (before its first `await`), so `job.status` read AFTER

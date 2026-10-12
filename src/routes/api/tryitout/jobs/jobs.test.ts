@@ -243,6 +243,27 @@ describe('POST /api/tryitout/jobs', () => {
     expect(after).toEqual(before)
   })
 
+  it('WR-07: a cookie-less client minting fresh sessions is capped per client address with a 429', async () => {
+    svcMod.__setTryItOutServiceForTests(
+      svcMod.createTryItOutService({
+        runtime: fakeMod.createFakeRuntime(),
+        config: cfgMod.parseRunnerConfig({ PI_RUNNER_ANON_SESSIONS_PER_CLIENT: '2' }),
+        instanceId: 't',
+      }),
+    )
+    const freshSessionEvent = (ip: string, sid: string) => {
+      const ev = asPostEvent(makeForm({ agentId: AGENT_ID, task: 'hello' })) as unknown as Record<string, unknown>
+      ev.cookies = { get: () => sid, set: vi.fn() }
+      ev.getClientAddress = () => ip
+      return ev as unknown as Parameters<typeof POST>[0]
+    }
+    await POST(freshSessionEvent('203.0.113.7', 'AAAAAAAAAAAAAAAAAAAAA1'))
+    await POST(freshSessionEvent('203.0.113.7', 'AAAAAAAAAAAAAAAAAAAAA2'))
+    await expectHttpError(() => POST(freshSessionEvent('203.0.113.7', 'AAAAAAAAAAAAAAAAAAAAA3')), 429)
+    // another client is unaffected
+    await POST(freshSessionEvent('198.51.100.9', 'AAAAAAAAAAAAAAAAAAAAA4'))
+  })
+
   it('a file named ../../escape.txt lands at input/input.txt; nothing exists outside workDir', async () => {
     const traversalFile = new File(['payload'], '../../escape.txt')
     const res = await POST(

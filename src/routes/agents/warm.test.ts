@@ -58,6 +58,7 @@ function run(cookies = makeCookies(), user: { email: string } | null = null) {
     url: new URL('http://localhost/agents/demo-rfi-triage'),
     locals: { user },
     cookies,
+    getClientAddress: () => '203.0.113.7',
   } as unknown as LoadArgs)
 }
 
@@ -75,6 +76,7 @@ describe('warm on visit', () => {
     const [key, slug] = warm.mock.calls[0]
     expect(key).toMatch(/^anon:.+/)
     expect(slug).toBe('demo-rfi-triage')
+    expect(warm.mock.calls[0][2]).toBe('203.0.113.7') // WR-07: the client address rides along for the per-client cap
     expect(cookies.set).toHaveBeenCalledWith('aic_tryout_sid', expect.any(String), expect.anything())
     expect(key).toBe(`anon:${cookies.set.mock.calls[0][1]}`)
   })
@@ -83,7 +85,7 @@ describe('warm on visit', () => {
     state.get = () => row('runnable')
     const cookies = makeCookies()
     await run(cookies, { email: 'u@x.fi' })
-    expect(warm).toHaveBeenCalledWith('user:u@x.fi', 'demo-rfi-triage')
+    expect(warm).toHaveBeenCalledWith('user:u@x.fi', 'demo-rfi-triage', '203.0.113.7')
     expect(cookies.set).not.toHaveBeenCalled()
   })
 

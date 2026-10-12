@@ -28,7 +28,14 @@ describe('parseRunnerConfig', () => {
       jobRequestBudget: 40,
       maxOutputBytes: 20971520,
       maxOutputFiles: 200,
+      anonSessionsPerClient: 5,
     })
+  })
+
+  it('parses the per-client anonymous session cap, 0 meaning unlimited', () => {
+    expect(parseRunnerConfig({ PI_RUNNER_ANON_SESSIONS_PER_CLIENT: '2' }).anonSessionsPerClient).toBe(2)
+    expect(parseRunnerConfig({ PI_RUNNER_ANON_SESSIONS_PER_CLIENT: '0' }).anonSessionsPerClient).toBe(0)
+    expect(() => parseRunnerConfig({ PI_RUNNER_ANON_SESSIONS_PER_CLIENT: '-1' })).toThrow()
   })
 
   it('derives the socket path from XDG_RUNTIME_DIR and lets PI_RUNNER_SOCKET win', () => {

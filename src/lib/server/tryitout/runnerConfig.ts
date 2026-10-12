@@ -33,6 +33,7 @@ export interface RunnerConfig {
   jobRequestBudget: number
   maxOutputBytes: number
   maxOutputFiles: number
+  anonSessionsPerClient: number
 }
 
 function num(
@@ -113,5 +114,6 @@ export function parseRunnerConfig(source: Record<string, string | undefined>): R
     jobRequestBudget: num(source, 'PI_JOB_REQUEST_BUDGET', 40, 1, 10000),
     maxOutputBytes: num(source, 'PI_RUNNER_MAX_OUTPUT_BYTES', 20971520, 1, 1_073_741_824),
     maxOutputFiles: num(source, 'PI_RUNNER_MAX_OUTPUT_FILES', 200, 1, 100000),
+    anonSessionsPerClient: num(source, 'PI_RUNNER_ANON_SESSIONS_PER_CLIENT', 5, 0, 1000),
   }
 }

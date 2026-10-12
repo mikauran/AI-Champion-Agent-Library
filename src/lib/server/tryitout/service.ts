@@ -15,13 +15,22 @@ import { createLeaseManager, type Lease, type LeaseManager } from './leaseManage
 import { AGENT_DIR, TryItOutRuntimeError, type ContainerRuntime, type StagedFile } from './runtime'
 import { createDockerodeRuntime } from './runtimeDockerode'
 import type { RunnerConfig } from './runnerConfig'
+import { createClientLimiter } from './clientLimit'
 
 export interface TryItOutService {
   config: RunnerConfig
   runtime: ContainerRuntime
   leases: LeaseManager
   instanceId: string
+  /**
+   * WR-07: may this (session, client) start a container? Signed-in users and sessions that already
+   * hold a lease always may; a NEW anonymous session consumes one of the client's per-window slots.
+   */
+  admitSession(sessionKey: string, clientKey: string | undefined): boolean
 }
+
+/** Window for the per-client cap on new anonymous sessions. */
+export const ANON_SESSION_WINDOW_MS = 10 * 60 * 1000
 
 interface ServiceGlobal {
   service?: TryItOutService | null
@@ -115,7 +124,17 @@ export function createTryItOutService(opts: {
     instanceId,
     now: opts.now,
   })
-  return { config, runtime, leases, instanceId }
+  const limiter = createClientLimiter({
+    max: config.anonSessionsPerClient,
+    windowMs: ANON_SESSION_WINDOW_MS,
+    now: opts.now,
+  })
+  const admitSession = (sessionKey: string, clientKey: string | undefined): boolean => {
+    if (!sessionKey.startsWith('anon:')) return true
+    if (leases.snapshot().some((l) => l.sessionKey === sessionKey)) return true
+    return limiter.tryAdmit(clientKey ?? 'unknown')
+  }
+  return { config, runtime, leases, instanceId, admitSession }
 }
 
 export function getTryItOutService(): TryItOutService {
@@ -139,9 +158,18 @@ export function __setTryItOutServiceForTests(svc: TryItOutService | null): void 
 }
 
 /** Never rejects; a failed warm-up only costs the first-job latency. */
-export async function warmForSession(sessionKey: string, slug: string): Promise<void> {
+export async function warmForSession(
+  sessionKey: string,
+  slug: string,
+  clientKey?: string,
+): Promise<void> {
   try {
-    await getTryItOutService().leases.ensureWarm(sessionKey, slug)
+    const svc = getTryItOutService()
+    if (!svc.admitSession(sessionKey, clientKey)) {
+      console.info('Try It Out: warm-up skipped, client is over its new-session cap')
+      return
+    }
+    await svc.leases.ensureWarm(sessionKey, slug)
   } catch (err) {
     console.warn('Try It Out warm-up failed:', err instanceof Error ? err.message : String(err))
   }

@@ -181,3 +181,33 @@ describe('startTryItOutService and warmForSession', () => {
     expect(warn.mock.calls[0].join(' ')).toContain('boom')
   })
 })
+
+describe('per-client cap on new anonymous sessions (WR-07)', () => {
+  it('lets a cookie-less client start only N sessions, but never limits users or existing sessions', async () => {
+    const { runtime, svc } = make({ PI_RUNNER_ANON_SESSIONS_PER_CLIENT: '2' })
+    __setTryItOutServiceForTests(svc)
+    for (const sid of ['a', 'b', 'c', 'd']) await warmForSession(`anon:${sid}`, SLUG, '203.0.113.7')
+    expect(runtime.containers()).toHaveLength(2)
+    expect(svc.leases.snapshot().map((l) => l.sessionKey).sort()).toEqual(['anon:a', 'anon:b'])
+    // an existing session keeps warming (reload), another client and a signed-in user are unaffected
+    await warmForSession('anon:a', SLUG, '203.0.113.7')
+    await warmForSession('anon:z', SLUG, '198.51.100.9')
+    await warmForSession('user:u@x.fi', SLUG, '203.0.113.7')
+    expect(runtime.containers()).toHaveLength(4)
+  })
+
+  it('admitSession frees the client again after the window', () => {
+    let t = 0
+    const runtime = createFakeRuntime()
+    const svc = createTryItOutService({
+      runtime,
+      config: parseRunnerConfig({ PI_RUNNER_ANON_SESSIONS_PER_CLIENT: '1' }),
+      instanceId: 'i',
+      now: () => t,
+    })
+    expect(svc.admitSession('anon:a', 'ip')).toBe(true)
+    expect(svc.admitSession('anon:b', 'ip')).toBe(false)
+    t += 11 * 60 * 1000
+    expect(svc.admitSession('anon:c', 'ip')).toBe(true)
+  })
+})

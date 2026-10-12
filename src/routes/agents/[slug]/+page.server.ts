@@ -5,7 +5,7 @@ import type { PageServerLoad } from './$types'
 import { warmForSession } from '$lib/server/tryitout/service'
 import { sessionKey } from '$lib/server/tryitout/session'
 
-export const load: PageServerLoad = async ({ params, url, locals, cookies }) => {
+export const load: PageServerLoad = async ({ params, url, locals, cookies, getClientAddress }) => {
   const row = db
     .select()
     .from(agents)
@@ -18,7 +18,14 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies }) => 
 
   // D-05: warm the visitor's container in the background; never awaited, never fatal.
   if (row.tryItOutMode === 'runnable') {
-    void warmForSession(sessionKey({ locals, cookies, url }), row.slug).catch(() => {})
+    let clientKey: string | undefined
+    try {
+      clientKey = getClientAddress?.()
+    } catch {
+      clientKey = undefined
+    }
+    // WR-07: warmForSession caps new anonymous sessions per client address.
+    void warmForSession(sessionKey({ locals, cookies, url }), row.slug, clientKey).catch(() => {})
   }
 
   const { inputSchema, ...agentRow } = row
