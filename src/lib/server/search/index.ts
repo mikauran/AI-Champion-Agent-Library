@@ -2,8 +2,9 @@
 // Relative imports only; nothing is constructed at import time.
 import { buildBm25Index, type Bm25Index } from './bm25.js'
 import { hybridSearch } from './hybrid.js'
-import { buildSearchText, rowToSearchable } from './documents.js'
-import { blobToVector, createTransformersEmbedder, type Embedder } from './embedder.js'
+import { sql } from 'drizzle-orm'
+import { buildSearchText, contentHash, rowToSearchable } from './documents.js'
+import { EMBEDDING_DIM, blobToVector, createTransformersEmbedder, type Embedder } from './embedder.js'
 
 export type SearchMode = 'hybrid' | 'bm25'
 
@@ -31,7 +32,13 @@ export interface SearchService {
 
 export interface SearchServiceDeps {
   loadAgents: () => { rows: AgentRowForSearch[]; fingerprint: string }
-  loadVectors: () => { model: string; slug: string; vector: Buffer }[]
+  loadVectors: () => { model: string; slug: string; vector: Buffer; contentHash: string }[]
+  /**
+   * Cheap fingerprint of the stored embeddings (e.g. `count:max(updated_at)`). When it
+   * changes the in-memory vector cache is dropped, so vectors written after the agents
+   * (ingest writes embeddings last) are picked up without a restart.
+   */
+  loadVectorFingerprint?: () => string
   getEmbedder: () => Promise<Embedder | null>
   embedTimeoutMs?: number
   recheckMs?: number
@@ -52,7 +59,8 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
 
   let bm25: Bm25Index | null = null
   let fingerprint: string | null = null
-  let rowSlugs = new Set<string>()
+  let rowTexts = new Map<string, string>()
+  let vectorFingerprint: string | null = null
   let lastCheck = -Infinity
   let vectorCache: { model: string; vectors: Map<string, Float32Array> } | null = null
   let embedderPromise: Promise<Embedder | null> | null = null
@@ -87,13 +95,18 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
     if (bm25 && t - lastCheck < recheckMs) return bm25
     lastCheck = t
     const { rows, fingerprint: fp } = deps.loadAgents()
+    const vfp = deps.loadVectorFingerprint?.() ?? ''
+    if (vfp !== vectorFingerprint) {
+      vectorFingerprint = vfp
+      vectorCache = null
+    }
     if (bm25 && fp === fingerprint) return bm25
     const docs = rows.map((r) => {
       const s = rowToSearchable(r)
       return { slug: s.slug, title: s.title, tags: s.tags, text: buildSearchText(s) }
     })
     bm25 = buildBm25Index(docs)
-    rowSlugs = new Set(rows.map((r) => r.slug))
+    rowTexts = new Map(docs.map((d) => [d.slug, d.text]))
     fingerprint = fp
     vectorCache = null
     return bm25
@@ -103,8 +116,18 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
     if (vectorCache && vectorCache.model === model) return vectorCache.vectors
     const vectors = new Map<string, Float32Array>()
     for (const v of deps.loadVectors()) {
-      if (v.model !== model || !rowSlugs.has(v.slug)) continue
-      vectors.set(v.slug, blobToVector(v.vector))
+      if (v.model !== model) continue
+      const text = rowTexts.get(v.slug)
+      if (text === undefined) continue
+      // Only trust a vector computed from the current text: otherwise BM25 (new text) and
+      // the semantic ranking (old text) would silently disagree.
+      if (v.contentHash !== contentHash(model, text)) continue
+      try {
+        const vec = blobToVector(v.vector)
+        if (vec.length === EMBEDDING_DIM) vectors.set(v.slug, vec)
+      } catch {
+        // Malformed blob (byteLength not a multiple of 4): skip this row, keep the rest.
+      }
     }
     vectorCache = { model, vectors }
     return vectors
@@ -176,6 +199,21 @@ function getSingleton(): SearchService {
         return db.select().from(agentEmbeddings).all()
       } catch {
         return [] // old DB without the agent_embeddings table
+      }
+    },
+    loadVectorFingerprint() {
+      const { db, agentEmbeddings } = dbModule()
+      try {
+        const r = db
+          .select({
+            n: sql<number>`count(*)`,
+            m: sql<string | null>`max(${agentEmbeddings.updatedAt})`,
+          })
+          .from(agentEmbeddings)
+          .get()
+        return `${r?.n ?? 0}:${r?.m ?? ''}`
+      } catch {
+        return 'missing' // old DB without the agent_embeddings table
       }
     },
     getEmbedder: async () =>

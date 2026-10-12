@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createSearchService, type AgentRowForSearch } from './index.js'
 import { createFakeEmbedder } from './embedder.fake.js'
-import { buildSearchText, rowToSearchable } from './documents.js'
+import { buildSearchText, contentHash, rowToSearchable } from './documents.js'
 import { vectorToBlob } from './embedder.js'
 
 const rows: AgentRowForSearch[] = [
@@ -11,10 +11,11 @@ const rows: AgentRowForSearch[] = [
 
 async function vectorsFor(model: string) {
   const e = createFakeEmbedder()
-  const out: { model: string; slug: string; vector: Buffer }[] = []
+  const out: { model: string; slug: string; vector: Buffer; contentHash: string }[] = []
   for (const r of rows) {
-    const [v] = await e.embed([buildSearchText(rowToSearchable(r))])
-    out.push({ model, slug: r.slug, vector: vectorToBlob(v) })
+    const text = buildSearchText(rowToSearchable(r))
+    const [v] = await e.embed([text])
+    out.push({ model, slug: r.slug, vector: vectorToBlob(v), contentHash: contentHash(model, text) })
   }
   return out
 }
@@ -165,6 +166,76 @@ describe('createSearchService', () => {
     t = 600
     await svc.search('sql')
     expect(getEmbedder).toHaveBeenCalledTimes(4)
+  })
+
+  it('reloads vectors when the embeddings fingerprint changes without an agents change (WR-01)', async () => {
+    let t = 0
+    let stored: Awaited<ReturnType<typeof vectorsFor>> = [] // ingest has not written embeddings yet
+    let vfp = '0:'
+    const loadVectors = vi.fn(() => stored)
+    const { svc } = make({
+      getEmbedder: async () => createFakeEmbedder(),
+      loadVectors,
+      loadVectorFingerprint: () => vfp,
+      now: () => t,
+      recheckMs: 1000,
+    })
+    expect((await svc.search('sql')).mode).toBe('bm25') // empty vector set: BM25 only
+    // Ingest finishes writing embeddings; the agents fingerprint ('a') is unchanged.
+    stored = await vectorsFor('fake-hash')
+    vfp = '2:2026-01-01T00:00:01Z'
+    t = 1500
+    expect((await svc.search('sql')).mode).toBe('hybrid')
+  })
+
+  it('does not re-read vectors while the embeddings fingerprint is unchanged (WR-01)', async () => {
+    let t = 0
+    const vecs = await vectorsFor('fake-hash')
+    const loadVectors = vi.fn(() => vecs)
+    const { svc } = make({
+      getEmbedder: async () => createFakeEmbedder(),
+      loadVectors,
+      loadVectorFingerprint: () => 'same',
+      now: () => t,
+      recheckMs: 1000,
+    })
+    await svc.search('sql')
+    t = 5000
+    await svc.search('sql')
+    await svc.search('hvac')
+    expect(loadVectors).toHaveBeenCalledTimes(1)
+  })
+
+  it('ignores vectors whose content hash no longer matches the text (WR-04)', async () => {
+    const vecs = await vectorsFor('fake-hash')
+    const stale = vecs.map((v) => ({ ...v, contentHash: 'outdated' }))
+    const { svc } = make({ getEmbedder: async () => createFakeEmbedder(), loadVectors: () => stale })
+    expect((await svc.search('sql')).mode).toBe('bm25') // nothing trustworthy -> BM25 only
+  })
+
+  it('keeps matching vectors and drops only the mismatched ones (WR-04)', async () => {
+    const vecs = await vectorsFor('fake-hash')
+    const mixed = [vecs[0], { ...vecs[1], contentHash: 'outdated' }]
+    const { svc } = make({ getEmbedder: async () => createFakeEmbedder(), loadVectors: () => mixed })
+    const r = await svc.search('heating')
+    // The valid sql-helper vector keeps hybrid mode on; hvac's vector was dropped but BM25 still finds it.
+    expect(r.mode).toBe('hybrid')
+    expect(r.results.map((x) => x.slug)).toContain('hvac')
+  })
+
+  it('skips malformed or wrong-size vector blobs instead of failing the whole load (IN-05)', async () => {
+    const vecs = await vectorsFor('fake-hash')
+    const bad = [
+      { ...vecs[0], vector: Buffer.from([1, 2, 3]) }, // byteLength % 4 !== 0 -> RangeError
+      { ...vecs[1], vector: vectorToBlob(new Float32Array(8)) }, // wrong dimension
+    ]
+    const loadVectors = vi.fn(() => bad)
+    const { svc } = make({ getEmbedder: async () => createFakeEmbedder(), loadVectors })
+    const r = await svc.search('sql')
+    expect(r.mode).toBe('bm25')
+    expect(r.results[0].slug).toBe('sql-helper')
+    await svc.search('sql')
+    expect(loadVectors).toHaveBeenCalledTimes(1) // cached, not re-parsed per query
   })
 
   it('requests the embedder once', async () => {
