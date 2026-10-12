@@ -402,7 +402,17 @@ Plans:
   6. Phase 4 Customize menu gains a working "Generate MCP" entry when the flag is on; flag off leaves the placeholder unchanged
   7. Decisions logged with revert notes; no real customer data, keys or fixtures copied from the reference projects
 
-**Plans**: TBD
+**Plans:** 7 plans
+
+Plans:
+
+- [ ] 14-01-PLAN.md — Design doc (cites RESEARCH-SYNTHESIS), MCP_GENERATOR flag, SourceModel/InputAdapter contract, adapter registry, credential scanner, diagnostics
+- [ ] 14-02-PLAN.md — Core emitter: tool synthesis, Python FastMCP templates, checklist behaviours, derived-filter extension point, golden tests
+- [ ] 14-03-PLAN.md — OpenAPI adapter with fixtures and golden
+- [ ] 14-04-PLAN.md — Tabular-catalog and SQL DDL (CUST-02) adapters with fixtures and goldens
+- [ ] 14-05-PLAN.md — Pipeline, zip bundle, `generate-mcp` CLI, flag-gated /api/mcp-generate route with size caps
+- [ ] 14-06-PLAN.md — Customize menu "Generate MCP" panel (flag-gated), flag-off regression, axe test
+- [ ] 14-07-PLAN.md — docs/mcp-generator.md (extension point), 14-HUMAN-UAT.md, decisions, VERIFICATION, invariant self-check
 
 ### Phase 15: MCP Test Platform (flagged)
 
