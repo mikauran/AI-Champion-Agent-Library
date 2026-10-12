@@ -8,3 +8,11 @@ export function agentKindsEnabled(
   const v = env.AGENT_KINDS
   return typeof v === 'string' && TRUTHY.has(v.trim().toLowerCase())
 }
+
+/** Phase 14 MCP generator flag (MCP_GENERATOR), default off. */
+export function mcpGeneratorEnabled(
+  env: Record<string, string | undefined> = process.env
+): boolean {
+  const v = env.MCP_GENERATOR
+  return typeof v === 'string' && TRUTHY.has(v.trim().toLowerCase())
+}
