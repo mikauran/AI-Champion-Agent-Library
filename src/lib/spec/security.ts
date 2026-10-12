@@ -3,6 +3,7 @@
 
 const KEY_DENY = /(api[_-]?key|authorization|bearer|password|secret|token)/i
 const SK_VALUE = /^sk-.{8,}/
+const SK_INLINE = /\bsk-[A-Za-z0-9_-]{16,}/g
 const MAX_DEPTH = 20
 
 function flagged(key: string | null, value: unknown): boolean {
@@ -44,7 +45,7 @@ export function scanSecrets(value: unknown): string[] {
 export function redactSecrets<T>(value: T): T {
   const seen = new WeakSet<object>()
   const walk = (v: unknown, key: string | null, depth: number): unknown => {
-    if (typeof v === 'string') return flagged(key, v) ? '[redacted]' : v
+    if (typeof v === 'string') return flagged(key, v) ? '[redacted]' : v.replace(SK_INLINE, '[redacted]')
     if (typeof v !== 'object' || v === null) return v
     if (depth >= MAX_DEPTH || seen.has(v)) return '[truncated]'
     seen.add(v)
