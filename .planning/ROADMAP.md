@@ -350,7 +350,13 @@ Plans:
   4. A decision memo with recommended canonical-model changes and a ranked adapter list, each with trade-offs; open questions flagged for the human
   5. No real company data (e.g. customer datasets) is invented or included
 
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+
+- [ ] 12-01-PLAN.md — Taxonomy (docs/agent-types.md) and capability matrix (docs/agent-capability-matrix.md)
+- [ ] 12-02-PLAN.md — Author intake guide with ready-to-send reply template (docs/agent-intake-guide.md)
+- [ ] 12-03-PLAN.md — Decision memo with minimal additive Phase 13 proposal, README/PROJECT links, Phase 13 handoff note
 
 ### Phase 13: Multi-Agent and Multi-Format Hosting (flagged)
 
