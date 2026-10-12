@@ -60,8 +60,8 @@ export const labeledQueries: LabeledQuery[] = [
 
   // --- scale: paraphrase (no keyword overlap; asserted only with real embeddings) ---
   scale('s-pa-hvac', 'paraphrase', 'keep the building comfortable in summer', 'hvac'),
-  scale('s-pa-rfi', 'paraphrase', 'who should answer this site question', 'rfi-triage'),
-  scale('s-pa-sched', 'paraphrase', 'will the project finish on time', 'scheduling'),
+  scale('s-pa-rfi', 'paraphrase', 'who should reply to this site enquiry', 'rfi-triage'),
+  scale('s-pa-sched', 'paraphrase', 'will the project finish when promised', 'scheduling'),
   scale('s-pa-cost', 'paraphrase', 'what will it set us back financially', 'cost-estimating'),
   scale('s-pa-fire', 'paraphrase', 'can people get out safely in an emergency', 'fire-safety'),
   scale('s-pa-electrical', 'paraphrase', 'is the wiring thick enough for the current', 'electrical'),
