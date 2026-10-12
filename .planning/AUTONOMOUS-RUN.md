@@ -18,4 +18,12 @@ Goal: spend leftover token budget on reviewable, low-risk improvements. The huma
 3. Close Phase 2 gaps except the human checkpoint.
 4. Per completed phase: code review + fix, security audit (`/gsd-secure-phase`), test-gap fill (`/gsd-add-tests`).
 5. Whole-repo passes: code review of Phase 8 container/lease/proxy code, dependency/typecheck/lint health, README/TECHNICAL_DOCUMENTATION sync with the code.
-6. Final: milestone audit + `.planning/AUTONOMOUS-SUMMARY.md` (what changed, decisions, open questions, what needs human eyes first).
+6. Free exploration: after 1-6, propose and implement further improvements you judge valuable (UX polish, perf, test coverage, DX, accessibility). Each one gets a D-NNN entry with rationale and revert steps. Stay inside the guardrails.
+7. Final: milestone audit + `.planning/AUTONOMOUS-SUMMARY.md` (what changed, decisions, open questions, what needs human eyes first).
+
+## Progress at handoff
+- Phase 3: CONTEXT, RESEARCH, VALIDATION, PATTERNS done and committed. Next step is `gsd-planner` (then plan-checker, execute). Do not redo discuss/research.
+- Traps to honour in Phase 3 plans: see 03-RESEARCH.md and 03-PATTERNS.md (catalog.test.ts mocks, ingest.test.ts DDL/embedder, syncUrl drops q, ONNXRUNTIME_NODE_INSTALL_CUDA=skip, HF cache dir under db/).
+
+## Review
+One branch, small commits. Entry points for the human: AUTONOMOUS-SUMMARY.md, AUTONOMOUS-DECISIONS.md, AUTONOMOUS-BLOCKERS.md.
