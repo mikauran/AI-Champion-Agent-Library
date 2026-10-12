@@ -313,7 +313,12 @@ Plans:
   3. Search results count and state changes announced via live region
   4. Findings that need visual/manual checks are listed as "pending human"
 
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Audit (10-AUDIT.md), axe-core jsdom helper, WCAG contrast calculator and test
+- [ ] 10-02-PLAN.md — Fixes: skip link, landmarks, titles, heading order, focus styles, labels, focus management, live regions, contrast tokens
+- [ ] 10-03-PLAN.md — Per-component and page-level a11y tests (axe, keyboard, live regions), 10-HUMAN-UAT.md
 
 ### Phase 11: Related Agents (DISC-01)
 
