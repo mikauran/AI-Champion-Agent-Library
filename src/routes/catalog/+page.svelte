@@ -15,6 +15,7 @@
   let selectedCategory = $derived(data.filters.category ?? '')
   let selectedLlm = $derived(data.filters.llm ?? '')
   let selectedMaturity = $derived(data.filters.maturity ?? '')
+  let selectedKind = $derived(('kind' in data.filters ? data.filters.kind : null) ?? '')
   let query = $derived(data.filters.q ?? '')
 
   // The search input owns its text while typing, so it is only re-created (not re-synced)
@@ -43,7 +44,13 @@
     syncUrl()
   }
 
+  function updateKind(value: string) {
+    selectedKind = value
+    syncUrl()
+  }
+
   function clearFilters() {
+    selectedKind = ''
     selectedCategory = ''
     selectedLlm = ''
     selectedMaturity = ''
@@ -60,7 +67,8 @@
       category: selectedCategory,
       llm: selectedLlm,
       maturity: selectedMaturity,
-      q: query
+      q: query,
+      kind: selectedKind
     })
     goto(`?${params.toString()}`, { replaceState: true, keepFocus: true, noScroll: true })
   }
@@ -92,6 +100,7 @@
   onLlmChange={updateLlm}
   onMaturityChange={updateMaturity}
   onClear={clearFilters}
+  {...'kinds' in data ? { kinds: data.kinds, selectedKind, onKindChange: updateKind } : {}}
 />
 
 {#if data.searchDegraded}
