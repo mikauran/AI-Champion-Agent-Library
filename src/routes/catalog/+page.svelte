@@ -2,6 +2,8 @@
   import { goto } from '$app/navigation'
   import AgentCard from '$lib/components/AgentCard.svelte'
   import FilterBar from '$lib/components/FilterBar.svelte'
+  import SearchBar from '$lib/components/SearchBar.svelte'
+  import { buildCatalogParams } from '$lib/catalogUrl'
   import Pagination from '$lib/components/Pagination.svelte'
   import type { PageData } from './$types'
 
@@ -11,6 +13,7 @@
   let selectedCategory = $state(data.filters.category ?? '')
   let selectedLlm = $state(data.filters.llm ?? '')
   let selectedMaturity = $state(data.filters.maturity ?? '')
+  let query = $state(data.filters.q ?? '')
 
   // Client-side derived filter on already-loaded agents (no server round-trip)
   let filteredAgents = $derived.by(() => {
@@ -44,17 +47,25 @@
     syncUrl()
   }
 
+  function updateQuery(value: string) {
+    query = value
+    syncUrl()
+  }
+
   function syncUrl() {
-    const params = new URLSearchParams()
-    if (selectedCategory) params.set('category', selectedCategory)
-    if (selectedLlm) params.set('llm', selectedLlm)
-    if (selectedMaturity) params.set('maturity', selectedMaturity)
-    params.set('page', '1')
-    goto(`?${params.toString()}`, { replaceState: true })
+    const params = buildCatalogParams({
+      category: selectedCategory,
+      llm: selectedLlm,
+      maturity: selectedMaturity,
+      q: query
+    })
+    goto(`?${params.toString()}`, { replaceState: true, keepFocus: true, noScroll: true })
   }
 </script>
 
 <h1 class="text-3xl font-semibold text-gray-900 mb-6">Agent Catalog</h1>
+
+<SearchBar value={query} onsearch={updateQuery} count={data.total} />
 
 <FilterBar
   categories={data.categories}
@@ -71,8 +82,13 @@
 
 {#if filteredAgents.length === 0}
   <div class="text-center py-16">
-    <h2 class="text-lg font-semibold text-gray-900 mb-2">No agents match your filters</h2>
-    <p class="text-sm text-gray-600">Try removing a filter or browsing all categories.</p>
+    {#if query.trim()}
+      <h2 class="text-lg font-semibold text-gray-900 mb-2">No agents match "{query.trim()}"</h2>
+      <p class="text-sm text-gray-600">Try different words or remove a filter.</p>
+    {:else}
+      <h2 class="text-lg font-semibold text-gray-900 mb-2">No agents match your filters</h2>
+      <p class="text-sm text-gray-600">Try removing a filter or browsing all categories.</p>
+    {/if}
   </div>
 {:else}
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
