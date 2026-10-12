@@ -17,7 +17,7 @@ function tokenVector(token: string): Float32Array {
 
 function embedOne(text: string): Float32Array {
   const sum = new Float32Array(EMBEDDING_DIM)
-  const tokens = text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)
+  const tokens = text.toLowerCase().normalize('NFKC').split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean)
   for (const t of tokens.length ? tokens : ['']) {
     const tv = tokenVector(t)
     for (let i = 0; i < EMBEDDING_DIM; i++) sum[i] += tv[i]

@@ -22,4 +22,20 @@ describe('tokenize', () => {
     expect(tokenize('')).toEqual([])
     expect(tokenize(' - -- ')).toEqual([])
   })
+
+  it('keeps non-ASCII (Finnish) words intact (WR-05)', () => {
+    expect(tokenize('päätös työkalu')).toEqual(['päätös', 'työkalu'])
+    expect(tokenize('Ääni-ohjaus Öljy')).toEqual(expect.arrayContaining(['ääni', 'ohjaus', 'ääni-ohjaus', 'öljy']))
+  })
+
+  it('handles non-Latin scripts and normalises composed/decomposed forms', () => {
+    expect(tokenize('Привет мир')).toEqual(['привет', 'мир'])
+    expect(tokenize('データ 分析')).toEqual(['データ', '分析'])
+    expect(tokenize('a\u0308iti')).toEqual(tokenize('\u00e4iti'))
+    expect(tokenize('\uff21\uff22\uff23 123')).toEqual(['abc', '123'])
+  })
+
+  it('still splits on punctuation and symbols next to non-ASCII text', () => {
+    expect(tokenize('työkalu, päätös! (ääni)')).toEqual(['työkalu', 'päätös', 'ääni'])
+  })
 })

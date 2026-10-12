@@ -62,3 +62,25 @@ describe('bm25', () => {
     for (let k = 1; k < r.length; k++) expect(r[k - 1].score).toBeGreaterThanOrEqual(r[k].score)
   })
 })
+
+describe('bm25 non-ASCII (WR-05)', () => {
+  const idx = buildBm25Index([
+    doc('fi', 'Päätöstuki', 'työkalu päätösten tekoon'),
+    doc('en', 'Decision aid', 'tool for decisions'),
+    doc('ru', 'Помощник', 'помощник по данным'),
+  ])
+
+  it('a Finnish query finds the Finnish doc, not garbage', () => {
+    expect(idx.search('työkalu').map(r => r.slug)).toEqual(['fi'])
+    expect(idx.search('päätösten').map(r => r.slug)).toEqual(['fi'])
+  })
+
+  it('prefix matching works on non-ASCII terms', () => {
+    expect(idx.search('työka').map(r => r.slug)).toEqual(['fi'])
+  })
+
+  it('Cyrillic queries match', () => {
+    expect(idx.search('данным').map(r => r.slug)).toEqual(['ru'])
+  })
+})
+

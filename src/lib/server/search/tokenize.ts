@@ -1,5 +1,6 @@
 // Server-only search tokenizer. Pure, no I/O.
-// Lowercase, split on non-alphanumerics, drop stopwords and 1-char tokens.
+// Lowercase, NFKC-normalise, split on anything that is not a Unicode letter, mark, digit or '-',
+// drop stopwords and 1-char tokens. Non-ASCII words ('päätös', 'työkalu') stay intact.
 // Hyphenated words ('ai-act') yield their parts ('ai', 'act') AND the joined form ('ai-act').
 
 const STOPWORDS = new Set(['the', 'and', 'for', 'of', 'to', 'a', 'in', 'on', 'with'])
@@ -10,7 +11,7 @@ function keep(t: string): boolean {
 
 export function tokenize(text: string): string[] {
   const out: string[] = []
-  const chunks = text.toLowerCase().split(/[^a-z0-9-]+/)
+  const chunks = text.toLowerCase().normalize('NFKC').split(/[^\p{L}\p{M}\p{N}-]+/u)
   for (const raw of chunks) {
     const chunk = raw.replace(/^-+|-+$/g, '')
     if (!chunk) continue
