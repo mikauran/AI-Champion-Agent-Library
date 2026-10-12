@@ -8,9 +8,11 @@
 - Phase 3 plan 03-04 (wave 3) done: debounced SearchBar, `buildCatalogParams`, catalog wiring with q in URL, query-specific no-results copy, aria-live count (D-012). `npm run check` now runs `svelte-kit sync` first (D-013); exits 0 (56 files passed, 1 skipped, 498 tests).
 
 - Phase 3 Search (code complete, verification human_needed): hybrid BM25 + embeddings (RRF), /api/search, catalog `?q=`, debounced SearchBar, 46-query labeled set (BM25 hit@3 1.00 on keyword/NL). Code review (1 critical, 8 warnings) all fixed, security audit SECURED. 58 files / 554 tests green. Decisions D-009..D-014.
+- Phase 4 Customization Placeholder done (04-01): `CustomizeMenu` (accessible disabled "Coming soon" menu) on every detail page, CUST-01 complete, D-015. `npm run check` exits 0 (60 files passed, 1 skipped, 565 tests).
 
 ## Pending human
-- Phase 2 checkpoint 02-04 (see D-001).
+- Phase 2 checkpoint 02-04 (see D-001): the only remaining Phase 2 item; Phase 2 is not marked complete.
+- Phase 4: browser check of the Customize menu (`.planning/phases/04-customization-placeholder/04-HUMAN-UAT.md`).
 - Phase 3: real-model accuracy run + SIM_FLOOR tuning, real-embedding ingest, browser feel (03-HUMAN-UAT.md).
 - Phase 3 real-model accuracy run, real-embedding ingest, SIM_FLOOR retune, live-typing browser feel (item 3): `.planning/phases/03-search/03-HUMAN-UAT.md`.
 

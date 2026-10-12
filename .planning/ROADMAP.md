@@ -16,11 +16,11 @@ Phases 5-7 were added after the fact (see "Roadmap Evolution" in STATE.md) as a 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Data Pipeline** - Canonical data model, Oracle AgentSpec ingestion, SQLite store (completed 2026-03-19)
-- [ ] **Phase 2: Catalog and Detail** - Browse page, agent detail page, responsive layout
+- [ ] **Phase 2: Catalog and Detail** (code complete; only human checkpoint 02-04 pending human) - Browse page, agent detail page, responsive layout
 - [x] **Phase 2.1: Green Baseline (INSERTED)** - Zero type errors, zero failing tests before further work
 - [x] **Phase 2.2: Scale and Seed Data (INSERTED)** - Synthetic 150-agent fixture set for search, pagination and ingest scale tests
 - [x] **Phase 3: Search** - Hybrid keyword + semantic search with live results
-- [ ] **Phase 4: Customization Placeholder** - Customize button and visible-but-non-functional menu
+- [x] **Phase 4: Customization Placeholder** - Customize button and visible-but-non-functional menu
 - [x] **Phase 5: Try It Out Field** - Optional try_it_out field (none/external/runnable) threaded through schema, ingest, and detail page (completed 2026-08-19)
 - [x] **Phase 6: Runnable Try It Out Flow (mock-backed)** - Mock-backed job client + panel for runnable mode, contract-shaped for a later real backend swap
 - [x] **Phase 7: No-Container Demo Backend for Try It Out** - Real (no-Docker/no-pi) SvelteKit server routes calling an LLM, replacing the mock client (completed 2026-08-20)
@@ -76,7 +76,7 @@ Plans:
 - [x] 02-01-PLAN.md — SvelteKit scaffold, Tailwind CSS v4, adapter-node, db singleton, tailorable fields config, Wave 0 test skeletons
 - [x] 02-02-PLAN.md — Catalog browse page with AgentCard, FilterBar (3 filters: category, model, status), Pagination, responsive grid
 - [x] 02-03-PLAN.md — Agent detail page with progressive disclosure, TechAccordion, CustomizationPanel
-- [ ] 02-04-PLAN.md — Human verification checkpoint for catalog and detail pages (not yet executed)
+- [ ] 02-04-PLAN.md — Human verification checkpoint for catalog and detail pages (PENDING HUMAN: the only remaining Phase 2 item; not executed, not faked, Phase 2 not marked complete)
 
 ### Phase 3: Search
 
@@ -114,7 +114,7 @@ Plans:
 
 Plans:
 
-- [ ] 04-01-PLAN.md — CustomizeMenu component (button + accessible disabled placeholder menu), wired into detail page, with tests
+- [x] 04-01-PLAN.md — CustomizeMenu component (button + accessible disabled placeholder menu), wired into detail page, with tests
 
 ### Phase 5: Try It Out Field
 

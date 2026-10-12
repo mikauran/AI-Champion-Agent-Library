@@ -32,7 +32,7 @@
 
 ### Customization (Placeholder)
 
-- [ ] **CUST-01**: Agent detail page has a "Customize" button that opens a menu — menu items are visible but non-functional in v1 (placeholder for future wizard flows)
+- [x] **CUST-01**: Agent detail page has a "Customize" button that opens a menu — menu items are visible but non-functional in v1 (placeholder for future wizard flows)
 
 ### UI / UX
 
@@ -102,12 +102,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRCH-01 | Phase 3 | Pending — no plans exist yet |
 | SRCH-02 | Phase 3 | Pending — no plans exist yet |
 | SRCH-03 | Phase 3 | Pending — no plans exist yet |
-| CUST-01 | Phase 4 | Pending — no plans exist yet |
+| CUST-01 | Phase 4 | Complete (04-01); browser check of the menu pending human (04-HUMAN-UAT.md) |
 
 **Coverage:**
 - v1 requirements: 15 total
 - Mapped to phases: 15
 - Unmapped: 0 ✓
+- Phase 2 status: the ONLY remaining Phase 2 item is the human checkpoint 02-04 (pending human). All code is done; Phase 2 is intentionally not marked complete.
 - Note (added 2026-08-20 during a phase-consistency pass): 02-04-PLAN.md is Phase 2's single human-verification checkpoint for the seven rows above (`requirements:` frontmatter lists exactly BROW-01/02/03, DETL-01/02/03, UI-01) and has never been executed — no 02-04-SUMMARY.md exists. The underlying code shipped and is unit-tested (02-01/02/02/02/03), but browser-level sign-off is outstanding. See STATE.md "Missing / Open Work".
 - The Try It Out initiative (Phases 5-7, all complete) is tracked separately above under "Try It Out (delivered outside the v1 REQ-ID system)" rather than in this table, since it was never assigned REQ-IDs.
 
