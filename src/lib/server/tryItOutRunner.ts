@@ -53,27 +53,58 @@ export async function runJob(jobId: string): Promise<void> {
   try {
     await runJobInContainer(jobId)
   } catch (err) {
-    const fallbackEnabled = getTryItOutService().config.fallbackEnabled
-    if (
-      isTryItOutRuntimeError(err) &&
-      (err.code === 'engine_unavailable' || err.code === 'container_start_failed') &&
-      fallbackEnabled
-    ) {
-      console.warn('Try It Out fallback for job', jobId, err.message)
-      pushEvent(jobId, 'container unavailable, falling back to direct model call')
-      try {
-        await runDirectLlmJob(jobId)
-      } catch (e) {
-        logDetail(`Try It Out fallback job ${jobId} failed:`, e)
-        pushEvent(jobId, 'agent failed')
-        setStatus(jobId, 'failed', publicErrorMessage(e))
-      }
-      return
+    try {
+      await handleContainerFailure(jobId, err)
+    } catch (inner) {
+      // WR-04: nothing above may strand the job in `running`.
+      failJob(jobId, inner)
     }
-    logDetail(`Try It Out job ${jobId} failed:`, err)
-    pushEvent(jobId, 'agent failed')
-    setStatus(jobId, 'failed', publicErrorMessage(err))
   }
+}
+
+/** Always ends the job in a terminal `failed` state; never throws. */
+function failJob(jobId: string, err: unknown): void {
+  try {
+    logDetail(`Try It Out job ${jobId} failed:`, err)
+  } catch {
+    // logging must not prevent the terminal status
+  }
+  try {
+    pushEvent(jobId, 'agent failed')
+  } catch {
+    // ignore
+  }
+  try {
+    setStatus(jobId, 'failed', publicErrorMessage(err))
+  } catch {
+    // the job store itself is gone; nothing left to record
+  }
+}
+
+async function handleContainerFailure(jobId: string, err: unknown): Promise<void> {
+  // Read the flag defensively: an invalid runner config makes getTryItOutService() throw the same
+  // error that just failed the job, and that must not escape (WR-04).
+  let fallbackEnabled = false
+  try {
+    fallbackEnabled = getTryItOutService().config.fallbackEnabled
+  } catch {
+    // config invalid: no fallback
+  }
+  if (
+    isTryItOutRuntimeError(err) &&
+    (err.code === 'engine_unavailable' || err.code === 'container_start_failed') &&
+    fallbackEnabled
+  ) {
+    console.warn('Try It Out fallback for job', jobId, err.message)
+    pushEvent(jobId, 'container unavailable, falling back to direct model call')
+    try {
+      await runDirectLlmJob(jobId)
+    } catch (e) {
+      failJob(jobId, e)
+    }
+    return
+  }
+  failJob(jobId, err)
 }
 
 /** The Phase 7 direct model call; reachable only from the runJob fallback. */

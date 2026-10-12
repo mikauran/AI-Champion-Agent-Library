@@ -334,6 +334,22 @@ describe('dispatcher (D-14)', () => {
     expect(mockCreate).not.toHaveBeenCalled()
   })
 
+  it('WR-04: an invalid runner config fails the job instead of leaving it running', async () => {
+    svcMod.__setTryItOutServiceForTests(null) // force getTryItOutService() to parse the env again
+    process.env.PI_RUNNER_FS_MODE = 'foo'
+    try {
+      const job = jobsMod.createJob('demo-rfi-triage', 'triage this', null)
+      await expect(runJob(job.jobId)).resolves.toBeUndefined()
+      const done = jobsMod.getJob(job.jobId)!
+      expect(done.status).toBe('failed')
+      expect(done.error).toMatch(/PI_RUNNER_FS_MODE/)
+      expect(done.events.some((e) => e.summary === 'agent failed')).toBe(true)
+      expect(mockCreate).not.toHaveBeenCalled()
+    } finally {
+      delete process.env.PI_RUNNER_FS_MODE
+    }
+  })
+
   it.each([
     ['engine_unavailable', true],
     ['container_start_failed', true],
