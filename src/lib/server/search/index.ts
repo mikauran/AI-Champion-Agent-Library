@@ -4,7 +4,9 @@ import { buildBm25Index, type Bm25Index } from './bm25.js'
 import { hybridSearch } from './hybrid.js'
 import { relatedAgents, type RelatedAgent, type RelatedInput } from './related.js'
 import { sql } from 'drizzle-orm'
-import { buildSearchText, contentHash, rowToSearchable } from './documents.js'
+import { buildSearchText, contentHash, rowToSearchable, rowToSearchableWithKind } from './documents.js'
+import { agentKindsEnabled } from '../../flags.js'
+import { defaultKindInfo, type KindInfo } from '../../spec/kinds.js'
 import { EMBEDDING_DIM, blobToVector, createTransformersEmbedder, type Embedder } from './embedder.js'
 
 export type SearchMode = 'hybrid' | 'bm25'
@@ -17,6 +19,10 @@ export interface AgentRowForSearch {
   tags: string
   toolNames: string
   llmName?: string | null
+  /** Flag-on only (AGENT_KINDS): attached by the loader from agent_kinds. */
+  kind?: string
+  framework?: string | null
+  memberNames?: string[]
 }
 
 export interface SearchOptions {
@@ -58,6 +64,15 @@ const TIMED_OUT = Symbol('timeout')
 
 /** Longest query the service will rank or embed; callers need not (but may) cap it themselves. */
 export const MAX_QUERY_CHARS = 200
+
+function kindInfoOf(r: AgentRowForSearch): KindInfo {
+  return {
+    ...defaultKindInfo(),
+    kind: r.kind as KindInfo['kind'],
+    framework: r.framework ?? null,
+    members: (r.memberNames ?? []).map((name) => ({ ref: name, name, role: 'participant', description: null, slug: null })),
+  }
+}
 
 export function createSearchService(deps: SearchServiceDeps): SearchService {
   const embedTimeoutMs = deps.embedTimeoutMs ?? 1500
@@ -114,12 +129,16 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
     }
     if (bm25 && fp === fingerprint) return bm25
     const docs = rows.map((r) => {
-      const s = rowToSearchable(r)
+      const s = r.kind !== undefined ? rowToSearchableWithKind(r, kindInfoOf(r)) : rowToSearchable(r)
       return { slug: s.slug, title: s.title, tags: s.tags, text: buildSearchText(s) }
     })
     bm25 = buildBm25Index(docs)
     rowTexts = new Map(docs.map((d) => [d.slug, d.text]))
-    relatedInputs = rows.map((r) => ({ ...rowToSearchable(r), ...(r.llmName ? { llm: r.llmName } : {}) }))
+    relatedInputs = rows.map((r) => ({
+      ...rowToSearchable(r),
+      ...(r.llmName ? { llm: r.llmName } : {}),
+      ...(r.kind !== undefined ? { kind: r.kind } : {}),
+    }))
     fingerprint = fp
     vectorCache = null
     return bm25
@@ -222,6 +241,44 @@ function dbModule(): DbModule {
   return cachedDb
 }
 
+// Loaded lazily (flag on only): a static import would pull drizzle schema into every consumer's mocks.
+type KindsDeps = {
+  loadKindInfo: typeof import('../kinds.js').loadKindInfo
+  agentKinds: typeof import('../../../../drizzle/schema.js').agentKinds
+}
+let kindsDeps: KindsDeps | null = null
+async function ensureKindsDeps(): Promise<void> {
+  if (kindsDeps || !agentKindsEnabled()) return
+  const [k, schema] = await Promise.all([import('../kinds.js'), import('../../../../drizzle/schema.js')])
+  kindsDeps = { loadKindInfo: k.loadKindInfo, agentKinds: schema.agentKinds }
+}
+
+// Flag-on only: join agent_kinds (never throws; a missing table leaves rows kind-less).
+function loadKindRows(
+  db: DbModule['db'],
+  rows: AgentRowForSearch[],
+  fp: string,
+): { rows: AgentRowForSearch[]; fingerprint: string } {
+  if (!kindsDeps) return { rows, fingerprint: fp }
+  const { loadKindInfo, agentKinds } = kindsDeps
+  try {
+    const infos = loadKindInfo(db, rows.map((r) => r.slug))
+    const stamp = db
+      .select({ n: sql<number>`count(*)`, m: sql<string | null>`max(${agentKinds.updatedAt})` })
+      .from(agentKinds)
+      .get()
+    const withKinds = rows.map((r) => {
+      const info = infos.get(r.slug)
+      return info
+        ? { ...r, kind: info.kind, framework: info.framework, memberNames: info.members.map((m) => m.name) }
+        : r
+    })
+    return { rows: withKinds, fingerprint: `${fp}:k${stamp?.n ?? 0}:${stamp?.m ?? ''}` }
+  } catch {
+    return { rows, fingerprint: fp }
+  }
+}
+
 function getSingleton(): SearchService {
   if (singleton) return singleton
   singleton = createSearchService({
@@ -229,6 +286,7 @@ function getSingleton(): SearchService {
       const { db, agents } = dbModule()
       const rows = db.select().from(agents).all()
       const max = rows.reduce((m, r) => (r.lastIngestedAt > m ? r.lastIngestedAt : m), '')
+      if (agentKindsEnabled()) return loadKindRows(db, rows, `${rows.length}:${max}`)
       return { rows, fingerprint: `${rows.length}:${max}` }
     },
     loadVectors() {
@@ -262,16 +320,19 @@ function getSingleton(): SearchService {
 
 export async function search(q: string, opts?: SearchOptions): ReturnType<SearchService['search']> {
   if (!cachedDb) cachedDb = await import('../db.js')
+  await ensureKindsDeps()
   return getSingleton().search(q, opts)
 }
 
 export async function related(slug: string, k?: number): Promise<RelatedAgent[]> {
   if (!cachedDb) cachedDb = await import('../db.js')
+  await ensureKindsDeps()
   return getSingleton().related(slug, k)
 }
 
 export async function warmUp(): Promise<void> {
   if (process.env.SEARCH_EMBEDDINGS === 'off') return
   if (!cachedDb) cachedDb = await import('../db.js')
+  await ensureKindsDeps()
   await getSingleton().warmUp()
 }
