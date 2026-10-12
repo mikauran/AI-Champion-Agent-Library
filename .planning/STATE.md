@@ -181,3 +181,4 @@ Resume file: None
 | 3 | verification_deferred_human | /gsd-verify-work 3 |
 | 4 | verification_deferred_human | /gsd-verify-work 4 |
 | 9 | verification_deferred_human | /gsd-verify-work 9 |
+| 10 | verification_deferred_human | /gsd-verify-work 10 |
