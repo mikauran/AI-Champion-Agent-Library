@@ -26,6 +26,8 @@ export function piInstruction(hasUpload: boolean): string {
 
 // App-side backstop beyond the in-container `timeout` (covers a hung exec stream).
 export const TIMEOUT_GRACE_MS = 5000
+// Bound on the post-job `rm -rf` exec (WR-02): a hung engine must not leave the lease running.
+export const CLEANUP_TIMEOUT_MS = 10_000
 
 export function buildPiArgs(cfg: RunnerConfig, slug: string, hasUpload = true): string[] {
   return [
@@ -202,21 +204,34 @@ export async function runJobInContainer(jobId: string): Promise<void> {
     if (timedOut || broken) {
       await svc.leases.discard(lease).catch(() => {})
     } else {
-      // Best-effort cleanup of this job's directory (D-07, T8-06-4).
+      // Best-effort cleanup of this job's directory (D-07, T8-06-4). Bounded: if the engine hangs
+      // or the exec fails the work dir state is unknown, so the lease is discarded, not released.
+      let cleaned = true
+      let cleanupTimer: ReturnType<typeof setTimeout> | undefined
       try {
         const cid = lease.containerId
         if (cid) {
-          await runtime.exec(cid, {
-            cmd: ['rm', '-rf', jobDir],
-            workingDir: '/',
-            onStdout: () => {},
-            onStderr: () => {},
+          const cleanup = runtime
+            .exec(cid, {
+              cmd: ['rm', '-rf', jobDir],
+              workingDir: '/',
+              onStdout: () => {},
+              onStderr: () => {},
+            })
+            .then(() => true)
+          const cleanupTimeout = new Promise<boolean>((resolve) => {
+            cleanupTimer = setTimeout(() => resolve(false), CLEANUP_TIMEOUT_MS)
           })
+          cleanup.catch(() => {}) // a late rejection after the timeout must not be unhandled
+          cleaned = await Promise.race([cleanup, cleanupTimeout])
         }
       } catch {
-        // cleanup failure must not affect the recorded result
+        cleaned = false // cleanup failure must not affect the recorded result
+      } finally {
+        if (cleanupTimer) clearTimeout(cleanupTimer)
       }
-      svc.leases.release(lease)
+      if (cleaned) svc.leases.release(lease)
+      else await svc.leases.discard(lease).catch(() => {})
     }
   }
 }

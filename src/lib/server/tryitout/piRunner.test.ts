@@ -25,6 +25,7 @@ let fakeMod: typeof import('./runtimeFake')
 let cfgMod: typeof import('./runnerConfig')
 let proxy: typeof import('./llmProxy')
 let fx: typeof import('./piFixtures')
+let cleanupTimeoutMs = 0
 
 const SLUG = 'demo-rfi-triage'
 
@@ -38,6 +39,7 @@ beforeAll(async () => {
   cfgMod = await import('./runnerConfig')
   proxy = await import('./llmProxy')
   fx = await import('./piFixtures')
+  cleanupTimeoutMs = (await import('./piRunner')).CLEANUP_TIMEOUT_MS + 10
 })
 
 afterAll(async () => {
@@ -286,6 +288,53 @@ describe('runJobInContainer cleanup and reuse', () => {
     expect(runtime.containers()).toEqual([firstContainer])
     expect(jobsMod.getJob(b.jobId)!.events.some((e) => e.summary === 'using warm container')).toBe(true)
     expect([...runtime.filesOf(firstContainer).keys()].filter((k) => k.startsWith('/work/'))).toEqual([])
+  })
+
+  it('WR-02: a hung cleanup exec times out, keeps the recorded result and discards the lease', async () => {
+    vi.useFakeTimers()
+    let rmStarted = false
+    const { runtime, svc } = setup()
+    runtime.scriptExec((ctx) => {
+      if (ctx.cmd[0] === 'timeout') {
+        writeOut(ctx, 'result.txt', 'ok')
+        ctx.stdout(fx.PI_SUCCESS_STREAM)
+        return 0
+      }
+      if (ctx.cmd[0] === 'rm') {
+        rmStarted = true
+        return new Promise<number | null>(() => {}) // engine stalls
+      }
+      return 0
+    })
+    const job = newJob()
+    let done = false
+    const run = runJobInContainer(job.jobId).then(() => {
+      done = true
+    })
+    await vi.waitFor(() => expect(rmStarted).toBe(true))
+    expect(done).toBe(false) // waiting on the stalled cleanup
+    await vi.advanceTimersByTimeAsync(cleanupTimeoutMs)
+    await run
+    expect(jobsMod.getJob(job.jobId)!.status).toBe('succeeded')
+    expect(svc.leases.snapshot()).toHaveLength(0) // discarded, not stuck in running
+    expect(runtime.containers()).toHaveLength(0)
+  })
+
+  it('WR-02: a failing cleanup exec discards the lease instead of releasing it', async () => {
+    const { runtime, svc } = setup()
+    runtime.scriptExec((ctx) => {
+      if (ctx.cmd[0] === 'timeout') {
+        writeOut(ctx, 'result.txt', 'ok')
+        ctx.stdout(fx.PI_SUCCESS_STREAM)
+        return 0
+      }
+      if (ctx.cmd[0] === 'rm') throw new Error('engine hiccup')
+      return 0
+    })
+    const job = newJob()
+    await runJobInContainer(job.jobId)
+    expect(jobsMod.getJob(job.jobId)!.status).toBe('succeeded')
+    expect(svc.leases.snapshot()).toHaveLength(0)
   })
 
   it('reuse: a second job while the first runs fails with session_busy', async () => {
