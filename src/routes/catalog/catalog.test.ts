@@ -497,6 +497,31 @@ describe('Catalog load function', () => {
       expect(r.agents.map((a: { slug: string }) => a.slug)).toEqual(slugs.slice(24))
     })
 
+    it('ranks without a top-N cut so filters and total see every match (CR-01)', async () => {
+      const { search } = await setup([mk('a', 'A')], ['a'])
+      const { load } = await import('./+page.server.js')
+      await load({ url: new URL('http://localhost/catalog?q=sql&category=productivity') } as Parameters<typeof load>[0])
+      expect(search).toHaveBeenLastCalledWith('sql', { limit: Infinity })
+    })
+
+    it('chunks the slug IN-list and totals matches beyond 50 (CR-01)', async () => {
+      const slugs = Array.from({ length: 1200 }, (_, i) => `a${String(i).padStart(4, '0')}`)
+      const { chain } = await setup([], slugs)
+      const { inArray } = await import('drizzle-orm')
+      ;(inArray as unknown as ReturnType<typeof vi.fn>).mockClear()
+      chain.all.mockImplementation(() => {
+        const call = (inArray as unknown as ReturnType<typeof vi.fn>).mock.calls.length - 1
+        return slugs.slice(call * 500, call * 500 + 500).map((s) => mk(s, s))
+      })
+      const { load } = await import('./+page.server.js')
+      const r = (await load({ url: new URL('http://localhost/catalog?q=x&page=3') } as Parameters<typeof load>[0])) as CatalogData
+      expect(r.total).toBe(1200)
+      expect(r.totalPages).toBe(50)
+      const lists = (inArray as unknown as ReturnType<typeof vi.fn>).mock.calls.map((c) => (c[1] as string[]).length)
+      expect(lists).toEqual([500, 500, 200])
+      expect(r.agents.map((a: { slug: string }) => a.slug)).toEqual(slugs.slice(48, 72))
+    })
+
     it('returns empty when nothing matches', async () => {
       const { chain } = await setup([], [])
       const { load } = await import('./+page.server.js')

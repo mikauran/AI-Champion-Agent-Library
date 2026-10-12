@@ -113,3 +113,37 @@ describe('catalog load() at scale (150 agents)', () => {
     }
   })
 })
+
+describe('catalog load() with q at scale (CR-01: no top-50 truncation)', () => {
+  it('filtered search totals match the unfiltered ranking intersected with the filter', async () => {
+    const query = '?q=review'
+    const first = await run(query)
+    // A broad query must match well beyond the old top-50 cut-off.
+    expect(first.total).toBeGreaterThan(50)
+
+    const all: { slug: string; category: string | null }[] = []
+    for (let p = 1; p <= first.totalPages; p++) {
+      const d = await run(`${query}&page=${p}`)
+      all.push(...d.agents.map((a: { slug: string; category: string | null }) => ({ slug: a.slug, category: a.category })))
+    }
+    expect(all).toHaveLength(first.total)
+    expect(new Set(all.map(a => a.slug)).size).toBe(first.total)
+
+    let checkedAny = false
+    for (const category of distinct(e => e.category)) {
+      const want = all.filter(a => a.category === category).length
+      const d = await run(`${query}&category=${encodeURIComponent(category)}`)
+      expect(d.total, category).toBe(want)
+      expect(d.totalPages).toBe(Math.ceil(want / PAGE_SIZE))
+      for (const a of d.agents) expect(a.category).toBe(category)
+      if (want > 0) checkedAny = true
+    }
+    expect(checkedAny).toBe(true)
+  })
+
+  it('without q the result is unchanged (alphabetical, full total)', async () => {
+    const d = await run()
+    expect(d.total).toBe(150)
+    expect(d.filters.q).toBeNull()
+  })
+})

@@ -4,6 +4,7 @@ import { search } from '$lib/server/search/index.js'
 import type { PageServerLoad } from './$types'
 
 const PAGE_SIZE = 24
+const SLUG_CHUNK = 500
 
 export const load: PageServerLoad = async ({ url }) => {
   const page = parseInt(url.searchParams.get('page') ?? '1')
@@ -34,17 +35,25 @@ export const load: PageServerLoad = async ({ url }) => {
   let total: number
 
   if (q) {
-    const { results } = await search(q)
+    // Rank everything (no top-N cut): filters and pagination happen afterwards, so
+    // a filtered query must not lose matches that rank below the default cut-off.
+    const { results } = await search(q, { limit: Infinity })
     const slugs = results.map((r) => r.slug)
     if (slugs.length === 0) {
       agentList = []
       total = 0
     } else {
-      const matched = db
-        .select()
-        .from(agents)
-        .where(and(inArray(agents.slug, slugs), ...conditions))
-        .all()
+      // Chunk the IN list to stay far below SQLite's bound-variable limit.
+      const matched: (typeof agents.$inferSelect)[] = []
+      for (let i = 0; i < slugs.length; i += SLUG_CHUNK) {
+        matched.push(
+          ...db
+            .select()
+            .from(agents)
+            .where(and(inArray(agents.slug, slugs.slice(i, i + SLUG_CHUNK)), ...conditions))
+            .all(),
+        )
+      }
       const rank = new Map(slugs.map((s, i) => [s, i]))
       matched.sort((a, b) => (rank.get(a.slug) ?? 0) - (rank.get(b.slug) ?? 0))
       total = matched.length

@@ -94,6 +94,21 @@ describe('createSearchService', () => {
     expect(loadAgents).toHaveBeenCalledTimes(2)
   })
 
+  it('honours opts.limit: default top 50, Infinity returns every match (CR-01)', async () => {
+    const many: AgentRowForSearch[] = Array.from({ length: 120 }, (_, i) => ({
+      slug: `agent-${String(i).padStart(3, '0')}`,
+      title: `Reporting agent ${i}`,
+      summary: 'Builds reporting',
+      category: 'data',
+      tags: '[]',
+      toolNames: '[]',
+    }))
+    const { svc } = make({ loadAgents: () => ({ rows: many, fingerprint: 'many' }) })
+    expect((await svc.search('reporting')).results).toHaveLength(50)
+    expect((await svc.search('reporting', { limit: 10 })).results).toHaveLength(10)
+    expect((await svc.search('reporting', { limit: Infinity })).results).toHaveLength(120)
+  })
+
   it('requests the embedder once', async () => {
     const getEmbedder = vi.fn(async () => createFakeEmbedder())
     const { svc } = make({ getEmbedder })

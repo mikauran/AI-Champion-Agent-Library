@@ -16,8 +16,16 @@ export interface AgentRowForSearch {
   toolNames: string
 }
 
+export interface SearchOptions {
+  /** Max ranked results to return. Defaults to 50; pass Infinity to rank everything. */
+  limit?: number
+}
+
 export interface SearchService {
-  search(q: string): Promise<{ results: { slug: string; score: number }[]; mode: SearchMode }>
+  search(
+    q: string,
+    opts?: SearchOptions,
+  ): Promise<{ results: { slug: string; score: number }[]; mode: SearchMode }>
   warmUp(): Promise<void>
 }
 
@@ -98,7 +106,7 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
     async warmUp() {
       await ensureEmbedder()
     },
-    async search(q: string) {
+    async search(q: string, opts?: SearchOptions) {
       const query = q.trim()
       if (!query) return { results: [], mode: 'bm25' }
       const index = refresh()
@@ -116,7 +124,7 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
       } catch {
         queryVector = null
       }
-      const { results, mode } = hybridSearch({ query, bm25: index, vectors, queryVector })
+      const { results, mode } = hybridSearch({ query, bm25: index, vectors, queryVector, limit: opts?.limit })
       return { results, mode }
     },
   }
@@ -155,9 +163,9 @@ function getSingleton(): SearchService {
   return singleton
 }
 
-export async function search(q: string): ReturnType<SearchService['search']> {
+export async function search(q: string, opts?: SearchOptions): ReturnType<SearchService['search']> {
   if (!cachedDb) cachedDb = await import('../db.js')
-  return getSingleton().search(q)
+  return getSingleton().search(q, opts)
 }
 
 export async function warmUp(): Promise<void> {
