@@ -3,6 +3,7 @@ import {
   createJsonlParser,
   createPiEventMapper,
   createCompletionTracker,
+  MAX_JSONL_LINE_CHARS,
   type MappedJobEvent,
 } from './piEvents'
 import { PI_SUCCESS_STREAM, PI_MODEL_ERROR_STREAM, PI_RETRY_FAILURE_STREAM } from './piFixtures'
@@ -21,6 +22,38 @@ function run(stream: string, chunkSize = 7) {
   parser.end()
   return { events, tracker }
 }
+
+describe('createJsonlParser line cap (IN-05)', () => {
+  it('drops an over-long line, resyncs at the next newline and counts the drop once', () => {
+    const got: unknown[] = []
+    const parser = createJsonlParser((r) => got.push(r))
+    parser.push(Buffer.from('{"a":1}\n'))
+    // 3 MiB without a newline, pushed in chunks, then the newline and a good line.
+    const chunk = Buffer.alloc(256 * 1024, 'x')
+    for (let i = 0; i < 12; i++) parser.push(chunk)
+    parser.push(Buffer.from('tail\n{"b":2}\n'))
+    parser.end()
+    expect(got).toEqual([{ a: 1 }, { b: 2 }])
+    expect(parser.dropped()).toBe(1)
+  })
+
+  it('does not retain the oversized line in memory', () => {
+    const parser = createJsonlParser(() => {})
+    const chunk = Buffer.alloc(512 * 1024, 'x')
+    for (let i = 0; i < 40; i++) parser.push(chunk)
+    expect(parser.bufferedChars()).toBeLessThanOrEqual(MAX_JSONL_LINE_CHARS)
+  })
+
+  it('keeps normal and CRLF lines unchanged', () => {
+    const got: unknown[] = []
+    const parser = createJsonlParser((r) => got.push(r))
+    parser.push(Buffer.from('{"a":1}\r\n{"b"'))
+    parser.push(Buffer.from(':2}\n'))
+    parser.end()
+    expect(got).toEqual([{ a: 1 }, { b: 2 }])
+    expect(parser.dropped()).toBe(0)
+  })
+})
 
 describe('pi success stream (tracer)', () => {
   it('maps a chunked success stream to the expected events and a succeeded verdict', () => {

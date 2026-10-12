@@ -27,9 +27,21 @@ function str(v: unknown): string | undefined {
   return typeof v === 'string' ? v : undefined
 }
 
-export function createJsonlParser(onRecord: (r: unknown) => void): { push(chunk: Buffer): void; end(): void } {
+/** IN-05: longest JSONL line kept in memory; longer lines are dropped up to the next newline. */
+export const MAX_JSONL_LINE_CHARS = 1024 * 1024
+
+export function createJsonlParser(onRecord: (r: unknown) => void): {
+  push(chunk: Buffer): void
+  end(): void
+  /** Number of over-long lines dropped so far. */
+  dropped(): number
+  /** Characters currently buffered (always <= MAX_JSONL_LINE_CHARS). */
+  bufferedChars(): number
+} {
   const dec = new StringDecoder('utf8')
   let buf = ''
+  let discarding = false
+  let droppedLines = 0
   const emit = (line: string) => {
     if (!line.trim()) return
     let parsed: unknown
@@ -42,20 +54,52 @@ export function createJsonlParser(onRecord: (r: unknown) => void): { push(chunk:
   }
   return {
     push(chunk: Buffer) {
-      buf += dec.write(chunk)
-      let i: number
-      while ((i = buf.indexOf('\n')) >= 0) {
-        const line = buf.slice(0, i).replace(/\r$/, '')
-        buf = buf.slice(i + 1)
-        emit(line)
+      let s = dec.write(chunk)
+      while (s.length > 0) {
+        const nl = s.indexOf('\n')
+        if (nl < 0) {
+          if (!discarding) {
+            buf += s
+            if (buf.length > MAX_JSONL_LINE_CHARS) {
+              buf = ''
+              discarding = true
+              droppedLines++
+            }
+          }
+          return
+        }
+        const head = s.slice(0, nl)
+        s = s.slice(nl + 1)
+        if (discarding) {
+          discarding = false
+          continue
+        }
+        const line = buf + head
+        buf = ''
+        if (line.length > MAX_JSONL_LINE_CHARS) {
+          droppedLines++
+          continue
+        }
+        emit(line.replace(/\r$/, ''))
       }
     },
     end() {
-      buf += dec.end()
-      const rest = buf.replace(/\r$/, '')
+      const tail = dec.end()
+      if (discarding) {
+        discarding = false
+        buf = ''
+        return
+      }
+      const rest = (buf + tail).replace(/\r$/, '')
       buf = ''
+      if (rest.length > MAX_JSONL_LINE_CHARS) {
+        droppedLines++
+        return
+      }
       emit(rest)
     },
+    dropped: () => droppedLines,
+    bufferedChars: () => buf.length,
   }
 }
 
