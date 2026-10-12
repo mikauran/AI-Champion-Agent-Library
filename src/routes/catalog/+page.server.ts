@@ -1,7 +1,8 @@
 import { db, agents } from '$lib/server/db.js'
 import { eq, and, asc, inArray } from 'drizzle-orm'
 import { search } from '$lib/server/search/index.js'
-import { parsePage } from '$lib/catalogUrl'
+import { parsePage, parseKind } from '$lib/catalogUrl'
+import { agentKindsEnabled } from '$lib/flags.js'
 import type { PageServerLoad } from './$types'
 
 const PAGE_SIZE = 24
@@ -14,10 +15,23 @@ export const load: PageServerLoad = async ({ url }) => {
   const maturity = url.searchParams.get('maturity') ?? null
   const q = (url.searchParams.get('q') ?? '').trim().slice(0, 200) || null
 
+  // Phase 13: everything kind-related is gated; with the flag off no extra db call is made.
+  const kindsOn = agentKindsEnabled()
+  const kindsMod = kindsOn ? await import('$lib/server/kinds.js') : null
+  // Allow-list validated: unknown values are ignored and never reach a query.
+  const kind = kindsOn ? parseKind(url.searchParams.get('kind')) : null
+  const kindSlugs: Set<string> | null =
+    kindsMod && kind ? (kindsMod.listSlugsByKind(db as never, kind) ?? new Set<string>()) : null
+  // Small kind sets are pushed into SQL; larger ones are filtered in memory (correctness over speed).
+  const kindInSql = kindSlugs !== null && kindSlugs.size > 0 && kindSlugs.size <= SLUG_CHUNK
+  const kindInMemory = kindSlugs !== null && kindSlugs.size > SLUG_CHUNK
+  const kindEmpty = kindSlugs !== null && kindSlugs.size === 0
+
   const conditions = []
   if (category) conditions.push(eq(agents.category, category))
   if (llm) conditions.push(eq(agents.llmName, llm))
   if (maturity) conditions.push(eq(agents.maturityStatus, maturity))
+  if (kindInSql) conditions.push(inArray(agents.slug, [...kindSlugs!]))
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
@@ -50,6 +64,8 @@ export const load: PageServerLoad = async ({ url }) => {
       slugs = null
     }
 
+    if (kindSlugs && slugs) slugs = slugs.filter((s) => kindSlugs.has(s))
+
     if (slugs === null) {
       const terms = q.toLowerCase().split(/\s+/).filter(Boolean)
       const matched = db
@@ -57,6 +73,7 @@ export const load: PageServerLoad = async ({ url }) => {
         .from(agents)
         .where(whereClause)
         .all()
+        .filter((row) => !kindSlugs || kindSlugs.has(row.slug))
         .filter((row) => {
           const hay = `${row.title} ${row.summary} ${row.category ?? ''} ${row.tags}`.toLowerCase()
           return terms.every((t) => hay.includes(t))
@@ -84,6 +101,19 @@ export const load: PageServerLoad = async ({ url }) => {
       total = matched.length
       agentList = matched.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(toAgent)
     }
+  } else if (kindEmpty) {
+    agentList = []
+    total = 0
+  } else if (kindInMemory) {
+    const matched = db
+      .select()
+      .from(agents)
+      .where(whereClause)
+      .orderBy(asc(agents.title))
+      .all()
+      .filter((row) => kindSlugs!.has(row.slug))
+    total = matched.length
+    agentList = matched.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(toAgent)
   } else {
     const rows = db
       .select()
@@ -112,12 +142,14 @@ export const load: PageServerLoad = async ({ url }) => {
     .map(r => r.category)
     .filter((c): c is string => c !== null)
 
-  const allLlms = db
+  let allLlms = db
     .selectDistinct({ llmName: agents.llmName })
     .from(agents)
     .all()
     .map(r => r.llmName)
     .filter(Boolean) as string[]
+  // Non-agent kinds carry the 'n/a' placeholder model (D-037); it is not a real filter option.
+  if (kindsOn) allLlms = allLlms.filter((l) => l !== 'n/a')
 
   const allMaturityStatuses = db
     .selectDistinct({ maturityStatus: agents.maturityStatus })
@@ -125,6 +157,28 @@ export const load: PageServerLoad = async ({ url }) => {
     .all()
     .map(r => r.maturityStatus)
     .filter(Boolean) as string[]
+
+  if (kindsMod) {
+    const info = kindsMod.loadKindInfo(db as never, agentList.map((a) => a.slug))
+    const withKind = agentList.map((a) => ({
+      ...a,
+      kind: info.get(a.slug)?.kind ?? 'agent',
+      framework: info.get(a.slug)?.framework ?? null,
+    }))
+    return {
+      agents: withKind,
+      total,
+      searchDegraded,
+      page,
+      pageSize: PAGE_SIZE,
+      totalPages: Math.ceil(total / PAGE_SIZE),
+      categories: allCategories,
+      llms: allLlms,
+      maturityStatuses: allMaturityStatuses,
+      kinds: kindsMod.listKinds(db as never),
+      filters: { category, llm, maturity, q, kind },
+    }
+  }
 
   return {
     agents: agentList,

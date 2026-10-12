@@ -1,4 +1,6 @@
 <script lang="ts">
+  import KindBadge from '$lib/components/KindBadge.svelte'
+
   interface Props {
     agent: {
       slug: string
@@ -9,6 +11,8 @@
       tags: string[]
       tryItOutMode: string
       tryItOutUrl: string | null
+      kind?: string
+      framework?: string | null
     }
   }
   let { agent }: Props = $props()
@@ -25,6 +29,9 @@
       <span class="shrink-0 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">Experimental</span>
     {/if}
   </div>
+  {#if agent.kind && agent.kind !== 'agent'}
+    <p class="mb-2"><KindBadge kind={agent.kind} framework={agent.framework ?? null} /></p>
+  {/if}
   {#if agent.category}
     <p class="text-xs text-indigo-600 font-medium mb-2">{agent.category}</p>
   {/if}

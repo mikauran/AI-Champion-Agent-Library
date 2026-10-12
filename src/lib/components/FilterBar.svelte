@@ -10,8 +10,11 @@
     onLlmChange: (value: string) => void
     onMaturityChange: (value: string) => void
     onClear: () => void
+    kinds?: string[]
+    selectedKind?: string
+    onKindChange?: (value: string) => void
   }
-  let { categories, llms, maturityStatuses, selectedCategory, selectedLlm, selectedMaturity, onCategoryChange, onLlmChange, onMaturityChange, onClear }: Props = $props()
+  let { categories, llms, maturityStatuses, selectedCategory, selectedLlm, selectedMaturity, onCategoryChange, onLlmChange, onMaturityChange, onClear, kinds, selectedKind = '', onKindChange }: Props = $props()
 
   let categoryEl: HTMLSelectElement | undefined = $state()
 
@@ -21,7 +24,7 @@
     categoryEl?.focus()
   }
 
-  let hasActiveFilters = $derived(selectedCategory !== '' || selectedLlm !== '' || selectedMaturity !== '')
+  let hasActiveFilters = $derived(selectedCategory !== '' || selectedLlm !== '' || selectedMaturity !== '' || selectedKind !== '')
 </script>
 
 <div class="flex flex-wrap items-end gap-4 mb-6" role="group" aria-label="Filter agents">
@@ -70,6 +73,23 @@
       {/each}
     </select>
   </div>
+
+  {#if kinds && kinds.length > 1}
+    <div>
+      <label for="filter-kind" class="block text-xs font-medium text-gray-700 mb-1">Type</label>
+      <select
+        id="filter-kind"
+        class="min-h-[44px] rounded border border-gray-500 bg-white px-3 py-2 text-sm text-gray-900"
+        value={selectedKind}
+        onchange={(e) => onKindChange?.(e.currentTarget.value)}
+      >
+        <option value="">All types</option>
+        {#each kinds as k}
+          <option value={k}>{k}</option>
+        {/each}
+      </select>
+    </div>
+  {/if}
 
   {#if hasActiveFilters}
     <button
