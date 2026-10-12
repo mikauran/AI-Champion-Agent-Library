@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Try It Out Field** - Optional try_it_out field (none/external/runnable) threaded through schema, ingest, and detail page (completed 2026-08-19)
 - [x] **Phase 6: Runnable Try It Out Flow (mock-backed)** - Mock-backed job client + panel for runnable mode, contract-shaped for a later real backend swap
 - [x] **Phase 7: No-Container Demo Backend for Try It Out** - Real (no-Docker/no-pi) SvelteKit server routes calling an LLM, replacing the mock client (completed 2026-08-20)
-- [ ] **Phase 8: Container-backed Try It Out (warm on visit)** - Pi + skill container warmed when an agent page is opened; runs behind the existing job API
+- [x] **Phase 8: Container-backed Try It Out (warm on visit)** - Pi + skill container warmed when an agent page is opened; runs behind the existing job API (completed 2026-10-12)
 
 ## Phase Details
 
@@ -212,7 +212,7 @@ Plans:
 **Goal:** Opening an agent's detail page warms a container running Pi with that agent's skill, so Try It Out runs in it behind the existing job API with no cold-start wait. Replaces the direct-LLM runner from Phase 7, which stays as fallback.
 **Requirements**: Derived from 08-CONTEXT.md decisions D-01..D-22 (no REQ-IDs mapped)
 **Depends on:** Phase 7
-**Plans:** 8/8 plans executed
+**Plans:** 8/8 plans complete
 
 Plans:
 
