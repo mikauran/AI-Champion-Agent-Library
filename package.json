@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
-    "check": "tsc --noEmit && vitest run",
+    "check": "svelte-kit sync && tsc --noEmit && vitest run",
     "ingest": "tsx scripts/ingest.ts",
     "fixtures:scale": "tsx scripts/fixtures/generate-scale.ts",
     "tryout:configure": "tsx scripts/set-try-it-out-mode.ts",
