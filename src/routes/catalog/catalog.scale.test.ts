@@ -62,8 +62,8 @@ describe('catalog load() at scale (150 agents)', () => {
     for (let p = 1; p <= 7; p++) {
       const d = await run(`?page=${p}`)
       expect(d.agents).toHaveLength(p === 7 ? 6 : 24)
-      slugs.push(...d.agents.map(a => a.slug))
-      titles.push(...d.agents.map(a => a.title))
+      slugs.push(...d.agents.map((a: { slug: string }) => a.slug))
+      titles.push(...d.agents.map((a: { title: string }) => a.title))
     }
     expect(new Set(slugs).size).toBe(150)
     expect([...slugs].sort()).toEqual(expected.map(e => e.slug).sort())
