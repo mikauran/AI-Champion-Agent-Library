@@ -71,7 +71,10 @@ async function embedAgents(
     const hasTable = sqlite
       .prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='agent_embeddings'`)
       .get()
-    if (!hasTable) return
+    if (!hasTable) {
+      console.warn('[search] agent_embeddings table missing; run db:push (semantic search stays off)')
+      return
+    }
 
     let embedder: Embedder | null
     if (opts?.embedder !== undefined) {
@@ -179,6 +182,15 @@ async function embedAgents(
 async function ingest( dataDir: string, dbPath: string, opts?: { embedder?: Embedder | null }): Promise<{ succeeded: number; failed: number }> {
   await mkdir(dirname(dbPath), { recursive: true })
   const sqlite = new Database(dbPath)
+  try {
+    return await ingestInto(sqlite, dataDir, opts)
+  } finally {
+    // Always release the handle, including when readdir/readFile throw.
+    sqlite.close()
+  }
+}
+
+async function ingestInto(sqlite: Database.Database, dataDir: string, opts?: { embedder?: Embedder | null }): Promise<{ succeeded: number; failed: number }> {
   sqlite.pragma('journal_mode = WAL')
   const db = drizzle(sqlite)
 
@@ -244,7 +256,6 @@ async function ingest( dataDir: string, dbPath: string, opts?: { embedder?: Embe
   await embedAgents(sqlite, db, searchables, opts)
 
   console.log(`Ingestion complete: ${succeeded} succeeded, ${failed} failed`)
-  sqlite.close()
 
   return { succeeded, failed }
 }

@@ -236,14 +236,27 @@ describe('embeddings', () => {
     expect(rows().length).toBe(0)
   })
 
-  it('DB without agent_embeddings table skips silently', async () => {
+  it('DB without agent_embeddings table skips embedding and warns to run db:push (IN-01)', async () => {
     const db = new Database(TEST_DB)
     db.exec('DROP TABLE agent_embeddings')
     db.close()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { embedder, calls } = spied()
     const res = await ingest(FIXTURES_DIR, TEST_DB, { embedder })
     expect(res.succeeded).toBe(2)
     expect(calls.length).toBe(0)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('run db:push'))
+    warn.mockRestore()
+  })
+
+  it('closes the SQLite handle when ingest throws (IN-02)', async () => {
+    const close = vi.spyOn(Database.prototype, 'close')
+    try {
+      await expect(ingest('./data/does-not-exist', TEST_DB)).rejects.toThrow()
+      expect(close).toHaveBeenCalledTimes(1)
+    } finally {
+      close.mockRestore()
+    }
   })
 
   it('embeds in bounded batches, one transaction per batch (WR-09)', async () => {
