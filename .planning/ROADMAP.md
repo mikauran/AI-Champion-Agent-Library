@@ -428,4 +428,20 @@ Plans:
   5. Report JSON + human-readable summary and a UI panel for progress/results; flag off hides it
   6. Container runs that cannot be verified unattended are listed as "pending human" with exact commands
 
-**Plans**: TBD
+**Plans:** 13 plans
+
+Plans:
+
+- [ ] 15-01-PLAN.md — Port-fidelity map (committed first), MCP_TESTER flag, shared types, source-compatible case/golden/rubric loaders
+- [ ] 15-02-PLAN.md — Minimal MCP client (stdio + Streamable HTTP) recording protocol misbehaviour, env allowlist, exec guard
+- [ ] 15-03-PLAN.md — Mock upstream with seeded datasets, strict params, fault injection and request log; shared contract
+- [ ] 15-04-PLAN.md — In-process fake MCP server, good and flawed variants, process-level variants, subprocess smoke test
+- [ ] 15-05-PLAN.md — Leak detector, walkers, tool binding, strict expect evaluator and the 10 behaviour checks
+- [ ] 15-06-PLAN.md — Scoring rollup (gate, tiers, thresholds, flags, verdict), rerun aggregation, Tier 3/4 special checks
+- [ ] 15-07-PLAN.md — 12 synthetic cases (case.yaml/golden.jsonl/rubric.yaml), suite loader, golden-isolation gate
+- [ ] 15-08-PLAN.md — Runner, subjects, report JSON + human summary, scorer-discrimination proof over fake variants
+- [ ] 15-09-PLAN.md — Phase 14 generator as in-process subject, generator-side checks (partial spec, credentials, reproducibility)
+- [ ] 15-10-PLAN.md — `npm run mcp-test` CLI, in-container driver, runner image definition (build pending human)
+- [ ] 15-11-PLAN.md — Flag-gated run API (202, poll, report), TTL job store, container run path tested on the fake runtime
+- [ ] 15-12-PLAN.md — /mcp-test page and panel (flag-gated), Customize entry only when flag on, flag-off regression, axe
+- [ ] 15-13-PLAN.md — docs, 15-HUMAN-UAT.md, decision consolidation, invariant self-check, VERIFICATION
