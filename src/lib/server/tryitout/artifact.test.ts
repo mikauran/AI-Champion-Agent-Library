@@ -25,6 +25,8 @@ describe('zipFiles', () => {
   it('rejects traversal and absolute names', () => {
     expect(() => art.zipFiles({ '../evil': bytes('x') })).toThrow()
     expect(() => art.zipFiles({ '/abs': bytes('x') })).toThrow()
+    expect(() => art.zipFiles({ 'a/./b': bytes('x') })).toThrow() // SEC-12: dot segments
+    expect(() => art.zipFiles({ '.': bytes('x') })).toThrow()
   })
 
   it('rejects more than MAX_ARTIFACT_FILES files', () => {

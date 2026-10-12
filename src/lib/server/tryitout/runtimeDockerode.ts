@@ -56,6 +56,8 @@ export function buildCreateOptions(cfg: RunnerConfig, spec: ContainerSpec): Dock
     Env: spec.env,
     HostConfig: {
       Memory: Math.round(cfg.memoryMb * MB),
+      // IN-04: same value as Memory, so the container cannot use swap on top of its limit.
+      MemorySwap: Math.round(cfg.memoryMb * MB),
       NanoCpus: Math.round(cfg.cpus * 1e9),
       PidsLimit: cfg.pids,
       CapDrop: ['ALL'],
@@ -89,13 +91,16 @@ async function collect(stream: AsyncIterable<unknown>): Promise<Buffer> {
 }
 
 async function buildTar(files: StagedFile[]): Promise<Buffer> {
+  // IN-01: validate every path before any stream exists, so a bad path cannot leave a rejected
+  // collect() promise behind (an unhandled rejection would crash the process).
+  for (const f of files) {
+    if (!isSafeRelativePath(f.path)) {
+      throw new TryItOutRuntimeError('exec_failed', `unsafe staged path: ${f.path}`)
+    }
+  }
   const pack = tar.pack()
   const done = collect(pack)
   for (const f of files) {
-    if (!isSafeRelativePath(f.path)) {
-      pack.destroy(new Error(`unsafe staged path: ${f.path}`))
-      throw new TryItOutRuntimeError('exec_failed', `unsafe staged path: ${f.path}`)
-    }
     if (f.type === 'dir') {
       pack.entry({ name: f.path, type: 'directory', mode: f.mode ?? 0o755, uid: 1000, gid: 1000 })
     } else {
@@ -233,37 +238,59 @@ export function createDockerodeRuntime(cfg: RunnerConfig, instanceId: string): C
     async getFiles(containerId, dir, limits: GetFilesLimits) {
       const archive = await client().getContainer(containerId).getArchive({ path: dir })
       const extract = tar.extract()
-      const out: Record<string, Uint8Array> = {}
+      // IN-02: null-prototype map so an entry named __proto__ is an own key, not dropped.
+      const out: Record<string, Uint8Array> = Object.create(null)
       let total = 0
       let count = 0
+      let seen = 0
+      // SEC-09: dirs, links etc. are skipped but still bounded.
+      const maxEntries = limits.maxFiles * 10 + 100
       const piped = archive.pipe(extract)
-      for await (const entry of piped) {
-        const header = entry.header
-        if (header.type !== 'file') {
-          entry.resume()
-          continue
+      try {
+        for await (const entry of piped) {
+          const header = entry.header
+          seen += 1
+          if (seen > maxEntries) {
+            throw new TryItOutRuntimeError('output_invalid', `output exceeds ${maxEntries} archive entries`)
+          }
+          if (header.type !== 'file') {
+            entry.resume()
+            continue
+          }
+          if (!isSafeRelativePath(header.name)) {
+            entry.resume()
+            throw new TryItOutRuntimeError('output_invalid', `unsafe output path: ${header.name}`)
+          }
+          // Strip the archived directory's basename (first segment).
+          const slash = header.name.indexOf('/')
+          const rel = slash === -1 ? header.name : header.name.slice(slash + 1)
+          if (!isSafeRelativePath(rel)) {
+            entry.resume()
+            continue
+          }
+          count += 1
+          if (count > limits.maxFiles) {
+            throw new TryItOutRuntimeError('output_invalid', `output exceeds ${limits.maxFiles} files`)
+          }
+          // WR-09: trust the header size before buffering anything.
+          if (typeof header.size === 'number' && total + header.size > limits.maxBytes) {
+            throw new TryItOutRuntimeError('output_invalid', `output exceeds ${limits.maxBytes} bytes`)
+          }
+          const body = await collect(entry)
+          total += body.length
+          if (total > limits.maxBytes) {
+            throw new TryItOutRuntimeError('output_invalid', `output exceeds ${limits.maxBytes} bytes`)
+          }
+          out[rel] = new Uint8Array(body)
         }
-        if (!isSafeRelativePath(header.name)) {
-          entry.resume()
-          throw new TryItOutRuntimeError('output_invalid', `unsafe output path: ${header.name}`)
-        }
-        // Strip the archived directory's basename (first segment).
-        const slash = header.name.indexOf('/')
-        const rel = slash === -1 ? header.name : header.name.slice(slash + 1)
-        if (!isSafeRelativePath(rel)) {
-          entry.resume()
-          continue
-        }
-        count += 1
-        if (count > limits.maxFiles) {
-          throw new TryItOutRuntimeError('output_invalid', `output exceeds ${limits.maxFiles} files`)
-        }
-        const body = await collect(entry)
-        total += body.length
-        if (total > limits.maxBytes) {
-          throw new TryItOutRuntimeError('output_invalid', `output exceeds ${limits.maxBytes} bytes`)
-        }
-        out[rel] = new Uint8Array(body)
+      } finally {
+        // WR-09: never leave the engine response or the parser open on an early exit.
+        // Destroying emits PREMATURE_CLOSE; swallow it so it cannot become an uncaught error event.
+        const noop = () => {}
+        extract.on('error', noop)
+        archive.on('error', noop)
+        extract.destroy()
+        ;(archive as unknown as { destroy?: () => void }).destroy?.()
       }
       return out
     },

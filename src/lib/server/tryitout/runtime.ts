@@ -104,7 +104,7 @@ export function isSafeRelativePath(name: string): boolean {
   if (name.startsWith('/')) return false
   const parts = name.split('/')
   for (const part of parts) {
-    if (part === '..' || part === '') return false
+    if (part === '..' || part === '.' || part === '') return false
   }
   return true
 }

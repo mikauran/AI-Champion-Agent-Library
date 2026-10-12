@@ -53,6 +53,7 @@ describe('buildCreateOptions', () => {
     expect(o.Env).toEqual(spec.env)
     const hc = o.HostConfig!
     expect(hc.Memory).toBe(1073741824)
+    expect(hc.MemorySwap).toBe(1073741824) // IN-04: no swap on top of the memory limit
     expect(hc.NanoCpus).toBe(500000000)
     expect(hc.PidsLimit).toBe(200)
     expect(hc.CapDrop).toEqual(['ALL'])
@@ -252,6 +253,83 @@ describe('getFiles hostile archives (output_invalid)', () => {
     const p = rt.getFiles('c', '/work/j/output', { maxBytes: 10, maxFiles: 10 })
     await expect(p).rejects.toMatchObject({ code: 'output_invalid' })
     await expect(p).rejects.toThrow(/10 bytes/)
+  })
+
+  it('rejects an oversized entry from its header before buffering the body (WR-09)', async () => {
+    const pack = tar.pack()
+    // header only, body never written; the dangling writer errors when the pack is destroyed
+    pack.entry({ name: 'output/huge', size: 1_000_000_000 }).on('error', () => {})
+    const destroy = vi.spyOn(pack, 'destroy')
+    mocks.getContainer.mockReturnValue({ getArchive: async () => pack })
+    const rt = createDockerodeRuntime(defaultCfg, 'i')
+    await expect(rt.getFiles('c', '/work/j/output', limits)).rejects.toMatchObject({
+      code: 'output_invalid',
+    })
+    expect(destroy).toHaveBeenCalled()
+  })
+
+  it('destroys the engine archive stream on an early exit (WR-09)', async () => {
+    const pack = await archiveOf([
+      { name: 'output/1', body: '1' },
+      { name: 'output/2', body: '2' },
+      { name: 'output/3', body: '3' },
+    ])
+    const destroy = vi.spyOn(pack, 'destroy')
+    mocks.getContainer.mockReturnValue({ getArchive: async () => pack })
+    const rt = createDockerodeRuntime(defaultCfg, 'i')
+    await expect(rt.getFiles('c', '/work/j/output', { maxBytes: 1000, maxFiles: 1 })).rejects.toMatchObject({
+      code: 'output_invalid',
+    })
+    expect(destroy).toHaveBeenCalled()
+  })
+
+  it('skips hardlink, device and fifo entries', async () => {
+    const pack = tar.pack()
+    pack.entry({ name: 'output/hard', type: 'link', linkname: 'output/ok' })
+    pack.entry({ name: 'output/dev', type: 'character-device' })
+    pack.entry({ name: 'output/fifo', type: 'fifo' })
+    pack.entry({ name: 'output/ok' }, 'ok')
+    pack.finalize()
+    mocks.getContainer.mockReturnValue({ getArchive: async () => pack })
+    const rt = createDockerodeRuntime(defaultCfg, 'i')
+    const out = await rt.getFiles('c', '/work/j/output', limits)
+    expect(Object.keys(out)).toEqual(['ok'])
+  })
+
+  it('rejects an archive with an excessive number of non-file entries', async () => {
+    const entries = Array.from({ length: 400 }, (_, i) => ({ name: `output/d${i}/`, type: 'directory' as const }))
+    const rt = runtimeWithArchive(entries)
+    await expect(rt.getFiles('c', '/work/j/output', { maxBytes: 1000, maxFiles: 2 })).rejects.toMatchObject({
+      code: 'output_invalid',
+    })
+  })
+
+  it('keeps an entry named __proto__ as an own entry (IN-02)', async () => {
+    const rt = runtimeWithArchive([
+      { name: 'output/__proto__', body: 'p' },
+      { name: 'output/a', body: 'a' },
+    ])
+    const out = await rt.getFiles('c', '/work/j/output', limits)
+    expect(Object.keys(out).sort()).toEqual(['__proto__', 'a'])
+    expect(Object.prototype.hasOwnProperty.call(out, '__proto__')).toBe(true)
+    expect(out['__proto__']).toBeInstanceOf(Uint8Array)
+  })
+
+  it('putFiles with an unsafe path rejects without an unhandled rejection (IN-01)', async () => {
+    const seen: unknown[] = []
+    const onUnhandled = (e: unknown) => seen.push(e)
+    process.on('unhandledRejection', onUnhandled)
+    try {
+      mocks.getContainer.mockReturnValue({ putArchive: vi.fn() })
+      const rt = createDockerodeRuntime(defaultCfg, 'i')
+      await expect(rt.putFiles('c', '/work', [{ path: '../evil', content: 'x' }])).rejects.toMatchObject({
+        code: 'exec_failed',
+      })
+      await new Promise((r) => setTimeout(r, 20))
+      expect(seen).toEqual([])
+    } finally {
+      process.off('unhandledRejection', onUnhandled)
+    }
   })
 
   it('exposes TryItOutRuntimeError for callers', () => {
