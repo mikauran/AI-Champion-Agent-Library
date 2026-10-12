@@ -90,13 +90,15 @@ Plans:
   3. Search results update live as the user types — no submit button required
   4. A labeled test set of 20+ query/result pairs passes with acceptable ranking accuracy before search is declared done
 
-**Plans**: TBD
+**Plans:** 5 plans
 
 Plans:
 
-- [ ] 03-01: Embedding generation script, embeddings stored in SQLite, search module with cosine similarity
-- [ ] 03-02: BM25 keyword scoring, hybrid ranking, SearchBar component, and search result rendering
-- [ ] 03-03: Search validation — 20-query labeled test set, model selection confirmation
+- [ ] 03-01-PLAN.md — Embedding storage (agent_embeddings), Embedder interface + transformers impl, ingest embedding step with staleness skip (wave 1)
+- [ ] 03-02-PLAN.md — Tokenizer, in-TS BM25 with prefix matching, cosine, weighted RRF hybrid ranking (wave 1)
+- [ ] 03-03-PLAN.md — Lazy search service, /api/search route, catalog loader `q` support (wave 2)
+- [ ] 03-04-PLAN.md — Debounced SearchBar, URL/q handling, no-results and live-region UI (wave 3)
+- [ ] 03-05-PLAN.md — Search validation: 20+ labeled queries on the 2.2 scale corpus, BM25 hit@3 gate, real-embedding test (skip by default, pending human) (wave 2)
 
 ### Phase 4: Customization Placeholder
 
