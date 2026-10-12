@@ -27,6 +27,9 @@ type Json = Record<string, unknown>
 const isObj = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v)
 
 const SERVER_PROTOCOL = '2025-11-25'
+const OLD_PROTOCOL = '2024-11-05' // a version the client knows
+const UNKNOWN_PROTOCOL = '1999-01-01' // a version nobody knows
+const STDOUT_BANNER = 'Acme fake server starting (this line is not JSON-RPC)'
 const KNOWN = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05']
 
 export interface Fake {
@@ -60,8 +63,16 @@ export function createFake(opts: FakeOptions): Fake {
     switch (msg.method) {
       case 'initialize': {
         const asked = typeof params.protocolVersion === 'string' ? params.protocolVersion : SERVER_PROTOCOL
+        const negotiated =
+          b.processFault === 'old-protocol'
+            ? OLD_PROTOCOL
+            : b.processFault === 'unknown-protocol'
+              ? UNKNOWN_PROTOCOL
+              : KNOWN.includes(asked)
+                ? asked
+                : SERVER_PROTOCOL
         return reply(id, {
-          protocolVersion: KNOWN.includes(asked) ? asked : SERVER_PROTOCOL,
+          protocolVersion: negotiated,
           capabilities: { tools: {} },
           serverInfo: { name: `scorer-fixture-${def.id}`, version: '0.0.0' }
         })
@@ -99,17 +110,26 @@ export async function serveStdio(
   opts: FakeOptions & { endOutputOnEof?: boolean }
 ): Promise<void> {
   const fake = createFake(opts)
+  const fault = fake.def.behaviour.processFault
   const inflight = new Set<Promise<void>>()
   const send = (m: unknown) => {
     if (!output.destroyed && !output.writableEnded) output.write(JSON.stringify(m) + '\n')
   }
+  let crashed = false
+  let stop: () => void = () => {}
+  if (fault === 'stdout-noise') output.write(STDOUT_BANNER + '\n')
   const onLine = (line: string) => {
-    if (!line.trim()) return
+    if (crashed || fault === 'hang' || !line.trim()) return
     let msg: unknown
     try {
       msg = JSON.parse(line)
     } catch {
       send({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } })
+      return
+    }
+    if (fault === 'crash-on-init' && isObj(msg) && msg.method === 'initialize') {
+      crashed = true // the process ends before replying to initialize
+      stop()
       return
     }
     const p = fake
@@ -141,6 +161,7 @@ export async function serveStdio(
       if (buf.trim()) onLine(buf)
       resolve()
     }
+    stop = finish
     input.on('end', finish)
     input.on('close', finish)
     input.on('error', finish)

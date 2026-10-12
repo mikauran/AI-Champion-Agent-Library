@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { PassThrough } from 'node:stream'
-import type { McpClient } from '../core/client'
+import { McpClient } from '../core/client'
+import { lineChannel } from '../core/jsonrpc'
 import { leakReason } from '../core/leak'
 import { AUTH_RE } from '../core/validators'
 import { TOOL_NAMES } from '../mock/contract'
@@ -202,5 +203,64 @@ describe('planted flaws are observable', () => {
       expect(s.shown).toBeUndefined()
       expect(s.total).toBeUndefined()
     })
+  })
+})
+
+describe('process-level variants', () => {
+  async function boot(variant: string, timeoutMs = 2000) {
+    const toServer = new PassThrough()
+    const fromServer = new PassThrough()
+    const served = serveStdio(toServer, fromServer, { variant, env: {} })
+    const client = McpClient.connect(lineChannel(fromServer, toServer), { timeoutMs })
+    return { client, served }
+  }
+
+  it('registers them with the expected mustFail and flags', () => {
+    expect(VARIANTS['crash-on-init'].mustFail).toEqual(['D1'])
+    expect(VARIANTS.hang.mustFail).toEqual(['D1'])
+    expect(VARIANTS['stdout-noise'].flags).toEqual(['STDOUT_NOISE'])
+    expect(VARIANTS['old-protocol']).toMatchObject({ mustFail: [], flags: [] })
+    expect(VARIANTS['unknown-protocol']).toMatchObject({ mustFail: [], flags: [] })
+    for (const id of ['crash-on-init', 'hang', 'stdout-noise', 'old-protocol', 'unknown-protocol']) {
+      expect(variantIds()).toContain(id)
+    }
+  })
+
+  it('crash-on-init ends the stream before replying to initialize', async () => {
+    const { client, served } = await boot('crash-on-init')
+    expect(await client.initialize()).toMatchObject({ ok: false, kind: 'closed' })
+    await client.close()
+    await served
+  })
+
+  it('hang never replies', async () => {
+    const { client, served } = await boot('hang', 300)
+    expect(await client.initialize()).toMatchObject({ ok: false, kind: 'timeout' })
+    await client.close()
+    await served
+  })
+
+  it('stdout-noise prints a non-JSON line first and still works', async () => {
+    const { client, served } = await boot('stdout-noise')
+    expect((await client.initialize()).ok).toBe(true)
+    expect(client.findings.some((f) => f.kind === 'stdout_noise')).toBe(true)
+    await client.close()
+    await served
+  })
+
+  it('old-protocol negotiates a known older version without findings', async () => {
+    const { client, served } = await boot('old-protocol')
+    expect(await client.initialize()).toMatchObject({ ok: true, protocolVersion: '2024-11-05' })
+    expect(client.findings).toEqual([])
+    await client.close()
+    await served
+  })
+
+  it('unknown-protocol replies with an unknown version and is recorded as a finding', async () => {
+    const { client, served } = await boot('unknown-protocol')
+    expect(await client.initialize()).toMatchObject({ ok: true, protocolVersion: '1999-01-01' })
+    expect(client.findings.some((f) => f.kind === 'unknown_protocol_version')).toBe(true)
+    await client.close()
+    await served
   })
 })

@@ -74,6 +74,11 @@ const LIST: VariantDef[] = [
     'partial'
   ),
   def('huge-payload', 'returns a very large slice of the big set.', { largeResponse: 'huge' }, ['large_response'], [], 'partial'),
+  def('crash-on-init', 'the process ends before replying to initialize.', { processFault: 'crash-on-init' }, ['D1']),
+  def('hang', 'never replies to any request.', { processFault: 'hang' }, ['D1']),
+  def('stdout-noise', 'writes a non-JSON banner line to stdout before valid messages.', { processFault: 'stdout-noise' }, [], ['STDOUT_NOISE']),
+  def('old-protocol', 'negotiates the older known protocol version 2024-11-05; a finding at most.', { processFault: 'old-protocol' }, []),
+  def('unknown-protocol', 'replies with a protocol version nobody knows (1999-01-01); recorded as a finding.', { processFault: 'unknown-protocol' }, []),
   def('no-trunc-signal', 'caps the big set silently, no truncated or coverage signal.', { largeResponse: 'silent-cap' }, ['large_response'], [], 'partial')
 ]
 

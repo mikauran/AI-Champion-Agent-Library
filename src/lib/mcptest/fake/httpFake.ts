@@ -42,7 +42,13 @@ export async function startHttpFake(
         }
         const msgs = Array.isArray(parsed) ? parsed : [parsed]
         const out = []
+        const fault = fake.def.behaviour.processFault
+        if (fault === 'hang') return // never answers
         for (const m of msgs) {
+          if (fault === 'crash-on-init' && (m as { method?: unknown })?.method === 'initialize') {
+            req.socket.destroy()
+            return
+          }
           const r = await fake.handle(m)
           if (r) out.push(r)
         }
