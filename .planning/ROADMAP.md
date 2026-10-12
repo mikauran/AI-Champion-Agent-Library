@@ -17,12 +17,19 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Data Pipeline** - Canonical data model, Oracle AgentSpec ingestion, SQLite store (completed 2026-03-19)
 - [ ] **Phase 2: Catalog and Detail** - Browse page, agent detail page, responsive layout
+- [ ] **Phase 2.1: Green Baseline (INSERTED)** - Zero type errors, zero failing tests before further work
+- [ ] **Phase 2.2: Scale and Seed Data (INSERTED)** - Synthetic 150-agent fixture set for search, pagination and ingest scale tests
 - [ ] **Phase 3: Search** - Hybrid keyword + semantic search with live results
 - [ ] **Phase 4: Customization Placeholder** - Customize button and visible-but-non-functional menu
 - [x] **Phase 5: Try It Out Field** - Optional try_it_out field (none/external/runnable) threaded through schema, ingest, and detail page (completed 2026-08-19)
 - [x] **Phase 6: Runnable Try It Out Flow (mock-backed)** - Mock-backed job client + panel for runnable mode, contract-shaped for a later real backend swap
 - [x] **Phase 7: No-Container Demo Backend for Try It Out** - Real (no-Docker/no-pi) SvelteKit server routes calling an LLM, replacing the mock client (completed 2026-08-20)
 - [x] **Phase 8: Container-backed Try It Out (warm on visit)** - Pi + skill container warmed when an agent page is opened; runs behind the existing job API (completed 2026-10-12)
+- [ ] **Phase 9: Try It Out Hardening** - Adversarial review and chaos tests of the Phase 8 lease/proxy/container code
+- [ ] **Phase 10: Accessibility (UI-03)** - WCAG AA keyboard navigation and screen-reader labels across catalog and detail
+- [ ] **Phase 11: Related Agents (DISC-01)** - Similar-agents panel on the detail page using Phase 3 embeddings
+- [ ] **Phase 12: Agent Types and Intake Research** - Taxonomy of hostable agent types/systems, per-format capability matrix, author intake guide
+- [ ] **Phase 13: Multi-Agent and Multi-Format Hosting (flagged)** - Canonical model extension, adapters, validate-submission CLI, system detail rendering, all behind a feature flag
 
 ## Phase Details
 
@@ -235,3 +242,100 @@ Plans:
 **Wave 4** *(blocked on Wave 3 completion)*
 
 - [x] 08-08-PLAN.md — `pi-runner` image, smoke script, compose socket/internal network, docs; live verification checkpoint on a Podman host
+
+### Phase 2.1: Green Baseline (INSERTED)
+
+**Goal:** `tsc --noEmit` reports 0 errors and `vitest run` has 0 failures, so every later phase starts from a trustworthy baseline.
+**Requirements**: Maintenance (no REQ-IDs)
+**Depends on:** Phase 8
+**Success Criteria** (what must be TRUE):
+
+  1. `npx tsc --noEmit` exits 0 (currently 22 errors in catalog.test.ts, try-it-out.test.ts, tryItOut.test.ts, detail.test.ts)
+  2. `npx vitest run` exits 0 (currently 3 failures in scripts/set-try-it-out-mode.test.ts); fixes address root cause (test isolation / typing), not deleting tests
+  3. A `npm run check` script runs typecheck + tests
+
+**Plans**: TBD
+
+### Phase 2.2: Scale and Seed Data (INSERTED)
+
+**Goal:** A deterministic synthetic fixture set of ~150 agents (clearly marked synthetic, never in the shipped catalog) exists so search, pagination, filtering and ingest can be tested and timed at the intended scale.
+**Requirements**: BROW-03 (scale validation)
+**Depends on:** Phase 2.1
+**Success Criteria** (what must be TRUE):
+
+  1. A generator produces N synthetic AgentSpec YAMLs deterministically (seeded) into a test-only directory with realistic variety of categories, tags, models, tools
+  2. Ingest of 150 agents completes and is idempotent; timing recorded
+  3. Catalog filter/pagination tests run against the large set
+  4. Shipped `data/agents` is untouched
+
+**Plans**: TBD
+
+### Phase 9: Try It Out Hardening
+
+**Goal:** The Phase 8 container/lease/LLM-proxy code withstands adversarial and failure conditions, proven by tests using the fake runtime (no real containers).
+**Requirements**: Maintenance / security (no REQ-IDs)
+**Depends on:** Phase 8
+**Success Criteria** (what must be TRUE):
+
+  1. Security review of lease tokens, proxy auth, budget enforcement, path/zip handling and network guard produces findings, each fixed or logged with rationale
+  2. Chaos tests cover lease races, hung engine, budget exhaustion, token reuse across leases, oversized/malformed Pi JSONL, and reaper timing
+  3. Live Podman checks that cannot run unattended are listed as "pending human" with exact commands
+
+**Plans**: TBD
+
+### Phase 10: Accessibility (UI-03)
+
+**Goal:** Catalog, search and detail pages meet WCAG AA basics: full keyboard operability, labelled controls, focus management, contrast, live-region announcements.
+**Requirements**: UI-03
+**Depends on:** Phase 3
+**Success Criteria** (what must be TRUE):
+
+  1. Every interactive control reachable and operable by keyboard with visible focus
+  2. Accessibility assertions (roles, names, labels) pass in component tests; an axe-based check runs in jsdom where feasible
+  3. Search results count and state changes announced via live region
+  4. Findings that need visual/manual checks are listed as "pending human"
+
+**Plans**: TBD
+
+### Phase 11: Related Agents (DISC-01)
+
+**Goal:** The detail page shows similar agents computed from Phase 3 embeddings (with tag/category overlap fallback when embeddings are unavailable).
+**Requirements**: DISC-01
+**Depends on:** Phase 3
+**Success Criteria** (what must be TRUE):
+
+  1. Detail page shows up to 4 related agents, excluding itself
+  2. Works without embeddings (tag/category fallback)
+  3. Related lists validated against the Phase 2.2 scale set and the labeled set
+
+**Plans**: TBD
+
+### Phase 12: Agent Types and Intake Research
+
+**Goal:** Produce the decision basis for what the platform can host: a taxonomy of agent types and systems, how each maps (or does not map) onto Oracle AgentSpec, and an intake guide so any author can know exactly what to send. The platform is technology agnostic, with first-class support for specific technologies where useful.
+**Requirements**: Research (no REQ-IDs)
+**Depends on:** Phase 2.1
+**Success Criteria** (what must be TRUE):
+
+  1. `docs/agent-types.md`: taxonomy covering single agents, multi-agent systems (swarm, manager/worker, pipelines), workflow agents, skill/prompt packages, MCP-based agents, and framework-native agents (LangGraph, CrewAI, AutoGen, others found in research)
+  2. A capability matrix: for each type and format, what AgentSpec expresses natively, what needs extension, what the library must display/store, and Try It Out suitability (runnable / external / not runnable)
+  3. `docs/agent-intake-guide.md`: what authors should send (repo link vs config files vs test-dataset notes), minimum metadata, readiness checklist, and a short ready-to-send reply template answering "do you need config files or the GitHub repo?"
+  4. A decision memo with recommended canonical-model changes and a ranked adapter list, each with trade-offs; open questions flagged for the human
+  5. No real company data (e.g. customer datasets) is invented or included
+
+**Plans**: TBD
+
+### Phase 13: Multi-Agent and Multi-Format Hosting (flagged)
+
+**Goal:** Implement the Phase 12 recommendations behind a feature flag (default off): canonical model extension for agent kind and multi-agent topology, adapters for Oracle AgentSpec multi-agent, MCP manifests, LangGraph/CrewAI/AutoGen configs and SKILL.md packages, a validate-submission CLI, and detail-page rendering of systems.
+**Requirements**: Derived from Phase 12 memo
+**Depends on:** Phase 12, Phase 3
+**Success Criteria** (what must be TRUE):
+
+  1. With the flag off, behaviour, schema output and existing tests are unchanged; DB changes are additive and non-destructive
+  2. With the flag on, synthetic fixtures in each target format ingest into canonical records with kind and members/topology
+  3. `npm run validate-submission -- <path>` reports ingestible / partial / missing-from-author for any folder, never throws on unknown formats
+  4. Detail page renders member agents and orchestration topology for system-type agents
+  5. Each adapter documents its assumptions; unknown fields are preserved, not dropped
+
+**Plans**: TBD

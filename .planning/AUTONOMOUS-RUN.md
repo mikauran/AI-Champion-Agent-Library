@@ -12,14 +12,17 @@ Goal: spend leftover token budget on reviewable, low-risk improvements. The huma
 - Small atomic commits. Tests/typecheck must pass before each phase is marked done; if they cannot, stop that phase and log it in `.planning/AUTONOMOUS-BLOCKERS.md`, then move on.
 - Human-verification checkpoints (e.g. 02-04): do not fake them. Mark as "pending human" and continue.
 
-## Work queue (in order)
-1. Phase 3 — Search (discuss→plan→execute with --auto defaults). Embeddings: use a local/offline-capable approach or an injectable provider with a fake for tests; no paid calls.
-2. Phase 4 — Customization placeholder.
-3. Close Phase 2 gaps except the human checkpoint.
-4. Per completed phase: code review + fix, security audit (`/gsd-secure-phase`), test-gap fill (`/gsd-add-tests`).
-5. Whole-repo passes: code review of Phase 8 container/lease/proxy code, dependency/typecheck/lint health, README/TECHNICAL_DOCUMENTATION sync with the code.
-6. Free exploration: after 1-6, propose and implement further improvements you judge valuable (UX polish, perf, test coverage, DX, accessibility). Each one gets a D-NNN entry with rationale and revert steps. Stay inside the guardrails.
-7. Final: milestone audit + `.planning/AUTONOMOUS-SUMMARY.md` (what changed, decisions, open questions, what needs human eyes first).
+## Work queue (in order; numbers are ROADMAP phases)
+1. Phase 2.1 Green Baseline, then Phase 2.2 Scale and Seed Data.
+2. Phase 3 Search (plan->execute; discuss/research/patterns already done). Offline/local embeddings only, fakes in tests; use the 2.2 scale set for accuracy checks.
+3. Phase 4 Customization placeholder; close Phase 2 gaps except the human checkpoint 02-04.
+4. Phase 9 Try It Out hardening.
+5. Phase 10 Accessibility, Phase 11 Related agents.
+6. Phase 12 Agent types and intake research (use WebSearch for framework formats; docs only), then Phase 13 build behind a feature flag (default off, additive DB changes only). Phase 13 data-model decisions must each be logged with revert steps.
+7. Per completed phase: code review + fix, security audit (`/gsd-secure-phase`), test-gap fill (`/gsd-add-tests`).
+8. Repo-wide: dependency health (no major bumps), README/TECHNICAL_DOCUMENTATION/PROJECT.md/STATE.md sync with the code, deploy runbook.
+9. Free exploration: further improvements you judge valuable (UX polish incl. dark mode/spec viewer, perf, tests, DX). Each gets a D-NNN entry with rationale and revert steps.
+10. Final: milestone audit + `.planning/AUTONOMOUS-SUMMARY.md`.
 
 ## Progress at handoff
 - Phase 3: CONTEXT, RESEARCH, VALIDATION, PATTERNS done and committed. Next step is `gsd-planner` (then plan-checker, execute). Do not redo discuss/research.
