@@ -131,9 +131,9 @@ def _query_problem(allowed, describe_tool, field, value, match):
 export function runtimeHttp(scheme: 'none' | 'apiKeyHeader' | 'apiKeyQuery' | 'bearer'): string {
   const authLines: Record<string, string[]> = {
     none: [],
-    apiKeyHeader: ['        headers[AUTH_NAME] = key'],
-    apiKeyQuery: ['        query[AUTH_NAME] = key'],
-    bearer: ['        headers["Authorization"] = "Bearer " + key'],
+    apiKeyHeader: ['    headers[AUTH_NAME] = key'],
+    apiKeyQuery: ['    query[AUTH_NAME] = key'],
+    bearer: ['    headers["Authorization"] = "Bearer " + key'],
   }
   const authBlock =
     scheme === 'none'

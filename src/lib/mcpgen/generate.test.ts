@@ -22,7 +22,7 @@ describe.each(MODELS)('generate: %s backend', (_n, model) => {
     expect(JSON.stringify(model)).toBe(before)
   })
   it('emits the package files in a fixed order', () => {
-    expect(result.files.map((f) => f.path)).toEqual(['server.py', 'requirements.txt', 'README.generated.md', 'report.json'])
+    expect(result.files.map((f) => f.path)).toEqual(['server.py', 'test_server.py', 'requirements.txt', 'README.generated.md', 'report.json'])
   })
   it('uses fastmcp over stdio and no other server SDK', () => {
     expect(py).toContain('from fastmcp import FastMCP')
@@ -86,7 +86,7 @@ describe('generate: http specifics', () => {
   })
   it('maps auth failures to a message naming the env var only', () => {
     expect(py).toContain('"Authentication failed: check the API key configured in ACME_API_KEY"')
-    expect(py).toContain('headers[AUTH_NAME] = key')
+    expect(py).toContain('    if not key:\n        raise _Fail("auth", _AUTH_MESSAGE)\n    headers[AUTH_NAME] = key\n    response = httpx.get(')
   })
   it('lists the dropped write in the report and emits no create tool', () => {
     const r = generate(acmeHttp).report
@@ -103,9 +103,9 @@ describe('generate: http specifics', () => {
   })
   it('uses the right credential placement per scheme and never a Bearer literal otherwise', () => {
     const q = server({ ...acmeHttp, auth: { scheme: 'apiKeyQuery', paramName: 'key', envVar: 'ACME_API_KEY' } })
-    expect(q).toContain('query[AUTH_NAME] = key')
+    expect(q).toContain('_AUTH_MESSAGE)\n    query[AUTH_NAME] = key\n')
     const b = server({ ...acmeHttp, auth: { scheme: 'bearer', envVar: 'ACME_TOKEN' } })
-    expect(b).toContain('Bearer')
+    expect(b).toContain('_AUTH_MESSAGE)\n    headers["Authorization"] = "Bearer " + key\n')
     const none = server({ ...acmeHttp, auth: { scheme: 'none' } })
     expect(none).not.toContain('os.environ.get(AUTH_ENV')
     expect(none).toContain('AUTH_ENV = None')

@@ -3,6 +3,7 @@
 import { MAX_OUTPUT_BYTES } from './api-contract.js'
 import { gap } from './diagnostics.js'
 import { emitPython } from './emit/python.js'
+import { emitPytest } from './emit/pytest.js'
 import { emitRequirements } from './emit/requirements.js'
 import { cleanText } from './emit/pyutil.js'
 import { buildPlan, resolveEnv, serverSlug } from './plan.js'
@@ -89,6 +90,7 @@ export function generate(model: SourceModel, options: GenerateOptions = {}, extr
   }
   const files: GeneratedFile[] = [
     { path: 'server.py', content: emitPython(plan) },
+    { path: 'test_server.py', content: emitPytest(plan) },
     { path: 'requirements.txt', content: emitRequirements(plan) },
     { path: 'README.generated.md', content: emitReadme(plan) },
     { path: 'report.json', content: stableJson(report) },
