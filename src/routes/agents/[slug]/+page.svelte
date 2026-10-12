@@ -15,8 +15,8 @@
 </svelte:head>
 
 <div class="mb-4">
-  <a href="/catalog" class="text-sm text-gray-500 hover:text-gray-700">
-    &larr; Back to catalog
+  <a href="/catalog" class="rounded text-sm text-gray-500 hover:text-gray-700">
+    <span aria-hidden="true">&larr;</span> Back to catalog
   </a>
 </div>
 
@@ -58,7 +58,7 @@
             rel="noopener noreferrer"
             class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:underline"
           >
-            {agent.linkLabel ?? 'View on GitHub'} &rarr;
+            {agent.linkLabel ?? 'View on GitHub'}<span aria-hidden="true"> &rarr;</span><span class="sr-only"> (opens in new tab)</span>
           </a>
         {/if}
 
@@ -69,7 +69,7 @@
             rel="noopener noreferrer"
             class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:underline"
           >
-            Try it out &rarr;
+            Try it out<span aria-hidden="true"> &rarr;</span><span class="sr-only"> (opens in new tab)</span>
           </a>
         {/if}
 
@@ -82,6 +82,7 @@
             type="button"
             onclick={() => (tryItOutOpen = !tryItOutOpen)}
             aria-expanded={tryItOutOpen}
+            aria-controls="try-it-out-panel"
             class="inline-flex items-center gap-2 rounded text-sm font-medium text-indigo-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
           >
             Try it out
@@ -93,7 +94,7 @@
           </button>
 
           {#if tryItOutOpen}
-            <div class="mt-4">
+            <div id="try-it-out-panel" class="mt-4">
               <TryItOutPanel agentId={agent.slug} />
             </div>
           {/if}

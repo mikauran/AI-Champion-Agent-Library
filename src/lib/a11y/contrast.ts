@@ -156,6 +156,6 @@ export const PAIRS: ContrastPair[] = [
   // Non-text (1.4.11): control boundaries and focus indicators
   { name: 'focus ring indigo-600 on white', fg: 'indigo-600', bg: 'white', minRatio: U, where: 'focus-visible ring' },
   { name: 'focus ring indigo-500 on white', fg: 'indigo-500', bg: 'white', minRatio: U, where: 'focus ring variant' },
-  { name: 'input border gray-200 on white', fg: 'gray-200', bg: 'white', minRatio: U, where: 'search input, selects', knownFailing: true },
-  { name: 'input border gray-300 on white', fg: 'gray-300', bg: 'white', minRatio: U, where: 'login/TryOutPanel inputs', knownFailing: true },
+  { name: 'input border gray-500 on white', fg: 'gray-500', bg: 'white', minRatio: U, where: 'search input, selects, pagination, login, try-it-out inputs' },
+  { name: 'login focus ring blue-700 on white', fg: 'blue-700', bg: 'white', minRatio: U, where: 'login input focus ring' },
 ]

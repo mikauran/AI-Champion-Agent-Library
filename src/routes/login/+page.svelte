@@ -18,7 +18,7 @@
     </p>
 
     {#if form?.error}
-      <div class="mt-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+      <div id="login-error" class="mt-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
         {form.error}
       </div>
     {/if}
@@ -45,7 +45,8 @@
             autocomplete="one-time-code"
             maxlength="6"
             required
-            class="mt-2 block w-full rounded-md border border-gray-300 px-3 py-2 text-lg tracking-[0.3em] shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            aria-describedby={form?.error ? 'login-error' : undefined}
+            class="mt-2 block w-full rounded-md border border-gray-500 px-3 py-2 text-lg tracking-[0.3em] shadow-sm focus-visible:border-blue-700 focus-visible:ring-2 focus-visible:ring-blue-700"
           />
           <p class="mt-2 text-xs text-gray-500">Sent to {form.email}. The code expires in 10 minutes.</p>
         </div>
@@ -72,7 +73,8 @@
             autocomplete="email"
             value={form?.email ?? ''}
             required
-            class="mt-2 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            aria-describedby={form?.error ? 'login-error' : undefined}
+            class="mt-2 block w-full rounded-md border border-gray-500 px-3 py-2 shadow-sm focus-visible:border-blue-700 focus-visible:ring-2 focus-visible:ring-blue-700"
           />
         </div>
         <button type="submit" class="w-full rounded-md bg-blue-700 px-4 py-2.5 font-medium text-white hover:bg-blue-800">

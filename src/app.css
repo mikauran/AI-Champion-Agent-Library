@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+/* Global keyboard focus indicator (WCAG 2.4.7, 1.4.11): indigo-600 on white is 6.46:1.
+   Controls with their own ring utilities keep them; this covers everything else
+   (selects, links, summary, login inputs) and survives `outline-none` resets. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-indigo-600);
+    outline-offset: 2px;
+  }
+}
