@@ -91,12 +91,19 @@ export function createLeaseManager(deps: LeaseManagerDeps): LeaseManager {
   const leases = new Map<string, Lease>()
   let reaperTimer: ReturnType<typeof setInterval> | null = null
 
+  // One engine remove per container: a second discard/evict/reap of an already-evicting lease
+  // awaits the same removal instead of issuing another one (09-02 chaos finding).
+  const removals = new WeakMap<Lease, Promise<void>>()
   function removeContainer(lease: Lease): Promise<void> {
     const id = lease.containerId
     if (!id) return Promise.resolve()
-    return runtime.remove(id).catch((err: unknown) => {
+    const existing = removals.get(lease)
+    if (existing) return existing
+    const p = runtime.remove(id).catch((err: unknown) => {
       console.warn('Try It Out: removing container failed:', err instanceof Error ? err.message : String(err))
     })
+    removals.set(lease, p)
+    return p
   }
 
   // Synchronous: state, token revocation and map removal happen in one step.
@@ -274,18 +281,18 @@ export function createLeaseManager(deps: LeaseManagerDeps): LeaseManager {
 
     async reap(at) {
       const t = at ?? now()
-      const removals: Promise<void>[] = []
+      const pending: Promise<void>[] = []
       for (const l of [...leases.values()]) {
         if (l.state === 'idle' && t - l.idleSince >= config.idleTtlMs) {
-          removals.push(evictSync(l, 'expired'))
+          pending.push(evictSync(l, 'expired'))
         } else if (l.state === 'warming' && t - l.createdAt >= config.warmWaitMs * STUCK_WARMING_FACTOR) {
           // WR-01: a warm-up that stalled (hung engine call) would hold its cap slot and token
           // forever. Expiring it frees both; if the create call ever returns, startLease sees the
           // non-warming state and removes the container.
-          removals.push(evictSync(l, 'expired'))
+          pending.push(evictSync(l, 'expired'))
         }
       }
-      await Promise.allSettled(removals)
+      await Promise.allSettled(pending)
     },
 
     startReaper() {
