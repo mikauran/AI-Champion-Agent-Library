@@ -98,9 +98,9 @@ Counts: Tier 1 x1, Tier 2 x3, Tier 3 x4, Tier 4 x4 = 12. Implemented in the sour
 
 ## 6. Honest residual gaps
 
-- Legacy HTTP+SSE transport (deprecated by the specification): unsupported, listed in the report rather than skipped silently.
-- Real profile mapping: only the invented Acme profile is scored; mapping to the real partner profile needs the real document (pending human).
-- T2-CATALOG-HTTP and T3-COMPOSITE for generator subjects: the generator emits neither an HTTP transport nor composite tools.
-- Any real FastMCP execution: needs the runner image and a pinned FastMCP; pending human.
+- `legacy-http-sse`: legacy HTTP+SSE transport (deprecated by the specification): unsupported, listed in the report rather than skipped silently.
+- `real-profile-mapping`: only the invented Acme profile is scored; mapping to the real partner profile needs the real document (pending human).
+- `generator-http-transport` and `generator-composite`: T2-CATALOG-HTTP and T3-COMPOSITE for generator subjects; the generator emits neither an HTTP transport nor composite tools.
+- `real-fastmcp-run`: any real FastMCP execution; needs the runner image and a pinned FastMCP; pending human.
 - D3 and D5 were never scored in the source; here they are advisory only and never part of the headline score.
 - Tokens and cost are 0 for non-LLM subjects; human interventions are not applicable.
