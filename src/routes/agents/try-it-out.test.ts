@@ -16,13 +16,13 @@ const baseAgent = {
   toolNames: [],
   requiresHumanApproval: false,
   category: null,
-  githubUrl: null,
+  githubUrl: null as string | null,
   maturityStatus: 'experimental',
   tags: [],
   specId: null,
   lastIngestedAt: '2026-08-18T00:00:00.000Z',
   tryItOutMode: 'none',
-  tryItOutUrl: null,
+  tryItOutUrl: null as string | null,
   tryItOutTaskTemplate: null,
 }
 

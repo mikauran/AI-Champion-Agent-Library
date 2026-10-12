@@ -220,9 +220,7 @@ describe('subscribeProgress', () => {
 
 describe('downloadArtifact', () => {
   beforeEach(() => {
-    // @ts-expect-error jsdom does not implement these
     URL.createObjectURL = vi.fn(() => 'blob:mock')
-    // @ts-expect-error jsdom does not implement these
     URL.revokeObjectURL = vi.fn()
   })
 

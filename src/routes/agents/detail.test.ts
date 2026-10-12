@@ -37,7 +37,7 @@ describe('Agent detail load function', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     const dbModule = await import('$lib/server/db')
-    mockDb = dbModule.db as typeof mockDb
+    mockDb = dbModule.db as unknown as typeof mockDb
     // Rebuild the mock chain fresh each test
     mockGet = vi.fn()
     const mockWhere = vi.fn(() => ({ get: mockGet }))
