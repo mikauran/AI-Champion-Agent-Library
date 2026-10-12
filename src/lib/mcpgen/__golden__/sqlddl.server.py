@@ -341,7 +341,7 @@ _TABLES = {
             "sku": "\"sku\"",
             "quantity": "\"quantity\"",
         },
-        "order": "\"order_id\"",
+        "order": "\"order_id\", \"line_no\"",
     },
 }
 

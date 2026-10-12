@@ -417,7 +417,7 @@ export function emitPython(plan: ServerPlan): string {
       const e = entityOf(plan, id)
       const columns: Record<string, string> = {}
       for (const f of e.fields) columns[f.name] = `"${f.name}"`
-      tables[id] = { table: `"${e.id}"`, columns, order: e.identifierFields[0] ? `"${e.identifierFields[0]}"` : '' }
+      tables[id] = { table: `"${e.id}"`, columns, order: e.identifierFields.map((n) => `"${n}"`).join(', ') }
     }
     out.push('# Table and column names are quoted allow-list entries; tool arguments never reach the SQL text.', `_TABLES = ${pyLit(tables)}`, '')
   }
