@@ -19,6 +19,7 @@
   "license": "ISC",
   "description": "AIC Agent Library — catalog of Oracle AgentSpec agents",
   "dependencies": {
+    "@huggingface/transformers": "^4.3.1",
     "@sveltejs/kit": "^2.55.0",
     "better-sqlite3": "^12.8.0",
     "dockerode": "^5.0.1",

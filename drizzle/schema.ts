@@ -1,6 +1,6 @@
 // SOURCE: Drizzle ORM SQLite docs (orm.drizzle.team/docs/get-started-sqlite)
 // Maps AgentRecord fields to SQLite columns for the agents catalog table.
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, real, blob } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 
 export const agents = sqliteTable('agents', {
@@ -33,3 +33,12 @@ export const agents = sqliteTable('agents', {
 
 export type AgentRow = typeof agents.$inferSelect
 export type NewAgentRow = typeof agents.$inferInsert
+
+export const agentEmbeddings = sqliteTable('agent_embeddings', {
+  slug:        text('slug').primaryKey().references(() => agents.slug, { onDelete: 'cascade' }),
+  model:       text('model').notNull(),
+  contentHash: text('content_hash').notNull(),
+  vector:      blob('vector', { mode: 'buffer' }).notNull(),
+  updatedAt:   text('updated_at').notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`),
+})
+export type AgentEmbeddingRow = typeof agentEmbeddings.$inferSelect
