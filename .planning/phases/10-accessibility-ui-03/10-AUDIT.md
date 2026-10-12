@@ -187,3 +187,26 @@ All text pairs meet AA; the only failures are control borders (1.4.11). A grey b
 ## 6. Scope exclusions
 
 Dark mode (UI-02), the raw spec viewer (UI-04), the legacy TryOutPanel (unused), language-of-parts (Finnish content), captions or media (none), and server-rendered email content.
+
+## 7. Resolution (plan 10-02)
+
+| IDs | Resolution | Where |
+|-----|------------|-------|
+| A11Y-01, 02, 03 | fixed: skip link, `main#main-content tabindex=-1`, `<nav aria-label="Primary">` | src/routes/+layout.svelte |
+| A11Y-04, 15, 22, 26, 33, 54, 58 | fixed: global `:focus-visible` indigo-600 outline in `@layer base`, plus explicit rings on Clear filters and summary | src/app.css, FilterBar, TechAccordion |
+| A11Y-05 | fixed: catalog title | catalog/+page.svelte |
+| A11Y-06 | fixed: card titles `<h2>` | AgentCard.svelte |
+| A11Y-07, 08 | fixed: SearchBar's persistent `aria-live` region is the single announcer; new `message` prop carries the degraded notice; visual notice lost its `role="status"` (existing WR-07 test updated) | SearchBar, catalog/+page.svelte, catalog/page.test.ts |
+| A11Y-10 | fixed: input refocused after Clear search | SearchBar |
+| A11Y-11, 14, 19, 45, 50, 52 | fixed: control borders `gray-500` (4.84:1); `knownFailing` flags removed and a gray-500 pair is enforced | all inputs, selects, pagination buttons, login, legacy TryOutPanel |
+| A11Y-13 | fixed: focus moves to the Category select after Clear filters | FilterBar |
+| A11Y-16 | fixed: `role="group" aria-label="Filter agents"`, `type="button"` | FilterBar |
+| A11Y-17, 18 | fixed: `keepFocus`, awaited `goto`, focus handed to the opposite button when the pressed one becomes disabled, `aria-label` "Previous page"/"Next page", indicator `aria-current` and `aria-live` | Pagination |
+| A11Y-20, 21, 23, 24 | fixed: "View details: X", 44px target, "(opens in new tab)" name suffix on the external Try out link, `motion-reduce:transition-none` | AgentCard |
+| A11Y-26, 27, 28 | fixed: arrows `aria-hidden`, sr-only new-tab text, `aria-controls="try-it-out-panel"` | agents/[slug]/+page.svelte |
+| A11Y-30, 36 | fixed: both asides named via `aria-labelledby` | CustomizationPanel, TryItOutPanel |
+| A11Y-35 | fixed: system prompt `<pre>` is a focusable labelled region | TechAccordion |
+| A11Y-42, 43, 44, 46 | fixed: `role="log"` feed with label and `tabindex=0`, persistent sr-only `role="status"` job-state text, failure block `role="alert"` | TryItOutPanel |
+| A11Y-51, 53 | fixed: login inputs `focus-visible:ring-blue-700`, error id referenced by `aria-describedby` | login/+page.svelte |
+| A11Y-09, 12, 25, 29, 31, 32, 34, 37 to 41, 47 to 49, 55 to 57, 59, 60 | verified OK, no change | |
+| A11Y-H1 to H6 | pending human, see 10-HUMAN-UAT.md | |
