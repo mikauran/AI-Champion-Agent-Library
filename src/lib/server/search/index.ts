@@ -35,6 +35,9 @@ export interface SearchServiceDeps {
   getEmbedder: () => Promise<Embedder | null>
   embedTimeoutMs?: number
   recheckMs?: number
+  /** First retry delay after the embedder fails to load; doubles per failure up to embedderRetryMaxMs. */
+  embedderRetryMs?: number
+  embedderRetryMaxMs?: number
   now?: () => number
 }
 
@@ -44,6 +47,8 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
   const embedTimeoutMs = deps.embedTimeoutMs ?? 1500
   const recheckMs = deps.recheckMs ?? 30000
   const now = deps.now ?? Date.now
+  const embedderRetryMs = deps.embedderRetryMs ?? 60_000
+  const embedderRetryMaxMs = deps.embedderRetryMaxMs ?? 15 * 60_000
 
   let bm25: Bm25Index | null = null
   let fingerprint: string | null = null
@@ -51,14 +56,30 @@ export function createSearchService(deps: SearchServiceDeps): SearchService {
   let lastCheck = -Infinity
   let vectorCache: { model: string; vectors: Map<string, Float32Array> } | null = null
   let embedderPromise: Promise<Embedder | null> | null = null
+  let embedderFailures = 0
+  let embedderRetryAt = -Infinity
 
+  // A loaded embedder is memoised for the process lifetime. A failed load (null or
+  // rejection, e.g. a transient download error) is NOT: it is retried with exponential
+  // backoff so hybrid search can recover without a restart.
   function ensureEmbedder(): Promise<Embedder | null> {
-    if (!embedderPromise) {
-      embedderPromise = Promise.resolve()
-        .then(() => deps.getEmbedder())
-        .catch(() => null)
-    }
-    return embedderPromise
+    if (embedderPromise) return embedderPromise
+    if (embedderFailures > 0 && now() < embedderRetryAt) return Promise.resolve(null)
+    const attempt: Promise<Embedder | null> = Promise.resolve()
+      .then(() => deps.getEmbedder())
+      .catch(() => null)
+      .then((e) => {
+        if (e) {
+          embedderFailures = 0
+          return e
+        }
+        embedderFailures++
+        embedderRetryAt = now() + Math.min(embedderRetryMs * 2 ** (embedderFailures - 1), embedderRetryMaxMs)
+        embedderPromise = null
+        return null
+      })
+    embedderPromise = attempt
+    return attempt
   }
 
   function refresh(): Bm25Index {

@@ -21,8 +21,6 @@ export function blobToVector(b: Buffer): Float32Array {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Loader = () => Promise<any>
 
-let warned = false
-
 export async function createTransformersEmbedder(
   loader: Loader = () => import('@huggingface/transformers'),
 ): Promise<Embedder | null> {
@@ -53,10 +51,8 @@ export async function createTransformersEmbedder(
     }
   } catch (err) {
     extractorPromise = null
-    if (!warned) {
-      warned = true
-      console.warn(`[search] embeddings unavailable: ${(err as Error).message}`)
-    }
+    // Callers retry with backoff, so this logs once per attempt rather than once per process.
+    console.warn(`[search] embeddings unavailable: ${(err as Error).message}`)
     return null
   }
 }

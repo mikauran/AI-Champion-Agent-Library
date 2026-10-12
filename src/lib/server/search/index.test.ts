@@ -109,6 +109,64 @@ describe('createSearchService', () => {
     expect((await svc.search('reporting', { limit: Infinity })).results).toHaveLength(120)
   })
 
+  it('does not cache a failed embedder forever: retries with backoff and recovers (WR-02)', async () => {
+    let t = 0
+    let attempts = 0
+    const vecs = await vectorsFor('fake-hash')
+    const getEmbedder = vi.fn(async () => {
+      attempts++
+      return attempts < 3 ? null : createFakeEmbedder()
+    })
+    const { svc } = make({
+      getEmbedder,
+      loadVectors: () => vecs,
+      now: () => t,
+      recheckMs: 1e9,
+      embedderRetryMs: 1000,
+      embedderRetryMaxMs: 8000,
+    })
+    expect((await svc.search('sql')).mode).toBe('bm25') // attempt 1 fails
+    expect(getEmbedder).toHaveBeenCalledTimes(1)
+
+    t = 500 // still inside the backoff window: no new attempt
+    expect((await svc.search('sql')).mode).toBe('bm25')
+    expect(getEmbedder).toHaveBeenCalledTimes(1)
+
+    t = 1000 // first backoff elapsed -> attempt 2 (fails, backoff doubles to 2000)
+    expect((await svc.search('sql')).mode).toBe('bm25')
+    expect(getEmbedder).toHaveBeenCalledTimes(2)
+    t = 2500
+    expect((await svc.search('sql')).mode).toBe('bm25')
+    expect(getEmbedder).toHaveBeenCalledTimes(2)
+
+    t = 3000 // second backoff elapsed -> attempt 3 succeeds
+    expect((await svc.search('sql')).mode).toBe('hybrid')
+    expect(getEmbedder).toHaveBeenCalledTimes(3)
+
+    t = 99999 // loaded embedder is memoised
+    await svc.search('hvac')
+    expect(getEmbedder).toHaveBeenCalledTimes(3)
+  })
+
+  it('retries after a rejecting getEmbedder too, and backoff is capped (WR-02)', async () => {
+    let t = 0
+    const getEmbedder = vi.fn(async () => {
+      throw new Error('network')
+    })
+    const { svc } = make({ getEmbedder, now: () => t, embedderRetryMs: 100, embedderRetryMaxMs: 300, recheckMs: 1e9 })
+    await svc.search('sql') // fail 1 -> next at 100
+    t = 100
+    await svc.search('sql') // fail 2 -> next at 300
+    t = 300
+    await svc.search('sql') // fail 3 -> 400 capped to 300 -> next at 600
+    t = 599
+    await svc.search('sql')
+    expect(getEmbedder).toHaveBeenCalledTimes(3)
+    t = 600
+    await svc.search('sql')
+    expect(getEmbedder).toHaveBeenCalledTimes(4)
+  })
+
   it('requests the embedder once', async () => {
     const getEmbedder = vi.fn(async () => createFakeEmbedder())
     const { svc } = make({ getEmbedder })
