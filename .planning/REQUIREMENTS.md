@@ -20,9 +20,9 @@
 
 ### Search
 
-- [ ] **SRCH-01**: User can search agents using natural language (semantic search via cosine similarity on pre-built embeddings)
-- [ ] **SRCH-02**: Search combines semantic similarity with keyword/BM25 scoring for reliable short-query results
-- [ ] **SRCH-03**: Search results update live as the user types (search-as-you-type)
+- [x] **SRCH-01**: User can search agents using natural language (semantic search via cosine similarity on pre-built embeddings)
+- [x] **SRCH-02**: Search combines semantic similarity with keyword/BM25 scoring for reliable short-query results
+- [x] **SRCH-03**: Search results update live as the user types (search-as-you-type)
 
 ### Agent Detail
 
@@ -50,12 +50,12 @@ Added mid-project (see STATE.md "Roadmap Evolution") as a self-contained initiat
 
 ### Customization (Functional)
 
-- **CUST-02** *(planned: Phase 14, flagged)*: MCP config wizard — user provides database schema and credentials, platform generates a configured MCP variant of the agent
+- [x] **CUST-02** *(Phase 14, flagged `MCP_GENERATOR`, default off; live checks pending human)*: MCP generator — user provides a database schema (SQL DDL), OpenAPI spec or tabular catalog header, platform generates a Python FastMCP package. As built it takes schema or spec only and rejects anything that looks like a credential (never stores credentials or data); SQL DDL is one adapter among three
 - **CUST-03**: Additional customization wizard flows for other well-defined agent types
 
 ### Discovery Enhancements
 
-- **DISC-01**: Related agents panel on detail page (similar agents by embedding distance)
+- [x] **DISC-01** *(Phase 11; browser check pending human)*: Related agents panel on detail page (similar agents by embedding distance)
 - **DISC-02**: Side-by-side agent comparison view
 - **DISC-03**: Agent collections / curated bundles
 
@@ -68,7 +68,7 @@ Added mid-project (see STATE.md "Roadmap Evolution") as a self-contained initiat
 ### UI Polish
 
 - **UI-02**: Dark / light mode theme toggle
-- **UI-03**: WCAG AA accessibility (keyboard nav, screen reader labels)
+- [x] **UI-03** *(Phase 10; keyboard/screen-reader/zoom checks pending human, `10-HUMAN-UAT.md`)*: WCAG AA accessibility (keyboard nav, screen reader labels)
 - **UI-04**: AgentSpec raw viewer (syntax-highlighted spec file on detail page)
 
 ## Out of Scope
@@ -99,19 +99,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DETL-02 | Phase 2 | Complete (code) — human checkpoint 02-04 not yet executed |
 | DETL-03 | Phase 2 | Complete (code) — human checkpoint 02-04 not yet executed |
 | UI-01 | Phase 2 | Complete (code) — human checkpoint 02-04 not yet executed |
-| SRCH-01 | Phase 3 | Pending — no plans exist yet |
-| SRCH-02 | Phase 3 | Pending — no plans exist yet |
-| SRCH-03 | Phase 3 | Pending — no plans exist yet |
+| SRCH-01 | Phase 3 | Complete (code); real-model quality run pending human (03-HUMAN-UAT.md) |
+| SRCH-02 | Phase 3 | Complete (code) |
+| SRCH-03 | Phase 3 | Complete (code); live-typing feel pending human (03-HUMAN-UAT.md) |
 | CUST-01 | Phase 4 | Complete (04-01); browser check of the menu pending human (04-HUMAN-UAT.md) |
+| CUST-02 | Phase 14 | Complete (code), behind flag `MCP_GENERATOR` (default off); live checks pending human (14-HUMAN-UAT.md) |
+| DISC-01 | Phase 11 | Complete (code); browser check pending human (11-HUMAN-UAT.md) |
+| UI-03 | Phase 10 | Complete (code and jsdom/axe checks); keyboard, screen-reader, zoom and contrast checks pending human (10-HUMAN-UAT.md) |
+
+Phases 12 (research docs), 13 (multi-agent and multi-format hosting, flag `AGENT_KINDS`) and 15 (MCP test platform, flag `MCP_TESTER`) were added by the autonomous run without REQ-IDs; they are tracked by their ROADMAP success criteria and the `*-VERIFICATION.md` files (status `human_needed` for 13 and 15, `passed` for 12). Phases 2.1 and 2.2 (green baseline, scale data) likewise have no REQ-IDs (`passed`).
 
 **Coverage:**
-- v1 requirements: 15 total
-- Mapped to phases: 15
+- v1 requirements: 15 total (all implemented in code; human checks still pending for the seven Phase 2 rows, SRCH-01, SRCH-03 and CUST-01)
+- Mapped to phases: 15 (plus v2 items CUST-02, DISC-01, UI-03 now delivered by Phases 14, 11, 10)
 - Unmapped: 0 ✓
-- Phase 2 status: the ONLY remaining Phase 2 item is the human checkpoint 02-04 (pending human). All code is done; Phase 2 is intentionally not marked complete.
+- Phase 2 status (NOT verified, not marked complete): the ONLY remaining Phase 2 item is the human checkpoint 02-04 (pending human). All code is done; Phase 2 is intentionally not marked complete.
 - Note (added 2026-08-20 during a phase-consistency pass): 02-04-PLAN.md is Phase 2's single human-verification checkpoint for the seven rows above (`requirements:` frontmatter lists exactly BROW-01/02/03, DETL-01/02/03, UI-01) and has never been executed — no 02-04-SUMMARY.md exists. The underlying code shipped and is unit-tested (02-01/02/02/02/03), but browser-level sign-off is outstanding. See STATE.md "Missing / Open Work".
 - The Try It Out initiative (Phases 5-7, all complete) is tracked separately above under "Try It Out (delivered outside the v1 REQ-ID system)" rather than in this table, since it was never assigned REQ-IDs.
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-19 after roadmap creation — traceability complete*
+*Last updated: 2026-10-13 — traceability synced with code and phase VERIFICATION files (Phase 2 deliberately not marked verified)*

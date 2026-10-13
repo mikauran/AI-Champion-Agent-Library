@@ -3,18 +3,17 @@ gsd_state_version: "1.0"
 milestone: v1.0
 current_phase: 2
 current_phase_name: Catalog and Detail
-status: planning
-stopped_at: Phase 8 complete, ready to plan Phase 2
-last_updated: "2026-10-12T12:04:36.167Z"
-last_activity: 2026-10-12
-last_activity_desc: Phase 8 complete, transitioned to Phase 2
-state_head: 40a7ba21e61bd86e9eb8457739234a03bfb150ce
+status: human_verification_pending
+stopped_at: Autonomous queue complete (phases 2.1-15 built); Phase 2 only needs human checkpoint 02-04; repo-wide hygiene pass done 2026-10-13
+last_updated: "2026-10-13T00:00:00.000Z"
+last_activity: 2026-10-13
+last_activity_desc: Docs sync, dependency health and deploy runbook (AUTONOMOUS-RUN item 9)
 progress:
-  total_phases: 8
-  completed_phases: 5
-  total_plans: 24
-  completed_plans: 23
-  percent: 57
+  total_phases: 17
+  completed_phases: 16
+  total_plans: 75
+  completed_plans: 74
+  percent: 99
 milestone_name: milestone
 ---
 
@@ -25,33 +24,32 @@ milestone_name: milestone
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Tech evaluators and executives can find the right AI agent for their use case within seconds — through semantic search or category browsing — and understand what it does, how it works, and how to get it.
-**Current focus:** Phase 08 — Container-backed Try It Out (warm on visit)
+**Current focus:** Autonomous run on branch `autonomous/overnight-improvements` is past its phase queue (2.1, 2.2, 3, 4, 9-15 built and merged; review fixes for 13-15 done). Next: free-exploration backlog and the final milestone audit, then human verification (see Deferred Verification).
 
 ## Current Position
 
-Phase: 2 — Catalog and Detail
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-12 — Phase 8 complete, transitioned to Phase 2
+Phase: 2 (Catalog and Detail) is the only phase not closed; all other phases (1, 2.1, 2.2, 3-15) are code complete.
+Plan: 02-04 (human checkpoint) not executed, not faked.
+Status: 8 phases verified `passed` (1, 2.1, 2.2, 5, 6, 7, 8, 12); 8 phases `human_needed` (3, 4, 9, 10, 11, 13, 14, 15: automated evidence complete, browser / live-container / real-model checks pending); Phase 2 pending its human checkpoint. `npm run check` exits 0 (208 files passed, 1 skipped, 2087 tests).
+Last activity: 2026-10-13, hygiene pass (dependencies bumped in range, docs synced, `docs/deploy-runbook.md`, `docs/dependency-health.md`).
 
-Progress: [██████░░░░] 57%
+Progress: [##########] 74/75 plans (the missing plan is 02-04, pending human)
 
 ## Missing / Open Work
 
-Not "missing" in the sense of lost work — these are legitimate gaps in the roadmap's execution, listed here so a future session doesn't have to rediscover them:
-
-- **Phase 2 only remaining item: 02-04 (pending human).** Do not mark Phase 2 complete until it runs or is waived.
-- **02-04-PLAN.md** (Phase 2, human-verification checkpoint for catalog and detail pages) has a PLAN.md but no SUMMARY.md — it was never executed. Phase 2 is otherwise functionally complete (browse, filter, detail page, responsive layout all shipped and tested in 02-01..02-03).
-- **Phase 3 (Search)** has a phase directory (`.planning/phases/03-search/`) but it is empty — no CONTEXT/RESEARCH/PLAN files exist yet. Requirements SRCH-01..03 are defined in REQUIREMENTS.md but unmapped to any plan.
-- **Phase 4 (Customization Placeholder)**: 04-01 done (CUST-01 complete); browser check of the menu is pending human (`.planning/phases/04-customization-placeholder/04-HUMAN-UAT.md`).
-- **Phase 9 (Try It Out hardening)**: plans 09-01..09-04 executed (security review, chaos tests, pending-human live checklist); phase not marked complete, verification and the live Podman checks in `.planning/phases/09-try-it-out-hardening/09-HUMAN-UAT.md` are pending human.
-- Neither gap blocks Phases 5-7 (the Try It Out initiative), which branched off Phase 2 and does not depend on Phase 3 or 4.
+- **Phase 2: only 02-04 remains (pending human).** Do not mark Phase 2 complete until it runs or is waived (D-001). 02-04-PLAN.md has no SUMMARY.md.
+- **Phase 3 (Search)**: built (5/5 plans, hybrid BM25 + local embeddings, `/api/search`, `?q=`). Pending human: real-model accuracy run, SIM_FLOOR tuning, live-typing feel (`03-HUMAN-UAT.md`).
+- **Phase 4 (Customization placeholder)**: built; browser check of the Customize menu pending (`04-HUMAN-UAT.md`).
+- **Phase 9 (Try It Out hardening)**: built, security findings fixed; nine live Podman checks pending (`09-HUMAN-UAT.md`).
+- **Phases 10, 11, 13, 14, 15**: built; pending human lists in each `*-HUMAN-UAT.md` (indexed in `docs/deploy-runbook.md` section 9).
+- **Build blocker B-002**: `npm run build` / `vite build` fails with `Invalid export 'mcpGeneratorData'` in `src/routes/agents/[slug]/+page.server.ts`; `npm run check` does not catch it. Needs a human or orchestrator decision because two existing tests import the helpers from the route module.
+- Open design questions for Ville are in `.planning/AUTONOMOUS-SUMMARY.md` ("Questions for Ville").
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 15
+- Total plans completed (timed rows below, up to Phase 8): 15; all phases: 74 of 75
 - Average duration: ~11 min
 - Total execution time: ~2.7 hours
 
@@ -64,6 +62,8 @@ Not "missing" in the sense of lost work — these are legitimate gaps in the roa
 | 05 — Try It Out Field | 2/2 | ~25 min | ~12.5 min |
 | 06 — Runnable Try It Out Flow (mock) | 3/3 | 25 min | ~8.3 min |
 | 07 — No-Container Demo Backend | 5/5 | ~88 min | ~17.6 min |
+
+Phases 8 onward (and the inserted and autonomous-run phases) are not timed here; plan counts per phase: 08: 8/8, 09: 4/4, 10: 3/3, 11: 2/2, 12: 3/3, 13: 9/9, 14: 7/7, 15: 13/13, 2.1: 2/2, 2.2: 2/2, 03: 5/5, 04: 1/1.
 
 **Recent Trend:**
 
@@ -102,7 +102,7 @@ Not "missing" in the sense of lost work — these are legitimate gaps in the roa
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
+Decisions are logged in PROJECT.md Key Decisions table. Autonomous-run decisions (D-001 onward, each with revert steps) are in `.planning/AUTONOMOUS-DECISIONS.md`.
 Recent decisions affecting current work:
 
 - [Pre-Phase 1]: Oracle AgentSpec is the canonical source format; shim/adapter layer is mandatory before any UI work
@@ -146,9 +146,10 @@ None yet.
 
 ### Blockers/Concerns
 
-- Oracle AgentSpec field structure not directly inspected — must obtain actual spec files or schema before implementing PIPE-01/PIPE-02 (research gap flagged). *Note: Phase 1 has since shipped and closed PIPE-01/02 — this blocker predates that and can likely be retired; left here pending explicit confirmation.*
-- Embedding model selection (all-MiniLM-L6-v2 recommended) needs validation against real agent descriptions before Phase 3 commits to it — still open; Phase 3 has not started.
-- Phase 2's 02-04 human-verification checkpoint was never executed — Phase 2 cannot be marked fully complete until it runs (or is explicitly waived).
+- B-002 (see Missing / Open Work): production build fails on the route-module exports. B-001 (test flake) is resolved (D-163). Full list: `.planning/AUTONOMOUS-BLOCKERS.md`.
+- Phase 2's 02-04 human-verification checkpoint was never executed; Phase 2 cannot be marked fully complete until it runs (or is explicitly waived).
+- RETIRED: "Oracle AgentSpec field structure not inspected" (Phase 1 shipped PIPE-01/02) and "embedding model validation before Phase 3" (Phase 3 shipped with all-MiniLM-L6-v2; the real-model accuracy run is a pending human item).
+- Unverified facts carried by flagged phases: `fastmcp>=3.4,<4` pin (Phase 14/15), several framework format details (Phase 12/13). See the HUMAN-UAT files.
 
 ### Quick Tasks Completed
 
@@ -166,23 +167,25 @@ None yet.
 - Phases 9-11 added: Try It Out Hardening (adversarial review + chaos tests of Phase 8 code), Accessibility (UI-03), Related Agents (DISC-01)
 - Phases 12-13 added: Agent Types and Intake Research (taxonomy, capability matrix, intake guide), then Multi-Agent and Multi-Format Hosting behind a feature flag
 - Phases 14-15 added: MCP Generator (research synthesis first; DB schema/CUST-02 is one adapter) and MCP Test Platform (ports the benchmark harness from ~/projects/mcp-gen-comparison); both flagged, default off
+- Phase 2.1 and 2.2 done (D-005, D-007); Phases 3, 4, 9, 10, 11 built by the autonomous run; Phases 12-15 built (12 docs only; 13-15 behind flags `AGENT_KINDS`, `MCP_GENERATOR`, `MCP_TESTER`, all default off). Post-queue review/fix passes for 13, 14, 15 (D-200..D-259).
 - Phases 5, 6, and 7 together form one continuous "Try It Out" initiative, executed as a self-contained branch off Phase 2 — independent of, and completed ahead of, Phases 3 and 4.
 
 ## Session Continuity
 
-Last session: 2026-10-08T06:24:23.252Z
-Stopped at: Phase 8 complete, ready to plan Phase 2
+Last session: 2026-10-13 (autonomous run, hygiene pass)
+Stopped at: docs sync, dependency health and deploy runbook committed on the worktree branch
 Resume file: None
 
 ## Deferred Verification
 
 | Phase | State | Resume |
 |-------|-------|--------|
-| 3 | verification_deferred_human | /gsd-verify-work 3 |
-| 4 | verification_deferred_human | /gsd-verify-work 4 |
-| 9 | verification_deferred_human | /gsd-verify-work 9 |
-| 10 | verification_deferred_human | /gsd-verify-work 10 |
-| 11 | verification_deferred_human | /gsd-verify-work 11 |
-| 13 | verification_deferred_human | /gsd-verify-work 13 |
-| 14 | verification_deferred_human | /gsd-verify-work 14 |
-| 15 | verification_deferred_human | /gsd-verify-work 15 (pending-human list: .planning/phases/15-mcp-test-platform-flagged/15-HUMAN-UAT.md; decisions D-164..D-181 in AUTONOMOUS-DECISIONS.md) |
+| 2 | checkpoint 02-04 pending human | execute `.planning/phases/02-catalog-and-detail/02-04-PLAN.md` |
+| 3 | verification_deferred_human | /gsd-verify-work 3 (`03-HUMAN-UAT.md`) |
+| 4 | verification_deferred_human | /gsd-verify-work 4 (`04-HUMAN-UAT.md`) |
+| 9 | verification_deferred_human | /gsd-verify-work 9 (`09-HUMAN-UAT.md`) |
+| 10 | verification_deferred_human | /gsd-verify-work 10 (`10-HUMAN-UAT.md`) |
+| 11 | verification_deferred_human | /gsd-verify-work 11 (`11-HUMAN-UAT.md`) |
+| 13 | verification_deferred_human | /gsd-verify-work 13 (`13-HUMAN-UAT.md`) |
+| 14 | verification_deferred_human | /gsd-verify-work 14 (`14-HUMAN-UAT.md`) |
+| 15 | verification_deferred_human | /gsd-verify-work 15 (pending-human list: `.planning/phases/15-mcp-test-platform-flagged/15-HUMAN-UAT.md`; decisions D-164..D-181 in AUTONOMOUS-DECISIONS.md) |
