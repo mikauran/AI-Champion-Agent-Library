@@ -42,7 +42,7 @@ Progress: [##########] 74/75 plans (the missing plan is 02-04, pending human)
 - **Phase 4 (Customization placeholder)**: built; browser check of the Customize menu pending (`04-HUMAN-UAT.md`).
 - **Phase 9 (Try It Out hardening)**: built, security findings fixed; nine live Podman checks pending (`09-HUMAN-UAT.md`).
 - **Phases 10, 11, 13, 14, 15**: built; pending human lists in each `*-HUMAN-UAT.md` (indexed in `docs/deploy-runbook.md` section 9).
-- **Build blocker B-002**: `npm run build` / `vite build` fails with `Invalid export 'mcpGeneratorData'` in `src/routes/agents/[slug]/+page.server.ts`; `npm run check` does not catch it. Needs a human or orchestrator decision because two existing tests import the helpers from the route module.
+- **Build blocker B-002 (resolved)**: `vite build` failed on route-module exports; helpers moved to `src/lib/pageFlags.ts`, guard test `src/routes/routeExports.test.ts` added, real `vite build` verified exit 0.
 - Open design questions for Ville are in `.planning/AUTONOMOUS-SUMMARY.md` ("Questions for Ville").
 
 ## Performance Metrics
@@ -146,7 +146,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- B-002 (see Missing / Open Work): production build fails on the route-module exports. B-001 (test flake) is resolved (D-163). Full list: `.planning/AUTONOMOUS-BLOCKERS.md`.
+- B-001 (test flake) and B-002 (build failure on route-module exports) are both resolved. Full list: `.planning/AUTONOMOUS-BLOCKERS.md`.
 - Phase 2's 02-04 human-verification checkpoint was never executed; Phase 2 cannot be marked fully complete until it runs (or is explicitly waived).
 - RETIRED: "Oracle AgentSpec field structure not inspected" (Phase 1 shipped PIPE-01/02) and "embedding model validation before Phase 3" (Phase 3 shipped with all-MiniLM-L6-v2; the real-model accuracy run is a pending human item).
 - Unverified facts carried by flagged phases: `fastmcp>=3.4,<4` pin (Phase 14/15), several framework format details (Phase 12/13). See the HUMAN-UAT files.

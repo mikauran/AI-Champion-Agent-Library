@@ -406,7 +406,7 @@ npm run build
 npm run preview           # node build
 ```
 
-The built output in `build/` is a Node.js server (adapter-node). Run it with `node build`. Known issue: the build currently fails on invalid route-module exports (B-002 in `.planning/AUTONOMOUS-BLOCKERS.md`).
+The built output in `build/` is a Node.js server (adapter-node). Run it with `node build`.
 
 Environment variables: the complete table with defaults (flags, auth, Try It Out, MCP test runner) is in `docs/deploy-runbook.md` section 3. Core ones: `CATALOG_DB_PATH`, `INGEST_DATA_DIR`, `INGEST_DB_PATH`, `PORT`, `HF_CACHE_DIR`, `SEARCH_EMBEDDINGS`.
 

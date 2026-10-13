@@ -2,7 +2,7 @@
 
 Operator guide for building, starting, checking and rolling back the AIC Agent Library. Everything here is derived from `package.json`, `Containerfile`, `podman-compose.yml`, `.env.example` and the code (variable names are grep-verified against `src/` and `scripts/`). Nothing in this file has been run against a real host.
 
-> **Known blocker (B-002).** On this branch `npm run build` / `npx vite build` fails with `Invalid export 'mcpGeneratorData' in src/routes/agents/[slug]/+page.server.ts`, so the Containerfile build cannot currently succeed. `npm run check` does not run the build. Fix it before the first deploy (see `.planning/AUTONOMOUS-BLOCKERS.md`).
+> **Build status.** `npx vite build` succeeds on this branch (B-002, a route-module export error, is fixed and guarded by `src/routes/routeExports.test.ts`). The Containerfile image build itself has still never been run here (pending human).
 
 ## 1. Prerequisites
 
@@ -169,4 +169,4 @@ Nothing below has been done. Each file is an unchecked checklist.
 | 14 MCP generator | fastmcp pin check on PyPI, run a generated server, CLI per fixture, panel and zip download | `.planning/phases/14-mcp-generator-generalized-from-research-flagged/14-HUMAN-UAT.md` |
 | 15 MCP test platform | Runner image build, container run, real FastMCP comparison, auth hook check, browser checks | `.planning/phases/15-mcp-test-platform-flagged/15-HUMAN-UAT.md` |
 
-Phases 1, 2.1, 2.2, 5, 6, 7, 8 and 12 are verified `passed`. The first production build is also a human step until B-002 is fixed.
+Phases 1, 2.1, 2.2, 5, 6, 7, 8 and 12 are verified `passed`. The first production container build is a human step.

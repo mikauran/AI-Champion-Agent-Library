@@ -215,7 +215,7 @@ Flags accept `1`, `true`, `on` or `yes`.
 
 Deploying, environment table, backups, health check, rollback and the list of pending live checks: [docs/deploy-runbook.md](docs/deploy-runbook.md). Dependency audit status: [docs/dependency-health.md](docs/dependency-health.md).
 
-Known issue: `npm run build` currently fails on a SvelteKit invalid-export error (blocker B-002 in `.planning/AUTONOMOUS-BLOCKERS.md`); `npm run dev` and `npm run check` are unaffected.
+`vite build` was verified to succeed on this branch (an earlier route-export failure, B-002, is fixed and guarded by `src/routes/routeExports.test.ts`).
 
 ---
 
