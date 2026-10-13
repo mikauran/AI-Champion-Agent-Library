@@ -11,7 +11,7 @@ vi.mock('drizzle-orm', () => ({ eq: vi.fn(), inArray: vi.fn() }))
 vi.mock('@sveltejs/kit', () => ({ error: vi.fn() }))
 
 import Page from './[slug]/+page.svelte'
-import { mcpGeneratorData } from './[slug]/+page.server'
+import { mcpGeneratorData } from '$lib/pageFlags'
 
 const baseAgent = {
   slug: 'example-agent',

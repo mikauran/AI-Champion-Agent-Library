@@ -5,22 +5,9 @@ import type { PageServerLoad } from './$types'
 import { warmForSession } from '$lib/server/tryitout/service'
 import { related } from '$lib/server/search/index.js'
 import { sessionKey } from '$lib/server/tryitout/session'
-import { agentKindsEnabled, mcpGeneratorEnabled, mcpTesterEnabled } from '$lib/flags.js'
+import { agentKindsEnabled } from '$lib/flags.js'
+import { mcpGeneratorData, mcpTesterData } from '$lib/pageFlags.js'
 import { defaultKindInfo, effectiveTryItOutMode } from '$lib/spec/kinds.js'
-
-/** Phase 14: the key exists only when MCP_GENERATOR is on, so flag-off data is unchanged. */
-export function mcpGeneratorData(
-  env: Record<string, string | undefined> = process.env
-): { mcpGeneratorEnabled?: true } {
-  return mcpGeneratorEnabled(env) ? { mcpGeneratorEnabled: true } : {}
-}
-
-/** Phase 15: the key exists only when MCP_TESTER is on, so flag-off data is unchanged. */
-export function mcpTesterData(
-  env: Record<string, string | undefined> = process.env
-): { mcpTesterEnabled?: true } {
-  return mcpTesterEnabled(env) ? { mcpTesterEnabled: true } : {}
-}
 
 export const load: PageServerLoad = async ({ params, url, locals, cookies, getClientAddress }) => {
   const row = db

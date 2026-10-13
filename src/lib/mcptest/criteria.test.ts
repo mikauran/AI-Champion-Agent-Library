@@ -235,7 +235,12 @@ describe('docs and pending-human list', () => {
 
 describe('no pre-existing test file was modified by Phase 15', () => {
   // Baseline = parent of the commit that started the phase. jobs.test.ts changed later in a flake fix (D-163): exempt by name.
-  const EXEMPT = ['src/routes/api/tryitout/jobs/jobs.test.ts']
+  // jobs.test.ts: flake fix (D-163). customize-button.mcp*.test.ts: import path only, helpers moved to $lib/pageFlags (build fix, B-002).
+  const EXEMPT = [
+    'src/routes/api/tryitout/jobs/jobs.test.ts',
+    'src/routes/agents/customize-button.mcp.test.ts',
+    'src/routes/agents/customize-button.mcptest.test.ts',
+  ]
   it('git diff --diff-filter=M against the baseline lists no test file', () => {
     let start = ''
     try {
