@@ -32,7 +32,8 @@ import type {
 } from '../kinds.js'
 import { AGENT_KIND_VALUES, clampExtras, MEMBERS_MAX } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { redactSecrets, scanSecrets } from '../security.js'
+import { capText, redactSecrets, scanSecrets, setOwn } from '../security.js'
+import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
 const FORMAT = 'catalog-manifest'
@@ -61,18 +62,47 @@ function strList(v: unknown): string[] {
   return out
 }
 
-function load(files: SubmissionFile[]): { doc: Obj } | null {
-  for (const file of Array.isArray(files) ? files : []) {
-    if (!file || typeof file.path !== 'string' || typeof file.text !== 'string') continue
-    if (!CATALOG_RE.test(file.path)) continue
+function load(files: SubmissionFile[]): { doc: Obj; path: string; ignored: string[] } | null {
+  const catalogs = byShallowest(
+    (Array.isArray(files) ? files : []).filter(
+      (f) => f && typeof f.path === 'string' && typeof f.text === 'string' && CATALOG_RE.test(f.path),
+    ),
+    (f) => f.path,
+  )
+  for (const file of catalogs) {
     try {
       const doc: unknown = parseYaml(file.text, { maxAliasCount: 100 })
-      if (isObj(doc) && str(doc.name)) return { doc }
+      if (isObj(doc) && str(doc.name)) {
+        return { doc, path: file.path, ignored: catalogs.filter((f) => f !== file).map((f) => f.path) }
+      }
     } catch {
       /* not parseable: not detected */
     }
   }
   return null
+}
+
+function hasCatalogObject(files: SubmissionFile[]): boolean {
+  for (const file of Array.isArray(files) ? files : []) {
+    if (!file || typeof file.path !== 'string' || typeof file.text !== 'string') continue
+    if (!CATALOG_RE.test(file.path)) continue
+    try {
+      if (isObj(parseYaml(file.text, { maxAliasCount: 100 }))) return true
+    } catch {
+      /* not parseable */
+    }
+  }
+  return false
+}
+
+/** Why a catalog file is unusable: the (clamped) YAML error, e.g. the alias limit, or the missing name. */
+function catalogProblem(text: string): string {
+  try {
+    const doc: unknown = parseYaml(text, { maxAliasCount: 100 })
+    return isObj(doc) ? 'catalog.yaml has no usable name' : 'catalog.yaml is not a mapping'
+  } catch (e) {
+    return `catalog.yaml could not be parsed: ${capText(e instanceof Error ? e.message : 'error', 200).text}`
+  }
 }
 
 function safeHttpUrl(v: unknown): string | null {
@@ -157,13 +187,13 @@ function parseDoc(doc: Obj, now: string): ParseOutcome {
   const members = parseMembers(doc.members, warnings)
 
   const extras: Obj = {}
-  for (const k of unknownFields) extras[k] = doc[k]
+  for (const k of unknownFields) setOwn(extras, k, doc[k])
   if (kind === 'mcp-server') {
     const mcp: Obj = {}
     const src = isObj(doc.mcp) ? { ...doc.mcp } : {}
     for (const k of MCP_KEYS) {
       const v = doc[k] ?? src[k]
-      if (v !== undefined) mcp[k] = v
+      if (v !== undefined) setOwn(mcp, k, v)
     }
     const names = envNames(doc.env ?? src.env)
     if (names.length > 0) mcp.envVarNames = names
@@ -211,7 +241,12 @@ export const manifestAdapter: FormatAdapter = {
   id: 'catalog-manifest',
   detect(files) {
     try {
-      return load(files) ? { format: FORMAT, confidence: 0.9 } : null
+      if (load(files)) return { format: FORMAT, confidence: 0.9 }
+      // WR-01: a catalog.yaml that parses but has no name is still a catalog manifest. It is
+      // detected at low confidence so that parse() can report the missing name (a failure for
+      // the author) instead of the folder being skipped as "not a submission". An unparseable
+      // file stays undetected (pinned by manifest.test.ts; IN-03 is only covered at parse level).
+      return hasCatalogObject(files) ? { format: FORMAT, confidence: 0.3 } : null
     } catch {
       return null
     }
@@ -219,12 +254,16 @@ export const manifestAdapter: FormatAdapter = {
   parse(files, ctx) {
     try {
       const hit = load(files)
-      if (hit) return parseDoc(hit.doc, ctx.now)
+      if (hit) {
+        const outcome = parseDoc(hit.doc, ctx.now)
+        const note = ignoredWarning('catalog.yaml', hit.path, hit.ignored)
+        return note ? { ...outcome, warnings: [...outcome.warnings, note] } : outcome
+      }
       for (const f of Array.isArray(files) ? files : []) {
         if (f && typeof f.path === 'string' && CATALOG_RE.test(f.path)) {
           return {
             status: 'missing-from-author', format: FORMAT, record: null, kindInfo: null,
-            missingFromAuthor: ['name'], unknownFields: [], warnings: ['catalog.yaml has no usable name'],
+            missingFromAuthor: ['name'], unknownFields: [], warnings: [catalogProblem(f.text)],
           }
         }
       }

@@ -33,7 +33,7 @@ function jaccard(a: string[], b: string[]): number {
   return inter / (sa.size + sb.size - inter)
 }
 
-/** Tag/category/tool/LLM overlap score in [0, 1.65]. No embeddings needed. */
+/** Tag/category/tool/LLM overlap score in [0, 1.65] (+0.1 when both carry a kind). No embeddings needed. */
 export function fallbackScore(a: RelatedInput, b: RelatedInput): number {
   let s = jaccard(a.tags, b.tags)
   if (a.category && b.category && a.category.toLowerCase() === b.category.toLowerCase()) s += CATEGORY_WEIGHT
@@ -58,6 +58,9 @@ export function relatedAgents(
   const target = agents.find((a) => a.slug === slug)
   if (!target || k <= 0) return []
   const tv = vectors?.get(slug)
+  // The kind bonus only exists when kinds are present (flag on), so only then does it raise the ceiling;
+  // flag-off inputs keep the exact pre-Phase-13 scaling and no clamp is needed (IN-01).
+  const max = FALLBACK_MAX + (typeof target.kind === 'string' ? KIND_WEIGHT : 0)
   const out: RelatedAgent[] = []
   for (const c of agents) {
     if (c.slug === slug) continue
@@ -67,7 +70,7 @@ export function relatedAgents(
       if (score >= SIM_FLOOR) out.push({ slug: c.slug, score, via: 'embedding' })
     } else {
       const f = fallbackScore(target, c)
-      if (f > 0) out.push({ slug: c.slug, score: tv ? Math.min(1, f / FALLBACK_MAX) : f, via: 'fallback' })
+      if (f > 0) out.push({ slug: c.slug, score: tv ? f / max : f, via: 'fallback' })
     }
   }
   out.sort((x, y) => y.score - x.score || (x.slug < y.slug ? -1 : x.slug > y.slug ? 1 : 0))

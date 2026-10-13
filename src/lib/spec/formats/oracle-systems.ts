@@ -33,7 +33,9 @@ import type {
 } from '../kinds.js'
 import { clampExtras, MEMBERS_MAX } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { redactSecrets, scanSecrets } from '../security.js'
+import { redactSecrets, scanSecrets, setOwn } from '../security.js'
+import { safeHttpUrl } from '../../safeUrl.js'
+import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
 type SystemType = 'Swarm' | 'ManagerWorkers' | 'Flow' | 'A2AAgent'
@@ -90,8 +92,9 @@ function candidates(files: SubmissionFile[]): Candidate[] {
       out.push({ file, doc, type: t as Candidate['type'] })
     }
   }
-  // systems first (stable), then single agents
-  return out.sort((a, b) => Number(a.type === 'Agent') - Number(b.type === 'Agent'))
+  // systems first, then single agents; within each, the shallowest path wins (WR-02)
+  const shallow = byShallowest(out, (c) => c.file.path)
+  return [...shallow.filter((c) => c.type !== 'Agent'), ...shallow.filter((c) => c.type === 'Agent')]
 }
 
 // ---- reference resolution ---------------------------------------------------------------
@@ -177,7 +180,7 @@ function toMember(r: Resolved, role: MemberRole, ctx: Ctx): AgentMember {
 function memberFields(r: Resolved): Obj | null {
   if (!r.comp) return null
   const o: Obj = {}
-  for (const [k, v] of Object.entries(r.comp)) if (!OMIT_FROM_MEMBER_FIELDS.has(k)) o[k] = v
+  for (const [k, v] of Object.entries(r.comp)) if (!OMIT_FROM_MEMBER_FIELDS.has(k)) setOwn(o, k, v)
   return Object.keys(o).length > 0 ? o : null
 }
 
@@ -266,14 +269,15 @@ function readFlow(doc: Obj, ctx: Ctx): SystemRead {
   }
   for (const n of nodes) if (!seen.has(n.ref)) ordered.push(n)
 
-  const nodeTypes: Record<string, number> = {}
+  // Map, not a plain object: author-controlled node types like `constructor` must not read inherited members.
+  const nodeTypes = new Map<string, number>()
   const members: SystemRead['members'] = []
   for (const n of ordered) {
     const t = (n.comp && typeOf(n.comp)) ?? 'unknown'
-    nodeTypes[t] = (nodeTypes[t] ?? 0) + 1
+    nodeTypes.set(t, (nodeTypes.get(t) ?? 0) + 1)
     if (t === 'AgentNode') members.push({ r: n, role: 'step' })
   }
-  const extras: Obj = { nodeTypes }
+  const extras: Obj = { nodeTypes: Object.fromEntries([...nodeTypes].filter(([k]) => k !== '__proto__')) }
   if (start) extras.startNode = start
   if (doc.control_flow_connections !== undefined) extras.controlFlow = doc.control_flow_connections
   return { kind: 'system', topology: 'pipeline', members, extras }
@@ -292,10 +296,13 @@ function metaStr(meta: Obj | null, key: string): string | null {
   return meta ? str(meta[key]) : null
 }
 
-function placeholderRecord(doc: Obj, now: string): AgentRecord | null {
+function placeholderRecord(doc: Obj, now: string, warnings: string[]): AgentRecord | null {
   const name = str(doc.name)
   if (!name) return null
   const meta = isObj(doc.metadata) ? doc.metadata : null
+  const rawUrl = metaStr(meta, 'github_url')
+  const githubUrl = safeHttpUrl(rawUrl)
+  if (rawUrl && !githubUrl) warnings.push('github_url is not an http(s) URL; dropped')
   const maturity = metaStr(meta, 'maturity')
   return {
     slug: slugify(name),
@@ -308,7 +315,7 @@ function placeholderRecord(doc: Obj, now: string): AgentRecord | null {
     inputFields: [],
     requiresHumanApproval: false,
     category: metaStr(meta, 'category'),
-    githubUrl: metaStr(meta, 'github_url'),
+    githubUrl,
     linkLabel: metaStr(meta, 'link_label'),
     maturityStatus: maturity === 'production' || maturity === 'beta' || maturity === 'experimental' ? maturity : 'experimental',
     tags: meta && Array.isArray(meta.tags) ? meta.tags.filter((t): t is string => typeof t === 'string') : [],
@@ -371,17 +378,17 @@ function parseCandidate(c: Candidate, ctxIn: { now: string }): ParseOutcome {
   const members = picked.map((m) => toMember(m.r, m.role, ctx))
 
   const extras: Obj = { ...read.extras }
-  for (const k of unknownFields) extras[k] = doc[k]
+  for (const k of unknownFields) setOwn(extras, k, doc[k])
   if (isObj(doc.metadata)) {
     const rest: Obj = {}
     const consumed = new Set(['category', 'tags', 'github_url', 'maturity', 'link_label'])
-    for (const [k, v] of Object.entries(doc.metadata)) if (!consumed.has(k)) rest[k] = v
+    for (const [k, v] of Object.entries(doc.metadata)) if (!consumed.has(k)) setOwn(rest, k, v)
     if (Object.keys(rest).length > 0) extras.metadata = rest
   }
   const fields: Obj = {}
   for (const m of picked) {
     const f = memberFields(m.r)
-    if (f) fields[m.r.ref] = f
+    if (f) setOwn(fields, m.r.ref, f)
   }
   if (Object.keys(fields).length > 0) extras.memberFields = fields
   if (type === 'Swarm' && !str(doc.first_agent) && !isObj(doc.first_agent)) {
@@ -397,7 +404,7 @@ function parseCandidate(c: Candidate, ctxIn: { now: string }): ParseOutcome {
   }
   safe = clampExtras(safe)
 
-  const record = placeholderRecord(doc, ctxIn.now)
+  const record = placeholderRecord(doc, ctxIn.now, warnings)
   if (!record) {
     return {
       status: 'missing-from-author', format, record: null, kindInfo: null,
@@ -422,9 +429,13 @@ export const oracleSystemsAdapter: FormatAdapter = {
     return { format: 'oracle-agentspec', confidence: best.type === 'Agent' ? 0.8 : 0.9 }
   },
   parse(files, ctx) {
-    const best = candidates(files)[0]
+    const all = candidates(files)
+    const best = all[0]
     if (!best) return unrecognizedOutcome()
-    return parseCandidate(best, ctx)
+    const outcome = parseCandidate(best, ctx)
+    // WR-02: one submission yields one record; say so when other definitions were left out.
+    const note = ignoredWarning('Oracle AgentSpec', best.file.path, all.slice(1).map((c) => c.file.path))
+    return note ? { ...outcome, warnings: [...outcome.warnings, note] } : outcome
   },
 }
 

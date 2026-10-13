@@ -7,10 +7,13 @@
   import CustomizeMenu from '$lib/components/CustomizeMenu.svelte'
   import TryItOutPanel from '$lib/components/TryItOutPanel.svelte'
   import { TAILORABLE_FIELDS } from '$lib/config/tailorable-fields.js'
+  import { safeHttpUrl } from '$lib/safeUrl.js'
   import type { PageData } from './$types'
 
   let { data }: { data: PageData } = $props()
   let agent = $derived(data.agent)
+  // Only http(s) links reach an href (CR-03): a stored `javascript:` URL renders no link.
+  let githubHref = $derived(safeHttpUrl(agent.githubUrl))
   // Phase 13 (flag AGENT_KINDS): data.kindInfo exists only when the flag is on.
   let kindInfo = $derived(data.kindInfo && data.kindInfo.kind !== 'agent' ? data.kindInfo : null)
   let isSystem = $derived(kindInfo !== null)
@@ -76,9 +79,9 @@
       {/if}
 
       <div class="flex flex-wrap items-center gap-4">
-        {#if agent.githubUrl}
+        {#if githubHref}
           <a
-            href={agent.githubUrl}
+            href={githubHref}
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:underline"

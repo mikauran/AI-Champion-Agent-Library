@@ -7,6 +7,7 @@ import { basename, join } from 'node:path'
 import { parseSubmission, detectFormats } from '../src/lib/spec/registry.js'
 import { readSubmissionDir } from '../src/lib/spec/scan.js'
 import type { ParseOutcome, SubmissionFile, SubmissionStatus } from '../src/lib/spec/kinds.js'
+import { sanitizeMessage } from '../src/lib/spec/security.js'
 
 export interface ReportItem {
   name: string
@@ -29,6 +30,8 @@ export interface ValidationResult {
   notes: string[]
 }
 
+/** Exit code for an unexpected internal error (1 is a --strict failure, 2 is usage). */
+export const INTERNAL_ERROR_EXIT = 3
 const MAX_ITEMS = 200
 const MAX_STR = 300
 const MAX_LIST = 50
@@ -36,10 +39,8 @@ const DATA_EXT = /\.(ya?ml|json|jsonc|md)$/i
 
 /** Strip secret-looking tokens, control characters and excess length from any printed string. */
 function clean(s: unknown): string {
-  let t = typeof s === 'string' ? s : String(s)
-  t = t.replace(/sk-[A-Za-z0-9_-]{8,}/g, '[redacted]')
-  t = t.replace(/[\u0000-\u001f\u007f]+/g, ' ')
-  return t.length > MAX_STR ? `${t.slice(0, MAX_STR)}...` : t
+  const t = (typeof s === 'string' ? s : String(s)).replace(/sk-[A-Za-z0-9_-]{8,}/g, '[redacted]')
+  return sanitizeMessage(t, MAX_STR)
 }
 const cleanList = (l: unknown): string[] =>
   (Array.isArray(l) ? l : []).slice(0, MAX_LIST).map(clean)
@@ -79,7 +80,9 @@ function failItem(name: string, warning: string): ReportItem {
 function itemFor(name: string, target: string): ReportItem {
   try {
     const { files, skipped } = readSubmissionDir(target)
-    const outcome = parseSubmission(files, { now: new Date().toISOString() })
+    // The folder (or file stem) names the submission when its files carry no usable name (CR-02).
+    const hint = DATA_EXT.test(name) ? name.replace(/\.[^.]+$/, '') : name
+    const outcome = parseSubmission(files, { now: new Date().toISOString(), hint })
     return toItem(name, outcome, skipped)
   } catch (e) {
     return failItem(name, `could not be validated: ${e instanceof Error ? e.message : 'error'}`)
@@ -232,8 +235,13 @@ export function main(
     if (strict && result.items.some((i) => i.status !== 'ingestible')) return 1
     return 0
   } catch (e) {
-    io.err(`validate-submission: ${e instanceof Error ? clean(e.message) : 'error'}`)
-    return 0
+    try {
+      io.err(`validate-submission: ${e instanceof Error ? clean(e.message) : 'error'}`)
+    } catch {
+      /* the exit code below is what matters */
+    }
+    // WR-08: an internal failure must fail a CI gate (also with --strict), never report success.
+    return INTERNAL_ERROR_EXIT
   }
 }
 

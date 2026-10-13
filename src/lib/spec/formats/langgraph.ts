@@ -16,7 +16,8 @@ import { slugify } from '../types.js'
 import type { FormatAdapter, KindInfo, ParseOutcome, SubmissionFile } from '../kinds.js'
 import { clampExtras } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { capText } from '../security.js'
+import { capText, setOwn } from '../security.js'
+import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
 
@@ -45,7 +46,7 @@ const KNOWN = new Set([
 export const langgraphAdapter: FormatAdapter = {
   id: 'langgraph',
   detect(files) {
-    for (const f of files.filter(isLg)) {
+    for (const f of byShallowest(files.filter(isLg), (x) => x.path)) {
       const o = parseJson(f.text)
       if (o && isObj(o.graphs)) return { format: 'langgraph-json', confidence: 0.5 }
     }
@@ -53,8 +54,10 @@ export const langgraphAdapter: FormatAdapter = {
   },
   parse(files, ctx): ParseOutcome {
     try {
-      const f = files.find(isLg)
+      const all = byShallowest(files.filter(isLg), (x) => x.path)
+      const f = all.find((x) => isObj(parseJson(x.text)?.graphs)) ?? all[0]
       if (!f) return unrecognizedOutcome()
+      const ignored = all.filter((x) => x !== f).map((x) => x.path)
       const o = parseJson(f.text)
       if (!o || !isObj(o.graphs)) {
         return {
@@ -65,18 +68,21 @@ export const langgraphAdapter: FormatAdapter = {
       const graphIds = Object.keys(o.graphs).slice(0, 50).map((k) => cap(k, 100))
       const graphEntrypoints: Record<string, string> = {}
       for (const [k, v] of Object.entries(o.graphs).slice(0, 50)) {
-        if (typeof v === 'string') graphEntrypoints[cap(k, 100)] = cap(v, 300)
+        if (typeof v === 'string') setOwn(graphEntrypoints, cap(k, 100), cap(v, 300))
       }
       const dependencies = Array.isArray(o.dependencies)
         ? o.dependencies.filter((d): d is string => typeof d === 'string').slice(0, 100).map((d) => cap(d, 200))
         : []
       const unknown: Obj = {}
-      for (const k of Object.keys(o)) if (!KNOWN.has(k)) unknown[k] = o[k]
+      for (const k of Object.keys(o)) if (!KNOWN.has(k)) setOwn(unknown, k, o[k])
       const parts = f.path.split('/')
       const folder = parts.length >= 2 ? parts[parts.length - 2]! : ''
-      const title = folder && folder !== '.' ? cap(folder, 120) : 'LangGraph application'
+      // CR-02: root-level files have no folder in their path, so fall back to the submission hint
+      // before the fixed name; otherwise every root-level langgraph.json would share one slug.
+      const hint = typeof ctx.hint === 'string' ? ctx.hint.trim() : ''
+      const title = folder && folder !== '.' ? cap(folder, 120) : hint ? cap(hint, 120) : 'LangGraph application'
       const record: AgentRecord = {
-        slug: slugify(title) || 'langgraph-application',
+        slug: slugify(title),
         title,
         specId: null,
         summary: '',
@@ -117,7 +123,10 @@ export const langgraphAdapter: FormatAdapter = {
         record, kindInfo,
         missingFromAuthor: ['name', 'summary', 'members', 'topology', 'category (add catalog.yaml)'],
         unknownFields: Object.keys(unknown),
-        warnings: ['langgraph.json holds no topology; add a catalog.yaml describing the system'],
+        warnings: [
+          'langgraph.json holds no topology; add a catalog.yaml describing the system',
+          ...[ignoredWarning('langgraph.json', f.path, ignored)].filter((w): w is string => w !== null),
+        ],
       }
     } catch (e) {
       return unrecognizedOutcome([`langgraph: ${e instanceof Error ? e.message : 'error'}`])

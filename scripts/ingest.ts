@@ -1,8 +1,8 @@
-import { readdir, readFile, mkdir, stat } from 'node:fs/promises'
+import { readdir, readFile, mkdir, lstat } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
-import { sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { parse as parseYaml } from 'yaml'
 import { agents, agentEmbeddings, agentKinds } from '../drizzle/schema.js'
 import type { NewAgentRow } from '../drizzle/schema.js'
@@ -18,7 +18,7 @@ import { clampExtras } from '../src/lib/spec/kinds.js'
 import type { SubmissionFile } from '../src/lib/spec/kinds.js'
 import { parseSubmission } from '../src/lib/spec/registry.js'
 import { readSubmissionDir } from '../src/lib/spec/scan.js'
-import { redactSecrets } from '../src/lib/spec/security.js'
+import { redactSecrets, sanitizeMessage } from '../src/lib/spec/security.js'
 
 const DATA_DIR = process.env.INGEST_DATA_DIR ?? './data/agents'
 const DB_PATH = process.env.INGEST_DB_PATH ?? './db/catalog.db'
@@ -198,6 +198,36 @@ async function ingest( dataDir: string, dbPath: string, opts?: { embedder?: Embe
 }
 
 /**
+ * CR-02: a re-ingest may land on a slug owned by a different kind or source format (an unrelated
+ * submission with the same derived slug, or an author changing what the folder contains). The
+ * upsert deliberately keeps try_it_out_* (D-07), so in that case they are reset to the defaults
+ * instead of letting a new skill/system inherit a previous agent's runnable or external setting.
+ * A legacy row with no sidecar counts as kind 'agent' and is NOT compared by source format, so
+ * turning the flag on never resets curated settings.
+ */
+export function tryItOutResetReason(
+  sqlite: Database.Database,
+  slug: string,
+  next: { kind: string; sourceFormat: string | null },
+): string | null {
+  const prev = sqlite
+    .prepare(
+      'SELECT k.slug AS sidecar, k.kind AS kind, k.source_format AS source_format FROM agents a LEFT JOIN agent_kinds k ON k.slug = a.slug WHERE a.slug = ?',
+    )
+    .get(slug) as { sidecar: string | null; kind: string | null; source_format: string | null } | undefined
+  if (!prev) return null
+  const prevKind = prev.kind ?? 'agent'
+  if (prevKind !== next.kind) return `kind ${prevKind} -> ${next.kind}`
+  if (prev.sidecar !== null) {
+    const family = (f: string | null) => (f ?? '').split('@')[0]
+    if (family(prev.source_format) !== family(next.sourceFormat)) {
+      return `source format ${prev.source_format ?? 'none'} -> ${next.sourceFormat ?? 'none'}`
+    }
+  }
+  return null
+}
+
+/**
  * Flag-on (AGENT_KINDS) ingest, kept separate so the legacy path stays untouched.
  * Top-level files are single submissions; sub-directories are scanned as submissions;
  * unrecognized directories are skipped with an info log (not counted as failures).
@@ -221,30 +251,44 @@ async function ingestKindsInto(
     let files: SubmissionFile[]
     let isDir = false
     try {
-      const st = await stat(abs)
-      if (st.isDirectory()) {
+      // WR-04: lstat, not stat. Symlinks are never followed (same policy as the directory scanner).
+      const st = await lstat(abs)
+      const isDataFile = name.endsWith('.yaml') || name.endsWith('.yml') || name.endsWith('.json')
+      if (st.isSymbolicLink()) {
+        if (name.startsWith('.') || name === 'node_modules' || !(isDataFile || !name.includes('.'))) continue
+        throw new Error('symlinks are not followed')
+      } else if (st.isDirectory()) {
         if (name.startsWith('.') || name === 'node_modules') continue
         isDir = true
         files = readSubmissionDir(abs).files
-      } else if (name.endsWith('.yaml') || name.endsWith('.yml') || name.endsWith('.json')) {
-        files = [{ path: name, text: await readFile(abs, 'utf-8') }]
+      } else if (isDataFile) {
+        // Single files go through the scanner too: size cap, binary check, no symlink.
+        files = readSubmissionDir(abs).files
+        if (files.length === 0) throw new Error('file skipped: too large, binary or unreadable')
       } else {
         continue
       }
     } catch (err) {
-      console.error(`[SKIP] ${name}: ${(err as Error).message}`)
+      console.error(`[SKIP] ${name}: ${sanitizeMessage((err as Error).message)}`)
       failed++
       continue
     }
 
     try {
-      const outcome = parseSubmission(files, { now })
+      const hint = isDir ? name : name.replace(/\.[^.]+$/, '')
+      const outcome = parseSubmission(files, { now, hint })
       if (!outcome.record) {
-        if (isDir && outcome.status === 'missing-from-author') {
+        // WR-01: only a folder in which NO format was detected (and nothing went wrong) is
+        // skipped quietly. A recognised-but-broken submission is a failure with its reason.
+        if (isDir && outcome.format === 'unknown' && outcome.warnings.length === 0) {
           console.log(`[SKIP-INFO] ${name}: not a recognized submission`)
           continue
         }
-        throw new Error(outcome.warnings[0] ?? `unrecognized or invalid (${outcome.status})`)
+        const why = [
+          outcome.missingFromAuthor.length > 0 ? `missing: ${outcome.missingFromAuthor.join(', ')}` : '',
+          ...outcome.warnings,
+        ].filter(Boolean)
+        throw new Error(`${outcome.format}: ${why.join('; ') || `unrecognized or invalid (${outcome.status})`}`)
       }
       const record = outcome.record
       const info = outcome.kindInfo
@@ -253,6 +297,10 @@ async function ingestKindsInto(
       const row = flattenRecord(record)
       const extras = JSON.stringify(clampExtras(redactSecrets(info.extras) as Record<string, unknown>))
       const updatedAt = new Date().toISOString()
+      const resetReason = tryItOutResetReason(sqlite, record.slug, info)
+      if (resetReason) {
+        console.warn(`[WARN] ${name}: slug '${record.slug}' already existed (${resetReason}); try-it-out settings reset`)
+      }
 
       db.transaction(tx => {
         tx.insert(agents)
@@ -284,6 +332,12 @@ async function ingestKindsInto(
             },
           })
           .run()
+        if (resetReason) {
+          tx.update(agents)
+            .set({ tryItOutMode: 'none', tryItOutUrl: null, tryItOutTaskTemplate: null })
+            .where(eq(agents.slug, record.slug))
+            .run()
+        }
         tx.insert(agentKinds)
           .values({
             slug: record.slug,
@@ -314,7 +368,7 @@ async function ingestKindsInto(
       searchables.push(recordToSearchableWithKind(record, { ...info, extras: {} }))
       succeeded++
     } catch (err) {
-      console.error(`[SKIP] ${name}: ${(err as Error).message}`)
+      console.error(`[SKIP] ${name}: ${sanitizeMessage((err as Error).message)}`)
       failed++
     }
   }

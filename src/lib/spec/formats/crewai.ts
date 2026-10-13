@@ -30,7 +30,8 @@ import type {
 } from '../kinds.js'
 import { clampExtras, MEMBERS_MAX } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { capText } from '../security.js'
+import { capText, setOwn } from '../security.js'
+import { byShallowest, dirOf, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
 
@@ -103,6 +104,50 @@ const crewFile = (f: SubmissionFile): boolean => /^crew\.jsonc?$/.test(base(f.pa
 const agentFile = (f: SubmissionFile): boolean => /(^|\/)agents\/[^/]+\.jsonc?$/.test(f.path)
 const yamlAgents = (f: SubmissionFile): boolean => /(^|\/)config\/agents\.ya?ml$/.test(f.path)
 const yamlTasks = (f: SubmissionFile): boolean => /(^|\/)config\/tasks\.ya?ml$/.test(f.path)
+
+/**
+ * WR-03: crew.json is a very common file name. It only counts as a CrewAI crew when its content
+ * looks like one (agents or tasks), when agent files sit next to it, or when it does not parse at
+ * all (so the author hears about the syntax error instead of the file being silently skipped).
+ */
+function crewStrength(f: SubmissionFile, files: SubmissionFile[]): 'strong' | 'weak' | 'none' {
+  const doc = parseJsonc(f.text)
+  if (doc === undefined) return 'weak'
+  if (!isObj(doc)) return 'none'
+  const listy = (v: unknown): boolean => Array.isArray(v) || isObj(v)
+  if (listy(doc.agents) || listy(doc.tasks)) return 'strong'
+  const dir = dirOf(f.path)
+  const prefix = dir ? `${dir}/agents/` : 'agents/'
+  return files.some((o) => agentFile(o) && o.path.startsWith(prefix)) ? 'strong' : 'none'
+}
+
+/** The crew file to use (shallowest wins, WR-02), how strongly it looks like a crew, and the rest. */
+function pickCrew(files: SubmissionFile[]): { file: SubmissionFile; strength: 'strong' | 'weak'; ignored: string[] } | null {
+  const ranked = byShallowest(files.filter(crewFile), (f) => f.path)
+    .map((f) => ({ f, strength: crewStrength(f, files) }))
+    .filter((x) => x.strength !== 'none')
+  const first = ranked.find((x) => x.strength === 'strong') ?? ranked[0]
+  if (!first) return null
+  return {
+    file: first.f,
+    strength: first.strength as 'strong' | 'weak',
+    ignored: files.filter((o) => crewFile(o) && o !== first.f).map((o) => o.path),
+  }
+}
+
+function pickYaml(files: SubmissionFile[]): { agents: SubmissionFile; tasks: SubmissionFile | undefined; ignored: string[] } | null {
+  const agents = byShallowest(files.filter(yamlAgents), (f) => f.path)
+  const first = agents[0]
+  if (!first) return null
+  const tasks = byShallowest(files.filter(yamlTasks), (f) => f.path)
+  const sibling = tasks.find((t) => dirOf(t.path) === dirOf(first.path)) ?? tasks[0]
+  const used = new Set([first, sibling])
+  return {
+    agents: first,
+    tasks: sibling,
+    ignored: [...agents, ...tasks].filter((f) => !used.has(f)).map((f) => f.path),
+  }
+}
 
 interface RawAgent {
   id: string
@@ -190,8 +235,7 @@ function parseTasks(
   return out
 }
 
-function parseJsoncStyle(files: SubmissionFile[]): Parsed | ParseOutcome {
-  const cf = files.find(crewFile)!
+function parseJsoncStyle(files: SubmissionFile[], cf: SubmissionFile, hint: string): Parsed | ParseOutcome {
   const crew = parseJsonc(cf.text)
   if (!isObj(crew)) return failed('crewai-jsonc', ['valid crew.jsonc'])
   const warnings: string[] = []
@@ -225,11 +269,11 @@ function parseJsoncStyle(files: SubmissionFile[]): Parsed | ParseOutcome {
   const hierarchical =
     crew.process === 'hierarchical' || crew.manager_llm !== undefined || crew.manager_agent !== undefined
   const unknown: Obj = {}
-  for (const [k, v] of Object.entries(crew)) if (!CREW_KNOWN.has(k)) unknown[k] = v
+  for (const [k, v] of Object.entries(crew)) if (!CREW_KNOWN.has(k)) setOwn(unknown, k, v)
   const models = new Set<string>()
   if (typeof crew.manager_llm === 'string') models.add(crew.manager_llm)
   return {
-    title: str(crew.name) ?? 'CrewAI crew',
+    title: str(crew.name) ? cap(str(crew.name) as string, 120) : hint || 'CrewAI crew',
     summary: str(crew.description) ?? '',
     agents, hierarchical, managerRef, managerInline,
     tasks: parseTasks(crew.tasks),
@@ -247,16 +291,16 @@ function parseJsoncStyle(files: SubmissionFile[]): Parsed | ParseOutcome {
   }
 }
 
-function parseYamlStyle(files: SubmissionFile[]): Parsed | ParseOutcome {
-  const af = files.find(yamlAgents)!
-  const tf = files.find(yamlTasks)
+function parseYamlStyle(af: SubmissionFile, tf: SubmissionFile | undefined, hint: string): Parsed | ParseOutcome {
   let adoc: unknown
   let tdoc: unknown
   try {
     adoc = parseYaml(af.text)
     tdoc = tf ? parseYaml(tf.text) : undefined
-  } catch {
-    return failed('crewai-yaml', ['valid config/agents.yaml and config/tasks.yaml'])
+  } catch (e) {
+    return failed('crewai-yaml', ['valid config/agents.yaml and config/tasks.yaml'], [
+      `YAML could not be parsed: ${cap(e instanceof Error ? e.message : 'error', 200)}`,
+    ])
   }
   if (!isObj(adoc)) return failed('crewai-yaml', ['valid config/agents.yaml'])
   const agents: RawAgent[] = []
@@ -264,7 +308,7 @@ function parseYamlStyle(files: SubmissionFile[]): Parsed | ParseOutcome {
   const parts = af.path.split('/')
   const folder = parts.length >= 3 ? parts[parts.length - 3]! : ''
   return {
-    title: folder !== '' && folder !== '.' ? folder : 'CrewAI crew',
+    title: folder !== '' && folder !== '.' ? folder : hint || 'CrewAI crew',
     summary: '',
     agents, hierarchical: false, managerRef: null, managerInline: null,
     tasks: parseTasks(tdoc),
@@ -279,16 +323,23 @@ function parseYamlStyle(files: SubmissionFile[]): Parsed | ParseOutcome {
 export const crewaiAdapter: FormatAdapter = {
   id: 'crewai',
   detect(files) {
-    if (files.some(crewFile)) return { format: 'crewai-jsonc', confidence: 0.85 }
-    if (files.some(yamlAgents) && files.some(yamlTasks)) return { format: 'crewai-yaml', confidence: 0.8 }
+    const crew = pickCrew(files)
+    if (crew) return { format: 'crewai-jsonc', confidence: crew.strength === 'strong' ? 0.85 : 0.4 }
+    if (pickYaml(files) && files.some(yamlTasks)) return { format: 'crewai-yaml', confidence: 0.8 }
     return null
   },
   parse(files, ctx): ParseOutcome {
     try {
-      const jsonc = files.some(crewFile)
-      if (!jsonc && !files.some(yamlAgents)) return unrecognizedOutcome()
-      const p = jsonc ? parseJsoncStyle(files) : parseYamlStyle(files)
+      const crew = pickCrew(files)
+      const yaml = crew ? null : pickYaml(files)
+      if (!crew && !yaml) return unrecognizedOutcome()
+      const hint = typeof ctx.hint === 'string' ? cap(ctx.hint.trim(), 120) : ''
+      const p = crew ? parseJsoncStyle(files, crew.file, hint) : parseYamlStyle(yaml!.agents, yaml!.tasks, hint)
       if ('status' in p) return p
+      const ignoredNote = crew
+        ? ignoredWarning('crew.json', crew.file.path, crew.ignored)
+        : ignoredWarning('config/agents.yaml', yaml!.agents.path, yaml!.ignored)
+      if (ignoredNote) p.warnings.push(ignoredNote)
 
       const toolNames = new Set<string>()
       const unloaded = new Set<string>()
@@ -339,7 +390,8 @@ export const crewaiAdapter: FormatAdapter = {
       if (p.sourceFormat === 'crewai-yaml') missing.unshift('name')
       if (members.length === 0) missing.push('agents')
 
-      const slug = slugify(p.title) || 'crewai-crew'
+      // An empty slug (non-ASCII title) is resolved by the registry from the folder hint or a hash.
+      const slug = slugify(p.title)
       const record: AgentRecord = {
         slug,
         title: p.title,

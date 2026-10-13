@@ -6,7 +6,7 @@ import { warmForSession } from '$lib/server/tryitout/service'
 import { related } from '$lib/server/search/index.js'
 import { sessionKey } from '$lib/server/tryitout/session'
 import { agentKindsEnabled, mcpGeneratorEnabled, mcpTesterEnabled } from '$lib/flags.js'
-import { defaultKindInfo } from '$lib/spec/kinds.js'
+import { defaultKindInfo, effectiveTryItOutMode } from '$lib/spec/kinds.js'
 
 /** Phase 14: the key exists only when MCP_GENERATOR is on, so flag-off data is unchanged. */
 export function mcpGeneratorData(
@@ -40,8 +40,7 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
     ? ((await import('$lib/server/kinds.js')).loadKindInfo(db as never, [row.slug]).get(row.slug) ?? defaultKindInfo())
     : null
   // Non-agent kinds (systems, skills, ...) are never runnable; 'external' links stay.
-  const effectiveMode =
-    kindInfo && kindInfo.kind !== 'agent' && row.tryItOutMode !== 'external' ? 'none' : row.tryItOutMode
+  const effectiveMode = kindInfo ? effectiveTryItOutMode(kindInfo.kind, row.tryItOutMode) : row.tryItOutMode
 
   // D-05: warm the visitor's container in the background; never awaited, never fatal.
   if (effectiveMode === 'runnable') {

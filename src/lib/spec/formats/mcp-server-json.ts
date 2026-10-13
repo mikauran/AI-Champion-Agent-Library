@@ -18,7 +18,8 @@ import { slugify } from '../types.js'
 import type { FormatAdapter, KindInfo, ParseOutcome, SubmissionFile } from '../kinds.js'
 import { clampExtras } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { capText } from '../security.js'
+import { capText, setOwn } from '../security.js'
+import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
 
@@ -54,9 +55,12 @@ function parseJson(text: string): Obj | undefined {
 const isServerJson = (f: SubmissionFile): boolean => (f.path.split('/').pop() ?? '') === 'server.json'
 
 function looksLikeMcp(o: Obj): boolean {
-  if (typeof o.name !== 'string') return false
   const schema = typeof o.$schema === 'string' && o.$schema.toLowerCase().includes('modelcontextprotocol')
-  return Array.isArray(o.packages) || Array.isArray(o.remotes) || schema
+  // WR-01: a nameless server.json that declares the MCP registry $schema is still an MCP server
+  // definition; parse() reports the missing name instead of the file being skipped.
+  if (schema) return true
+  if (typeof o.name !== 'string') return false
+  return Array.isArray(o.packages) || Array.isArray(o.remotes)
 }
 
 function envNames(v: unknown, into: Set<string>): void {
@@ -84,7 +88,7 @@ function prettify(name: string): string {
 export const mcpServerJsonAdapter: FormatAdapter = {
   id: 'mcp-server-json',
   detect(files) {
-    for (const f of files.filter(isServerJson)) {
+    for (const f of byShallowest(files.filter(isServerJson), (x) => x.path)) {
       const o = parseJson(f.text)
       if (o && looksLikeMcp(o)) return { format: 'mcp-server-json', confidence: 0.85 }
     }
@@ -92,8 +96,10 @@ export const mcpServerJsonAdapter: FormatAdapter = {
   },
   parse(files, ctx): ParseOutcome {
     try {
-      const f = files.find(isServerJson)
+      const all = byShallowest(files.filter(isServerJson), (x) => x.path)
+      const f = all.find((x) => { const j = parseJson(x.text); return j !== undefined && looksLikeMcp(j) }) ?? all[0]
       if (!f) return unrecognizedOutcome()
+      const ignored = all.filter((x) => x !== f).map((x) => x.path)
       const o = parseJson(f.text)
       if (!o) {
         return {
@@ -109,6 +115,8 @@ export const mcpServerJsonAdapter: FormatAdapter = {
         }
       }
       const warnings: string[] = []
+      const ignoredNote = ignoredWarning('server.json', f.path, ignored)
+      if (ignoredNote) warnings.push(ignoredNote)
       const transports = new Set<string>()
       const packageIdentifiers: string[] = []
       const remoteUrls: string[] = []
@@ -136,7 +144,7 @@ export const mcpServerJsonAdapter: FormatAdapter = {
       envNames(pick(o, 'environment_variables', 'environmentVariables'), env)
 
       const unknown: Obj = {}
-      for (const [k, v] of Object.entries(o)) if (!KNOWN.has(k)) unknown[k] = v
+      for (const [k, v] of Object.entries(o)) if (!KNOWN.has(k)) setOwn(unknown, k, v)
 
       const repoUrl = isObj(o.repository) ? str(o.repository.url) : null
       const githubUrl = repoUrl && /^https?:\/\//i.test(repoUrl) ? cap(repoUrl, 500) : null
@@ -144,7 +152,8 @@ export const mcpServerJsonAdapter: FormatAdapter = {
       const title = str(o.title) ? cap(o.title as string, 120) : prettify(name)
 
       const record: AgentRecord = {
-        slug: slugify(name) || 'mcp-server',
+        // An empty slug (non-ASCII name) is resolved by the registry from the folder hint or a hash.
+        slug: slugify(name),
         title,
         specId: cap(name, 200),
         summary: cap(str(o.description) ?? '', 2000),
