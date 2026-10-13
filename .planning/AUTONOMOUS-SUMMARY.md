@@ -84,6 +84,15 @@
   10. Submitted-server uploads: v1 accepts only fake variants and generator samples through the API (D-176). Should uploaded servers ever be run, after an isolation review?
 - None else yet. (Phase 9 note: compose deployments should set `APP_INSTANCE_NAME`; decide whether to add it to `podman-compose.yml`.)
 
+### From the error-state audit (E6) and the milestone audit
+- Empty library copy: a fresh install currently says "No agents match your filters". Should it say there are no agents yet and point at `npm run ingest`?
+- Error JSON shape: the auth hook's 401 uses `{error}` while other routes use `{message}`. Unify (edits `hooks.server.test.ts`)?
+- Should job-route 404 messages stop echoing the id?
+- Should `/health` check the database and return 503 when tables are missing?
+- Should there be a `handleError` that returns a reference id for support?
+- Tech-debt consolidation (no behaviour change, your call on timing): one `envFlag()` helper, shared directory walker and size-cap constants, one safe-YAML wrapper, one UUID regex.
+- `/api/mcp-generate` has size caps but no per-client rate limit, and auth for `/api/mcp-*` depends on the deployment's global hook (D-179). Add a limiter / confirm auth?
+
 ## Look at first
 - `.planning/phases/10-accessibility-ui-03/10-AUDIT.md` (findings and Resolution table), D-023..D-026.
 - `.planning/phases/02.2-scale-and-seed-data-inserted/02.2-0*-SUMMARY.md`, D-007.
