@@ -1,6 +1,7 @@
 // generate(model, options, extraDerived?) -> GenerationResult. Pure and deterministic: no network,
 // no file reads, no clock. The generated Python is text only; it is never executed here.
 import { MAX_OUTPUT_BYTES } from './api-contract.js'
+import { scanForCredentials } from './credentials.js'
 import { gap } from './diagnostics.js'
 import { emitPython } from './emit/python.js'
 import { emitPytest } from './emit/pytest.js'
@@ -26,6 +27,11 @@ export function stableJson(value: unknown): string {
   return JSON.stringify(sort(value), null, 2) + '\n'
 }
 
+/** Source text in Markdown: link, image and tag syntax is neutralised with backslashes (review IN-07). */
+export function mdText(s: string): string {
+  return s.replace(/[\\`\[\]()<>]/g, (c) => `\\${c}`)
+}
+
 function emitReadme(plan: ServerPlan): string {
   const m = plan.model
   const env = resolveEnv(m)
@@ -46,14 +52,14 @@ function emitReadme(plan: ServerPlan): string {
     },
   }
   const out: string[] = [
-    `# ${cleanText(m.name, 80)} MCP server (generated)`,
+    `# ${mdText(cleanText(m.name, 80))} MCP server (generated)`,
     '',
     'Read-only MCP server over stdio, generated deterministically from a source description.',
     'Review it before use. The generator never executed this code.',
     '',
     '## Tools',
     '',
-    ...plan.tools.map((t) => `- \`${t.name}\`: ${cleanText(t.description, 200)}`),
+    ...plan.tools.map((t) => `- \`${t.name}\`: ${mdText(cleanText(t.description, 200))}`),
     '',
     '## Environment variables',
     '',
@@ -95,6 +101,18 @@ export function generate(model: SourceModel, options: GenerateOptions = {}, extr
     { path: 'README.generated.md', content: emitReadme(plan) },
     { path: 'report.json', content: stableJson(report) },
   ]
+  // Output-side guarantee (review CR-03): whatever the input scan let through, no credential-like text
+  // may leave in any generated file. Findings carry file, line and kind only, never the text.
+  const leaks = files.flatMap((f) => scanForCredentials(f.content).map((x) => ({ path: f.path, line: x.line, kind: x.kind })))
+  if (leaks.length > 0) {
+    const gaps = leaks.slice(0, 20).map((l) =>
+      gap('credential-in-output', `Generated file ${l.path} line ${l.line} contains credential-like text (${l.kind}); nothing was produced. Remove it from the source and use an env-var placeholder.`, {
+        severity: 'error',
+        path: `${l.path}:${l.line}`,
+      }),
+    )
+    return { files: [], report: { ...report, gaps: [...report.gaps, ...gaps] } }
+  }
   const bytes = files.reduce((n, f) => n + Buffer.byteLength(f.content, 'utf8'), 0)
   if (bytes > MAX_OUTPUT_BYTES) {
     const g = gap('output-too-large', `Generated package exceeds the ${MAX_OUTPUT_BYTES} byte limit.`, { severity: 'error' })

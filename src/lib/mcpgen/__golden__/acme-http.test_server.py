@@ -166,6 +166,20 @@ def test_auth_failure_names_the_env_var_not_the_value(upstream, name, kwargs):
     assert not looks_leaky(out)
 
 
+DOT_CASES = [
+    ("lookup_product_by_id", "product_id", {"product_id": "sample"}),
+]
+
+
+@pytest.mark.parametrize("name,arg,kwargs", DOT_CASES)
+def test_dot_segment_identifiers_are_rejected_before_any_call(upstream, name, arg, kwargs):
+    for bad in (".", "..", " .. "):
+        out = getattr(server, name)(**dict(kwargs, **{arg: bad}))
+        assert out["ok"] is False and out["kind"] == "invalid_argument"
+        assert set(out) == ERROR_KEYS
+    assert upstream["calls"] == []
+
+
 def test_projection_is_capped_at_12_fields(upstream):
     upstream["handler"] = lambda path, params: (200, json.dumps([make_row(1)]))
     out = server.list_products()

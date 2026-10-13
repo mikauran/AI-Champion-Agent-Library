@@ -5,6 +5,11 @@ import type { Gap, Severity } from './types.js'
 const MAX_MESSAGE = 300
 const RANK: Record<Severity, number> = { error: 0, warn: 1, info: 2 }
 
+/** Code-unit string comparison: the same order in every locale and runtime. */
+export function cmp(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0
+}
+
 function clean(s: unknown): string {
   const t = (typeof s === 'string' ? s : String(s)).replace(/[\u0000-\u001f\u007f]+/g, ' ')
   return t.length > MAX_MESSAGE ? `${t.slice(0, MAX_MESSAGE)}...` : t
@@ -26,8 +31,8 @@ function sorted(gaps: Gap[]): Gap[] {
     .sort(
       (a, b) =>
         RANK[a.severity] - RANK[b.severity] ||
-        a.code.localeCompare(b.code) ||
-        (a.path ?? '').localeCompare(b.path ?? ''),
+        cmp(a.code, b.code) ||
+        cmp(a.path ?? '', b.path ?? ''),
     )
 }
 

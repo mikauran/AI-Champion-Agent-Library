@@ -202,8 +202,9 @@ def _http_json(path, params=None):
 
 def _seg(value):
     text = str(value).strip()
-    if not text or len(text) > 128:
-        raise _Fail("invalid_argument", "The identifier must be between 1 and 128 characters.")
+    # quote() leaves dots alone, and an HTTP client folds /a/.. into /: dot segments never pass.
+    if not text or len(text) > 128 or text in (".", ".."):
+        raise _Fail("invalid_argument", "The identifier must be between 1 and 128 characters and not a dot segment.")
     return urllib.parse.quote(text, safe="")
 
 

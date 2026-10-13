@@ -208,8 +208,9 @@ def _http_json(path, params=None):
 
 def _seg(value):
     text = str(value).strip()
-    if not text or len(text) > 128:
-        raise _Fail("invalid_argument", "The identifier must be between 1 and 128 characters.")
+    # quote() leaves dots alone, and an HTTP client folds /a/.. into /: dot segments never pass.
+    if not text or len(text) > 128 or text in (".", ".."):
+        raise _Fail("invalid_argument", "The identifier must be between 1 and 128 characters and not a dot segment.")
     return urllib.parse.quote(text, safe="")
 
 
@@ -279,7 +280,7 @@ def _load_rows():
             raise _Fail("config", "The server is not configured: set " + DATA_FILE_ENV + ".")
         try:
             with open(path, newline="", encoding="utf-8-sig") as handle:
-                loaded = [dict(row) for row in csv.DictReader(handle)]
+                loaded = [dict(row) for row in csv.DictReader(handle, delimiter=DATA_DELIMITER)]
         except (OSError, csv.Error, UnicodeDecodeError):
             raise _Fail("config", "The data file could not be read; check " + DATA_FILE_ENV + ".")
         _ROWS = loaded
@@ -314,7 +315,7 @@ def _sql_query(entity, selected, field, match, value, limit, offset):
     if field is not None:
         column = columns[field]
         if match == "equals":
-            sql += " WHERE " + column + " = ?"
+            sql += " WHERE " + column + " = ? COLLATE NOCASE"
             args.append(str(value))
         elif match == "contains":
             sql += " WHERE " + column + " LIKE ? ESCAPE '!'"

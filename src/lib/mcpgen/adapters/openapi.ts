@@ -9,6 +9,7 @@ import { parse as parseYaml } from 'yaml'
 import { MAX_INPUT_BYTES } from '../api-contract.js'
 import { gap } from '../diagnostics.js'
 import { snake } from '../plan.js'
+import { redactSecrets } from '../redact.js'
 import type {
   Entity,
   Field,
@@ -36,16 +37,27 @@ const WRAPPER_NAMES = ['items', 'data', 'results', 'content', 'records', 'rows']
 const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v)
 const own = (o: Obj, k: string): unknown => (Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined)
 
-/** Text copied from the spec: links and control characters removed, clipped. */
+/** Text copied from the spec: links, credential-like text and control characters removed, clipped. */
 function clean(s: unknown, max = 200): string | undefined {
   if (typeof s !== 'string') return undefined
-  const t = s
-    .replace(/https?:\/\/\S+/gi, '[link removed]')
-    .replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  const t = redactSecrets(
+    s
+      .slice(0, 8192)
+      .replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  ).trim()
   if (t === '') return undefined
   return t.length > max ? `${t.slice(0, max - 3).trimEnd()}...` : t
+}
+
+/** Names of the schemes an OpenAPI security value requires, as one comparable string ('-' when absent). */
+function securityKey(v: unknown): string {
+  if (!Array.isArray(v)) return '-'
+  return v
+    .map((r) => (isObj(r) ? Object.keys(r).sort().join('+') : '?'))
+    .sort()
+    .join('|')
 }
 
 class Unsupported extends Error {
@@ -90,25 +102,69 @@ function deref(root: Obj, node: unknown): { node: Obj; name?: string } {
   return { node: cur, name }
 }
 
+/**
+ * Work limits for schema composition (review CR-02). `memo` remembers the merged properties of every
+ * resolved schema node, so a node reached through many allOf/oneOf paths is computed once; `calls`
+ * counts every schemaProps call (hits included) so even a memoised fan-out stays bounded.
+ */
+interface SchemaCtx {
+  memo: WeakMap<object, { props: Obj; merged: boolean }>
+  /** calls left for the operation being read (reset per operation) */
+  left: number
+  /** calls left for the whole document */
+  total: number
+}
+/** schemaProps calls one operation may spend, and the whole document. */
+export const OPERATION_SCHEMA_BUDGET = 5000
+export const DOCUMENT_SCHEMA_BUDGET = 200000
+
+function newCtx(): SchemaCtx {
+  return { memo: new WeakMap(), left: OPERATION_SCHEMA_BUDGET, total: DOCUMENT_SCHEMA_BUDGET }
+}
+
+const hasOwn = (o: object, k: string) => Object.prototype.hasOwnProperty.call(o, k)
+
 /** Merged properties of a schema (allOf merged; oneOf/anyOf only with a discriminator). */
-function schemaProps(root: Obj, schema: unknown, depth = 0, notes?: { merged: boolean }): Obj {
+function schemaProps(root: Obj, schema: unknown, ctx: SchemaCtx, depth = 0, notes?: { merged: boolean }): Obj {
   if (depth > MAX_REF_DEPTH) throw new Unsupported('ref-depth-exceeded', 'Schema composition is too deep.')
-  const { node } = deref(root, schema)
-  const props: Obj = {}
-  const merge = (from: Obj) => {
-    for (const k of Object.keys(from)) if (!(k in props)) props[k] = from[k]
+  if (--ctx.left < 0 || --ctx.total < 0) {
+    throw new Unsupported('schema-budget-exceeded', 'Schema composition (allOf, oneOf, anyOf) is too large to read.')
   }
-  if (Array.isArray(node.allOf)) for (const part of node.allOf) merge(schemaProps(root, part, depth + 1, notes))
+  const { node } = deref(root, schema)
+  const hit = ctx.memo.get(node)
+  if (hit) {
+    if (hit.merged && notes) notes.merged = true
+    return hit.props
+  }
+  // A null-prototype object, so property names such as constructor or __proto__ are ordinary fields.
+  const props: Obj = Object.create(null)
+  const local = { merged: false }
+  const merge = (from: Obj) => {
+    for (const k of Object.keys(from)) if (!hasOwn(props, k)) props[k] = from[k]
+  }
+  if (Array.isArray(node.allOf)) {
+    for (const part of node.allOf) {
+      const sub = { merged: false }
+      merge(schemaProps(root, part, ctx, depth + 1, sub))
+      if (sub.merged) local.merged = true
+    }
+  }
   for (const key of ['oneOf', 'anyOf'] as const) {
     const variants = node[key]
     if (!Array.isArray(variants)) continue
     if (!isObj(node.discriminator)) throw new Unsupported('ambiguous-oneof', `${key} without a discriminator cannot be resolved to one shape.`)
-    if (notes) notes.merged = true
-    for (const v of variants) merge(schemaProps(root, v, depth + 1, notes))
+    local.merged = true
+    for (const v of variants) {
+      const sub = { merged: false }
+      merge(schemaProps(root, v, ctx, depth + 1, sub))
+      if (sub.merged) local.merged = true
+    }
   }
   if (isObj(node.properties)) {
     for (const k of Object.keys(node.properties)) props[k] = node.properties[k]
   }
+  if (local.merged && notes) notes.merged = true
+  ctx.memo.set(node, { props, merged: local.merged })
   return props
 }
 
@@ -150,7 +206,7 @@ function fieldFlags(name: string, entityId: string): Pick<Field, 'identifier' | 
   return out
 }
 
-function buildField(root: Obj, name: string, schema: unknown, entityId: string): { field: Field; nested?: NestedCollection } {
+function buildField(root: Obj, ctx: SchemaCtx, name: string, schema: unknown, entityId: string): { field: Field; nested?: NestedCollection } {
   const { node } = deref(root, schema)
   const type = typeOf(node)
   const field: Field = { name, type, ...fieldFlags(name, entityId) }
@@ -163,7 +219,7 @@ function buildField(root: Obj, name: string, schema: unknown, entityId: string):
   if (type === 'array' && node.items !== undefined) {
     const item = deref(root, node.items)
     if (typeOf(item.node) === 'object') {
-      const itemProps = schemaProps(root, item.node)
+      const itemProps = schemaProps(root, item.node, ctx)
       const itemFields: Field[] = Object.keys(itemProps).map((k) => {
         const d = deref(root, itemProps[k]).node
         const f: Field = { name: k, type: typeOf(d) }
@@ -296,7 +352,12 @@ function parseDoc(input: RawInput): ParseResult {
   let auth: SourceModel['auth'] = { scheme: 'none' }
   const schemes = isObj(root.components) && isObj(root.components.securitySchemes) ? root.components.securitySchemes : {}
   const referenced = Array.isArray(root.security) ? root.security.flatMap((r) => (isObj(r) ? Object.keys(r) : [])) : []
-  const schemeNames = (referenced.length > 0 ? referenced : Object.keys(schemes)).filter((k, i, a) => a.indexOf(k) === i).sort()
+  // An explicit empty list means the API is public (review WR-09): declared schemes must not be applied.
+  const explicitlyPublic = Array.isArray(root.security) && root.security.length === 0
+  const schemeNames = (explicitlyPublic ? [] : referenced.length > 0 ? referenced : Object.keys(schemes)).filter((k, i, a) => a.indexOf(k) === i).sort()
+  if (explicitlyPublic && Object.keys(schemes).length > 0) {
+    gaps.push(gap('auth-public', 'The document sets security to an empty list (a public API); the server sends no credentials although security schemes are declared.', { severity: 'info' }))
+  }
   let picked = false
   let unsupported = 0
   for (const sn of schemeNames) {
@@ -325,6 +386,7 @@ function parseDoc(input: RawInput): ParseResult {
     gaps.push(gap('auth-unsupported', 'The declared security scheme is not supported (only API key in header or query, and bearer); the server sends no credentials.'))
   }
 
+  const ctx = newCtx()
   const usedIds = new Set<string>()
   const candidates: Candidate[] = []
   const entities = new Map<string, EntityAcc>()
@@ -343,6 +405,10 @@ function parseDoc(input: RawInput): ParseResult {
         continue
       }
       const where = `GET ${path.slice(0, 120)}`
+      ctx.left = OPERATION_SCHEMA_BUDGET
+      if (opNode.security !== undefined && securityKey(opNode.security) !== securityKey(root.security)) {
+        gaps.push(gap('auth-operation-override', `${where}: the operation declares its own security requirement; the generated server applies the document-level authentication to every tool.`, { path: id }))
+      }
       try {
         // Parameters: path-level first, operation-level overrides by (in, name).
         const merged = new Map<string, Obj>()
@@ -396,14 +462,14 @@ function parseDoc(input: RawInput): ParseResult {
         // Locate the item schema: array, wrapper object with one array of objects, or the object itself.
         const top = deref(root, responseSchema)
         const notes = { merged: false }
-        const topProps = schemaProps(root, top.node, 0, notes)
+        const topProps = schemaProps(root, top.node, ctx, 0, notes)
         let itemSchema: unknown = top.node
         let schemaName = top.name
         if (typeOf(top.node) === 'array' && top.node.items !== undefined) {
           const it = deref(root, top.node.items)
           itemSchema = it.node
           schemaName = it.name
-          schemaProps(root, it.node, 0, notes)
+          schemaProps(root, it.node, ctx, 0, notes)
         } else if (kind !== 'get') {
           const arrays: { key: string; items: { node: Obj; name?: string } }[] = []
           for (const k of Object.keys(topProps)) {
@@ -424,27 +490,29 @@ function parseDoc(input: RawInput): ParseResult {
           if (arrays.length === 1) {
             itemSchema = arrays[0].items.node
             schemaName = arrays[0].items.name
-            schemaProps(root, itemSchema, 0, notes)
+            schemaProps(root, itemSchema, ctx, 0, notes)
           }
         }
         if (notes.merged) gaps.push(gap('oneof-merged', `${where}: a oneOf with a discriminator was merged into one field set.`, { severity: 'info', path: id }))
 
         const lastStatic = [...segs].reverse().find((s) => !/[{}]/.test(s))
         const entityId = snake(schemaName ?? singular(lastStatic ?? 'item'))
-        const props = schemaProps(root, itemSchema)
+        const props = schemaProps(root, itemSchema, ctx)
         let acc = entities.get(entityId)
         if (!acc) {
           acc = { id: entityId, label: clean(schemaName ?? entityId, 60) ?? entityId, fields: new Map(), nested: new Map() }
           entities.set(entityId, acc)
         }
         for (const k of Object.keys(props)) {
-          const { field, nested } = buildField(root, k, props[k], entityId)
+          const { field, nested } = buildField(root, ctx, k, props[k], entityId)
           if (!acc.fields.has(k)) acc.fields.set(k, field)
           if (nested && !acc.nested.has(k)) acc.nested.set(k, nested)
         }
 
         const op: Operation = { id, kind, method: 'GET', path, entity: entityId, params }
         if (pageP && pageP.type === 'integer') op.pageParam = pageP.name
+        // Offset/limit paging (review WR-10). A bare `start` only counts when a page size accompanies it.
+        if (offsetP && offsetP.type === 'integer' && (lower(offsetP) !== 'start' || sizeP)) op.offsetParam = offsetP.name
         if (sizeP && sizeP.type === 'integer') {
           op.pageSizeParam = sizeP.name
           if (typeof sizeP.max === 'number' && Number.isInteger(sizeP.max) && sizeP.max >= 1) pageSizeMax.push(sizeP.max)

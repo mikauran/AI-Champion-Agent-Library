@@ -134,6 +134,9 @@ function parseTabular(input: RawInput, options?: GenerateOptions): ParseResult {
   const skip = /^\d{1,3}$/.test(opts.skip_rows ?? '') ? Number(opts.skip_rows) : 0
 
   const delim = pickDelimiter(dataLines[0])
+  if (delim !== ',') {
+    gaps.push(gap('delimiter-detected', `The header uses a ${delim === '\t' ? 'tab' : 'semicolon'} delimiter; the generated server reads the data file with the same delimiter.`, { severity: 'info' }))
+  }
   const codes = splitLine(dataLines[0], delim)
   if (codes.length < 1 || codes.length > MAX_COLUMNS) return reject(gap('invalid-header', `The header must have 1 to ${MAX_COLUMNS} column codes.`, { severity: 'error' }))
 
@@ -216,7 +219,7 @@ function parseTabular(input: RawInput, options?: GenerateOptions): ParseResult {
   const entityName = snake(opts.entity ?? 'item')
   const model: SourceModel = {
     name,
-    backend: { kind: 'dataset', datasetPathEnv: `${serverSlug({ name } as SourceModel).toUpperCase()}_DATA_PATH` },
+    backend: { kind: 'dataset', datasetPathEnv: `${serverSlug({ name } as SourceModel).toUpperCase()}_DATA_PATH`, ...(delim !== ',' ? { delimiter: delim } : {}) },
     auth: { scheme: 'none' },
     entities: [
       {

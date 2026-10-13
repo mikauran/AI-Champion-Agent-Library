@@ -5,6 +5,7 @@
 // own through the `extraDerived` argument of `buildPlan` (origin 'user'). Both flow through the same
 // validation and the same emitter templates. Invalid user entries are reported, never guessed.
 import { gap } from './diagnostics.js'
+import { redactSecrets, sanitizeSourceText } from './redact.js'
 import type {
   DerivedTool,
   Entity,
@@ -25,6 +26,8 @@ export const DEFAULT_MAX_PAGE_SIZE = 100
 export const DEFAULT_MAX_RESPONSE_ITEMS = 200
 /** Upper bound on pages a derived filter tool may scan in one call. */
 export const DERIVED_MAX_PAGES = 10
+/** Upper bound for any numeric limit written into generated code. */
+export const MAX_LIMIT = 1_000_000_000
 
 /** Gap codes that describe something the generator dropped (shown as toolsDropped in the report). */
 export const DROP_CODES = ['write-dropped', 'write-not-supported', 'operation-skipped', 'tool-omitted']
@@ -45,7 +48,7 @@ const PY_KEYWORDS = new Set(
 const RESERVED_NAMES = new Set(
   (
     'str int float bool len list dict set tuple range min max sum any all sorted isinstance zip enumerate print dir ' +
-    'os json time csv math sqlite3 httpx mcp server Any Optional functools urllib pathlib ' +
+    'os json time csv math sqlite3 httpx mcp server Any Optional functools urllib pathlib Exception BaseException ' +
     'exc sel query data rows row results item items hits matches scanned truncated needle coverage out ' +
     'base_query spec conn cur sql args col pages hint ident entry'
   ).split(' '),
@@ -205,16 +208,21 @@ function isFreeText(p: Param): boolean {
   return p.in === 'query' && p.type !== 'array' && p.type !== 'object' && FREE_TEXT.has(p.name.toLowerCase())
 }
 
-function safeParamName(name: string, reserved: Set<string>): boolean {
+function safeParamName(name: string, reserved: Set<string>, allowStandard = false): boolean {
   return (
     IDENT.test(name) &&
     !name.startsWith('_') &&
     !PY_KEYWORDS.has(name) &&
     !RESERVED_NAMES.has(name) &&
-    !STANDARD_ARGS.has(name) &&
+    (allowStandard || !STANDARD_ARGS.has(name)) &&
     !reserved.has(name) &&
     !/^[A-Z0-9_]+$/.test(name)
   )
+}
+
+/** A limit that is not a finite number is dropped; it would otherwise reach generated code. */
+function finiteOrUndefined(v: unknown): number | undefined {
+  return typeof v === 'number' && Number.isFinite(v) ? v : undefined
 }
 
 interface ParamResult {
@@ -223,17 +231,36 @@ interface ParamResult {
   dropped: Gap[]
 }
 
-/** Request parameters that become tool arguments (paging parameters are handled by the emitter). */
-function toolParams(op: Operation, reserved: Set<string>): ParamResult {
+/**
+ * Request parameters that become tool arguments (paging parameters are handled by the emitter).
+ * `keepOffset`: an offset/limit style offset parameter is exposed as an ordinary integer argument
+ * (list tools); filter tools iterate it themselves and so leave it out.
+ */
+function toolParams(op: Operation, reserved: Set<string>, keepOffset = false): ParamResult {
   const dropped: Gap[] = []
   const kept: Param[] = []
   const seen = new Set<string>()
-  for (const p of op.params) {
-    if (p.name === op.pageParam || p.name === op.pageSizeParam) continue
+  for (const p0 of op.params) {
+    if (p0.name === op.pageParam || p0.name === op.pageSizeParam) continue
+    const isOffset = op.offsetParam !== undefined && p0.name === op.offsetParam
+    if (isOffset && !keepOffset) continue
+    let p: Param = p0
+    // Limits reach generated source: only finite numbers may pass (review WR-04).
+    const min = finiteOrUndefined(p.min)
+    const max = finiteOrUndefined(p.max)
+    if (min !== p.min || max !== p.max) {
+      dropped.push(gap('param-limit-invalid', `${op.id}: a minimum or maximum for ${p.name} is not a finite number and was ignored.`, { path: `${op.id}.${p.name}` }))
+      p = { ...p, min, max }
+      if (min === undefined) delete p.min
+      if (max === undefined) delete p.max
+    }
+    if (isOffset) {
+      p = { ...p, type: 'integer', required: false, min: Math.max(0, p.min ?? 0), description: p.description ?? 'Number of items to skip (offset paging).' }
+    }
     let problem: string | undefined
     if (p.in !== 'query' && p.in !== 'path') problem = `parameter ${p.name} is not a query or path parameter`
     else if (p.type === 'array' || p.type === 'object') problem = `parameter ${p.name} has an unsupported type`
-    else if (!safeParamName(p.name, reserved)) problem = `parameter ${p.name} cannot be a safe argument name`
+    else if (!safeParamName(p.name, reserved, isOffset)) problem = `parameter ${p.name} cannot be a safe argument name`
     else if (seen.has(p.name)) problem = `parameter ${p.name} is declared twice`
     if (problem) {
       if (p.required || p.in === 'path') return { params: [], omit: problem, dropped }
@@ -272,9 +299,24 @@ function words(s: string): string {
   return snake(s).replace(/_/g, ' ')
 }
 
+/** Operation summary as it is published: secrets and model-directed phrases removed (review CR-03, WR-06). */
+function summaryNote(op?: Operation): { text: string; flagged: boolean } {
+  if (!op?.summary) return { text: '', flagged: false }
+  const r = sanitizeSourceText(
+    redactSecrets(op.summary.slice(0, 8192).replace(/[\u0000-\u001f\u007f"\\`]+/g, ' ').replace(/\s+/g, ' ').trim()),
+  )
+  return { text: r.text.slice(0, 120), flagged: r.flagged }
+}
+
 function withSummary(base: string, op?: Operation): string {
-  const s = op?.summary ? op.summary.replace(/https?:\/\/\S+/gi, '').replace(/[\u0000-\u001f\u007f"\\`]+/g, ' ').replace(/\s+/g, ' ').trim() : ''
-  return s ? `${base} Source note: ${s.slice(0, 120)}` : base
+  const s = summaryNote(op).text
+  return s ? `${base} Source note: ${s}` : base
+}
+
+/** Source free text a tool publishes: its operation summary and the descriptions of its arguments. */
+function publishesSourceText(op: Operation | undefined, params: Param[]): { copied: boolean; flagged: boolean } {
+  const notes = [summaryNote(op), ...params.map((p) => (p.description ? sanitizeSourceText(p.description.slice(0, 8192)) : { text: '', flagged: false }))]
+  return { copied: notes.some((n) => n.text !== ''), flagged: notes.some((n) => n.flagged) }
 }
 
 /** Which kind of tool a PlannedTool is. Derived from the plan, so the contract types stay unchanged. */
@@ -304,12 +346,38 @@ function validateExtra(model: SourceModel, d: DerivedTool, gaps: Gap[]): NestedC
   return nested
 }
 
+/** Own-property lookup, so an entity named constructor or __proto__ never reads Object.prototype. */
+function ownList(map: Record<string, string[]> | undefined, key: string): string[] | undefined {
+  if (!map || !Object.prototype.hasOwnProperty.call(map, key)) return undefined
+  const v = map[key]
+  return Array.isArray(v) ? v : undefined
+}
+
 /** buildPlan(model, options, extraDerived?) -> ServerPlan. Deterministic: tools sorted by name. */
 export function buildPlan(model: SourceModel, options: GenerateOptions = {}, extraDerived: DerivedTool[] = []): ServerPlan {
   const limits = { ...model.limits, ...(options.limits ?? {}) }
-  if (!Number.isInteger(limits.maxResponseItems) || limits.maxResponseItems < 1) limits.maxResponseItems = DEFAULT_MAX_RESPONSE_ITEMS
-  const m: SourceModel = { ...model, name: options.serverName?.trim() || model.name, limits }
   const gaps: Gap[] = [...model.gaps]
+  // Limits are written into generated source: integers in range only (review WR-04).
+  const badLimit = (name: string) => gaps.push(gap('limit-invalid', `The limit ${name} is not a whole number in the allowed range and was ignored.`, { path: name }))
+  if (limits.maxResponseItems !== undefined && (!Number.isSafeInteger(limits.maxResponseItems) || limits.maxResponseItems < 1 || limits.maxResponseItems > MAX_LIMIT)) {
+    badLimit('maxResponseItems')
+    limits.maxResponseItems = DEFAULT_MAX_RESPONSE_ITEMS
+  } else if (limits.maxResponseItems === undefined) limits.maxResponseItems = DEFAULT_MAX_RESPONSE_ITEMS
+  if (limits.resultCeiling !== undefined && (!Number.isSafeInteger(limits.resultCeiling) || limits.resultCeiling < 1 || limits.resultCeiling > MAX_LIMIT)) {
+    badLimit('resultCeiling')
+    delete limits.resultCeiling
+  }
+  if (limits.maxPageSize !== undefined && (!Number.isSafeInteger(limits.maxPageSize) || limits.maxPageSize < 1 || limits.maxPageSize > MAX_LIMIT)) {
+    badLimit('maxPageSize')
+    delete limits.maxPageSize
+  }
+  let backend = model.backend
+  if (backend.delimiter !== undefined && ![',', ';', '\t'].includes(backend.delimiter)) {
+    gaps.push(gap('delimiter-invalid', 'The data file delimiter is not a comma, semicolon or tab; a comma was assumed.', { path: 'delimiter' }))
+    backend = { ...backend }
+    delete backend.delimiter
+  }
+  const m: SourceModel = { ...model, name: options.serverName?.trim() || model.name, limits, backend }
   const used = new Set<string>()
   const tools: PlannedTool[] = []
   const derived: DerivedTool[] = []
@@ -318,7 +386,7 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
   const projection = (e: Entity) => {
     let p = projections.get(e.id)
     if (!p) {
-      p = projectionFor(e, options.projectionOverride?.[e.id], gaps)
+      p = projectionFor(e, ownList(options.projectionOverride, e.id), gaps)
       projections.set(e.id, p)
     }
     return p
@@ -347,6 +415,8 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
 
   if (m.backend.kind === 'http') {
     const listOps = new Map<string, Operation>()
+    const copiedFrom: string[] = []
+    const flaggedIn: string[] = []
     let anyList = false
     for (const op of m.operations) {
       if (op.method !== 'GET') {
@@ -366,12 +436,15 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
         gaps.push(gap('tool-omitted', `Operation ${op.id} has an unsafe or inconsistent path and was omitted.`, { path: op.id }))
         continue
       }
-      const pr = toolParams(op, new Set())
+      const pr = toolParams(op, new Set(), true)
       if (pr.omit) {
         gaps.push(gap('tool-omitted', `Operation ${op.id} was omitted: ${pr.omit}.`, { path: op.id }))
         continue
       }
       gaps.push(...pr.dropped)
+      if (op.offsetParam !== undefined && pr.params.some((p) => p.name === op.offsetParam)) {
+        gaps.push(gap('offset-pagination', `${op.id}: pages by offset; the ${op.offsetParam} argument is passed through unchanged and the result ceiling check does not apply to it.`, { severity: 'info', path: op.id }))
+      }
       const en = snake(entity.id)
       let name: string
       let description: string
@@ -394,6 +467,9 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
         if (!have || (op.kind === 'list' && have.kind !== 'list')) listOps.set(entity.id, op)
       }
       tools.push({ name, description, entity: entity.id, operation: op.id, params: pr.params, projection: projection(entity) })
+      const pub = publishesSourceText(op, pr.params)
+      if (pub.copied) copiedFrom.push(name)
+      if (pub.flagged) flaggedIn.push(name)
     }
     if (anyList && limits.resultCeiling === undefined) {
       gaps.push(gap('ceiling-unknown', 'No result ceiling is set (limits.resultCeiling); no ceiling warning is emitted. Supply the upstream ceiling if one exists.'))
@@ -428,6 +504,10 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
         continue
       }
       const pr = toolParams(op, new Set(['key', 'value', 'max_pages']))
+      if (op.offsetParam !== undefined && !op.pageParam && !op.pageSizeParam) {
+        gaps.push(gap('tool-omitted', `Derived tool ${d.id} was omitted: the list operation pages by offset without a page size parameter, so candidate pages cannot be walked.`, { path: d.id }))
+        continue
+      }
       if (pr.omit || !pathSegments(op)) {
         gaps.push(gap('tool-omitted', `Derived tool ${d.id} was omitted: ${pr.omit ?? 'unsafe list path'}.`, { path: d.id }))
         continue
@@ -435,6 +515,15 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
       const name = uniqueName(`filter_${snake(entity.id)}_by_${snake(d.source)}`, used)
       derived.push(d)
       tools.push({ name, description: d.description, entity: entity.id, operation: op.id, derived: d, params: pr.params, projection: projection(entity) })
+      const pub = publishesSourceText(undefined, pr.params)
+      if (pub.copied) copiedFrom.push(name)
+      if (pub.flagged) flaggedIn.push(name)
+    }
+    if (copiedFrom.length > 0) {
+      gaps.push(gap('source-text-copied', `Free text from the source document (operation summaries and argument descriptions) is published in the description of ${copiedFrom.length} tool(s). Summaries are labelled "Source note". Review that text before use.`))
+    }
+    for (const name of flaggedIn) {
+      gaps.push(gap('source-text-flagged', `Text addressed to a model was removed from the source text published for tool ${name}.`, { path: name }))
     }
   } else {
     // dataset and sql: schema discovery plus one bounded query tool per entity (synthesis 2.1, 5.3).
