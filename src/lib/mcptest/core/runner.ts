@@ -192,6 +192,17 @@ export async function runSuite(opts: RunOptions): Promise<Report> {
         progress(id)
         continue
       }
+      if (sc.golden.length === 0) {
+        // Fail closed (CR-01): a case with no checks measures nothing and must never be scored as a pass.
+        caseInputs.push({
+          run: { caseId: id, tier: tier(sc), state: 'ERROR', checks: extra, thresholds: thresholds(sc) },
+          stateReason: 'case declares no golden checks',
+          timings
+        })
+        done += reruns
+        progress(id)
+        continue
+      }
       const results: CellResult[] = []
       for (let i = 0; i < reruns; i++) {
         if (opts.signal?.aborted) {

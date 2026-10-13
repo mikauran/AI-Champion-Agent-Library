@@ -151,7 +151,7 @@ export async function loadSuite(
   }
   for (const name of names) {
     const dir = join(rootDir, name)
-    const loaded = await loadCaseDir(dir)
+    const loaded = await loadCaseDir(dir, { requireGolden: true })
     if (!loaded.ok) {
       for (const e of loaded.errors) errors.push(`${name}: ${e.file ?? ''}${e.line ? ':' + e.line : ''}: ${e.message}`)
       continue

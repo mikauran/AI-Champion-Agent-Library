@@ -209,8 +209,12 @@ async function readOptional(path: string): Promise<{ text?: string; error?: stri
   }
 }
 
-/** Load case.yaml (required), golden.jsonl and rubric.yaml (optional) from one case directory. */
-export async function loadCaseDir(dir: string): Promise<LoadResult<LoadedCase>> {
+/**
+ * Load case.yaml (required), golden.jsonl and rubric.yaml (optional) from one case directory.
+ * With requireGolden (the suite loader), a missing or empty golden.jsonl is an error: a case without
+ * its checks would be scored on nothing (CR-01, CR-02).
+ */
+export async function loadCaseDir(dir: string, opts: { requireGolden?: boolean } = {}): Promise<LoadResult<LoadedCase>> {
   const errors: LoadError[] = []
   const tag = (file: string, errs: LoadError[]) => errors.push(...errs.map((e) => ({ ...e, file })))
 
@@ -227,7 +231,10 @@ export async function loadCaseDir(dir: string): Promise<LoadResult<LoadedCase>> 
     const p = parseGoldenJsonl(g.text)
     if (p.ok) golden = p.value
     else tag('golden.jsonl', p.errors)
-  }
+    if (p.ok && opts.requireGolden && golden.length === 0) {
+      errors.push({ line: 0, file: 'golden.jsonl', message: 'golden.jsonl declares no checks' })
+    }
+  } else if (opts.requireGolden) errors.push({ line: 0, file: 'golden.jsonl', message: 'golden.jsonl not found' })
 
   let rubric: Rubric | undefined
   const r = await readOptional(join(dir, 'rubric.yaml'))

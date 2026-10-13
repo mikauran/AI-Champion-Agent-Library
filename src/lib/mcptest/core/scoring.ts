@@ -172,15 +172,17 @@ export function evaluateCase(run: CaseRun): CaseEval {
   if (RAN.includes(run.state)) {
     const anyFail = checks.some((c) => c.status === 'FAIL')
     const anyError = checks.some((c) => c.status === 'ERROR')
+    // Fail closed (CR-02): a case that measured nothing is never a PASS, whatever its thresholds say.
+    const nothingMeasured = scoredChecks.length === 0
     let ok: boolean
-    if (decisive.length > 0) ok = decisive.every((t) => t.met === true)
-    else if (scoredChecks.length === 0 && dims.D1 === null) ok = false
+    if (nothingMeasured) ok = false
+    else if (decisive.length > 0) ok = decisive.every((t) => t.met === true)
     else ok = scoredChecks.every((c) => c.status === 'PASS')
     // The tier 1 gate (D1) is never averaged or thresholded away.
     if (dims.D1 === false) ok = false
     if (ok) state = 'PASS'
     else if (anyError && !anyFail && dims.D1 !== false) state = 'ERROR'
-    else if (scoredChecks.length === 0 && dims.D1 === null && decisive.length === 0) state = 'ERROR'
+    else if (nothingMeasured && dims.D1 !== false) state = 'ERROR' // a scorer or input problem, not a server verdict
     else state = 'FAIL'
   }
 
@@ -245,8 +247,11 @@ export function rollUp(evals: CaseEval[]): RollUp {
   if (blockers > 0) verdict = 'BLOCKED'
   else if (gate === 'fail') verdict = 'DISQUALIFIED'
   else if (ran.length === 0) verdict = 'INCOMPLETE'
-  else if (ran.length === scoring.length && ran.every((e) => e.state === 'PASS')) verdict = 'PASS'
-  else verdict = 'FAIL'
+  else if (ran.length === scoring.length && ran.every((e) => e.state === 'PASS')) {
+    // Fail closed (CR-02, WR-07): PASS needs a passed Tier 1 gate and a measured score; otherwise the
+    // verdict says the run did not establish anything.
+    verdict = gate === 'pass' && value !== null ? 'PASS' : 'INCOMPLETE'
+  } else verdict = 'FAIL'
 
   return { gate, score, flags: { blockers, warnings, list }, verdict }
 }

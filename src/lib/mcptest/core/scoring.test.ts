@@ -80,7 +80,7 @@ describe('evaluateCase', () => {
     expect(evaluateCase(run({ tier: 1, d1: { pass: false } })).dims.D1).toBe(false)
     const bad = evaluateCase(run({ tier: 1, d1: { pass: false }, thresholds: { d1_pass: false } }))
     expect(bad.state).toBe('FAIL')
-    const ok = evaluateCase(run({ tier: 1, d1: { pass: true } }))
+    const ok = evaluateCase(run({ tier: 1, d1: { pass: true }, checks: [chk('tool_exists', 'D1', 'PASS')] }))
     expect(ok.dims.D1).toBe(true)
     expect(ok.state).toBe('PASS')
   })
@@ -183,7 +183,8 @@ describe('evaluateCase', () => {
 })
 
 describe('rollUp', () => {
-  const t1 = (pass: boolean) => evaluateCase(run({ tier: 1, d1: { pass }, state: pass ? 'PASS' : 'FAIL' }))
+  const t1 = (pass: boolean) =>
+    evaluateCase(run({ tier: 1, d1: { pass }, state: pass ? 'PASS' : 'FAIL', checks: [chk('tool_exists', 'D1', pass ? 'PASS' : 'FAIL')] }))
 
   it('Tier 1 failure is a gate: score null, DISQUALIFIED', () => {
     const r = rollUp([t1(false), caseAt(2, 4)])
