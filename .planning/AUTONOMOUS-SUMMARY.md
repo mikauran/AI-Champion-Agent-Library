@@ -6,8 +6,10 @@
 - Test-flake fix (D-163): vitest timeouts raised after a load-sensitive `jobs.test.ts` failure.
 - Repo-wide pass done: `docs/dependency-health.md` (npm audit 18 -> 9 findings, 0 high; in-range bumps only, D-253..D-257), `docs/deploy-runbook.md`, README/TECHNICAL_DOCUMENTATION/PROJECT/STATE/REQUIREMENTS synced. Found and fixed a hidden build break (D-264-ish, B-002): `vite build` failed on route-module exports; helpers moved to `src/lib/pageFlags.ts`, guard test `routeExports.test.ts` added, `npx vite build` verified exit 0.
 - Exploration loop so far: E1 UI-04 raw spec viewer behind `UI_SPEC_VIEWER` (default off; shows re-serialised stored record, redacted, size-capped; D-300..D-302; browser check pending human). E2 profiling: `npm run bench`, `docs/performance.md` (linear scaling to 5000 agents; yaml parse ~70% of ingest; no code change). E3: ~235 new Phase 8 tests (7 files) + one real bug fixed (secret redaction mangled words like "task-force", D-340).
-- Latest verified state: 219 files / 2360 tests, tsc clean, `vite build` exit 0.
-- Still to do: DISC-02 comparison view (flagged), UI-02 dark mode (flagged), empty/error-state audit, final milestone audit.
+- E4 DISC-02 comparison view behind `AGENT_COMPARE` (default off): Compare checkboxes (max 3) in the catalog, server-rendered `/compare?agents=a,b,c` table with differences marked, friendly handling of bad slugs, 404 when flag off (D-360..D-365). Memory/deployment/invocation-style rows are not in the data model, so not invented (D-362). Browser check pending human.
+- E5 UI-02 dark/light/system theme behind `UI_DARK_MODE` (default off): cookie preference, `data-theme` stamped server-side (no flash), palette remapped centrally in `app.css`, all 45 colour pairs proven >= AA by `contrast.dark.test.ts` (D-380..D-384). Needs a human look in a browser (translucent colours, borders, placeholders).
+- Latest verified state: 230 files / 2474 tests, tsc clean, `vite build` exit 0.
+- Still to do: empty/error-state audit (E6, running), final milestone audit.
 
 ## Completed
 - Phase 2.1 Green Baseline: `npx tsc --noEmit` exits 0 (was 22 errors in 4 test files); `npx vitest run` 43/43 files, 411/411 tests; `npm run check` added and exits 0. Decision D-005. Test files only plus package.json; no production changes.
