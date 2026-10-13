@@ -45,7 +45,9 @@ export function createRunStore(opts: RunStoreOptions = {}) {
 
   function evict(): void {
     const t = now()
-    for (const [id, r] of runs) if (t - r.createdAt > ttlMs) runs.delete(id)
+    // WR-03: an active run is never evicted, by the TTL or by the cap. Evicting it would free the single-flight
+    // slot while its work keeps running; the executor's own deadline ends a stuck run, and then the TTL applies.
+    for (const [id, r] of runs) if (!active(r) && t - r.createdAt > ttlMs) runs.delete(id)
     if (runs.size > maxRuns) {
       // Map order is insertion order = oldest first; running runs are never evicted by the cap.
       for (const [id, r] of runs) {

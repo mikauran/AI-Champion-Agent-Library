@@ -49,9 +49,11 @@ describe('run store', () => {
   it('evicts after the TTL on get and create', () => {
     const { store, clock } = mk({ ttlMs: 1000 })
     const r = store.createRun('s')
+    store.setStatus(r.id, 'done') // WR-03: only finished runs are evicted by the TTL
     clock.t += 1001
     expect(store.getRun(r.id)).toBeNull()
     const r2 = store.createRun('s')
+    store.setStatus(r2.id, 'failed')
     clock.t += 2000
     store.createRun('s')
     expect(store.getRun(r2.id)).toBeNull()

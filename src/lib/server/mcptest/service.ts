@@ -23,6 +23,21 @@ export interface ServiceDeps {
   env?: Record<string, string | undefined>
   runtimeFactory?: RuntimeFactory
   driverTree?: StagedFile[]
+  /** Time allowed after the soft deadline before the run is failed whatever the work is doing (tests). Default 10 s. */
+  hardGraceMs?: number
+}
+
+/** Used when MCPTEST_JOB_TIMEOUT_MS is unset or invalid (the runner config default). */
+export const DEFAULT_JOB_TIMEOUT_MS = 300_000
+export const HARD_GRACE_MS = 10_000
+
+/** Overall wall-clock budget of one run (WR-08): MCPTEST_JOB_TIMEOUT_MS, parsed and bounded by the runner config. */
+export function jobTimeoutMs(env: Record<string, string | undefined> = process.env): number {
+  try {
+    return mcpTestRunnerConfig(env).jobTimeoutMs
+  } catch {
+    return DEFAULT_JOB_TIMEOUT_MS
+  }
 }
 
 /** Subjects the web API accepts: fake variants and generator samples only (no uploads, no cmd:). */
@@ -102,9 +117,55 @@ async function prepareGeneratorRequest(
   }
 }
 
+/**
+ * Runs one stored run under an overall deadline (WR-03, WR-08). At the budget the run's AbortSignal fires (the host
+ * runner stops between cases and the report becomes INCOMPLETE); if the work still has not returned after a short
+ * grace the run is failed anyway, so a hung run cannot hold the single-flight slot.
+ */
 export async function executeRun(runId: string, input: StartRunRequest, deps: ServiceDeps = {}): Promise<void> {
   const store = deps.store ?? runStore
   const env = deps.env ?? process.env
+  const budget = jobTimeoutMs(env)
+  const ac = new AbortController()
+  let soft: ReturnType<typeof setTimeout> | undefined
+  let hard: ReturnType<typeof setTimeout> | undefined
+  const expired = new Promise<'expired'>((resolve) => {
+    soft = setTimeout(() => ac.abort(), budget)
+    hard = setTimeout(() => resolve('expired'), budget + (deps.hardGraceMs ?? HARD_GRACE_MS))
+    soft.unref?.()
+    hard.unref?.()
+  })
+  // After the hard deadline the run is failed for good: late writes from the abandoned work are dropped.
+  let abandoned = false
+  const guarded: RunStore = {
+    ...store,
+    setStatus: (...a) => (abandoned ? undefined : store.setStatus(...a)),
+    setProgress: (...a) => (abandoned ? undefined : store.setProgress(...a)),
+    addEvent: (...a) => (abandoned ? undefined : store.addEvent(...a)),
+    setReport: (...a) => (abandoned ? undefined : store.setReport(...a))
+  }
+  try {
+    const outcome = await Promise.race([runBody(runId, input, deps, guarded, env, ac.signal, budget).then(() => 'done' as const), expired])
+    if (outcome === 'expired') {
+      abandoned = true
+      ac.abort()
+      store.setStatus(runId, 'failed', 'the run exceeded its time limit')
+    }
+  } finally {
+    clearTimeout(soft)
+    clearTimeout(hard)
+  }
+}
+
+async function runBody(
+  runId: string,
+  input: StartRunRequest,
+  deps: ServiceDeps,
+  store: RunStore,
+  env: Record<string, string | undefined>,
+  signal: AbortSignal,
+  budgetMs: number
+): Promise<void> {
   const fail = (msg: string) => store.setStatus(runId, 'failed', msg)
   try {
     store.setStatus(runId, 'running')
@@ -139,7 +200,11 @@ export async function executeRun(runId: string, input: StartRunRequest, deps: Se
         }
       }
       const runtime = await (deps.runtimeFactory ?? defaultRuntimeFactory)()
-      const res = await runInContainer(runtime, request, files, { ...(deps.driverTree ? { driverTree: deps.driverTree } : {}) })
+      // The container has its own timeout (the configured budget); the exec is cancelled when it fires.
+      const res = await runInContainer(runtime, request, files, {
+        timeoutMs: budgetMs,
+        ...(deps.driverTree ? { driverTree: deps.driverTree } : {})
+      })
       if (!res.ok) return fail(res.message)
       store.setProgress(runId, { done: cases.length * reruns, total: cases.length * reruns })
       store.setReport(runId, res.reportJson)
@@ -157,6 +222,7 @@ export async function executeRun(runId: string, input: StartRunRequest, deps: Se
       runtime: 'fake',
       // Never true here: a generated server is not executed in the web process.
       allowStdioExec: false,
+      signal,
       onProgress: (p) => {
         store.setProgress(runId, { done: p.done, total: p.total, current: p.current ?? null })
         if (p.current && p.current !== last) {
