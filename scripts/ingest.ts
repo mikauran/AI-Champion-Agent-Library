@@ -2,7 +2,7 @@ import { readdir, readFile, mkdir, stat } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
-import { sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { parse as parseYaml } from 'yaml'
 import { agents, agentEmbeddings, agentKinds } from '../drizzle/schema.js'
 import type { NewAgentRow } from '../drizzle/schema.js'
@@ -198,6 +198,36 @@ async function ingest( dataDir: string, dbPath: string, opts?: { embedder?: Embe
 }
 
 /**
+ * CR-02: a re-ingest may land on a slug owned by a different kind or source format (an unrelated
+ * submission with the same derived slug, or an author changing what the folder contains). The
+ * upsert deliberately keeps try_it_out_* (D-07), so in that case they are reset to the defaults
+ * instead of letting a new skill/system inherit a previous agent's runnable or external setting.
+ * A legacy row with no sidecar counts as kind 'agent' and is NOT compared by source format, so
+ * turning the flag on never resets curated settings.
+ */
+export function tryItOutResetReason(
+  sqlite: Database.Database,
+  slug: string,
+  next: { kind: string; sourceFormat: string | null },
+): string | null {
+  const prev = sqlite
+    .prepare(
+      'SELECT k.slug AS sidecar, k.kind AS kind, k.source_format AS source_format FROM agents a LEFT JOIN agent_kinds k ON k.slug = a.slug WHERE a.slug = ?',
+    )
+    .get(slug) as { sidecar: string | null; kind: string | null; source_format: string | null } | undefined
+  if (!prev) return null
+  const prevKind = prev.kind ?? 'agent'
+  if (prevKind !== next.kind) return `kind ${prevKind} -> ${next.kind}`
+  if (prev.sidecar !== null) {
+    const family = (f: string | null) => (f ?? '').split('@')[0]
+    if (family(prev.source_format) !== family(next.sourceFormat)) {
+      return `source format ${prev.source_format ?? 'none'} -> ${next.sourceFormat ?? 'none'}`
+    }
+  }
+  return null
+}
+
+/**
  * Flag-on (AGENT_KINDS) ingest, kept separate so the legacy path stays untouched.
  * Top-level files are single submissions; sub-directories are scanned as submissions;
  * unrecognized directories are skipped with an info log (not counted as failures).
@@ -238,7 +268,8 @@ async function ingestKindsInto(
     }
 
     try {
-      const outcome = parseSubmission(files, { now })
+      const hint = isDir ? name : name.replace(/\.[^.]+$/, '')
+      const outcome = parseSubmission(files, { now, hint })
       if (!outcome.record) {
         if (isDir && outcome.status === 'missing-from-author') {
           console.log(`[SKIP-INFO] ${name}: not a recognized submission`)
@@ -253,6 +284,10 @@ async function ingestKindsInto(
       const row = flattenRecord(record)
       const extras = JSON.stringify(clampExtras(redactSecrets(info.extras) as Record<string, unknown>))
       const updatedAt = new Date().toISOString()
+      const resetReason = tryItOutResetReason(sqlite, record.slug, info)
+      if (resetReason) {
+        console.warn(`[WARN] ${name}: slug '${record.slug}' already existed (${resetReason}); try-it-out settings reset`)
+      }
 
       db.transaction(tx => {
         tx.insert(agents)
@@ -284,6 +319,12 @@ async function ingestKindsInto(
             },
           })
           .run()
+        if (resetReason) {
+          tx.update(agents)
+            .set({ tryItOutMode: 'none', tryItOutUrl: null, tryItOutTaskTemplate: null })
+            .where(eq(agents.slug, record.slug))
+            .run()
+        }
         tx.insert(agentKinds)
           .values({
             slug: record.slug,

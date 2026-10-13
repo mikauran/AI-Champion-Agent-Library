@@ -79,7 +79,9 @@ function failItem(name: string, warning: string): ReportItem {
 function itemFor(name: string, target: string): ReportItem {
   try {
     const { files, skipped } = readSubmissionDir(target)
-    const outcome = parseSubmission(files, { now: new Date().toISOString() })
+    // The folder (or file stem) names the submission when its files carry no usable name (CR-02).
+    const hint = DATA_EXT.test(name) ? name.replace(/\.[^.]+$/, '') : name
+    const outcome = parseSubmission(files, { now: new Date().toISOString(), hint })
     return toItem(name, outcome, skipped)
   } catch (e) {
     return failItem(name, `could not be validated: ${e instanceof Error ? e.message : 'error'}`)

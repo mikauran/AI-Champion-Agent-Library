@@ -144,7 +144,8 @@ export const mcpServerJsonAdapter: FormatAdapter = {
       const title = str(o.title) ? cap(o.title as string, 120) : prettify(name)
 
       const record: AgentRecord = {
-        slug: slugify(name) || 'mcp-server',
+        // An empty slug (non-ASCII name) is resolved by the registry from the folder hint or a hash.
+        slug: slugify(name),
         title,
         specId: cap(name, 200),
         summary: cap(str(o.description) ?? '', 2000),

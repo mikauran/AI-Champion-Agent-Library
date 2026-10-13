@@ -86,7 +86,7 @@ afterEach(() => {
 })
 
 const EXPECTED: Array<[string, string, string | null, string | null, number]> = [
-  ['crewai-crew', 'system', 'crewai', 'pipeline', 2],
+  ['crewai-yaml', 'system', 'crewai', 'pipeline', 2],
   ['example-remote-agent', 'external-agent', 'oracle-agentspec', null, 0],
   ['example-report-flow', 'system', 'oracle-agentspec', 'pipeline', 2],
   ['example-research-crew', 'system', 'crewai', 'pipeline', 2],
@@ -97,7 +97,7 @@ const EXPECTED: Array<[string, string, string | null, string | null, number]> = 
   ['example-support-swarm', 'system', 'oracle-agentspec', 'swarm', 3],
   ['example-weather-mcp', 'mcp-server', null, null, 0],
   ['io-github-example-acme-catalog-server', 'mcp-server', 'mcp', null, 0],
-  ['langgraph-application', 'system', 'langgraph', null, 0],
+  ['langgraph', 'system', 'langgraph', null, 0],
   ['skill-example', 'skill', 'agent-skills', null, 0],
 ]
 

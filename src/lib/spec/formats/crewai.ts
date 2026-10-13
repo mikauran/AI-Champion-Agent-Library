@@ -190,7 +190,7 @@ function parseTasks(
   return out
 }
 
-function parseJsoncStyle(files: SubmissionFile[]): Parsed | ParseOutcome {
+function parseJsoncStyle(files: SubmissionFile[], hint: string): Parsed | ParseOutcome {
   const cf = files.find(crewFile)!
   const crew = parseJsonc(cf.text)
   if (!isObj(crew)) return failed('crewai-jsonc', ['valid crew.jsonc'])
@@ -229,7 +229,7 @@ function parseJsoncStyle(files: SubmissionFile[]): Parsed | ParseOutcome {
   const models = new Set<string>()
   if (typeof crew.manager_llm === 'string') models.add(crew.manager_llm)
   return {
-    title: str(crew.name) ?? 'CrewAI crew',
+    title: str(crew.name) ? cap(str(crew.name) as string, 120) : hint || 'CrewAI crew',
     summary: str(crew.description) ?? '',
     agents, hierarchical, managerRef, managerInline,
     tasks: parseTasks(crew.tasks),
@@ -247,7 +247,7 @@ function parseJsoncStyle(files: SubmissionFile[]): Parsed | ParseOutcome {
   }
 }
 
-function parseYamlStyle(files: SubmissionFile[]): Parsed | ParseOutcome {
+function parseYamlStyle(files: SubmissionFile[], hint: string): Parsed | ParseOutcome {
   const af = files.find(yamlAgents)!
   const tf = files.find(yamlTasks)
   let adoc: unknown
@@ -264,7 +264,7 @@ function parseYamlStyle(files: SubmissionFile[]): Parsed | ParseOutcome {
   const parts = af.path.split('/')
   const folder = parts.length >= 3 ? parts[parts.length - 3]! : ''
   return {
-    title: folder !== '' && folder !== '.' ? folder : 'CrewAI crew',
+    title: folder !== '' && folder !== '.' ? folder : hint || 'CrewAI crew',
     summary: '',
     agents, hierarchical: false, managerRef: null, managerInline: null,
     tasks: parseTasks(tdoc),
@@ -287,7 +287,8 @@ export const crewaiAdapter: FormatAdapter = {
     try {
       const jsonc = files.some(crewFile)
       if (!jsonc && !files.some(yamlAgents)) return unrecognizedOutcome()
-      const p = jsonc ? parseJsoncStyle(files) : parseYamlStyle(files)
+      const hint = typeof ctx.hint === 'string' ? cap(ctx.hint.trim(), 120) : ''
+      const p = jsonc ? parseJsoncStyle(files, hint) : parseYamlStyle(files, hint)
       if ('status' in p) return p
 
       const toolNames = new Set<string>()
@@ -339,7 +340,8 @@ export const crewaiAdapter: FormatAdapter = {
       if (p.sourceFormat === 'crewai-yaml') missing.unshift('name')
       if (members.length === 0) missing.push('agents')
 
-      const slug = slugify(p.title) || 'crewai-crew'
+      // An empty slug (non-ASCII title) is resolved by the registry from the folder hint or a hash.
+      const slug = slugify(p.title)
       const record: AgentRecord = {
         slug,
         title: p.title,

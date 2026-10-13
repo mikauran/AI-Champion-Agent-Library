@@ -74,9 +74,12 @@ export const langgraphAdapter: FormatAdapter = {
       for (const k of Object.keys(o)) if (!KNOWN.has(k)) unknown[k] = o[k]
       const parts = f.path.split('/')
       const folder = parts.length >= 2 ? parts[parts.length - 2]! : ''
-      const title = folder && folder !== '.' ? cap(folder, 120) : 'LangGraph application'
+      // CR-02: root-level files have no folder in their path, so fall back to the submission hint
+      // before the fixed name; otherwise every root-level langgraph.json would share one slug.
+      const hint = typeof ctx.hint === 'string' ? ctx.hint.trim() : ''
+      const title = folder && folder !== '.' ? cap(folder, 120) : hint ? cap(hint, 120) : 'LangGraph application'
       const record: AgentRecord = {
-        slug: slugify(title) || 'langgraph-application',
+        slug: slugify(title),
         title,
         specId: null,
         summary: '',
