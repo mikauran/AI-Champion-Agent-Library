@@ -8,10 +8,12 @@ A browse-and-discovery catalog for the AI agents produced for the AI Champion (A
 
 The AIC consortium produces AI agents that automate workflows across engineering, operations, and project management. This library is the front door to that catalog — a fast, searchable index where you can:
 
+- **Search** with natural language or keywords (hybrid keyword + local-embedding search)
 - **Browse** agents by category, LLM, and maturity status
 - **Read** a plain-language summary of what each agent does and when to use it
 - **Inspect** the technical specification (LLM config, tools, human-in-the-loop requirements) when you need the details
 - **See** which fields are tailorable for your environment before you open the GitHub repo
+- **Try out** selected demo agents and find **related agents** on each detail page
 
 The platform is a discovery tool, not a runtime. Agents live in GitHub; this library helps you find the right one.
 
@@ -27,13 +29,13 @@ Each agent is described in a YAML file using the Oracle AgentSpec format. On sta
 
 ## Getting started
 
-**Prerequisites:** Node.js 20+
+**Prerequisites:** Node.js 22 (the container images use Node 22; the Try It Out runner images need >= 22.19)
 
 ```bash
 # 1. Clone and install
 git clone https://github.com/aic-consortium/aic-agent-library
 cd aic-agent-library
-npm install
+ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm install   # the variable avoids a hanging CUDA download (see Search)
 
 # 2. Configure access and email delivery
 cp .env.example .env
@@ -141,12 +143,79 @@ Off by default. Set `MCP_TESTER=1` to enable the `/mcp-test` page, the `POST /ap
 
 ---
 
-## What's coming
+## npm scripts
 
-| Phase | What it adds |
-|-------|-------------|
-| Search | Natural language + keyword search, results update as you type |
-| Customization | "Customize" entry point with wizard flows for well-defined configuration patterns |
+| Script | What it does |
+|--------|--------------|
+| `npm run dev` | `db:push`, `ingest`, `tryout:configure`, then the Vite dev server (port 5173) |
+| `npm run build` | `db:push`, `ingest`, `tryout:configure`, then `vite build` (see `docs/deploy-runbook.md`) |
+| `npm run preview` | `node build` (serve the production build) |
+| `npm run check` | `svelte-kit sync && tsc --noEmit && vitest run`: the one command that must exit 0 |
+| `npm test` | `vitest run` only |
+| `npm run db:push` | `drizzle-kit push`: apply `drizzle/schema.ts` to `db/catalog.db` |
+| `npm run ingest` | Ingest `data/agents/` into SQLite (+ embeddings unless `SEARCH_EMBEDDINGS=off`) |
+| `npm run tryout:configure` | Set `try_it_out_mode` for the demo agents (`demo-rfi-triage` runnable, `hvac-load-calculator` none); run after ingest |
+| `npm run fixtures:scale` | Write 150 synthetic agent YAMLs to `data/fixtures-scale/` (gitignored); `SCALE_COUNT`, `SCALE_SEED`, `SCALE_OUT_DIR` override |
+| `npm run validate-submission -- <path>` | Check an agent submission folder or file against the format adapters (read-only, works without `AGENT_KINDS`) |
+| `npm run generate-mcp -- --adapter <id> <input> --out <dir>` | MCP generator CLI (works without `MCP_GENERATOR`) |
+| `npm run mcp-test -- --list` / `--subject fake:good` | MCP test platform CLI (works without `MCP_TESTER`) |
+
+## Configuration reference
+
+Variables are read from the environment (`.env` for local runs and compose). Defaults and the full table, including every `PI_*` and `MCPTEST_*` knob, are in `docs/deploy-runbook.md` section 3; `.env.example` has the commented list.
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `AGENT_KINDS` | off | Feature flag: multi-agent and multi-format hosting (Phase 13) |
+| `MCP_GENERATOR` | off | Feature flag: Generate MCP panel and `POST /api/mcp-generate` (Phase 14) |
+| `MCP_TESTER` | off | Feature flag: `/mcp-test` page and `/api/mcp-test/runs` (Phase 15) |
+| `MCP_TESTER_RUNTIME` | unset | `container` runs the MCP tester in the runner image instead of in-process fakes |
+| `SEARCH_EMBEDDINGS` | on | `off` = keyword-only search, no model |
+| `SEARCH_REAL_EMBEDDINGS` | unset | Test only: `1` enables the real-model accuracy test (downloads the model) |
+| `HF_CACHE_DIR` | `./db/models` | Embedding model cache |
+| `APP_INSTANCE_NAME` | container hostname | Owner label for Try It Out containers; makes the orphan sweep safe |
+| `MCPTEST_JOB_TIMEOUT_MS` | 300000 | Job timeout of the MCP test runner container (also `MCPTEST_MEMORY_MB`, `MCPTEST_NETWORK`, `MCPTEST_RUNNER_IMAGE`) |
+| `CATALOG_DB_PATH`, `INGEST_DATA_DIR`, `INGEST_DB_PATH` | `./db/catalog.db`, `./data/agents`, `./db/catalog.db` | Database and source locations |
+| `OPENAI_API_KEY`, `PI_*` | see `.env.example` | Try It Out (direct call and container runner) |
+| `AUTH_*`, `BREVO_API_KEY`, `SMTP_*`, `ORIGIN` | see below | Sign-in and mail |
+
+Flags accept `1`, `true`, `on` or `yes`.
+
+## Tests
+
+`npm run check` is the gate (type check plus the whole Vitest suite, about 2 minutes: 208 files, 2087 tests at the time of writing). Strategy:
+
+- Everything runs offline. No test loads an embedding model (`SEARCH_EMBEDDINGS=off` in `vitest.config.ts`), calls OpenAI or talks to a container engine: the container runtime, LLM upstream and MCP servers are replaced by fakes, fake timers and loopback mocks.
+- Component tests (`src/lib/components/**`) run in jsdom; accessibility is checked with axe-core in jsdom (`*.a11y.test.ts`) plus a dependency-free contrast calculator; everything else runs in Node.
+- Search quality: a 46-query labeled set on the 150-agent synthetic corpus (BM25 hit@3 enforced); the real-model variant is skipped unless `SEARCH_REAL_EMBEDDINGS=1`.
+- Flag safety: `scripts/flag-off.golden.test.ts` and `scripts/flag-regression.test.ts` pin that flag-off output is byte-identical; golden files under `src/lib/mcpgen/__golden__` pin generator output (`UPDATE_GOLDEN=1` regenerates them); `criteria.test.ts` files pin architectural invariants.
+- Chaos tests for the Try It Out lease, proxy and reaper (`src/lib/server/tryitout/chaos.*.test.ts`) use seeded interleavings and fakes.
+- What tests cannot show lives in `*-HUMAN-UAT.md` files (browser, screen reader, live Podman, real model). `npm run check` does not run `vite build`.
+
+## Repository map
+
+| Path | Contents |
+|------|----------|
+| `src/routes/` | SvelteKit pages and APIs: `catalog`, `agents/[slug]`, `login`, `logout`, `health`, `mcp-test`, `api/search`, `api/tryitout/jobs`, `api/try-out`, `api/llm/v1` (proxy), `api/mcp-generate`, `api/mcp-test/runs` |
+| `src/lib/spec/` | Spec shim: canonical `AgentRecord`, Oracle AgentSpec adapter, multi-format registry and adapters (Phase 13) |
+| `src/lib/server/` | DB singleton, auth and mail, search (`search/`: BM25, embeddings, hybrid, related), Try It Out (`tryitout/`: lease manager, container runtime, LLM proxy, Pi runner), MCP test service (`mcptest/`) |
+| `src/lib/mcpgen/` | MCP generator (adapters, planner, Python emitter, credential scanner) |
+| `src/lib/mcptest/` | MCP test platform (client, mock upstream, fakes, suite, scoring, driver) |
+| `src/lib/components/` | Svelte components and their tests |
+| `src/lib/flags.ts` | Feature flag readers |
+| `scripts/` | CLIs (`ingest`, `set-try-it-out-mode`, `validate-submission`, `generate-mcp`, `mcp-test`), scale-fixture generator, `smoke-pi-runner.ts` and `probe-openai-model.ts` (manual, not in any script) |
+| `drizzle/schema.ts` | Tables `agents`, `agent_embeddings`, `agent_kinds` |
+| `data/` | `agents/` (YAML source), `tryitout-prompts/`, `try-out/` |
+| `fixtures/submissions/` | Sample submissions for `validate-submission` |
+| `docs/` | Design docs, research, `deploy-runbook.md`, `dependency-health.md` |
+| `.planning/` | GSD planning state, per-phase plans, verification and human-UAT checklists, autonomous-run decisions |
+| `Containerfile*`, `podman-compose.yml` | App image, Pi runner image, MCP test runner image (definition only), compose stack |
+
+## Operations
+
+Deploying, environment table, backups, health check, rollback and the list of pending live checks: [docs/deploy-runbook.md](docs/deploy-runbook.md). Dependency audit status: [docs/dependency-health.md](docs/dependency-health.md).
+
+Known issue: `npm run build` currently fails on a SvelteKit invalid-export error (blocker B-002 in `.planning/AUTONOMOUS-BLOCKERS.md`); `npm run dev` and `npm run check` are unaffected.
 
 ---
 
@@ -284,7 +353,7 @@ For stack choices, data model, ingestion pipeline, component structure, and cont
 
 ### Agent types and intake
 
-Research output from Phase 12; hosting of multi-agent systems and other formats is not yet implemented.
+Research output from Phase 12. Hosting of multi-agent systems and other formats is implemented behind `AGENT_KINDS` (Phase 13, default off; see `docs/phase13-adapters.md`).
 
 - [docs/agent-types.md](docs/agent-types.md): taxonomy of agent kinds, topologies and frameworks with per-format findings.
 - [docs/agent-capability-matrix.md](docs/agent-capability-matrix.md): what each type needs, stores and shows, and Try It Out suitability.
