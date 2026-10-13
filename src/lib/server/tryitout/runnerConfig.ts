@@ -34,6 +34,13 @@ export interface RunnerConfig {
   maxOutputBytes: number
   maxOutputFiles: number
   anonSessionsPerClient: number
+  /**
+   * Container user. Default 'pi' (the Pi runner image). Other images set it to the user their
+   * Containerfile ends with (the MCP test runner image runs as 'node'). Never read from the environment.
+   */
+  runUser?: string
+  /** Mount the Pi agent dir tmpfs (/home/pi/agent). Default true; images without that path set false. */
+  mountAgentDir?: boolean
 }
 
 function num(

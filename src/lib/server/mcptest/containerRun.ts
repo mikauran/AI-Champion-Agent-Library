@@ -3,6 +3,7 @@
 // -> remove (always). The container is the isolation; the web process never runs a generated server.
 // Verified only against createFakeRuntime; a real engine is a pending human check.
 import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { hostname } from 'node:os'
 import { join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ReportSchema, MAX_REPORT_BYTES, type Report } from '$lib/mcptest/core/report'
@@ -11,6 +12,8 @@ import { parseRunnerConfig, type RunnerConfig } from '../tryitout/runnerConfig'
 import { publicErrorMessage, publicText, redactSecrets } from '../tryitout/redact'
 import {
   LABEL_INSTANCE,
+  LABEL_MANAGED,
+  LABEL_OWNER,
   WORK_ROOT_IN_CONTAINER,
   isSafeRelativePath,
   isTryItOutRuntimeError,
@@ -19,7 +22,13 @@ import {
 } from '../tryitout/runtime'
 
 export const LABEL_MCPTEST = 'aic.mcptest'
-export const DRIVER_CMD = ['tsx', '/work/src/lib/mcptest/driver.ts']
+/** User the runner image ends with (Containerfile.mcp-test-runner: USER node); a test keeps the two in step. */
+export const RUNNER_USER = 'node'
+/**
+ * `npm install --prefix /` puts the binary in /node_modules/.bin (CR-04). The absolute path does not depend on PATH;
+ * the Containerfile also puts that directory on PATH.
+ */
+export const DRIVER_CMD = ['/node_modules/.bin/tsx', '/work/src/lib/mcptest/driver.ts']
 export const MAX_PKG_FILES = 200
 export const MAX_PKG_BYTES = 2_000_000
 export const MAX_TREE_FILES = 800
@@ -42,6 +51,8 @@ export interface ContainerRunOptions {
   timeoutMs?: number
   signal?: AbortSignal
   instanceId?: string
+  /** Owner label of the deployment (default APP_INSTANCE_NAME or the hostname, like the Try It Out service). */
+  ownerId?: string
   /** Pre-read driver tree (tests); default reads src/lib/mcptest and src/lib/mcpgen from disk. */
   driverTree?: StagedFile[]
 }
@@ -62,19 +73,36 @@ export function mcpTestRunnerConfig(env: Record<string, string | undefined> = pr
     PI_RUNNER_MAX_OUTPUT_BYTES: String(MAX_REPORT_BYTES + 100_000),
     PI_RUNNER_MAX_OUTPUT_FILES: String(MAX_OUT_FILES)
   })
-  const out: RunnerConfig = { ...cfg, proxyUrl: '', allowOpenEgress: false, tools: [], jobTokenBudget: 0, jobRequestBudget: 0, fallbackEnabled: false }
+  const out: RunnerConfig = {
+    ...cfg,
+    proxyUrl: '',
+    allowOpenEgress: false,
+    tools: [],
+    jobTokenBudget: 0,
+    jobRequestBudget: 0,
+    fallbackEnabled: false,
+    // CR-03: this image has user 'node' and no /home/pi/agent.
+    runUser: RUNNER_USER,
+    mountAgentDir: false
+  }
   if (out.allowOpenEgress) throw new Error('open egress is forbidden for the test runner')
   return out
 }
 
 const TREE_ROOTS = ['src/lib/mcptest', 'src/lib/mcpgen']
-const TEXT_EXT = new Set(['.ts', '.json', '.yaml', '.yml', '.md', '.mjs'])
+// .jsonl (golden checks) and .csv (fixtures) were missing before CR-01.
+const TEXT_EXT = new Set(['.ts', '.json', '.jsonl', '.yaml', '.yml', '.md', '.mjs', '.csv'])
+const SUITE_PREFIX = 'src/lib/mcptest/suite/'
 
 function repoRoot(): string {
   return fileURLToPath(new URL('../../../../', import.meta.url))
 }
 
-/** Reads the driver source tree (text files only, no tests, goldens or testing dirs except the suite). */
+/**
+ * Reads the driver source tree (text files only, no tests, goldens or testing dirs). Everything under the suite
+ * directory is staged whatever its extension, and the tree is rejected when a suite case lacks its golden.jsonl
+ * (CR-01: the in-container suite must equal the host suite, or the run would score nothing).
+ */
 export function readDriverTree(root: string = repoRoot()): StagedFile[] {
   const files: StagedFile[] = []
   let bytes = 0
@@ -86,18 +114,35 @@ export function readDriverTree(root: string = repoRoot()): StagedFile[] {
         if (ent.name === '__golden__' || ent.name === 'testing' || ent.name === 'node_modules') continue
         walk(p)
       } else if (ent.isFile()) {
-        const dot = ent.name.lastIndexOf('.')
-        if (dot < 0 || !TEXT_EXT.has(ent.name.slice(dot))) continue
+        const rel = relative(root, p).split(sep).join('/')
         if (ent.name.endsWith('.test.ts')) continue
+        if (!rel.startsWith(SUITE_PREFIX)) {
+          const dot = ent.name.lastIndexOf('.')
+          if (dot < 0 || !TEXT_EXT.has(ent.name.slice(dot))) continue
+        }
         const size = statSync(p).size
         bytes += size
         if (files.length + 1 > MAX_TREE_FILES || bytes > MAX_TREE_BYTES) throw new Error('driver tree exceeds its caps')
-        files.push({ path: relative(root, p).split(sep).join('/'), content: readFileSync(p, 'utf8') })
+        files.push({ path: rel, content: readFileSync(p, 'utf8') })
       }
     }
   }
   for (const r of TREE_ROOTS) walk(join(root, r))
+  const missing = missingGoldens(files)
+  if (missing.length > 0) throw new Error(`driver tree lacks golden.jsonl for: ${missing.join(', ')}`)
   return files
+}
+
+/** Suite case directories (those with a case.yaml) that have no golden.jsonl in the staged files. */
+export function missingGoldens(files: { path: string }[]): string[] {
+  const paths = new Set(files.map((f) => f.path))
+  const out: string[] = []
+  for (const f of files) {
+    if (!f.path.startsWith(SUITE_PREFIX) || !f.path.endsWith('/case.yaml')) continue
+    const dir = f.path.slice(0, -'case.yaml'.length)
+    if (!paths.has(`${dir}golden.jsonl`)) out.push(dir.slice(SUITE_PREFIX.length, -1))
+  }
+  return out
 }
 
 function withDirs(prefix: string, files: { path: string; content: string }[]): StagedFile[] {
@@ -192,18 +237,30 @@ export async function runInContainer(
   } catch {
     return fail('exec_failed', 'driver sources could not be read')
   }
+  // CR-01: never run against a suite whose goldens were not staged.
+  if (missingGoldens(tree).length > 0) return fail('exec_failed', 'driver sources are incomplete')
 
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS
   let containerId: string | null = null
+  // WR-04: the create call is tracked so a timeout that fires while it is in flight can still remove the container.
+  let created: Promise<string> | null = null
+  const execAbort = new AbortController()
   const stderrTail: string[] = []
   try {
     const run = async (): Promise<ContainerRunResult> => {
       await runtime.ensureNetwork()
-      containerId = await runtime.createAndStart({
+      // aic.tryitout + aic.owner make the existing Try It Out orphan sweep find a leaked container too.
+      created = runtime.createAndStart({
         name: `mcptest-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-        labels: { [LABEL_MCPTEST]: '1', [LABEL_INSTANCE]: opts.instanceId ?? 'mcptest' },
+        labels: {
+          [LABEL_MANAGED]: '1',
+          [LABEL_MCPTEST]: '1',
+          [LABEL_INSTANCE]: opts.instanceId ?? 'mcptest',
+          [LABEL_OWNER]: opts.ownerId ?? (process.env.APP_INSTANCE_NAME?.trim() || hostname())
+        },
         env: []
       })
+      containerId = await created
       const id = containerId
       const staged: StagedFile[] = [
         { path: 'in', type: 'dir' },
@@ -216,6 +273,7 @@ export async function runInContainer(
       const { exitCode } = await runtime.exec(id, {
         cmd: DRIVER_CMD,
         workingDir: WORK_ROOT_IN_CONTAINER,
+        signal: execAbort.signal,
         onStdout: () => {},
         onStderr: (c) => {
           stderrTail.push(c.toString('utf8'))
@@ -255,7 +313,11 @@ export async function runInContainer(
       }
       const checked = ReportSchema.safeParse(json)
       if (!checked.success) return fail('output_invalid', 'report does not match the schema')
-      return { ok: true, report: checked.data, reportJson: text }
+      // WR-05: store and serve the validated data (unknown keys stripped by the schema), never the raw bytes the
+      // container wrote, so content a subject smuggled into report.json cannot reach the host store.
+      const reportJson = JSON.stringify(checked.data)
+      if (Buffer.byteLength(reportJson, 'utf8') > MAX_REPORT_BYTES) return fail('output_invalid', 'report exceeds the size cap')
+      return { ok: true, report: checked.data, reportJson }
     }
     return await guard(run(), timeoutMs, opts.signal)
   } catch (err) {
@@ -263,13 +325,19 @@ export async function runInContainer(
     if (err instanceof RunAborted) return fail('exec_failed', 'the run was cancelled')
     return mapError(err)
   } finally {
+    execAbort.abort()
     const id = containerId
     if (id) {
       try {
         await runtime.remove(id)
       } catch {
-        /* cleanup is best effort; the orphan sweep labels (aic.mcptest) cover leftovers */
+        /* cleanup is best effort; the labelled orphan sweep covers leftovers */
       }
+    } else if (created) {
+      // The create call was still in flight (timeout or abort): remove whatever it produces once it settles.
+      void (created as Promise<string>)
+        .then((late) => runtime.remove(late))
+        .catch(() => {})
     }
   }
 }

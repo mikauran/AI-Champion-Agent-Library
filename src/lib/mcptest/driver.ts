@@ -90,7 +90,8 @@ export async function runDriver(io: DriverIo): Promise<number> {
   let report: Report
   try {
     const suite = await loadSuite()
-    if (!suite.ok) throw new Error('suite failed to load')
+    // Fail closed (CR-01): a missing golden.jsonl or fixture makes the suite fail to load; nothing is scored.
+    if (!suite.ok) throw new Error(`suite failed to load: ${suite.errors[0] ?? 'unknown error'}`.slice(0, 150))
     const wanted = req.cases
     const cases = wanted ? suite.cases.filter((c) => wanted.includes(c.def.id as never)) : suite.cases
     let subject: RunnableSubject

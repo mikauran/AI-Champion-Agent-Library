@@ -67,6 +67,8 @@ export interface ExecOptions {
   workingDir: string
   onStdout: (chunk: Buffer) => void
   onStderr: (chunk: Buffer) => void
+  /** Optional cancellation: the dockerode runtime stops waiting on the exec stream when it aborts. */
+  signal?: AbortSignal
 }
 
 export interface ExecResult {

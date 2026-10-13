@@ -43,14 +43,15 @@ export function buildCreateOptions(cfg: RunnerConfig, spec: ContainerSpec): Dock
     : {
         '/work': `rw,size=${cfg.workTmpfsMb}m,mode=1777`,
         '/tmp': `rw,size=${cfg.tmpTmpfsMb}m,mode=1777`,
-        // Podman 4.9 rejects the uid=/gid= tmpfs options (verified by the live smoke run), so
-        // the agent dir is sticky world-writable instead; only the pi user exists in the container.
-        '/home/pi/agent': `rw,size=${cfg.agentTmpfsMb}m,mode=1777`,
       }
+  // Podman 4.9 rejects the uid=/gid= tmpfs options (verified by the live smoke run), so
+  // the agent dir is sticky world-writable instead; only the pi user exists in the container.
+  // Images that have no /home/pi/agent (the MCP test runner) opt out with mountAgentDir: false (CR-03).
+  if (!layer && cfg.mountAgentDir !== false) Tmpfs['/home/pi/agent'] = `rw,size=${cfg.agentTmpfsMb}m,mode=1777`
   return {
     Image: cfg.image,
     name: spec.name,
-    User: 'pi',
+    User: cfg.runUser ?? 'pi',
     Cmd: ['sleep', 'infinity'],
     Labels: spec.labels,
     Env: spec.env,
@@ -216,6 +217,12 @@ export function createDockerodeRuntime(cfg: RunnerConfig, instanceId: string): C
       out.on('data', (c: Buffer) => opts.onStdout(c))
       err.on('data', (c: Buffer) => opts.onStderr(c))
       d.modem.demuxStream(stream, out, err)
+      // WR-08: a cancelled run stops waiting on the exec stream (the container is removed by the caller).
+      if (opts.signal) {
+        const onAbort = () => (stream as unknown as { destroy?: () => void }).destroy?.()
+        if (opts.signal.aborted) onAbort()
+        else opts.signal.addEventListener('abort', onAbort, { once: true })
+      }
       await new Promise<void>((resolve, reject) => {
         stream.on('end', resolve)
         stream.on('close', resolve)

@@ -31,9 +31,12 @@ RUN npm install --prefix / --no-save --no-audit --no-fund --ignore-scripts \
 # the package index; the human decides the pin before the first build.
 RUN python3 -m venv /opt/venv \
     && /opt/venv/bin/pip install --no-cache-dir "fastmcp>=3.4,<4" "httpx>=0.27" pyyaml
-ENV PATH=/opt/venv/bin:$PATH
+# /node_modules/.bin holds tsx (npm install --prefix / above); the driver command also uses its absolute path.
+ENV PATH=/node_modules/.bin:/opt/venv/bin:$PATH
 
-# Non-root user (uid 1000 exists in the node image as "node").
+# Non-root user (uid 1000 exists in the node image as "node"). The platform creates the container with
+# User "node" for this image (containerRun.RUNNER_USER; a test keeps the two in step) and mounts no
+# /home/pi/agent tmpfs; /work is a tmpfs at run time, so everything the driver needs is staged into it.
 RUN mkdir -p /work/in /work/out /work/pkg && chown -R node:node /work
 USER node
 WORKDIR /work
