@@ -11,7 +11,7 @@ import {
   snake,
   toolKind,
 } from '../plan.js'
-import { cleanText, joinLines, pyLit, pyStr } from './pyutil.js'
+import { cleanSource, cleanText, joinLines, pyLit, pyStr } from './pyutil.js'
 import { RUNTIME_COMMON, RUNTIME_DATASET, RUNTIME_QUERY, RUNTIME_SQL, runtimeHttp } from './runtime.js'
 
 const PYTYPE: Record<string, string> = { string: 'str', integer: 'int', number: 'float', boolean: 'bool', unknown: 'str' }
@@ -98,7 +98,7 @@ function doc(summary: string, args: [string, string][], notes: string[] = []): s
 }
 
 function paramArgs(params: Param[]): [string, string][] {
-  return params.map((p) => [p.name, p.description || (p.in === 'path' ? 'Identifier of the item.' : `Optional ${p.name} filter.`)] as [string, string])
+  return params.map((p) => [p.name, (p.description ? cleanSource(p.description, 160) : '') || (p.in === 'path' ? 'Identifier of the item.' : `Optional ${p.name} filter.`)] as [string, string])
 }
 
 const FIELDS_DOC = 'Optional list of field names to return (at most 12; unknown names are ignored).'
@@ -342,12 +342,12 @@ function schemaLiteral(plan: ServerPlan): unknown {
       const e = entityOf(plan, t.entity)
       return {
         name: e.id,
-        label: cleanText(e.label, 80),
+        label: cleanSource(e.label, 80),
         query_tool: t.name,
         default_fields: t.projection,
         fields: e.fields.map((f) => {
           const o: Record<string, unknown> = { name: f.name, type: f.type }
-          if (f.label) o.label = cleanText(f.label, 80)
+          if (f.label) o.label = cleanSource(f.label, 80)
           return o
         }),
       }

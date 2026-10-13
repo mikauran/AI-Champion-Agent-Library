@@ -1,5 +1,6 @@
 // Small helpers for writing Python source text. Everything that reaches generated Python as a
 // string goes through pyStr (exact literals) or cleanText (docstrings and messages).
+import { redactSecrets, sanitizeSourceText } from '../redact.js'
 
 /** A valid Python string literal for any JS string. */
 export function pyStr(s: string): string {
@@ -33,19 +34,26 @@ export function pyLit(v: unknown, indent = 0): string {
 /**
  * Text taken from the source model (descriptions, labels, summaries) is untrusted. This makes it
  * safe inside a triple-quoted docstring or a message literal: no control characters, no quotes,
- * no backslashes, no URLs and no token-looking strings, clipped to `max` characters.
+ * no backslashes, no links of any scheme, no credential-like text (tokens, JWTs, `user:pass@`
+ * userinfo, key assignments; see redact.ts), clipped to `max` characters.
  */
 export function cleanText(s: unknown, max = 200): string {
   let t = typeof s === 'string' ? s : s === undefined || s === null ? '' : String(s)
   t = t
-    .replace(/https?:\/\/\S+/gi, '[link removed]')
-    .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, '[removed]')
+    .slice(0, 8192)
     .replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ')
     .replace(/\\/g, '/')
     .replace(/["`]/g, "'")
     .replace(/\s+/g, ' ')
     .trim()
+  t = redactSecrets(t).trim()
   return t.length > max ? `${t.slice(0, max - 3).trimEnd()}...` : t
+}
+
+/** cleanText for text that originates in the source document and is published in descriptions. */
+export function cleanSource(s: unknown, max = 200): string {
+  const raw = typeof s === 'string' ? s : s === undefined || s === null ? '' : String(s)
+  return cleanText(sanitizeSourceText(raw.slice(0, 8192)).text, max)
 }
 
 /** Flatten string and string[] parts into text with a trailing newline. */

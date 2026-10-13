@@ -5,6 +5,7 @@
 // own through the `extraDerived` argument of `buildPlan` (origin 'user'). Both flow through the same
 // validation and the same emitter templates. Invalid user entries are reported, never guessed.
 import { gap } from './diagnostics.js'
+import { redactSecrets, sanitizeSourceText } from './redact.js'
 import type {
   DerivedTool,
   Entity,
@@ -272,9 +273,24 @@ function words(s: string): string {
   return snake(s).replace(/_/g, ' ')
 }
 
+/** Operation summary as it is published: secrets and model-directed phrases removed (review CR-03, WR-06). */
+function summaryNote(op?: Operation): { text: string; flagged: boolean } {
+  if (!op?.summary) return { text: '', flagged: false }
+  const r = sanitizeSourceText(
+    redactSecrets(op.summary.slice(0, 8192).replace(/[\u0000-\u001f\u007f"\\`]+/g, ' ').replace(/\s+/g, ' ').trim()),
+  )
+  return { text: r.text.slice(0, 120), flagged: r.flagged }
+}
+
 function withSummary(base: string, op?: Operation): string {
-  const s = op?.summary ? op.summary.replace(/https?:\/\/\S+/gi, '').replace(/[\u0000-\u001f\u007f"\\`]+/g, ' ').replace(/\s+/g, ' ').trim() : ''
-  return s ? `${base} Source note: ${s.slice(0, 120)}` : base
+  const s = summaryNote(op).text
+  return s ? `${base} Source note: ${s}` : base
+}
+
+/** Source free text a tool publishes: its operation summary and the descriptions of its arguments. */
+function publishesSourceText(op: Operation | undefined, params: Param[]): { copied: boolean; flagged: boolean } {
+  const notes = [summaryNote(op), ...params.map((p) => (p.description ? sanitizeSourceText(p.description.slice(0, 8192)) : { text: '', flagged: false }))]
+  return { copied: notes.some((n) => n.text !== ''), flagged: notes.some((n) => n.flagged) }
 }
 
 /** Which kind of tool a PlannedTool is. Derived from the plan, so the contract types stay unchanged. */
@@ -347,6 +363,8 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
 
   if (m.backend.kind === 'http') {
     const listOps = new Map<string, Operation>()
+    const copiedFrom: string[] = []
+    const flaggedIn: string[] = []
     let anyList = false
     for (const op of m.operations) {
       if (op.method !== 'GET') {
@@ -394,6 +412,9 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
         if (!have || (op.kind === 'list' && have.kind !== 'list')) listOps.set(entity.id, op)
       }
       tools.push({ name, description, entity: entity.id, operation: op.id, params: pr.params, projection: projection(entity) })
+      const pub = publishesSourceText(op, pr.params)
+      if (pub.copied) copiedFrom.push(name)
+      if (pub.flagged) flaggedIn.push(name)
     }
     if (anyList && limits.resultCeiling === undefined) {
       gaps.push(gap('ceiling-unknown', 'No result ceiling is set (limits.resultCeiling); no ceiling warning is emitted. Supply the upstream ceiling if one exists.'))
@@ -435,6 +456,15 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
       const name = uniqueName(`filter_${snake(entity.id)}_by_${snake(d.source)}`, used)
       derived.push(d)
       tools.push({ name, description: d.description, entity: entity.id, operation: op.id, derived: d, params: pr.params, projection: projection(entity) })
+      const pub = publishesSourceText(undefined, pr.params)
+      if (pub.copied) copiedFrom.push(name)
+      if (pub.flagged) flaggedIn.push(name)
+    }
+    if (copiedFrom.length > 0) {
+      gaps.push(gap('source-text-copied', `Free text from the source document (operation summaries and argument descriptions) is published in the description of ${copiedFrom.length} tool(s). Summaries are labelled "Source note". Review that text before use.`))
+    }
+    for (const name of flaggedIn) {
+      gaps.push(gap('source-text-flagged', `Text addressed to a model was removed from the source text published for tool ${name}.`, { path: name }))
     }
   } else {
     // dataset and sql: schema discovery plus one bounded query tool per entity (synthesis 2.1, 5.3).

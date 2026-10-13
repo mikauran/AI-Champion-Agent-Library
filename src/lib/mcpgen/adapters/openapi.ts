@@ -9,6 +9,7 @@ import { parse as parseYaml } from 'yaml'
 import { MAX_INPUT_BYTES } from '../api-contract.js'
 import { gap } from '../diagnostics.js'
 import { snake } from '../plan.js'
+import { redactSecrets } from '../redact.js'
 import type {
   Entity,
   Field,
@@ -36,14 +37,16 @@ const WRAPPER_NAMES = ['items', 'data', 'results', 'content', 'records', 'rows']
 const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v)
 const own = (o: Obj, k: string): unknown => (Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined)
 
-/** Text copied from the spec: links and control characters removed, clipped. */
+/** Text copied from the spec: links, credential-like text and control characters removed, clipped. */
 function clean(s: unknown, max = 200): string | undefined {
   if (typeof s !== 'string') return undefined
-  const t = s
-    .replace(/https?:\/\/\S+/gi, '[link removed]')
-    .replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  const t = redactSecrets(
+    s
+      .slice(0, 8192)
+      .replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  ).trim()
   if (t === '') return undefined
   return t.length > max ? `${t.slice(0, max - 3).trimEnd()}...` : t
 }

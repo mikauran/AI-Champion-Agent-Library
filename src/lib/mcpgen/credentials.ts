@@ -19,7 +19,7 @@ const MAX_FINDINGS = 20
 export const SCAN_WINDOW = 8192
 const WINDOW_OVERLAP = 512
 /** Longest value read after a key name (a longer value is judged on its first characters). */
-const MAX_VALUE = 512
+const MAX_VALUE = 128
 
 const isSpace = (c: number): boolean =>
   c === 32 ||
@@ -67,7 +67,8 @@ export function isPlaceholder(v: string): boolean {
 const KEYWORDS = /api[_-]?key|access[_-]?key|private[_-]?key|passphrase|passwd|password|token|secret|pwd|authorization|bearer/gi
 /** Optional endings that keep a key name a key name (secret_key, token_value). `token_count` is not one. */
 const KEY_SUFFIXES = ['_key', '-key', 'key', '_value', '_string']
-const VALUE_STOP = new Set(['"', "'", ',', ';', '&', '}', '`'])
+/** An unquoted value ends at whitespace, a quote, a separator, `&` or `}`. Anchored on a short slice. */
+const UNQUOTED_VALUE = /^[^\s"',;&}`]*/
 
 function skipSpaces(s: string, p: number): number {
   while (p < s.length && isSpace(s.charCodeAt(p))) p++
@@ -82,10 +83,8 @@ function readValue(s: string, p: number): string {
     const end = window.indexOf(q)
     return stripTrailingBackslashes(end === -1 ? window : window.slice(0, end))
   }
-  let e = p
-  const limit = Math.min(s.length, p + MAX_VALUE)
-  while (e < limit && !isSpace(s.charCodeAt(e)) && !VALUE_STOP.has(s[e])) e++
-  return stripTrailingBackslashes(s.slice(p, e))
+  const m = UNQUOTED_VALUE.exec(s.slice(p, p + MAX_VALUE))
+  return stripTrailingBackslashes(m ? m[0] : '')
 }
 
 /** After a key word: optional suffix, optional (escaped) quote, `:` or `=`, then the value. */
