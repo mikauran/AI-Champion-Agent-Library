@@ -1,4 +1,4 @@
-import { readdir, readFile, mkdir, stat } from 'node:fs/promises'
+import { readdir, readFile, mkdir, lstat } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
@@ -18,7 +18,7 @@ import { clampExtras } from '../src/lib/spec/kinds.js'
 import type { SubmissionFile } from '../src/lib/spec/kinds.js'
 import { parseSubmission } from '../src/lib/spec/registry.js'
 import { readSubmissionDir } from '../src/lib/spec/scan.js'
-import { redactSecrets } from '../src/lib/spec/security.js'
+import { redactSecrets, sanitizeMessage } from '../src/lib/spec/security.js'
 
 const DATA_DIR = process.env.INGEST_DATA_DIR ?? './data/agents'
 const DB_PATH = process.env.INGEST_DB_PATH ?? './db/catalog.db'
@@ -251,18 +251,25 @@ async function ingestKindsInto(
     let files: SubmissionFile[]
     let isDir = false
     try {
-      const st = await stat(abs)
-      if (st.isDirectory()) {
+      // WR-04: lstat, not stat. Symlinks are never followed (same policy as the directory scanner).
+      const st = await lstat(abs)
+      const isDataFile = name.endsWith('.yaml') || name.endsWith('.yml') || name.endsWith('.json')
+      if (st.isSymbolicLink()) {
+        if (name.startsWith('.') || name === 'node_modules' || !(isDataFile || !name.includes('.'))) continue
+        throw new Error('symlinks are not followed')
+      } else if (st.isDirectory()) {
         if (name.startsWith('.') || name === 'node_modules') continue
         isDir = true
         files = readSubmissionDir(abs).files
-      } else if (name.endsWith('.yaml') || name.endsWith('.yml') || name.endsWith('.json')) {
-        files = [{ path: name, text: await readFile(abs, 'utf-8') }]
+      } else if (isDataFile) {
+        // Single files go through the scanner too: size cap, binary check, no symlink.
+        files = readSubmissionDir(abs).files
+        if (files.length === 0) throw new Error('file skipped: too large, binary or unreadable')
       } else {
         continue
       }
     } catch (err) {
-      console.error(`[SKIP] ${name}: ${(err as Error).message}`)
+      console.error(`[SKIP] ${name}: ${sanitizeMessage((err as Error).message)}`)
       failed++
       continue
     }
@@ -271,11 +278,17 @@ async function ingestKindsInto(
       const hint = isDir ? name : name.replace(/\.[^.]+$/, '')
       const outcome = parseSubmission(files, { now, hint })
       if (!outcome.record) {
-        if (isDir && outcome.status === 'missing-from-author') {
+        // WR-01: only a folder in which NO format was detected (and nothing went wrong) is
+        // skipped quietly. A recognised-but-broken submission is a failure with its reason.
+        if (isDir && outcome.format === 'unknown' && outcome.warnings.length === 0) {
           console.log(`[SKIP-INFO] ${name}: not a recognized submission`)
           continue
         }
-        throw new Error(outcome.warnings[0] ?? `unrecognized or invalid (${outcome.status})`)
+        const why = [
+          outcome.missingFromAuthor.length > 0 ? `missing: ${outcome.missingFromAuthor.join(', ')}` : '',
+          ...outcome.warnings,
+        ].filter(Boolean)
+        throw new Error(`${outcome.format}: ${why.join('; ') || `unrecognized or invalid (${outcome.status})`}`)
       }
       const record = outcome.record
       const info = outcome.kindInfo
@@ -355,7 +368,7 @@ async function ingestKindsInto(
       searchables.push(recordToSearchableWithKind(record, { ...info, extras: {} }))
       succeeded++
     } catch (err) {
-      console.error(`[SKIP] ${name}: ${(err as Error).message}`)
+      console.error(`[SKIP] ${name}: ${sanitizeMessage((err as Error).message)}`)
       failed++
     }
   }

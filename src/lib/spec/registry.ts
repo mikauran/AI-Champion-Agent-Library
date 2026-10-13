@@ -9,7 +9,7 @@ import type { DetectResult, FormatAdapter, ParseContext, ParseOutcome, Submissio
 import { clampExtras, clampMembers, TITLE_MAX_BYTES } from './kinds.js'
 import { ADAPTERS } from './formats/index.js'
 import { unrecognizedOutcome } from './outcome.js'
-import { capText, redactSecrets, redactText, scanSecrets, scanTruncated } from './security.js'
+import { capText, redactSecrets, redactText, sanitizeMessage, scanSecrets, scanTruncated } from './security.js'
 import { finalizeSlug } from './slug.js'
 import { safeHttpUrl } from '../safeUrl.js'
 
@@ -86,7 +86,7 @@ function finalize(outcome: ParseOutcome, ctx: ParseContext): ParseOutcome {
     record = r
   }
 
-  return { ...outcome, record, kindInfo, warnings: dedupe(warnings) }
+  return { ...outcome, record, kindInfo, warnings: dedupe(warnings.map((w) => sanitizeMessage(w, 500))) }
 }
 
 export function parseSubmission(files: SubmissionFile[], ctx: ParseContext): ParseOutcome {
@@ -99,7 +99,7 @@ export function parseSubmission(files: SubmissionFile[], ctx: ParseContext): Par
       outcome = best.adapter.parse(list, ctx)
     } catch (e) {
       return unrecognizedOutcome([
-        `adapter ${best.adapter.id} failed: ${e instanceof Error ? e.message : 'error'}`,
+        sanitizeMessage(`adapter ${best.adapter.id} failed: ${e instanceof Error ? e.message : 'error'}`, 500),
       ])
     }
     return finalize(outcome, ctx)

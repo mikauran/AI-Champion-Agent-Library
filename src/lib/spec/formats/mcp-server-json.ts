@@ -54,9 +54,12 @@ function parseJson(text: string): Obj | undefined {
 const isServerJson = (f: SubmissionFile): boolean => (f.path.split('/').pop() ?? '') === 'server.json'
 
 function looksLikeMcp(o: Obj): boolean {
-  if (typeof o.name !== 'string') return false
   const schema = typeof o.$schema === 'string' && o.$schema.toLowerCase().includes('modelcontextprotocol')
-  return Array.isArray(o.packages) || Array.isArray(o.remotes) || schema
+  // WR-01: a nameless server.json that declares the MCP registry $schema is still an MCP server
+  // definition; parse() reports the missing name instead of the file being skipped.
+  if (schema) return true
+  if (typeof o.name !== 'string') return false
+  return Array.isArray(o.packages) || Array.isArray(o.remotes)
 }
 
 function envNames(v: unknown, into: Set<string>): void {

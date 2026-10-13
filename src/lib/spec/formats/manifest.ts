@@ -75,6 +75,19 @@ function load(files: SubmissionFile[]): { doc: Obj } | null {
   return null
 }
 
+function hasCatalogObject(files: SubmissionFile[]): boolean {
+  for (const file of Array.isArray(files) ? files : []) {
+    if (!file || typeof file.path !== 'string' || typeof file.text !== 'string') continue
+    if (!CATALOG_RE.test(file.path)) continue
+    try {
+      if (isObj(parseYaml(file.text, { maxAliasCount: 100 }))) return true
+    } catch {
+      /* not parseable */
+    }
+  }
+  return false
+}
+
 function safeHttpUrl(v: unknown): string | null {
   const s = str(v)
   if (!s) return null
@@ -211,7 +224,11 @@ export const manifestAdapter: FormatAdapter = {
   id: 'catalog-manifest',
   detect(files) {
     try {
-      return load(files) ? { format: FORMAT, confidence: 0.9 } : null
+      if (load(files)) return { format: FORMAT, confidence: 0.9 }
+      // WR-01: a catalog.yaml that parses but has no name is still a catalog manifest. It is
+      // detected at low confidence so that parse() can report the missing name (a failure for
+      // the author) instead of the folder being skipped as "not a submission".
+      return hasCatalogObject(files) ? { format: FORMAT, confidence: 0.3 } : null
     } catch {
       return null
     }

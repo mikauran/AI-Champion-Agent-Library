@@ -128,6 +128,17 @@ export function redactSecrets<T>(value: T): T {
   }
 }
 
+/**
+ * A message safe to print or log: inline secret shapes redacted, control characters removed,
+ * length capped. Zod and YAML error messages echo submitted values, so every message that is
+ * logged or reported goes through this (IN-05).
+ */
+export function sanitizeMessage(message: unknown, maxChars = 300): string {
+  let t = redactText(typeof message === 'string' ? message : String(message))
+  t = t.replace(/[\u0000-\u001f\u007f]+/g, ' ')
+  return t.length > maxChars ? `${t.slice(0, maxChars)}...` : t
+}
+
 /** Truncate text to at most maxBytes of UTF-8 without splitting a character. */
 export function capText(text: string, maxBytes: number): { text: string; truncated: boolean } {
   const buf = Buffer.from(text, 'utf8')
