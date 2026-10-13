@@ -7,6 +7,7 @@ import { mcpTesterEnabled } from '$lib/flags.js'
 import { MAX_BODY_BYTES, MAX_CASES, MAX_RERUNS } from '$lib/mcptest/api-contract.js'
 import type { ApiError, StartRunRequest, StartRunResponse } from '$lib/mcptest/api-contract.js'
 import { runStore } from '$lib/server/mcptest/jobs.js'
+import { methodNotAllowed } from '$lib/server/mcptest/methodFallback.js'
 import { admitStart, isAllowedSubject, isKnownCase, startRun } from '$lib/server/mcptest/service.js'
 import { sessionKey } from '$lib/server/tryitout/session.js'
 
@@ -66,3 +67,6 @@ export const POST: RequestHandler = async ({ request, locals, cookies, url, getC
   startRun(run.id, input)
   return json({ id: run.id, status: 'queued' } satisfies StartRunResponse, { status: 202 })
 }
+
+// WR-02: every other method is 404 with the flag off, 405 with it on.
+export const fallback: RequestHandler = () => methodNotAllowed('POST')

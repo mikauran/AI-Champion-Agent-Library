@@ -3,6 +3,7 @@ import { error, json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { mcpTesterEnabled } from '$lib/flags.js'
 import { isValidRunId, runStore } from '$lib/server/mcptest/jobs.js'
+import { methodNotAllowed } from '$lib/server/mcptest/methodFallback.js'
 
 export const GET: RequestHandler = ({ params }) => {
   if (!mcpTesterEnabled()) error(404, 'Not found')
@@ -23,3 +24,6 @@ export const GET: RequestHandler = ({ params }) => {
     }
   })
 }
+
+// WR-02: every other method is 404 with the flag off, 405 with it on.
+export const fallback: RequestHandler = () => methodNotAllowed('GET')
