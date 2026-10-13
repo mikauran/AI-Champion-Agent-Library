@@ -1,5 +1,5 @@
 // GenerationReport: what was emitted, what was dropped and why, what was assumed (design doc 7, 9).
-import { formatGaps } from './diagnostics.js'
+import { cmp, formatGaps } from './diagnostics.js'
 import { DROP_CODES, pageSizeKnown, resolveEnv, toolKind } from './plan.js'
 import type { Gap, GenerationReport, ServerPlan } from './types.js'
 
@@ -9,7 +9,7 @@ export function buildReport(plan: ServerPlan): GenerationReport {
   const toolsDropped = plan.gaps
     .filter((g) => DROP_CODES.includes(g.code))
     .map((g) => ({ id: g.path ?? g.code, reason: g.message }))
-    .sort((a, b) => a.id.localeCompare(b.id) || a.reason.localeCompare(b.reason))
+    .sort((a, b) => cmp(a.id, b.id) || cmp(a.reason, b.reason))
 
   const envVars: { name: string; purpose: string }[] = []
   if (env.baseUrl) envVars.push({ name: env.baseUrl, purpose: 'Base address of the upstream service' })
@@ -46,7 +46,7 @@ export function buildReport(plan: ServerPlan): GenerationReport {
     toolsDropped,
     gaps,
     assumptions,
-    envVars: envVars.sort((a, b) => a.name.localeCompare(b.name)),
+    envVars: envVars.sort((a, b) => cmp(a.name, b.name)),
   }
 }
 
