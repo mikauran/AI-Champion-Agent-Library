@@ -263,15 +263,35 @@ export async function runSuite(opts: RunOptions): Promise<Report> {
   progress()
   try {
     let report = buildReport(build)
-    try {
-      assertReportSize(report)
-    } catch {
-      // Over the size cap: drop rerun detail and findings, then shorten reasons.
+    const fits = (r: Report) => {
+      try {
+        assertReportSize(r)
+        return true
+      } catch {
+        return false
+      }
+    }
+    // Over the size cap: drop rerun detail and findings and shorten reasons; if that is not enough, also drop the
+    // tool names and cap the checks per case. The size is re-checked after each step (WR-11); when nothing fits the
+    // assertion below throws into the RUNNER-ERROR fallback, so an oversize report is never returned.
+    if (!fits(report)) {
       report = {
         ...report,
         cases: report.cases.map((c) => ({ ...c, reruns: [], findings: [], checks: c.checks.map((k) => ({ ...k, reason: k.reason.slice(0, 60) })) }))
       }
     }
+    if (!fits(report)) {
+      report = {
+        ...report,
+        subject: { ...report.subject, toolNames: [] },
+        cases: report.cases.map((c) => ({
+          ...c,
+          stateReason: c.stateReason?.slice(0, 60),
+          checks: c.checks.slice(0, 100).map((k) => ({ ...k, reason: '' }))
+        }))
+      }
+    }
+    assertReportSize(report)
     return report
   } catch (e) {
     return buildReport({ ...build, cases: [{ run: { caseId: 'RUNNER-ERROR', tier: 1, state: 'ERROR', checks: [] }, stateReason: redact(errText(e)) }], incomplete: true })

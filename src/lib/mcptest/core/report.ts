@@ -3,13 +3,16 @@
 // Core purity: no $lib, svelte or @sveltejs imports.
 import { z } from 'zod'
 import { majority } from './aggregate'
-import { redact } from './redact'
+import { redact, redactName } from './redact'
 import { evaluateCase, rollUp, type CaseEval, type CaseRun } from './scoring'
 import type { CellState } from './types'
 
 export const REPORT_SCHEMA = 'mcptest-report/1'
 export const MAX_REPORT_BYTES = 1_000_000
 export const MAX_REASON = 200
+/** Bounds for strings the server under test controls (tool names, server name and version, protocol version). */
+export const MAX_NAME = 80
+export const MAX_TOOL_NAMES = 200
 
 export const CELL_STATES = [
   'PASS',
@@ -90,9 +93,10 @@ export const ReportSchema = z.object({
     kind: z.enum(['fake', 'generator', 'submitted']),
     labelNote: z.string().optional(),
     transport: z.enum(['stdio', 'http']).nullable(),
-    protocolVersion: z.string().nullable(),
-    serverInfo: z.object({ name: z.string().optional(), version: z.string().optional() }),
-    toolNames: z.array(z.string())
+    // WR-11: these come from the server under test, so they are bounded.
+    protocolVersion: z.string().max(MAX_NAME).nullable(),
+    serverInfo: z.object({ name: z.string().max(MAX_NAME).optional(), version: z.string().max(MAX_NAME).optional() }),
+    toolNames: z.array(z.string().max(MAX_NAME)).max(MAX_TOOL_NAMES)
   }),
   cases: z.array(
     z.object({
@@ -209,6 +213,7 @@ function pct(p: { pct: number; passed: number; scored: number } | null) {
 export function buildReport(input: BuildInput): Report {
   const secrets = input.secrets ?? []
   const clean = (s: string) => redact(s, secrets, MAX_REASON)
+  const name = (s: unknown) => redactName(typeof s === 'string' ? s : String(s), secrets, MAX_NAME)
   const evals: CaseEval[] = []
   const cases: ReportCase[] = []
   const timingCases: Report['timings']['cases'] = {}
@@ -275,9 +280,12 @@ export function buildReport(input: BuildInput): Report {
       kind: input.subject.kind,
       ...(input.subject.kind === 'fake' ? { labelNote: FAKE_NOTE } : {}),
       transport: input.subject.transport,
-      protocolVersion: input.subject.protocolVersion ?? null,
-      serverInfo: input.subject.serverInfo ?? {},
-      toolNames: [...(input.subject.toolNames ?? [])]
+      protocolVersion: input.subject.protocolVersion == null ? null : name(input.subject.protocolVersion),
+      serverInfo: {
+        ...(input.subject.serverInfo?.name !== undefined ? { name: name(input.subject.serverInfo.name) } : {}),
+        ...(input.subject.serverInfo?.version !== undefined ? { version: name(input.subject.serverInfo.version) } : {})
+      },
+      toolNames: (input.subject.toolNames ?? []).slice(0, MAX_TOOL_NAMES).map(name)
     },
     cases,
     summary: {
