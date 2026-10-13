@@ -27,8 +27,8 @@ function collect(ch: ReturnType<typeof httpChannel>) {
   const errors: { kind: string; message: string }[] = []
   const over: number[] = []
   const msgs: unknown[] = []
-  ch.onTransportError((e) => errors.push(e))
-  ch.onOversize((n) => over.push(n))
+  ch.onTransportError?.((e) => errors.push(e))
+  ch.onOversize?.((n) => over.push(n))
   ch.onMessage((m) => msgs.push(m))
   return { errors, over, msgs }
 }
