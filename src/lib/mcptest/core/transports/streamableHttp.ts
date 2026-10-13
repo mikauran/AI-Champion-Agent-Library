@@ -44,6 +44,8 @@ export function httpChannel(opts: HttpOptions): HttpChannel {
   const url = parseLoopback(opts.url)
   const doFetch = opts.fetchFn ?? globalThis.fetch
   const maxBytes = opts.maxLineBytes ?? DEFAULT_MAX_LINE_BYTES
+  /** Cap on everything one response may stream (SSE), so many small events cannot run on without bound. */
+  const maxTotalBytes = maxBytes * 8
   const msgCbs: ((m: unknown) => void)[] = []
   const noiseCbs: ((l: string) => void)[] = []
   const closeCbs: ((i: { code?: number | null; signal?: string | null }) => void)[] = []
@@ -90,6 +92,26 @@ export function httpChannel(opts: HttpOptions): HttpChannel {
     return true
   }
 
+  /** Reads a JSON body through the stream and gives up (cancelling the request) once it passes maxBytes. */
+  async function readTextCapped(res: Response): Promise<{ text: string } | { over: number }> {
+    const reader = res.body?.getReader()
+    if (!reader) return { text: '' }
+    const dec = new TextDecoder()
+    let text = ''
+    let bytes = 0
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      bytes += value.byteLength
+      if (bytes > maxBytes) {
+        await reader.cancel().catch(() => {})
+        return { over: bytes }
+      }
+      text += dec.decode(value, { stream: true })
+    }
+    return { text: text + dec.decode() }
+  }
+
   async function readSse(res: Response, seen: Set<unknown>): Promise<boolean> {
     const reader = res.body?.getReader()
     if (!reader) return false
@@ -97,16 +119,27 @@ export function httpChannel(opts: HttpOptions): HttpChannel {
     let buf = ''
     let discarding = false
     let data: string[] = []
+    // WR-06: bytes of data lines gathered for the current event, and bytes read for the whole response.
+    let dataBytes = 0
+    let total = 0
     let ok = true
     const flushEvent = () => {
       if (data.length) {
         if (!deliverJsonText(data.join('\n'), seen)) ok = false
       }
       data = []
+      dataBytes = 0
+    }
+    const cut = async (n: number): Promise<false> => {
+      for (const cb of overCbs) cb(n)
+      await reader.cancel().catch(() => {})
+      return false
     }
     for (;;) {
       const { done, value } = await reader.read()
       if (done) break
+      total += value.byteLength
+      if (total > maxTotalBytes) return cut(total)
       buf += dec.decode(value, { stream: true })
       let i
       while ((i = buf.indexOf('\n')) >= 0) {
@@ -118,7 +151,11 @@ export function httpChannel(opts: HttpOptions): HttpChannel {
           continue
         }
         if (line === '') flushEvent()
-        else if (line.startsWith('data:')) data.push(line.slice(5).replace(/^ /, ''))
+        else if (line.startsWith('data:')) {
+          data.push(line.slice(5).replace(/^ /, ''))
+          dataBytes += line.length
+          if (dataBytes > maxBytes) return cut(dataBytes)
+        }
         // other fields (event:, id:, retry:, comments) are ignored
       }
       if (buf.length > maxBytes) {
@@ -145,7 +182,9 @@ export function httpChannel(opts: HttpOptions): HttpChannel {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify(msg),
-        signal: ac.signal
+        signal: ac.signal,
+        // WR-01: a redirect would leave the loopback host that parseLoopback checked.
+        redirect: 'error'
       })
       const sid = res.headers.get('mcp-session-id')
       if (sid && !sessionId) sessionId = sid
@@ -161,12 +200,13 @@ export function httpChannel(opts: HttpOptions): HttpChannel {
       const ct = (res.headers.get('content-type') ?? '').toLowerCase()
       const seen = new Set<unknown>()
       if (ct.includes('application/json')) {
-        const text = await res.text()
-        if (text.length > maxBytes) {
-          for (const cb of overCbs) cb(text.length)
+        const body = await readTextCapped(res)
+        if ('over' in body) {
+          for (const cb of overCbs) cb(body.over)
           fail(id, 'bad_response', 'response body over size cap')
           return
         }
+        const text = body.text
         if (!deliverJsonText(text, seen)) fail(id, 'bad_response', 'response body is not JSON')
       } else if (ct.includes('text/event-stream')) {
         await readSse(res, seen)
@@ -197,7 +237,7 @@ export function httpChannel(opts: HttpOptions): HttpChannel {
     async healthCheck() {
       const hp = opts.healthPath ?? '/health'
       try {
-        const res = await doFetch(url.origin + hp, { method: 'GET' })
+        const res = await doFetch(url.origin + hp, { method: 'GET', redirect: 'error' })
         await res.body?.cancel().catch(() => {})
         return { ok: res.status >= 200 && res.status < 300, status: res.status }
       } catch {
@@ -212,6 +252,7 @@ export function httpChannel(opts: HttpOptions): HttpChannel {
         try {
           const res = await doFetch(url.href, {
             method: 'DELETE',
+            redirect: 'error',
             headers: { 'MCP-Session-Id': sessionId, ...(protocolVersion ? { 'MCP-Protocol-Version': protocolVersion } : {}) }
           })
           await res.body?.cancel().catch(() => {}) // 405 and others are tolerated
