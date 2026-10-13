@@ -185,3 +185,4 @@ Resume file: None
 | 11 | verification_deferred_human | /gsd-verify-work 11 |
 | 13 | verification_deferred_human | /gsd-verify-work 13 |
 | 14 | verification_deferred_human | /gsd-verify-work 14 |
+| 15 | verification_deferred_human | /gsd-verify-work 15 (pending-human list: .planning/phases/15-mcp-test-platform-flagged/15-HUMAN-UAT.md; decisions D-164..D-181 in AUTONOMOUS-DECISIONS.md) |

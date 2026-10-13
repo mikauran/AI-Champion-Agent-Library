@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 12: Agent Types and Intake Research** - Taxonomy of hostable agent types/systems, per-format capability matrix, author intake guide
 - [ ] **Phase 13: Multi-Agent and Multi-Format Hosting (flagged)** - Canonical model extension, adapters, validate-submission CLI, system detail rendering, all behind a feature flag
 - [ ] **Phase 14: MCP Generator (generalized from research, flagged)** - Research synthesis first, then input-adapter generator (DB schema/CUST-02 is one adapter among OpenAPI, tabular catalogs, ...) (code complete 2026-10-12, verification human_needed: see 14-HUMAN-UAT.md)
-- [ ] **Phase 15: MCP Test Platform (flagged)** - Port the existing benchmark harness (offline mock pattern, D1-D6 scoring, tier gates) to score any MCP server
+- [x] **Phase 15: MCP Test Platform (flagged)** - Port the existing benchmark harness (offline mock pattern, D1-D6 scoring, tier gates) to score any MCP server (code complete 2026-10-13, verification human_needed: see 15-HUMAN-UAT.md)
 
 ## Phase Details
 
@@ -432,16 +432,16 @@ Plans:
 
 Plans:
 
-- [ ] 15-01-PLAN.md — (Wave 1) Port-fidelity map (committed first), MCP_TESTER flag, shared types, source-compatible case/golden/rubric loaders
-- [ ] 15-02-PLAN.md — (Wave 2) Minimal MCP client (stdio + Streamable HTTP) recording protocol misbehaviour, env allowlist, exec guard
-- [ ] 15-03-PLAN.md — (Wave 2) Mock upstream with seeded datasets, strict params, fault injection and request log; shared contract
-- [ ] 15-04-PLAN.md — (Wave 3) In-process fake MCP server, good and flawed variants, process-level variants, subprocess smoke test
-- [ ] 15-05-PLAN.md — (Wave 2) Leak detector, walkers, tool binding, strict expect evaluator and the 10 behaviour checks
-- [ ] 15-06-PLAN.md — (Wave 3) Scoring rollup (gate, tiers, thresholds, flags, verdict), rerun aggregation, Tier 3/4 special checks
-- [ ] 15-07-PLAN.md — (Wave 3) 12 synthetic cases (case.yaml/golden.jsonl/rubric.yaml), suite loader, golden-isolation gate
-- [ ] 15-08-PLAN.md — (Wave 5) Runner, subjects, report JSON + human summary, scorer-discrimination proof over fake variants
-- [ ] 15-09-PLAN.md — (Wave 4) Phase 14 generator as in-process subject, generator-side checks (partial spec, credentials, reproducibility)
-- [ ] 15-10-PLAN.md — (Wave 6) `npm run mcp-test` CLI, shared DriverRequest schema, in-container driver, runner image definition (build pending human)
-- [ ] 15-11-PLAN.md — (Wave 7) Flag-gated run API (202, poll, report), TTL job store, container run path tested on the fake runtime
-- [ ] 15-12-PLAN.md — (Wave 8) /mcp-test page and panel (flag-gated), Customize entry only when flag on, flag-off regression, axe
-- [ ] 15-13-PLAN.md — (Wave 9) docs, 15-HUMAN-UAT.md, decision consolidation, invariant self-check, VERIFICATION
+- [x] 15-01-PLAN.md — (Wave 1) Port-fidelity map (committed first), MCP_TESTER flag, shared types, source-compatible case/golden/rubric loaders
+- [x] 15-02-PLAN.md — (Wave 2) Minimal MCP client (stdio + Streamable HTTP) recording protocol misbehaviour, env allowlist, exec guard
+- [x] 15-03-PLAN.md — (Wave 2) Mock upstream with seeded datasets, strict params, fault injection and request log; shared contract
+- [x] 15-04-PLAN.md — (Wave 3) In-process fake MCP server, good and flawed variants, process-level variants, subprocess smoke test
+- [x] 15-05-PLAN.md — (Wave 2) Leak detector, walkers, tool binding, strict expect evaluator and the 10 behaviour checks
+- [x] 15-06-PLAN.md — (Wave 3) Scoring rollup (gate, tiers, thresholds, flags, verdict), rerun aggregation, Tier 3/4 special checks
+- [x] 15-07-PLAN.md — (Wave 3) 12 synthetic cases (case.yaml/golden.jsonl/rubric.yaml), suite loader, golden-isolation gate
+- [x] 15-08-PLAN.md — (Wave 5) Runner, subjects, report JSON + human summary, scorer-discrimination proof over fake variants
+- [x] 15-09-PLAN.md — (Wave 4) Phase 14 generator as in-process subject, generator-side checks (partial spec, credentials, reproducibility)
+- [x] 15-10-PLAN.md — (Wave 6) `npm run mcp-test` CLI, shared DriverRequest schema, in-container driver, runner image definition (build pending human)
+- [x] 15-11-PLAN.md — (Wave 7) Flag-gated run API (202, poll, report), TTL job store, container run path tested on the fake runtime
+- [x] 15-12-PLAN.md — (Wave 8) /mcp-test page and panel (flag-gated), Customize entry only when flag on, flag-off regression, axe
+- [x] 15-13-PLAN.md — (Wave 9) docs, 15-HUMAN-UAT.md, decision consolidation, invariant self-check, VERIFICATION
