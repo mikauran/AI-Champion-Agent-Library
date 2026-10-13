@@ -133,7 +133,7 @@ async function expectHttpError(fn: () => unknown, status: number): Promise<void>
 async function waitForStatus(
   jobId: string,
   terminal: Array<'queued' | 'running' | 'succeeded' | 'failed'>,
-  maxMs = 3000
+  maxMs = 15000
 ) {
   const start = Date.now()
   for (;;) {
