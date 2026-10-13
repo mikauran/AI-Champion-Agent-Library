@@ -22,7 +22,13 @@ import { agentKindsEnabled } from '$lib/flags.js'
 const MAX_UPLOAD_BYTES = 200 * 1024
 
 export const POST: RequestHandler = async ({ request, locals, cookies, url, getClientAddress }) => {
-  const form = await request.formData()
+  // E6 (D-404): a non-multipart or malformed body is a client error, not an unhandled 500.
+  let form: FormData
+  try {
+    form = await request.formData()
+  } catch {
+    error(400, 'multipart form data required')
+  }
   const agentId = form.get('agentId')
   const task = form.get('task')
   const rawFile = form.get('file')

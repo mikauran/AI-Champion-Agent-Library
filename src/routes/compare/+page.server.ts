@@ -2,6 +2,8 @@
 // Only SvelteKit-recognised exports may live here (helpers are in $lib/compare).
 import { error } from '@sveltejs/kit'
 import { inArray } from 'drizzle-orm'
+import { parseJsonArray, parseJsonStringArray } from '$lib/safeJson.js'
+import { isMissingTableError } from '$lib/dbErrors.js'
 import type { PageServerLoad } from './$types'
 import { agentKindsEnabled } from '$lib/flags.js'
 import { agentCompareEnabled } from '$lib/compareFlag.js'
@@ -12,7 +14,15 @@ export const load: PageServerLoad = async ({ url }) => {
   if (!agentCompareEnabled()) error(404, 'Not found')
   const { slugs, invalidCount, truncated } = parseCompareSlugs(url.searchParams.getAll('agents'))
 
-  const rows = slugs.length ? db.select().from(agents).where(inArray(agents.slug, slugs)).all() : []
+  let rows: (typeof agents.$inferSelect)[] = []
+  if (slugs.length) {
+    try {
+      rows = db.select().from(agents).where(inArray(agents.slug, slugs)).all()
+    } catch (err) {
+      // E6 (D-401): no tables yet (fresh checkout): every slug is simply unknown.
+      if (!isMissingTableError(err)) throw err
+    }
+  }
   const bySlug = new Map(rows.map((r) => [r.slug, r]))
   const unknown = slugs.filter((s) => !bySlug.has(s))
 
@@ -32,17 +42,17 @@ export const load: PageServerLoad = async ({ url }) => {
         title: r.title,
         summary: r.summary,
         category: r.category,
-        tags: JSON.parse(r.tags) as string[],
+        tags: parseJsonStringArray(r.tags),
         llmName: r.llmName,
         llmTemperature: r.llmTemperature,
-        toolNames: JSON.parse(r.toolNames) as string[],
-        inputFields: JSON.parse(r.inputSchema ?? '[]'),
+        toolNames: parseJsonStringArray(r.toolNames),
+        inputFields: parseJsonArray(r.inputSchema),
         requiresHumanApproval: r.requiresHumanApproval,
         maturityStatus: r.maturityStatus,
         tryItOutMode: r.tryItOutMode,
         githubUrl: r.githubUrl,
         linkLabel: r.linkLabel,
-        customizableFields: r.customizableFields ? (JSON.parse(r.customizableFields) as string[]) : null,
+        customizableFields: r.customizableFields ? parseJsonStringArray(r.customizableFields) : null,
         ...(kindsOn ? { kind: k?.kind ?? 'agent', framework: k?.framework ?? null } : {}),
       },
     ]
