@@ -1,6 +1,7 @@
 // Canonical kind contracts for multi-agent / multi-format hosting (Phase 13, flag AGENT_KINDS).
 // Kind data is separate from AgentRecord so flag-off record output cannot change.
 import type { AgentRecord } from './types.js'
+import { capText } from './security.js'
 
 export const AGENT_KIND_VALUES = [
   'agent',
@@ -63,14 +64,35 @@ export interface ParseOutcome {
   unknownFields: string[]
   warnings: string[]
 }
+/** `hint` is the submission's folder (or file) name, used when the files carry no usable name. */
+export interface ParseContext {
+  now: string
+  hint?: string
+}
 export interface FormatAdapter {
   id: string
   detect(files: SubmissionFile[]): DetectResult | null
-  parse(files: SubmissionFile[], ctx: { now: string }): ParseOutcome
+  parse(files: SubmissionFile[], ctx: ParseContext): ParseOutcome
 }
 
 export const EXTRAS_MAX_BYTES = 16384
 export const MEMBERS_MAX = 50
+export const TITLE_MAX_BYTES = 200
+export const MEMBER_NAME_MAX_BYTES = 120
+export const MEMBER_REF_MAX_BYTES = 200
+export const MEMBER_DESC_MAX_BYTES = 300
+
+/** Entry-count and per-string byte caps for members (WR-07). Returns new objects. */
+export function clampMembers(members: AgentMember[]): AgentMember[] {
+  const cap = (s: string, n: number): string => capText(s, n).text
+  return members.slice(0, MEMBERS_MAX).map((m) => ({
+    ref: cap(m.ref, MEMBER_REF_MAX_BYTES),
+    name: cap(m.name, MEMBER_NAME_MAX_BYTES),
+    role: m.role,
+    description: m.description === null ? null : cap(m.description, MEMBER_DESC_MAX_BYTES),
+    slug: m.slug === null ? null : cap(m.slug, 100),
+  }))
+}
 
 export function clampExtras(obj: Record<string, unknown>): Record<string, unknown> {
   try {
@@ -127,7 +149,7 @@ export function parseKindInfoRow(row: {
   out.sourceFormat = strOrNull(row.sourceFormat)
   const members = parseJson(row.members)
   if (Array.isArray(members)) {
-    out.members = members.map(toMember).filter((m): m is AgentMember => m !== null).slice(0, MEMBERS_MAX)
+    out.members = clampMembers(members.map(toMember).filter((m): m is AgentMember => m !== null))
   }
   const extras = parseJson(row.extras)
   if (typeof extras === 'object' && extras !== null && !Array.isArray(extras)) {

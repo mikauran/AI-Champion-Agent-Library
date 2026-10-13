@@ -34,6 +34,7 @@ import type {
 import { clampExtras, MEMBERS_MAX } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
 import { redactSecrets, scanSecrets } from '../security.js'
+import { safeHttpUrl } from '../../safeUrl.js'
 
 type Obj = Record<string, unknown>
 type SystemType = 'Swarm' | 'ManagerWorkers' | 'Flow' | 'A2AAgent'
@@ -292,10 +293,13 @@ function metaStr(meta: Obj | null, key: string): string | null {
   return meta ? str(meta[key]) : null
 }
 
-function placeholderRecord(doc: Obj, now: string): AgentRecord | null {
+function placeholderRecord(doc: Obj, now: string, warnings: string[]): AgentRecord | null {
   const name = str(doc.name)
   if (!name) return null
   const meta = isObj(doc.metadata) ? doc.metadata : null
+  const rawUrl = metaStr(meta, 'github_url')
+  const githubUrl = safeHttpUrl(rawUrl)
+  if (rawUrl && !githubUrl) warnings.push('github_url is not an http(s) URL; dropped')
   const maturity = metaStr(meta, 'maturity')
   return {
     slug: slugify(name),
@@ -308,7 +312,7 @@ function placeholderRecord(doc: Obj, now: string): AgentRecord | null {
     inputFields: [],
     requiresHumanApproval: false,
     category: metaStr(meta, 'category'),
-    githubUrl: metaStr(meta, 'github_url'),
+    githubUrl,
     linkLabel: metaStr(meta, 'link_label'),
     maturityStatus: maturity === 'production' || maturity === 'beta' || maturity === 'experimental' ? maturity : 'experimental',
     tags: meta && Array.isArray(meta.tags) ? meta.tags.filter((t): t is string => typeof t === 'string') : [],
@@ -397,7 +401,7 @@ function parseCandidate(c: Candidate, ctxIn: { now: string }): ParseOutcome {
   }
   safe = clampExtras(safe)
 
-  const record = placeholderRecord(doc, ctxIn.now)
+  const record = placeholderRecord(doc, ctxIn.now, warnings)
   if (!record) {
     return {
       status: 'missing-from-author', format, record: null, kindInfo: null,
