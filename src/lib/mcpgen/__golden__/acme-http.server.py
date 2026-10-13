@@ -202,8 +202,9 @@ def _http_json(path, params=None):
 
 def _seg(value):
     text = str(value).strip()
-    if not text or len(text) > 128:
-        raise _Fail("invalid_argument", "The identifier must be between 1 and 128 characters.")
+    # quote() leaves dots alone, and an HTTP client folds /a/.. into /: dot segments never pass.
+    if not text or len(text) > 128 or text in (".", ".."):
+        raise _Fail("invalid_argument", "The identifier must be between 1 and 128 characters and not a dot segment.")
     return urllib.parse.quote(text, safe="")
 
 
@@ -431,7 +432,7 @@ def lookup_product_by_id(product_id: str, fields: Optional[list[str]] = None) ->
 
 
 def search_product(q: str, page: int = 1, page_size: int = 20, fields: Optional[list[str]] = None) -> dict:
-    """Search products by free text, one page at a time. Source note: Search products by free text. See for details
+    """Search products by free text, one page at a time. Source note: Search products by free text. See [link removed] for details
 
     page_size is clamped to the range 1 to 50; larger values are reduced, not rejected.
 

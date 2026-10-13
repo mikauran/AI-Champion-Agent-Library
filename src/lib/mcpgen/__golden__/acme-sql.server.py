@@ -165,7 +165,7 @@ def _sql_query(entity, selected, field, match, value, limit, offset):
     if field is not None:
         column = columns[field]
         if match == "equals":
-            sql += " WHERE " + column + " = ?"
+            sql += " WHERE " + column + " = ? COLLATE NOCASE"
             args.append(str(value))
         elif match == "contains":
             sql += " WHERE " + column + " LIKE ? ESCAPE '!'"
@@ -304,7 +304,7 @@ def query_customer(field: Optional[str] = None, value: Optional[str] = None, mat
     Args:
         field: Field to filter on.
         value: Value to match (text or number).
-        match: equals, contains or startsWith (case-insensitive).
+        match: equals, contains or startsWith (case-insensitive for ASCII letters only).
         fields: Optional list of field names to return (at most 12; unknown names are ignored).
         limit: Rows to return (1 to 25).
         offset: Rows to skip, for paging.
@@ -341,7 +341,7 @@ def query_order(field: Optional[str] = None, value: Optional[str] = None, match:
     Args:
         field: Field to filter on.
         value: Value to match (text or number).
-        match: equals, contains or startsWith (case-insensitive).
+        match: equals, contains or startsWith (case-insensitive for ASCII letters only).
         fields: Optional list of field names to return (at most 12; unknown names are ignored).
         limit: Rows to return (1 to 25).
         offset: Rows to skip, for paging.

@@ -16,6 +16,7 @@ mcp = FastMCP("Acme Widgets")
 SERVER_NAME = "Acme Widgets"
 MAX_RESPONSE_ITEMS = 200
 DATA_FILE_ENV = "ACME_WIDGETS_DATA_PATH"
+DATA_DELIMITER = ","
 
 
 PROJECTION_MAX_FIELDS = 12
@@ -150,7 +151,7 @@ def _load_rows():
             raise _Fail("config", "The server is not configured: set " + DATA_FILE_ENV + ".")
         try:
             with open(path, newline="", encoding="utf-8-sig") as handle:
-                loaded = [dict(row) for row in csv.DictReader(handle)]
+                loaded = [dict(row) for row in csv.DictReader(handle, delimiter=DATA_DELIMITER)]
         except (OSError, csv.Error, UnicodeDecodeError):
             raise _Fail("config", "The data file could not be read; check " + DATA_FILE_ENV + ".")
         _ROWS = loaded
