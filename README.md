@@ -135,6 +135,10 @@ Off by default. Set `AGENT_KINDS=on` and re-run `npm run ingest` to host multi-a
 
 Off by default. Set `MCP_GENERATOR=1` to enable a "Generate MCP" entry in the Customize menu and the `POST /api/mcp-generate` route. Authors can also run `npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|auto> <input-file> --out <dir>` (works without the flag). It turns an OpenAPI 3.x spec, a tabular catalog header or `CREATE TABLE` DDL into a Python FastMCP stdio server package with generated tests; schema or spec only, never credentials or data. Details: `docs/mcp-generator.md`.
 
+### MCP test platform (flagged)
+
+Off by default. Set `MCP_TESTER=1` to enable the `/mcp-test` page, the `POST /api/mcp-test/runs` routes and a Customize menu entry. Authors can score a server from the command line without the flag: `npm run mcp-test -- --list`, `npm run mcp-test -- --subject fake:good`. It runs 12 synthetic cases against an offline mock upstream and writes a report (JSON plus a text summary); no real API or credential is ever used. Real FastMCP servers and the container runner image (`MCP_TESTER_RUNTIME=container`, `Containerfile.mcp-test-runner`) have not been run yet and are listed as pending human. Details: `docs/mcp-test-platform.md` (port fidelity: `docs/mcp-test-port-fidelity.md`).
+
 ---
 
 ## What's coming
