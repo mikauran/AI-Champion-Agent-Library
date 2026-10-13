@@ -123,6 +123,10 @@ Plus bounded retries on 429/5xx, response size caps and parameterised read-only 
 ## Safety
 
 - Schema or spec only. Credential-looking input (keys, bearer tokens, `?apiKey=` literals, `.env` content) is rejected rather than redacted; the finding records rule, line and kind, never the matched text (D-142).
+- The credential scan runs in time linear in the input (long lines are scanned in overlapping windows), and it knows URL userinfo, JWTs, common vendor key shapes and `password`/`passwd`/`secret_key`-style assignments (D-220, D-221).
+- Credentials are also checked on the way out: text copied from the source into descriptions is redacted, and every generated file is scanned again; a hit withholds the whole package with `credential-in-output` (file, line and kind only; D-222).
+- Source text published in tool descriptions is labelled `Source note`, stripped of markup and of phrases that address a model, and reported with the `source-text-copied` and `source-text-flagged` gaps (D-223).
+- Generated tools reject `.` and `..` as identifiers, write only validated numbers and identifiers into Python and SQL, and order every report and gap list by code unit (D-224, D-225, D-231).
 - Generation makes no network call and has no persistence.
 - Ambiguous or unsupported constructs become gaps; the affected tool is omitted, never guessed.
 - Generated code never contains URLs, secrets or raw exception text, and docstring text is sanitised.
