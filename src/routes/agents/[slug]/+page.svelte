@@ -5,6 +5,7 @@
   import TechAccordion from '$lib/components/TechAccordion.svelte'
   import CustomizationPanel from '$lib/components/CustomizationPanel.svelte'
   import CustomizeMenu from '$lib/components/CustomizeMenu.svelte'
+  import SpecViewer from '$lib/components/SpecViewer.svelte'
   import TryItOutPanel from '$lib/components/TryItOutPanel.svelte'
   import { TAILORABLE_FIELDS } from '$lib/config/tailorable-fields.js'
   import { safeHttpUrl } from '$lib/safeUrl.js'
@@ -136,6 +137,10 @@
     {/if}
 
     <TechAccordion agent={techAgent} />
+
+    {#if data.specViewer}
+      <SpecViewer text={data.specViewer.text} truncated={data.specViewer.truncated} />
+    {/if}
 
     <RelatedAgents agents={data.related} />
   </div>

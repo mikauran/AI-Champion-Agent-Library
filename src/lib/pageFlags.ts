@@ -1,4 +1,13 @@
-import { mcpGeneratorEnabled, mcpTesterEnabled } from '$lib/flags.js'
+import { mcpGeneratorEnabled, mcpTesterEnabled, uiSpecViewerEnabled } from '$lib/flags.js'
+import { buildSpecText, type SpecRowLike } from '$lib/specViewer.js'
+
+/** UI-04: the key exists only when UI_SPEC_VIEWER is on, so flag-off data is unchanged. */
+export function specViewerData(
+  row: SpecRowLike,
+  env: Record<string, string | undefined> = process.env
+): { specViewer?: { text: string; truncated: boolean } } {
+  return uiSpecViewerEnabled(env) ? { specViewer: buildSpecText(row) } : {}
+}
 
 // SvelteKit only allows load/actions/etc. to be exported from +page.server.ts, so these
 // load helpers live here (a vite build fails on any other export).

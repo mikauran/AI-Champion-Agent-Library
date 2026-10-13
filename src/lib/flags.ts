@@ -17,6 +17,14 @@ export function mcpGeneratorEnabled(
   return typeof v === 'string' && TRUTHY.has(v.trim().toLowerCase())
 }
 
+/** UI-04 raw spec viewer flag (UI_SPEC_VIEWER), default off. */
+export function uiSpecViewerEnabled(
+  env: Record<string, string | undefined> = process.env
+): boolean {
+  const v = env.UI_SPEC_VIEWER
+  return typeof v === 'string' && TRUTHY.has(v.trim().toLowerCase())
+}
+
 /** Phase 15 MCP tester flag (MCP_TESTER), default off. */
 export function mcpTesterEnabled(
   env: Record<string, string | undefined> = process.env

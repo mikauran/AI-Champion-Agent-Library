@@ -6,7 +6,7 @@ import { warmForSession } from '$lib/server/tryitout/service'
 import { related } from '$lib/server/search/index.js'
 import { sessionKey } from '$lib/server/tryitout/session'
 import { agentKindsEnabled } from '$lib/flags.js'
-import { mcpGeneratorData, mcpTesterData } from '$lib/pageFlags.js'
+import { mcpGeneratorData, mcpTesterData, specViewerData } from '$lib/pageFlags.js'
 import { defaultKindInfo, effectiveTryItOutMode } from '$lib/spec/kinds.js'
 
 export const load: PageServerLoad = async ({ params, url, locals, cookies, getClientAddress }) => {
@@ -76,8 +76,10 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
     ...mcpGeneratorData(),
     ...mcpTesterData(),
   }
-  if (!kindInfo) return base
+  // UI-04 (flag UI_SPEC_VIEWER): adds the `specViewer` key only when on; flag off adds nothing.
+  const full = { ...base, ...specViewerData(base.agent) }
+  if (!kindInfo) return full
   // extras are never sent to the client.
   const { kind, framework, topology, members, sourceFormat } = kindInfo
-  return { ...base, kindInfo: { kind, framework, topology, members, sourceFormat } }
+  return { ...full, kindInfo: { kind, framework, topology, members, sourceFormat } }
 }
