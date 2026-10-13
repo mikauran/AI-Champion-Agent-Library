@@ -39,6 +39,7 @@ const DATA_EXT = /\.(ya?ml|json|jsonc|md)$/i
 
 /** Strip secret-looking tokens, control characters and excess length from any printed string. */
 function clean(s: unknown): string {
+  // The short (8+) sk- rule is a stricter extra on top of the shared list that sanitizeMessage applies (G2).
   const t = (typeof s === 'string' ? s : String(s)).replace(/sk-[A-Za-z0-9_-]{8,}/g, '[redacted]')
   return sanitizeMessage(t, MAX_STR)
 }

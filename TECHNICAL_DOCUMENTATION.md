@@ -108,7 +108,7 @@ The tree above is the original v0.1 core. Added since:
 src/
 ├── hooks.server.ts                      # auth gate, starts Try It Out service, warms search
 ├── lib/
-│   ├── flags.ts                         # AGENT_KINDS, MCP_GENERATOR, MCP_TESTER readers
+│   ├── flags.ts                         # AGENT_KINDS, MCP_GENERATOR, MCP_TESTER, UI_SPEC_VIEWER readers (AGENT_COMPARE, UI_DARK_MODE re-exported)
 │   ├── a11y/                            # contrast calculator (test support)
 │   ├── components/                      # + SearchBar, CustomizeMenu, TryItOutPanel, RelatedAgents,
 │   │                                    #   KindBadge, SystemMembers, GenerateMcpPanel, McpTestPanel
@@ -423,8 +423,15 @@ Defined in `src/lib/flags.ts` (plain `process.env`, read at call time; truthy va
 | Flag | Gates |
 |------|-------|
 | `AGENT_KINDS` | multi-format ingest, `agent_kinds` reads, kind badge, Type filter, `?kind=`, system detail page, kind checks in Try It Out routes |
+| `AGENT_COMPARE` | `/compare` route (404 when off, loader in `src/routes/compare/+page.server.ts`, helpers in `src/lib/compare.ts`) and the compare checkboxes on catalog cards; with `AGENT_KINDS` on the compare rows add kind and framework and use `effectiveTryItOutMode` |
+| `UI_SPEC_VIEWER` | `specViewer` key in the `/agents/[slug]` load data and the `SpecViewer` component (escaped text only) |
+| `UI_DARK_MODE` | theme toggle in the layout header and the dark palette (`src/lib/themeFlag.ts`) |
 | `MCP_GENERATOR` | `POST /api/mcp-generate`, "Generate MCP" panel |
 | `MCP_TESTER` | `/mcp-test`, `/api/mcp-test/runs*`, Customize entry |
+
+Toggling `AGENT_KINDS` requires a re-ingest for the semantic search leg: embedding hashes include the kind text.
+
+Other environment variables: `TRYOUT_STORAGE_PATH` (default `./runtime/try-out-sessions`, legacy `/api/try-out` storage, read in `src/lib/server/try-out.ts`) and `MCPTEST_ALLOW_OPEN_EGRESS` (never honoured: `true` or `1` makes the runner config throw, `src/lib/server/mcptest/containerRun.ts`).
 
 Related non-flag switches: `MCP_TESTER_RUNTIME=container`, `SEARCH_EMBEDDINGS=off`, `PI_RUNNER_ENABLED=false`, `AUTH_ENABLED=false`.
 

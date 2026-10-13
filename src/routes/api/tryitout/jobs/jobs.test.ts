@@ -89,7 +89,10 @@ function installUnavailableEngine() {
 
 beforeEach(() => {
   jobsMod.__resetJobs()
+  // clearAllMocks keeps queued *Once results; mockReset drops them so a job left in flight by
+  // an earlier test cannot hand its queued mock to the next test (B-003).
   vi.clearAllMocks()
+  mockCreate.mockReset()
   mockCreate.mockResolvedValue({ output_text: 'mock model output' })
   installUnavailableEngine()
 })
@@ -355,11 +358,16 @@ describe('GET /api/tryitout/jobs/[id]/artifact', () => {
   })
 
   it('returns 409 for a running job', async () => {
-    mockCreate.mockImplementationOnce(() => new Promise(() => {})) // never resolves -> stays running
+    let release!: (v: { output_text: string }) => void
+    mockCreate.mockImplementationOnce(() => new Promise((resolve) => { release = resolve })) // stays running until released
     const res = await POST(asPostEvent(makeForm({ agentId: AGENT_ID, task: 'triage this' })))
     const { jobId } = await res.json()
     await waitForStatus(jobId, ['running'])
+    await vi.waitFor(() => expect(mockCreate).toHaveBeenCalled())
     await expectHttpError(() => GET_ARTIFACT(asGetEvent(jobId)), 409)
+    // settle the in-flight job so it cannot leak into the next test
+    release({ output_text: 'done' })
+    await waitForStatus(jobId, ['succeeded', 'failed'])
   })
 
   it('returns 409 for a failed job', async () => {
