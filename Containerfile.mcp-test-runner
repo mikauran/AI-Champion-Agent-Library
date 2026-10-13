@@ -23,7 +23,7 @@ RUN apt-get update \
 # Node dependencies under /node_modules: ESM resolution walks up from /work, so the staged sources find them.
 # Versions equal the ones in package.json (a test compares them).
 RUN npm install --prefix / --no-save --no-audit --no-fund --ignore-scripts \
-      yaml@2.8.2 zod@4.3.6 fflate@0.8.3 tsx@4.21.0 \
+      yaml@2.9.1 zod@4.6.7 fflate@0.8.3 tsx@4.23.15 \
     && npm cache clean --force
 
 # Python dependencies of generated servers, in a venv (Debian marks the system Python as externally managed).
