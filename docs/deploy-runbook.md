@@ -40,7 +40,10 @@ Defaults are read from the code. "unset" means the feature is off or the value c
 
 | Variable | Default | Effect |
 |---|---|---|
-| `AGENT_KINDS` | off | Multi-agent and multi-format hosting (kind badge, Type filter, `?kind=`, system detail page). Needs a re-ingest. |
+| `AGENT_KINDS` | off | Multi-agent and multi-format hosting (kind badge, Type filter, `?kind=`, system detail page). Needs a re-ingest. Toggling it in either direction also needs a re-ingest for the semantic search leg: embedding hashes include the kind text, so stale vectors are rebuilt only by ingest. |
+| `AGENT_COMPARE` | off | Side-by-side comparison: `/compare?agents=a,b` (404 when off) and compare checkboxes on catalog cards. Read at request time; no re-ingest. |
+| `UI_SPEC_VIEWER` | off | Read-only raw spec viewer on the agent detail page (`/agents/[slug]`). Text is escaped, never rendered as HTML. |
+| `UI_DARK_MODE` | off | Dark/light theme toggle in the header and the dark palette. |
 | `MCP_GENERATOR` | off | "Generate MCP" panel and `POST /api/mcp-generate`. The CLI works without it. |
 | `MCP_TESTER` | off | `/mcp-test` page and `/api/mcp-test/runs` routes. The CLI works without it. |
 | `MCP_TESTER_RUNTIME` | unset (in-process fakes) | Literal `container` runs the MCP tester in the runner image through the container runtime. Operator-set only. |

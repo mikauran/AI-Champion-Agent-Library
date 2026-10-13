@@ -167,6 +167,11 @@ Variables are read from the environment (`.env` for local runs and compose). Def
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `AGENT_KINDS` | off | Feature flag: multi-agent and multi-format hosting (Phase 13) |
+| `AGENT_COMPARE` | off | Feature flag: side-by-side `/compare?agents=a,b` page and compare checkboxes on catalog cards |
+| `UI_SPEC_VIEWER` | off | Feature flag: read-only raw spec viewer on the agent detail page |
+| `UI_DARK_MODE` | off | Feature flag: dark/light theme toggle in the header |
+| `MCPTEST_ALLOW_OPEN_EGRESS` | n/a | Refused: `true` or `1` makes the MCP test runner config throw (the runner never gets egress) |
+| `TRYOUT_STORAGE_PATH` | `./runtime/try-out-sessions` | Storage directory of the legacy `/api/try-out` route (also `TRYOUT_TEMPLATE_PATH`) |
 | `MCP_GENERATOR` | off | Feature flag: Generate MCP panel and `POST /api/mcp-generate` (Phase 14) |
 | `MCP_TESTER` | off | Feature flag: `/mcp-test` page and `/api/mcp-test/runs` (Phase 15) |
 | `MCP_TESTER_RUNTIME` | unset | `container` runs the MCP tester in the runner image instead of in-process fakes |
@@ -179,9 +184,11 @@ Variables are read from the environment (`.env` for local runs and compose). Def
 | `OPENAI_API_KEY`, `PI_*` | see `.env.example` | Try It Out (direct call and container runner) |
 | `AUTH_*`, `BREVO_API_KEY`, `SMTP_*`, `ORIGIN` | see below | Sign-in and mail |
 
-Flags accept `1`, `true`, `on` or `yes`.
+Flags accept `1`, `true`, `on` or `yes`. Toggling `AGENT_KINDS` (either way) needs a re-run of `npm run ingest` for the semantic search leg, because embedding hashes include the kind text.
 
 ## Tests
+
+Prerequisite: `src/routes/api/tryitout/jobs/jobs.test.ts` reads a pre-built `./db/catalog.db` that contains `demo-rfi-triage`. On a fresh checkout run `mkdir -p db`, `npm run db:push`, `npm run ingest` and `npm run tryout:configure` first, or that file fails.
 
 `npm run check` is the gate (type check plus the whole Vitest suite, about 2 minutes: 208 files, 2087 tests at the time of writing). Strategy:
 
