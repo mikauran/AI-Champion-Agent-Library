@@ -402,7 +402,11 @@ export function toLegacyCsvRow(report: Report): string {
   }
   const vals = LEGACY_CHECKS.map(cell)
   const total = vals.filter((v) => v === '1').length
-  const esc = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)
+  // IN-03: server-controlled text must not become a spreadsheet formula (leading = + - @ tab or CR is neutralised).
+  const esc = (raw: string) => {
+    const v = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw
+    return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
+  }
   return [
     esc(report.subject.id),
     report.run.generatedAt,

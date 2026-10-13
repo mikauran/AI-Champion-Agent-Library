@@ -37,7 +37,7 @@ Flags: `--subject`, `--case ID` (repeatable), `--reruns 1-3`, `--format text|mar
 
 ### UI
 
-With `MCP_TESTER=1`, open `/mcp-test` (linked from the Customize menu). Choose a subject (fake variants and generator samples), optionally narrow the cases and reruns, start the run, watch progress and download `report.json`. The page stores nothing and polls.
+With `MCP_TESTER=1`, open `/mcp-test` (linked from the Customize menu). Choose a subject (fake variants and generator samples) and the number of reruns, start the run (the API also accepts a case list; the page has no case picker), watch progress and download `report.json`. The page stores nothing and polls.
 
 ### API (flag-gated)
 
@@ -45,7 +45,15 @@ With `MCP_TESTER=1`, open `/mcp-test` (linked from the Customize menu). Choose a
 - `GET /api/mcp-test/runs/{id}` returns status, progress and recent events.
 - `GET /api/mcp-test/runs/{id}/report` returns the report JSON when done.
 
-Starts are limited to 10 per client per 10 minutes. Runs are kept for 30 minutes (at most 50, finished runs evicted first). The routes derive a session key and rely on the application's global hook for authentication (see pending human item 8).
+Starts are limited to 10 per client per 10 minutes. Runs are kept for 30 minutes (at most 50, finished runs evicted first; a queued or running run is never evicted). The routes derive a session key and rely on the application's global hook for authentication (see pending human item 8).
+
+With the flag off, every method on every tester route (and a POST to the page) answers 404; with it on, an unsupported method answers 405 with an `Allow` header.
+
+A run id is a bearer capability: it is an unguessable UUID, status and report reads do not compare it with the session that started the run, and anyone holding it can read that run. Treat it like a link.
+
+Deployment note: the per-client start limit keys on `getClientAddress()`, and the per-session cap uses the anonymous session cookie. Behind a reverse proxy, set `ADDRESS_HEADER` (for example `X-Forwarded-For`) and `XFF_DEPTH` for the SvelteKit Node adapter, otherwise every visitor shares the proxy's address and one noisy visitor uses up everybody's budget. A single global run is allowed at a time, so the slot can be held by anyone who may call the API; keep the flag off, or the routes behind authentication, on an exposed host.
+
+Deadline: every run has an overall wall-clock budget, `MCPTEST_JOB_TIMEOUT_MS` (default 300000 ms, 1000 to 3600000). In process, the run is aborted at the budget (the report becomes INCOMPLETE) and failed after a 10 s grace if the work has still not returned. In container mode the same value is the container timeout.
 
 ## The 12 cases
 
@@ -98,14 +106,16 @@ Implement the `Subject` interface (`src/lib/mcptest/core/types.ts`): `prepare` m
 
 ## Safety rules
 
-- The runner never touches a real API or key. The mock binds 127.0.0.1 on an ephemeral port and answers a non-loopback Host header with 421; the HTTP transport accepts only loopback hosts.
-- Subject processes get an allowlisted environment (never `process.env`), a fresh temporary HOME and a per-run random canary key that is redacted from reports. Spawning requires an explicit `allowLocalExec`.
+- The runner never touches a real API or key. The mock binds 127.0.0.1 on an ephemeral port and answers a non-loopback Host header with 421; the HTTP transport accepts only loopback hosts, follows no redirects and reads responses through byte caps (a stream that passes the cap is cancelled).
+- Subject processes get an allowlisted environment (never `process.env`), a fresh temporary HOME and a per-run random canary key that is redacted from reports. Spawning requires an explicit `allowLocalExec`. A subject runs in its own process group, which is killed when the case ends. Caller-supplied environment names may not be `PATH`, `HOME`, `LANG`, `LD_*`, `NODE_*`, `PYTHON*` or similar; the driver request schema rejects interpreter options (arguments starting with a dash) and requires the first argument to be a `.py`, `.js`, `.mjs` or `.cjs` script.
+- Strings the server under test controls (tool names, server name and version, protocol version) are redacted for the canary and capped (200 names of 80 characters) in the report. The host stores the schema-validated report, never the raw text a container wrote.
+- A run that measured nothing is never a PASS: a case with no scored checks is ERROR, a case without a non-empty `golden.jsonl` fails the suite load, and the verdict is PASS only when the Tier 1 gate passed and a score exists (otherwise INCOMPLETE).
 - Container runs use a dedicated image, an internal network without egress, no LLM proxy and no tools; `MCPTEST_ALLOW_OPEN_EGRESS` is refused.
 - Generated Python is never executed in CI. The core, mock and fake modules import nothing from `$lib` or Svelte, and only `core/transports/stdio.ts` imports `child_process`. An invariant test (`src/lib/mcptest/criteria.test.ts`) enforces these rules, the absence of secrets and non-loopback URLs, and that the flag is off by default.
 
 ## Limits
 
-Body 4096 bytes; request to the driver 64 KiB; package up to 200 files and 2,000,000 bytes; driver tree up to 800 files and 6,000,000 bytes; report 1,000,000 bytes; 200 events of 300 characters per run; 10 starts per client per 10 minutes; default container job timeout from `MCPTEST_JOB_TIMEOUT_MS`.
+Body 4096 bytes; request to the driver 64 KiB; package up to 200 files and 2,000,000 bytes; driver tree up to 800 files and 6,000,000 bytes; report 1,000,000 bytes; 200 events of 300 characters per run; 10 starts per client per 10 minutes; overall run budget from `MCPTEST_JOB_TIMEOUT_MS` (default 300000 ms).
 
 ## Pending human
 
