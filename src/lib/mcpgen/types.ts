@@ -57,6 +57,8 @@ export interface Operation {
   params: Param[]
   pageParam?: string
   pageSizeParam?: string
+  /** Integer offset parameter of an offset/limit paged operation (exposed as an argument). */
+  offsetParam?: string
   summary?: string
 }
 export interface SourceModel {
@@ -66,6 +68,8 @@ export interface SourceModel {
     baseUrlEnv?: string
     datasetPathEnv?: string
     dsnEnv?: string
+    /** Field delimiter of a dataset file: a comma (default), semicolon or tab. */
+    delimiter?: string
   }
   /** Names only, never values. */
   auth: {

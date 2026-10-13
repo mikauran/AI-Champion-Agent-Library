@@ -511,6 +511,8 @@ function parseDoc(input: RawInput): ParseResult {
 
         const op: Operation = { id, kind, method: 'GET', path, entity: entityId, params }
         if (pageP && pageP.type === 'integer') op.pageParam = pageP.name
+        // Offset/limit paging (review WR-10). A bare `start` only counts when a page size accompanies it.
+        if (offsetP && offsetP.type === 'integer' && (lower(offsetP) !== 'start' || sizeP)) op.offsetParam = offsetP.name
         if (sizeP && sizeP.type === 'integer') {
           op.pageSizeParam = sizeP.name
           if (typeof sizeP.max === 'number' && Number.isInteger(sizeP.max) && sizeP.max >= 1) pageSizeMax.push(sizeP.max)

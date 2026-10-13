@@ -7,11 +7,10 @@ import {
   pathSegments,
   resolveAuth,
   resolveEnv,
-  serverSlug,
   snake,
   toolKind,
 } from '../plan.js'
-import { cleanSource, cleanText, joinLines, pyLit, pyStr } from './pyutil.js'
+import { cleanSource, cleanText, joinLines, pyIdent, pyLit, pyNum, pyStr, sqlIdent } from './pyutil.js'
 import { RUNTIME_COMMON, RUNTIME_DATASET, RUNTIME_QUERY, RUNTIME_SQL, runtimeHttp } from './runtime.js'
 
 const PYTYPE: Record<string, string> = { string: 'str', integer: 'int', number: 'float', boolean: 'bool', unknown: 'str' }
@@ -29,18 +28,26 @@ function opOf(plan: ServerPlan, tool: PlannedTool): Operation | undefined {
 const ind = (n: number, s: string) => '    '.repeat(n) + s
 
 function sigParam(p: Param): string {
+  pyIdent(p.name)
   const t = PYTYPE[p.type] ?? 'str'
   const required = p.required || p.in === 'path'
   return required ? `${p.name}: ${t}` : `${p.name}: Optional[${t}] = None`
+}
+
+/** The result ceiling as a checked number: anything but a finite number throws (review WR-04). */
+function ceilingOf(m: ServerPlan['model']): number | undefined {
+  const c = m.limits.resultCeiling
+  if (c === undefined) return undefined
+  pyNum(c)
+  return c
 }
 
 function ceilingWarning(ceiling: number, hint: string): string {
   return `Result ceiling reached: results beyond position ${ceiling} are not available. Narrow the request with ${hint} instead of paging deeper.`
 }
 
-function partitionHint(op: Operation | undefined, params: Param[]): string {
+function partitionHint(params: Param[]): string {
   const p = params.find((x) => !x.required && x.in === 'query' && !/^(q|query|search|keyword|keywords|text|term)$/i.test(x.name))
-  void op
   return p ? `the ${p.name} filter` : 'a more specific search term'
 }
 
@@ -55,11 +62,11 @@ function paramChecks(p: Param): string[] {
     out.push(ind(2, `if ${guard}str(${p.name}) not in (${vals},):`))
     out.push(ind(3, `return _err("invalid_argument", ${pyStr(`Invalid value for ${p.name}; allowed values: ${shown}.`)})`))
   } else if (p.type === 'integer' && (p.min !== undefined || p.max !== undefined)) {
-    const call = `${p.name} = _clamp(${p.name}, ${p.min ?? I32_MIN}, ${p.max ?? I32_MAX})`
+    const call = `${p.name} = _clamp(${p.name}, ${p.min === undefined ? I32_MIN : pyNum(p.min)}, ${p.max === undefined ? I32_MAX : pyNum(p.max)})`
     out.push(required ? ind(2, call) : ind(2, `if ${p.name} is not None:`))
     if (!required) out.push(ind(3, call))
   } else if (p.type === 'number' && (p.min !== undefined || p.max !== undefined)) {
-    const call = `${p.name} = _bound(${p.name}, ${p.min ?? 'None'}, ${p.max ?? 'None'})`
+    const call = `${p.name} = _bound(${p.name}, ${p.min === undefined ? 'None' : pyNum(p.min)}, ${p.max === undefined ? 'None' : pyNum(p.max)})`
     out.push(required ? ind(2, call) : ind(2, `if ${p.name} is not None:`))
     if (!required) out.push(ind(3, call))
   } else if (p.type === 'string' || p.type === 'unknown') {
@@ -103,11 +110,11 @@ function paramArgs(params: Param[]): [string, string][] {
 
 const FIELDS_DOC = 'Optional list of field names to return (at most 12; unknown names are ignored).'
 
-function httpListTool(plan: ServerPlan, tool: PlannedTool, kind: 'list' | 'search'): string[] {
+function httpListTool(plan: ServerPlan, tool: PlannedTool): string[] {
   const op = opOf(plan, tool)!
   const m = plan.model
   const max = effectiveMaxPageSize(m, op)
-  const ceiling = m.limits.resultCeiling
+  const ceiling = ceilingOf(m)
   const paged = !!op.pageParam
   const sized = !!op.pageSizeParam
   const required = tool.params.filter((p) => p.required || p.in === 'path')
@@ -128,8 +135,8 @@ function httpListTool(plan: ServerPlan, tool: PlannedTool, kind: 'list' | 'searc
   if (sized) body.push(ind(2, `page_size = _clamp(page_size, 1, ${max})`))
   if (ceiling !== undefined && paged) {
     const size = sized ? 'page_size' : '1'
-    const hint = partitionHint(op, tool.params)
-    body.push(ind(2, `if page * ${size} > ${ceiling}:`))
+    const hint = partitionHint(tool.params)
+    body.push(ind(2, `if page * ${size} > ${pyNum(ceiling)}:`))
     const extra = sized ? ', "page_size": page_size' : ''
     body.push(ind(3, `return {"ok": True, "results": [], "count": 0, "warning": ${pyStr(ceilingWarning(ceiling, hint))}, "page": page${extra}}`))
   }
@@ -147,8 +154,7 @@ function httpListTool(plan: ServerPlan, tool: PlannedTool, kind: 'list' | 'searc
   body.push(ind(2, 'results = [_project(row, sel) for row in rows]'))
   const tail = `${paged ? ', "page": page' : ''}${sized ? ', "page_size": page_size' : ''}`
   body.push(ind(2, `return {"ok": True, "results": results, "count": len(results)${tail}}`))
-  void kind
-  return [`def ${tool.name}(${sig.join(', ')}) -> dict:`, ...doc(tool.description, args, notes), ind(1, 'try:'), ...body, ...FAIL_TAIL]
+  return [`def ${pyIdent(tool.name)}(${sig.join(', ')}) -> dict:`, ...doc(tool.description, args, notes), ind(1, 'try:'), ...body, ...FAIL_TAIL]
 }
 
 function httpGetTool(plan: ServerPlan, tool: PlannedTool): string[] {
@@ -172,7 +178,7 @@ function httpGetTool(plan: ServerPlan, tool: PlannedTool): string[] {
   body.push(ind(3, `return ${notFound}`))
   body.push(ind(2, 'return {"ok": True, "result": _project(item, sel)}'))
   return [
-    `def ${tool.name}(${sig.join(', ')}) -> dict:`,
+    `def ${pyIdent(tool.name)}(${sig.join(', ')}) -> dict:`,
     ...doc(tool.description, args),
     ind(1, 'try:'),
     ...body,
@@ -194,9 +200,11 @@ function httpFilterTool(plan: ServerPlan, tool: PlannedTool): string[] {
   const m = plan.model
   const nested = nestedOf(plan, tool)
   const max = effectiveMaxPageSize(m, op)
-  const ceiling = m.limits.resultCeiling
-  const paged = !!op.pageParam
+  const ceiling = ceilingOf(m)
   const sized = !!op.pageSizeParam
+  // Offset/limit style paging (no page number): the scan walks offsets of one page size (review WR-10).
+  const offsetMode = !op.pageParam && !!op.offsetParam && sized
+  const paged = !!op.pageParam || offsetMode
   const required = tool.params.filter((p) => p.required || p.in === 'path')
   const optional = tool.params.filter((p) => !(p.required || p.in === 'path'))
   const sig = [...required.map(sigParam), 'key: str', 'value: Optional[str] = None', ...optional.map(sigParam), `max_pages: int = ${Math.min(5, DERIVED_MAX_PAGES)}`, 'fields: Optional[list[str]] = None']
@@ -227,7 +235,8 @@ function httpFilterTool(plan: ServerPlan, tool: PlannedTool): string[] {
   body.push(ind(2, 'truncated = False'))
   body.push(ind(2, `for page in range(1, ${paged ? 'max_pages + 1' : '2'}):`))
   body.push(ind(3, 'query = dict(base_query)'))
-  if (paged) body.push(ind(3, `query[${pyStr(op.pageParam!)}] = page`))
+  if (op.pageParam) body.push(ind(3, `query[${pyStr(op.pageParam)}] = page`))
+  if (offsetMode) body.push(ind(3, `query[${pyStr(op.offsetParam!)}] = (page - 1) * ${max}`))
   if (sized) body.push(ind(3, `query[${pyStr(op.pageSizeParam!)}] = ${max}`))
   body.push(ind(3, `rows = _rows(_http_json(${pathExpr(op)}, query))`))
   body.push(ind(3, 'scanned += 1'))
@@ -267,14 +276,14 @@ function httpFilterTool(plan: ServerPlan, tool: PlannedTool): string[] {
   body.push(ind(2, 'elif truncated:'))
   body.push(ind(3, `out["message"] = ${pyStr('Results may be incomplete: the scan stopped before every page was checked.')}`))
   body.push(ind(2, 'return out'))
-  return [`def ${tool.name}(${sig.join(', ')}) -> dict:`, ...doc(tool.description, args, notes), ind(1, 'try:'), ...body, ...FAIL_TAIL]
+  return [`def ${pyIdent(tool.name)}(${sig.join(', ')}) -> dict:`, ...doc(tool.description, args, notes), ind(1, 'try:'), ...body, ...FAIL_TAIL]
 }
 
 function queryTool(plan: ServerPlan, tool: PlannedTool): string[] {
   const m = plan.model
   const isSql = m.backend.kind === 'sql'
   const max = effectiveMaxPageSize(m)
-  const ceiling = m.limits.resultCeiling
+  const ceiling = ceilingOf(m)
   const ent = pyStr(tool.entity)
   const describe = plan.tools.find((t) => t.derived?.kind === 'schemaDiscovery')!.name
   const sig = ['field: Optional[str] = None', 'value: Optional[str] = None', 'match: str = "equals"', 'fields: Optional[list[str]] = None', `limit: int = ${Math.min(20, max)}`, 'offset: int = 0']
@@ -286,7 +295,7 @@ function queryTool(plan: ServerPlan, tool: PlannedTool): string[] {
   const args: [string, string][] = [
     ['field', 'Field to filter on.'],
     ['value', 'Value to match (text or number).'],
-    ['match', 'equals, contains or startsWith (case-insensitive).'],
+    ['match', isSql ? 'equals, contains or startsWith (case-insensitive for ASCII letters only).' : 'equals, contains or startsWith (case-insensitive).'],
     ['fields', FIELDS_DOC],
     ['limit', `Rows to return (1 to ${max}).`],
     ['offset', 'Rows to skip, for paging.'],
@@ -320,12 +329,12 @@ function queryTool(plan: ServerPlan, tool: PlannedTool): string[] {
     body.push(ind(2, 'results = [_project(row, sel) for row in rows]'))
     body.push(ind(2, 'return {"ok": True, "results": results, "count": len(results), "total_matches": total, "offset": offset, "limit": limit}'))
   }
-  return [`def ${tool.name}(${sig.join(', ')}) -> dict:`, ...doc(tool.description, args, notes), ind(1, 'try:'), ...body, ...FAIL_TAIL]
+  return [`def ${pyIdent(tool.name)}(${sig.join(', ')}) -> dict:`, ...doc(tool.description, args, notes), ind(1, 'try:'), ...body, ...FAIL_TAIL]
 }
 
-function describeTool(plan: ServerPlan, tool: PlannedTool): string[] {
+function describeTool(tool: PlannedTool): string[] {
   return [
-    `def ${tool.name}() -> dict:`,
+    `def ${pyIdent(tool.name)}() -> dict:`,
     ...doc(tool.description, []),
     ind(1, 'result = dict(_SCHEMA)'),
     ind(1, 'result["ok"] = True'),
@@ -382,7 +391,7 @@ export function emitPython(plan: ServerPlan): string {
   out.push('from fastmcp import FastMCP', '', `mcp = FastMCP(${pyStr(cleanText(m.name, 80) || 'server')})`, '')
   out.push('# Configuration (names only; values come from the environment).')
   out.push(`SERVER_NAME = ${pyStr(cleanText(m.name, 80))}`)
-  out.push(`MAX_RESPONSE_ITEMS = ${m.limits.maxResponseItems}`)
+  out.push(`MAX_RESPONSE_ITEMS = ${pyNum(m.limits.maxResponseItems)}`)
   if (kind === 'http') {
     out.push(`BASE_URL_ENV = ${pyStr(env.baseUrl!)}`)
     out.push(`AUTH_ENV = ${env.auth ? pyStr(env.auth) : 'None'}`)
@@ -392,7 +401,9 @@ export function emitPython(plan: ServerPlan): string {
     out.push(`_AUTH_MESSAGE = ${pyStr(env.auth ? `Authentication failed: check the API key configured in ${env.auth}` : 'Authentication failed: the upstream service refused the request.')}`)
     out.push(`_UPSTREAM_MESSAGE = ${pyStr('The upstream service is unavailable; try again later.')}`)
   }
-  if (kind === 'dataset') out.push(`DATA_FILE_ENV = ${pyStr(env.dataFile!)}`)
+  const delimiter = m.backend.delimiter ?? ','
+  if (kind === 'dataset' && ![',', ';', '\t'].includes(delimiter)) throw new Error('Unsupported data file delimiter.')
+  if (kind === 'dataset') out.push(`DATA_FILE_ENV = ${pyStr(env.dataFile!)}`, `DATA_DELIMITER = ${pyStr(delimiter)}`)
   if (kind === 'sql') out.push(`DSN_ENV = ${pyStr(env.dsn!)}`)
   out.push('', '')
   out.push(RUNTIME_COMMON.trimEnd())
@@ -403,22 +414,21 @@ export function emitPython(plan: ServerPlan): string {
 
   // Data tables: per-entity allow-list and default projection.
   const ents = [...new Set(plan.tools.filter((t) => t.entity !== '*').map((t) => t.entity))].sort()
-  const allowed: Record<string, string[]> = {}
-  const dflt: Record<string, string[]> = {}
-  for (const id of ents) {
-    allowed[id] = entityFieldNames(entityOf(plan, id))
-    dflt[id] = plan.tools.find((t) => t.entity === id)!.projection
-  }
+  // fromEntries creates own properties, so an entity named __proto__ or constructor stays a plain key.
+  const allowed = Object.fromEntries(ents.map((id) => [id, entityFieldNames(entityOf(plan, id))]))
+  const dflt = Object.fromEntries(ents.map((id) => [id, plan.tools.find((t) => t.entity === id)!.projection]))
   out.push(`_ALLOWED = ${pyLit(allowed)}`, '', `_DEFAULT = ${pyLit(dflt)}`, '')
   if (kind !== 'http') out.push(`_SCHEMA = ${pyLit(schemaLiteral(plan))}`, '')
   if (kind === 'sql') {
-    const tables: Record<string, unknown> = {}
-    for (const id of ents) {
-      const e = entityOf(plan, id)
-      const columns: Record<string, string> = {}
-      for (const f of e.fields) columns[f.name] = `"${f.name}"`
-      tables[id] = { table: `"${e.id}"`, columns, order: e.identifierFields.map((n) => `"${n}"`).join(', ') }
-    }
+    const tables = Object.fromEntries(
+      ents.map((id) => {
+        const e = entityOf(plan, id)
+        const columns = Object.fromEntries(e.fields.map((f) => [f.name, sqlIdent(f.name)]))
+        // Without a primary key the rowid keeps LIMIT/OFFSET paging in a stable order (review IN-01).
+        const order = e.identifierFields.length > 0 ? e.identifierFields.map((n) => sqlIdent(n)).join(', ') : 'rowid'
+        return [id, { table: sqlIdent(e.id), columns, order }]
+      }),
+    )
     out.push('# Table and column names are quoted allow-list entries; tool arguments never reach the SQL text.', `_TABLES = ${pyLit(tables)}`, '')
   }
 
@@ -429,20 +439,19 @@ export function emitPython(plan: ServerPlan): string {
     out.push(...(i === 0 ? [''] : ['', '']))
     const body =
       k === 'list' || k === 'search'
-        ? httpListTool(plan, tool, k)
+        ? httpListTool(plan, tool)
         : k === 'get'
           ? httpGetTool(plan, tool)
           : k === 'filter'
             ? httpFilterTool(plan, tool)
             : k === 'query'
               ? queryTool(plan, tool)
-              : describeTool(plan, tool)
+              : describeTool(tool)
     out.push(...body)
-    names.push(tool.name)
+    names.push(pyIdent(tool.name))
   }
   out.push('', '', '# Register every tool with the server (read-only tools only).', 'for _tool in (')
   for (const n of names) out.push(`    ${n},`)
   out.push('):', '    mcp.tool(_tool)', '', '', 'if __name__ == "__main__":', '    mcp.run()')
-  void serverSlug
   return joinLines(out)
 }

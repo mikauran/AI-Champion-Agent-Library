@@ -7,6 +7,25 @@ export function pyStr(s: string): string {
   return JSON.stringify(s).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')
 }
 
+/** A number for Python source. Throws on anything but a finite number, so text can never reach the code. */
+export function pyNum(x: unknown): string {
+  if (typeof x !== 'number' || !Number.isFinite(x)) throw new Error('A finite number is required in generated code.')
+  return String(x)
+}
+
+const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/
+
+/** A Python or SQL identifier. Throws on anything that is not a plain ASCII identifier. */
+export function pyIdent(x: unknown): string {
+  if (typeof x !== 'string' || !IDENT.test(x)) throw new Error('A plain identifier is required in generated code.')
+  return x
+}
+
+/** A double-quoted SQL identifier. The plain-identifier rule means no quote can ever need doubling. */
+export function sqlIdent(x: unknown): string {
+  return `"${pyIdent(x)}"`
+}
+
 /** Python literal for JSON-like data (null -> None, true -> True). Objects keep insertion order. */
 export function pyLit(v: unknown, indent = 0): string {
   if (v === null || v === undefined) return 'None'

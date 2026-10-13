@@ -3,7 +3,7 @@
 // This repository never runs them; they ship with the generated package and seed Phase 15 cases.
 import type { Entity, Operation, Param, PlannedTool, ServerPlan } from '../types.js'
 import { effectiveMaxPageSize, resolveEnv, toolKind } from '../plan.js'
-import { joinLines, pyLit, pyStr } from './pyutil.js'
+import { joinLines, pyLit, pyNum, pyStr } from './pyutil.js'
 
 function sample(p: Param): unknown {
   if (p.enum && p.enum.length) return p.enum[0]
@@ -183,6 +183,45 @@ function httpTests(plan: ServerPlan): string[] {
     '',
   )
 
+  const dotCases = calls.flatMap(([name, args]) => {
+    const tool = plan.tools.find((t) => t.name === name)!
+    const p = tool.params.find((x) => x.in === 'path' && (x.type === 'string' || x.type === 'unknown'))
+    return p ? [[name, p.name, args] as const] : []
+  })
+  if (dotCases.length > 0) {
+    out.push(
+      `DOT_CASES = [`,
+      ...dotCases.map(([n, a, k]) => `    (${pyStr(n)}, ${pyStr(a)}, {${Object.entries(k).map(([key, v]) => `${pyStr(key)}: ${pyLit(v)}`).join(', ')}}),`),
+      ']',
+      '',
+      '',
+      '@pytest.mark.parametrize("name,arg,kwargs", DOT_CASES)',
+      'def test_dot_segment_identifiers_are_rejected_before_any_call(upstream, name, arg, kwargs):',
+      '    for bad in (".", "..", " .. "):',
+      '        out = getattr(server, name)(**dict(kwargs, **{arg: bad}))',
+      '        assert out["ok"] is False and out["kind"] == "invalid_argument"',
+      '        assert set(out) == ERROR_KEYS',
+      '    assert upstream["calls"] == []',
+      '',
+      '',
+    )
+  }
+  const offsetList = lists.find((x) => {
+    const o = opOf(plan, x.t)
+    return !!o?.offsetParam && x.t.params.some((p) => p.name === o.offsetParam)
+  })?.t
+  if (offsetList) {
+    const o = opOf(plan, offsetList)!
+    out.push(
+      'def test_offset_is_passed_through_to_the_upstream(upstream):',
+      '    upstream["handler"] = lambda path, params: (200, json.dumps([make_row(1)]))',
+      `    out = server.${offsetList.name}(${kwargs(requiredArgs(offsetList), 'offset=40')})`,
+      '    assert out["ok"] is True',
+      `    assert upstream["calls"] and all(params.get(${pyStr(o.offsetParam!)}) == "40" for _, params in upstream["calls"])`,
+      '',
+      '',
+    )
+  }
   if (list) {
     const op = opOf(plan, list)!
     const args = requiredArgs(list)
@@ -223,7 +262,7 @@ function httpTests(plan: ServerPlan): string[] {
     if (m.limits.resultCeiling !== undefined && op.pageParam) {
       out.push(
         'def test_deep_paging_returns_a_ceiling_warning(upstream):',
-        `    out = server.${list.name}(${kwargs(args, `page=${m.limits.resultCeiling + 1}`)})`,
+        `    out = server.${list.name}(${kwargs(args, `page=${pyNum(m.limits.resultCeiling + 1)}`)})`,
         '    assert out["ok"] is True',
         '    assert out["results"] == []',
         '    assert "warning" in out and "narrow" in out["warning"].lower()',
@@ -276,7 +315,7 @@ function httpTests(plan: ServerPlan): string[] {
       '    assert out["count"] > 0',
       '    coverage = out["coverage"]',
       '    assert coverage["pages_scanned"] >= 1',
-      op.pageParam ? '    assert coverage["truncated"] is True' : '    assert coverage["truncated"] is False',
+      op.pageParam || (op.offsetParam && op.pageSizeParam) ? '    assert coverage["truncated"] is True' : '    assert coverage["truncated"] is False',
       '    assert not looks_leaky(out)',
       '',
       '',
@@ -328,7 +367,7 @@ function localTests(plan: ServerPlan): string[] {
       '    path = tmp_path / "data.csv"',
       '    fields = QUERY_TOOLS[0][2]',
       '    with open(path, "w", newline="", encoding="utf-8") as handle:',
-      '        writer = csv.writer(handle)',
+      '        writer = csv.writer(handle, delimiter=server.DATA_DELIMITER)',
       '        writer.writerow(fields)',
       '        for i in range(1, 4):',
       '            writer.writerow(["%s-%d" % (name, i) for name in fields])',
@@ -365,6 +404,13 @@ function localTests(plan: ServerPlan): string[] {
     '    assert partial["ok"] is True and partial["count"] == 1',
     '    prefix = getattr(server, tool)(field=first, value=first, match="startsWith")',
     '    assert prefix["count"] == 3',
+    '',
+    '',
+    tools,
+    'def test_equals_ignores_case(data, tool, entity, fields):',
+    '    first = fields[0]',
+    '    out = getattr(server, tool)(field=first, value=("%s-1" % first).upper())',
+    '    assert out["ok"] is True and out["count"] == 1',
     '',
     '',
     tools,
@@ -415,7 +461,7 @@ function localTests(plan: ServerPlan): string[] {
     out.push(
       tools,
       'def test_deep_paging_returns_a_ceiling_warning(data, tool, entity, fields):',
-      `    out = getattr(server, tool)(offset=${ceiling})`,
+      `    out = getattr(server, tool)(offset=${pyNum(ceiling)})`,
       '    assert out["ok"] is True and out["results"] == []',
       '    assert "warning" in out and "narrow" in out["warning"].lower()',
       '',
