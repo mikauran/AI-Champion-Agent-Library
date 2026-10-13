@@ -1,5 +1,6 @@
 <script>
   import '../app.css'
+  import ThemeToggle from '$lib/components/ThemeToggle.svelte'
   let { children, data } = $props()
 </script>
 
@@ -15,6 +16,9 @@
       <a href="/catalog" class="text-lg font-semibold text-gray-900">AIC Agent Library</a>
       {#if data.compareEnabled}
         <a href="/compare" class="text-sm font-medium text-gray-900 underline">Compare agents</a>
+      {/if}
+      {#if data.themeEnabled}
+        <ThemeToggle theme={data.theme} />
       {/if}
       {#if data.user}
         <div class="flex items-center gap-4">

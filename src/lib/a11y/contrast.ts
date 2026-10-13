@@ -59,7 +59,7 @@ export function contrastRatio(fgHex: string, bgHex: string): number {
   return (hi + 0.05) / (lo + 0.05)
 }
 
-const OKLCH: Record<string, string> = {
+export const OKLCH: Record<string, string> = {
   'gray-50': 'oklch(98.5% 0.002 247.839)',
   'gray-100': 'oklch(96.7% 0.003 264.542)',
   'gray-200': 'oklch(92.8% 0.006 264.531)',

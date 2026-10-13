@@ -29,6 +29,10 @@ export function uiSpecViewerEnabled(
  * compareFlag.ts so loaders that tests mock `$lib/flags.js` for still read it from the environment (D-364). */
 export { agentCompareEnabled } from './compareFlag.js'
 
+/** UI-02 dark/light theme toggle flag (UI_DARK_MODE), default off. Implemented in themeFlag.ts
+ * for the same reason as the compare flag (D-364, D-380). */
+export { uiDarkModeEnabled } from './themeFlag.js'
+
 /** Phase 15 MCP tester flag (MCP_TESTER), default off. */
 export function mcpTesterEnabled(
   env: Record<string, string | undefined> = process.env

@@ -1,6 +1,7 @@
 import { json, redirect, type Handle, type ServerInit } from '@sveltejs/kit'
 import { AUTH_COOKIE_NAME, authCookieOptions, getAuthService } from '$lib/server/auth'
 import { isAuthenticationEnabled } from '$lib/server/auth-config'
+import { resolveWithTheme } from '$lib/theme'
 import { startTryItOutService } from '$lib/server/tryitout/service'
 
 const PUBLIC_ROUTES = new Set(['/login', '/health'])
@@ -32,7 +33,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     if (event.url.pathname === '/login' && event.request.method === 'GET') {
       redirect(303, '/catalog')
     }
-    return resolve(event)
+    return resolveWithTheme(event, resolve)
   }
 
   const token = event.cookies.get(AUTH_COOKIE_NAME)
@@ -59,5 +60,5 @@ export const handle: Handle = async ({ event, resolve }) => {
     redirect(303, '/catalog')
   }
 
-  return resolve(event)
+  return resolveWithTheme(event, resolve)
 }
