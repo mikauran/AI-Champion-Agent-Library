@@ -6,7 +6,7 @@
 import { isTryItOutRuntimeError } from './runtime'
 
 const SECRET_PATTERNS: RegExp[] = [
-  /sk-[A-Za-z0-9_*.-]{3,}/g, // OpenAI-style keys, including masked ones (sk-proj-****abcd)
+  /(?<![A-Za-z0-9_])sk-[A-Za-z0-9_*.-]{3,}/g, // OpenAI-style keys, including masked ones (sk-proj-****abcd); not inside words like task-force
   /Bearer\s+[A-Za-z0-9._~+/=-]{8,}/gi,
 ]
 
