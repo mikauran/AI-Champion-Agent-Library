@@ -1,6 +1,8 @@
 import { db, agents } from '$lib/server/db.js'
 import { eq, inArray } from 'drizzle-orm'
 import { error } from '@sveltejs/kit'
+import { parseJsonArray, parseJsonStringArray } from '$lib/safeJson.js'
+import { isMissingTableError } from '$lib/dbErrors.js'
 import type { PageServerLoad } from './$types'
 import { warmForSession } from '$lib/server/tryitout/service'
 import { related } from '$lib/server/search/index.js'
@@ -10,11 +12,17 @@ import { mcpGeneratorData, mcpTesterData, specViewerData } from '$lib/pageFlags.
 import { defaultKindInfo, effectiveTryItOutMode } from '$lib/spec/kinds.js'
 
 export const load: PageServerLoad = async ({ params, url, locals, cookies, getClientAddress }) => {
-  const row = db
-    .select()
-    .from(agents)
-    .where(eq(agents.slug, params.slug))
-    .get()
+  let row: typeof agents.$inferSelect | undefined
+  try {
+    row = db
+      .select()
+      .from(agents)
+      .where(eq(agents.slug, params.slug))
+      .get()
+  } catch (err) {
+    // E6 (D-401): no tables yet (fresh checkout): there is no such agent, answer 404 rather than 500.
+    if (!isMissingTableError(err)) throw err
+  }
 
   if (!row) {
     error(404, 'Agent not found. It may have been removed or the URL is incorrect.')
@@ -65,11 +73,11 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
     agent: {
       ...agentRow,
       ...(effectiveMode !== row.tryItOutMode ? { tryItOutMode: effectiveMode } : {}),
-      toolNames: JSON.parse(row.toolNames) as string[],
-      inputFields: JSON.parse(inputSchema ?? '[]'),
-      tags: JSON.parse(row.tags) as string[],
-      fixedFields: JSON.parse(row.fixedFields ?? '[]') as string[],
-      customizableFields: row.customizableFields ? (JSON.parse(row.customizableFields) as string[]) : null,
+      toolNames: parseJsonStringArray(row.toolNames),
+      inputFields: parseJsonArray(inputSchema),
+      tags: parseJsonStringArray(row.tags),
+      fixedFields: parseJsonStringArray(row.fixedFields),
+      customizableFields: row.customizableFields ? parseJsonStringArray(row.customizableFields) : null,
     },
     related: relatedAgents,
     openTryOut: url?.searchParams.get('tryout') === '1',

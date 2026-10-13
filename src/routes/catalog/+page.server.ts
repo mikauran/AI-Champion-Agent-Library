@@ -5,12 +5,15 @@ import { parsePage, parseKind } from '$lib/catalogUrl'
 import { agentKindsEnabled } from '$lib/flags.js'
 import { catalogCompareData } from '$lib/compare.js'
 import { effectiveTryItOutMode } from '$lib/spec/kinds.js'
+import { parseJsonArray, parseJsonStringArray } from '$lib/safeJson.js'
+import { isMissingTableError } from '$lib/dbErrors.js'
+import { emptyCatalogData } from '$lib/catalogEmpty.js'
 import type { PageServerLoad } from './$types'
 
 const PAGE_SIZE = 24
 const SLUG_CHUNK = 500
 
-export const load: PageServerLoad = async ({ url }) => {
+const loadCatalog: PageServerLoad = async ({ url }) => {
   const page = parsePage(url.searchParams.get('page'))
   const category = url.searchParams.get('category') ?? null
   const llm = url.searchParams.get('llm') ?? null
@@ -42,9 +45,9 @@ export const load: PageServerLoad = async ({ url }) => {
     const { inputSchema, ...agentRow } = row
     return {
       ...agentRow,
-      toolNames: JSON.parse(row.toolNames) as string[],
-      inputFields: JSON.parse(inputSchema ?? '[]'),
-      tags: JSON.parse(row.tags) as string[],
+      toolNames: parseJsonStringArray(row.toolNames),
+      inputFields: parseJsonArray(inputSchema),
+      tags: parseJsonStringArray(row.tags),
     }
   }
 
@@ -201,5 +204,15 @@ export const load: PageServerLoad = async ({ url }) => {
     llms: allLlms,
     maturityStatuses: allMaturityStatuses,
     filters: { category, llm, maturity, q },
+  }
+}
+
+// E6 (D-401): a database with no tables yet (fresh checkout before db:push/ingest) is an empty catalog, not a 500.
+export const load: PageServerLoad = async (event) => {
+  try {
+    return await loadCatalog(event)
+  } catch (err) {
+    if (isMissingTableError(err)) return emptyCatalogData(event.url)
+    throw err
   }
 }
