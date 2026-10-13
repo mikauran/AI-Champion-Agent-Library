@@ -2,8 +2,10 @@
 // (the flag is never consulted). It reads no env files, makes no network calls itself, and writes only the
 // --out file. cmd: subjects (real servers) spawn only with --allow-local-exec: no shell, argv split,
 // scrubbed environment (core/transports/stdio). Exit codes: 0 verdict PASS, 1 other verdict, 2 usage error.
+import { realpathSync } from 'node:fs'
 import { mkdir, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { isReservedEnvName } from '../src/lib/mcptest/core/envNames'
 import { ReportSchema, renderMatrix, renderSummary, type Report } from '../src/lib/mcptest/core/report'
 import { runSuite } from '../src/lib/mcptest/core/runner'
@@ -257,7 +259,23 @@ export async function runCli(argv: string[], io: CliIo = defaultIo): Promise<num
   }
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`
+/**
+ * True when this module is the entry script. Compares real file paths, so paths with spaces, '%' or non-ASCII
+ * characters (percent-encoded in a file URL), relative paths and symlinks all work (WR-09). A plain URL string
+ * comparison failed for those and the CLI then ran nothing and exited 0, which a CI step reads as a PASS.
+ */
+export function isMainModule(metaUrl: string, argv1: string | undefined): boolean {
+  if (!argv1) return false
+  const self = fileURLToPath(metaUrl)
+  const entry = resolve(argv1)
+  try {
+    return realpathSync(self) === realpathSync(entry)
+  } catch {
+    return self === entry
+  }
+}
+
+const isMain = isMainModule(import.meta.url, process.argv[1])
 if (isMain) {
   process.exitCode = await runCli(process.argv.slice(2))
 }
