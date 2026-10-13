@@ -194,6 +194,8 @@ export interface BuildInput {
     toolNames?: string[]
   }
   cases: ReportCaseInput[]
+  /** True when the run was aborted: the verdict becomes INCOMPLETE unless a blocker was raised. */
+  incomplete?: boolean
   totalMs?: number
   secrets?: string[]
 }
@@ -278,7 +280,12 @@ export function buildReport(input: BuildInput): Report {
       toolNames: [...(input.subject.toolNames ?? [])]
     },
     cases,
-    summary: { gate: roll.gate, score: roll.score, flags: { blockers: roll.flags.blockers, warnings: roll.flags.warnings }, verdict: roll.verdict },
+    summary: {
+      gate: roll.gate,
+      score: roll.score,
+      flags: { blockers: roll.flags.blockers, warnings: roll.flags.warnings },
+      verdict: input.incomplete && roll.verdict !== 'BLOCKED' ? 'INCOMPLETE' : roll.verdict
+    },
     pendingHuman: [...pending, ...PENDING_HUMAN_STATIC],
     timings: { totalMs: input.totalMs ?? 0, cases: timingCases }
   }
