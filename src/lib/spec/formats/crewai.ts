@@ -31,6 +31,7 @@ import type {
 import { clampExtras, MEMBERS_MAX } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
 import { capText } from '../security.js'
+import { byShallowest, dirOf, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
 
@@ -103,6 +104,50 @@ const crewFile = (f: SubmissionFile): boolean => /^crew\.jsonc?$/.test(base(f.pa
 const agentFile = (f: SubmissionFile): boolean => /(^|\/)agents\/[^/]+\.jsonc?$/.test(f.path)
 const yamlAgents = (f: SubmissionFile): boolean => /(^|\/)config\/agents\.ya?ml$/.test(f.path)
 const yamlTasks = (f: SubmissionFile): boolean => /(^|\/)config\/tasks\.ya?ml$/.test(f.path)
+
+/**
+ * WR-03: crew.json is a very common file name. It only counts as a CrewAI crew when its content
+ * looks like one (agents or tasks), when agent files sit next to it, or when it does not parse at
+ * all (so the author hears about the syntax error instead of the file being silently skipped).
+ */
+function crewStrength(f: SubmissionFile, files: SubmissionFile[]): 'strong' | 'weak' | 'none' {
+  const doc = parseJsonc(f.text)
+  if (doc === undefined) return 'weak'
+  if (!isObj(doc)) return 'none'
+  const listy = (v: unknown): boolean => Array.isArray(v) || isObj(v)
+  if (listy(doc.agents) || listy(doc.tasks)) return 'strong'
+  const dir = dirOf(f.path)
+  const prefix = dir ? `${dir}/agents/` : 'agents/'
+  return files.some((o) => agentFile(o) && o.path.startsWith(prefix)) ? 'strong' : 'none'
+}
+
+/** The crew file to use (shallowest wins, WR-02), how strongly it looks like a crew, and the rest. */
+function pickCrew(files: SubmissionFile[]): { file: SubmissionFile; strength: 'strong' | 'weak'; ignored: string[] } | null {
+  const ranked = byShallowest(files.filter(crewFile), (f) => f.path)
+    .map((f) => ({ f, strength: crewStrength(f, files) }))
+    .filter((x) => x.strength !== 'none')
+  const first = ranked.find((x) => x.strength === 'strong') ?? ranked[0]
+  if (!first) return null
+  return {
+    file: first.f,
+    strength: first.strength as 'strong' | 'weak',
+    ignored: files.filter((o) => crewFile(o) && o !== first.f).map((o) => o.path),
+  }
+}
+
+function pickYaml(files: SubmissionFile[]): { agents: SubmissionFile; tasks: SubmissionFile | undefined; ignored: string[] } | null {
+  const agents = byShallowest(files.filter(yamlAgents), (f) => f.path)
+  const first = agents[0]
+  if (!first) return null
+  const tasks = byShallowest(files.filter(yamlTasks), (f) => f.path)
+  const sibling = tasks.find((t) => dirOf(t.path) === dirOf(first.path)) ?? tasks[0]
+  const used = new Set([first, sibling])
+  return {
+    agents: first,
+    tasks: sibling,
+    ignored: [...agents, ...tasks].filter((f) => !used.has(f)).map((f) => f.path),
+  }
+}
 
 interface RawAgent {
   id: string
@@ -190,8 +235,7 @@ function parseTasks(
   return out
 }
 
-function parseJsoncStyle(files: SubmissionFile[], hint: string): Parsed | ParseOutcome {
-  const cf = files.find(crewFile)!
+function parseJsoncStyle(files: SubmissionFile[], cf: SubmissionFile, hint: string): Parsed | ParseOutcome {
   const crew = parseJsonc(cf.text)
   if (!isObj(crew)) return failed('crewai-jsonc', ['valid crew.jsonc'])
   const warnings: string[] = []
@@ -247,9 +291,7 @@ function parseJsoncStyle(files: SubmissionFile[], hint: string): Parsed | ParseO
   }
 }
 
-function parseYamlStyle(files: SubmissionFile[], hint: string): Parsed | ParseOutcome {
-  const af = files.find(yamlAgents)!
-  const tf = files.find(yamlTasks)
+function parseYamlStyle(af: SubmissionFile, tf: SubmissionFile | undefined, hint: string): Parsed | ParseOutcome {
   let adoc: unknown
   let tdoc: unknown
   try {
@@ -279,17 +321,23 @@ function parseYamlStyle(files: SubmissionFile[], hint: string): Parsed | ParseOu
 export const crewaiAdapter: FormatAdapter = {
   id: 'crewai',
   detect(files) {
-    if (files.some(crewFile)) return { format: 'crewai-jsonc', confidence: 0.85 }
-    if (files.some(yamlAgents) && files.some(yamlTasks)) return { format: 'crewai-yaml', confidence: 0.8 }
+    const crew = pickCrew(files)
+    if (crew) return { format: 'crewai-jsonc', confidence: crew.strength === 'strong' ? 0.85 : 0.4 }
+    if (pickYaml(files) && files.some(yamlTasks)) return { format: 'crewai-yaml', confidence: 0.8 }
     return null
   },
   parse(files, ctx): ParseOutcome {
     try {
-      const jsonc = files.some(crewFile)
-      if (!jsonc && !files.some(yamlAgents)) return unrecognizedOutcome()
+      const crew = pickCrew(files)
+      const yaml = crew ? null : pickYaml(files)
+      if (!crew && !yaml) return unrecognizedOutcome()
       const hint = typeof ctx.hint === 'string' ? cap(ctx.hint.trim(), 120) : ''
-      const p = jsonc ? parseJsoncStyle(files, hint) : parseYamlStyle(files, hint)
+      const p = crew ? parseJsoncStyle(files, crew.file, hint) : parseYamlStyle(yaml!.agents, yaml!.tasks, hint)
       if ('status' in p) return p
+      const ignoredNote = crew
+        ? ignoredWarning('crew.json', crew.file.path, crew.ignored)
+        : ignoredWarning('config/agents.yaml', yaml!.agents.path, yaml!.ignored)
+      if (ignoredNote) p.warnings.push(ignoredNote)
 
       const toolNames = new Set<string>()
       const unloaded = new Set<string>()

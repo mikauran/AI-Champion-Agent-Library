@@ -17,6 +17,7 @@ import type { FormatAdapter, KindInfo, ParseOutcome, SubmissionFile } from '../k
 import { clampExtras } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
 import { capText } from '../security.js'
+import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
 
@@ -45,7 +46,7 @@ const KNOWN = new Set([
 export const langgraphAdapter: FormatAdapter = {
   id: 'langgraph',
   detect(files) {
-    for (const f of files.filter(isLg)) {
+    for (const f of byShallowest(files.filter(isLg), (x) => x.path)) {
       const o = parseJson(f.text)
       if (o && isObj(o.graphs)) return { format: 'langgraph-json', confidence: 0.5 }
     }
@@ -53,8 +54,10 @@ export const langgraphAdapter: FormatAdapter = {
   },
   parse(files, ctx): ParseOutcome {
     try {
-      const f = files.find(isLg)
+      const all = byShallowest(files.filter(isLg), (x) => x.path)
+      const f = all.find((x) => isObj(parseJson(x.text)?.graphs)) ?? all[0]
       if (!f) return unrecognizedOutcome()
+      const ignored = all.filter((x) => x !== f).map((x) => x.path)
       const o = parseJson(f.text)
       if (!o || !isObj(o.graphs)) {
         return {
@@ -120,7 +123,10 @@ export const langgraphAdapter: FormatAdapter = {
         record, kindInfo,
         missingFromAuthor: ['name', 'summary', 'members', 'topology', 'category (add catalog.yaml)'],
         unknownFields: Object.keys(unknown),
-        warnings: ['langgraph.json holds no topology; add a catalog.yaml describing the system'],
+        warnings: [
+          'langgraph.json holds no topology; add a catalog.yaml describing the system',
+          ...[ignoredWarning('langgraph.json', f.path, ignored)].filter((w): w is string => w !== null),
+        ],
       }
     } catch (e) {
       return unrecognizedOutcome([`langgraph: ${e instanceof Error ? e.message : 'error'}`])

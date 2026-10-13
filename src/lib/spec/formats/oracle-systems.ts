@@ -35,6 +35,7 @@ import { clampExtras, MEMBERS_MAX } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
 import { redactSecrets, scanSecrets } from '../security.js'
 import { safeHttpUrl } from '../../safeUrl.js'
+import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
 type SystemType = 'Swarm' | 'ManagerWorkers' | 'Flow' | 'A2AAgent'
@@ -91,8 +92,9 @@ function candidates(files: SubmissionFile[]): Candidate[] {
       out.push({ file, doc, type: t as Candidate['type'] })
     }
   }
-  // systems first (stable), then single agents
-  return out.sort((a, b) => Number(a.type === 'Agent') - Number(b.type === 'Agent'))
+  // systems first, then single agents; within each, the shallowest path wins (WR-02)
+  const shallow = byShallowest(out, (c) => c.file.path)
+  return [...shallow.filter((c) => c.type !== 'Agent'), ...shallow.filter((c) => c.type === 'Agent')]
 }
 
 // ---- reference resolution ---------------------------------------------------------------
@@ -426,9 +428,13 @@ export const oracleSystemsAdapter: FormatAdapter = {
     return { format: 'oracle-agentspec', confidence: best.type === 'Agent' ? 0.8 : 0.9 }
   },
   parse(files, ctx) {
-    const best = candidates(files)[0]
+    const all = candidates(files)
+    const best = all[0]
     if (!best) return unrecognizedOutcome()
-    return parseCandidate(best, ctx)
+    const outcome = parseCandidate(best, ctx)
+    // WR-02: one submission yields one record; say so when other definitions were left out.
+    const note = ignoredWarning('Oracle AgentSpec', best.file.path, all.slice(1).map((c) => c.file.path))
+    return note ? { ...outcome, warnings: [...outcome.warnings, note] } : outcome
   },
 }
 

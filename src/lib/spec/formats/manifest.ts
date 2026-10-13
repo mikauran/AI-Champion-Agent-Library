@@ -33,6 +33,7 @@ import type {
 import { AGENT_KIND_VALUES, clampExtras, MEMBERS_MAX } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
 import { redactSecrets, scanSecrets } from '../security.js'
+import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
 const FORMAT = 'catalog-manifest'
@@ -61,13 +62,19 @@ function strList(v: unknown): string[] {
   return out
 }
 
-function load(files: SubmissionFile[]): { doc: Obj } | null {
-  for (const file of Array.isArray(files) ? files : []) {
-    if (!file || typeof file.path !== 'string' || typeof file.text !== 'string') continue
-    if (!CATALOG_RE.test(file.path)) continue
+function load(files: SubmissionFile[]): { doc: Obj; path: string; ignored: string[] } | null {
+  const catalogs = byShallowest(
+    (Array.isArray(files) ? files : []).filter(
+      (f) => f && typeof f.path === 'string' && typeof f.text === 'string' && CATALOG_RE.test(f.path),
+    ),
+    (f) => f.path,
+  )
+  for (const file of catalogs) {
     try {
       const doc: unknown = parseYaml(file.text, { maxAliasCount: 100 })
-      if (isObj(doc) && str(doc.name)) return { doc }
+      if (isObj(doc) && str(doc.name)) {
+        return { doc, path: file.path, ignored: catalogs.filter((f) => f !== file).map((f) => f.path) }
+      }
     } catch {
       /* not parseable: not detected */
     }
@@ -236,7 +243,11 @@ export const manifestAdapter: FormatAdapter = {
   parse(files, ctx) {
     try {
       const hit = load(files)
-      if (hit) return parseDoc(hit.doc, ctx.now)
+      if (hit) {
+        const outcome = parseDoc(hit.doc, ctx.now)
+        const note = ignoredWarning('catalog.yaml', hit.path, hit.ignored)
+        return note ? { ...outcome, warnings: [...outcome.warnings, note] } : outcome
+      }
       for (const f of Array.isArray(files) ? files : []) {
         if (f && typeof f.path === 'string' && CATALOG_RE.test(f.path)) {
           return {

@@ -19,6 +19,7 @@ import type { FormatAdapter, KindInfo, ParseOutcome, SubmissionFile } from '../k
 import { clampExtras } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
 import { capText } from '../security.js'
+import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
 
@@ -87,7 +88,7 @@ function prettify(name: string): string {
 export const mcpServerJsonAdapter: FormatAdapter = {
   id: 'mcp-server-json',
   detect(files) {
-    for (const f of files.filter(isServerJson)) {
+    for (const f of byShallowest(files.filter(isServerJson), (x) => x.path)) {
       const o = parseJson(f.text)
       if (o && looksLikeMcp(o)) return { format: 'mcp-server-json', confidence: 0.85 }
     }
@@ -95,8 +96,10 @@ export const mcpServerJsonAdapter: FormatAdapter = {
   },
   parse(files, ctx): ParseOutcome {
     try {
-      const f = files.find(isServerJson)
+      const all = byShallowest(files.filter(isServerJson), (x) => x.path)
+      const f = all.find((x) => { const j = parseJson(x.text); return j !== undefined && looksLikeMcp(j) }) ?? all[0]
       if (!f) return unrecognizedOutcome()
+      const ignored = all.filter((x) => x !== f).map((x) => x.path)
       const o = parseJson(f.text)
       if (!o) {
         return {
@@ -112,6 +115,8 @@ export const mcpServerJsonAdapter: FormatAdapter = {
         }
       }
       const warnings: string[] = []
+      const ignoredNote = ignoredWarning('server.json', f.path, ignored)
+      if (ignoredNote) warnings.push(ignoredNote)
       const transports = new Set<string>()
       const packageIdentifiers: string[] = []
       const remoteUrls: string[] = []

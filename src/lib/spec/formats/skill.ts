@@ -25,6 +25,7 @@ import type { FormatAdapter, KindInfo, ParseOutcome, SubmissionFile } from '../k
 import { clampExtras } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
 import { capText, redactSecrets, scanSecrets } from '../security.js'
+import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
 
@@ -82,19 +83,35 @@ function isFile(f: unknown): f is SubmissionFile {
 }
 
 type Hit =
-  | { type: 'skill'; file: SubmissionFile; files: SubmissionFile[] }
-  | { type: 'subagent'; file: SubmissionFile; parsed: Parsed }
+  | { type: 'skill'; file: SubmissionFile; files: SubmissionFile[]; ignored: string[] }
+  | { type: 'subagent'; file: SubmissionFile; parsed: Parsed; ignored: string[] }
+
+/** Subagents live under an `agents/` folder (usually `.claude/agents/`) or declare tools or model (WR-03). */
+const SUBAGENT_DIR = /(^|\/)agents\/[^/]+\.md$/i
 
 function find(files: SubmissionFile[]): Hit | null {
   const list = (Array.isArray(files) ? files : []).filter(isFile)
-  const skill = list.find((f) => basename(f.path) === 'SKILL.md' && hasFrontmatterFence(f.text))
-  if (skill) return { type: 'skill', file: skill, files: list }
+  // WR-02: the shallowest match wins, so the submission's own SKILL.md beats one in a subfolder.
+  const skills = byShallowest(
+    list.filter((f) => basename(f.path) === 'SKILL.md' && hasFrontmatterFence(f.text)),
+    (f) => f.path,
+  )
+  if (skills[0]) {
+    return { type: 'skill', file: skills[0], files: list, ignored: skills.slice(1).map((f) => f.path) }
+  }
+  const subagents: Array<{ file: SubmissionFile; parsed: Parsed }> = []
   for (const f of list) {
     if (!/\.md$/i.test(f.path) || basename(f.path) === 'SKILL.md') continue
     const parsed = splitFrontmatter(f.text)
-    if (parsed.fm && str(parsed.fm.name) && str(parsed.fm.description)) return { type: 'subagent', file: f, parsed }
+    if (!parsed.fm || !str(parsed.fm.name) || !str(parsed.fm.description)) continue
+    // WR-03: a blog post or CHANGELOG with name+description frontmatter is not an agent.
+    if (!SUBAGENT_DIR.test(f.path) && parsed.fm.tools === undefined && parsed.fm.model === undefined) continue
+    subagents.push({ file: f, parsed })
   }
-  return null
+  const ordered = byShallowest(subagents, (x) => x.file.path)
+  const first = ordered[0]
+  if (!first) return null
+  return { type: 'subagent', file: first.file, parsed: first.parsed, ignored: ordered.slice(1).map((x) => x.file.path) }
 }
 
 function toolList(v: unknown, sep: RegExp): string[] {
@@ -260,7 +277,9 @@ export const skillAdapter: FormatAdapter = {
     try {
       const hit = find(files)
       if (!hit) return unrecognizedOutcome()
-      return hit.type === 'skill' ? parseSkill(hit, ctx.now) : parseSubagent(hit, ctx.now)
+      const outcome = hit.type === 'skill' ? parseSkill(hit, ctx.now) : parseSubagent(hit, ctx.now)
+      const note = ignoredWarning(hit.type === 'skill' ? 'SKILL.md' : 'subagent', hit.file.path, hit.ignored)
+      return note ? { ...outcome, warnings: [...outcome.warnings, note] } : outcome
     } catch (e) {
       return unrecognizedOutcome([`could not read submission: ${e instanceof Error ? e.message : 'error'}`])
     }
