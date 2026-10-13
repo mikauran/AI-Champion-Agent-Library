@@ -16,7 +16,7 @@ import { slugify } from '../types.js'
 import type { FormatAdapter, KindInfo, ParseOutcome, SubmissionFile } from '../kinds.js'
 import { clampExtras } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { capText } from '../security.js'
+import { capText, setOwn } from '../security.js'
 import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
@@ -68,13 +68,13 @@ export const langgraphAdapter: FormatAdapter = {
       const graphIds = Object.keys(o.graphs).slice(0, 50).map((k) => cap(k, 100))
       const graphEntrypoints: Record<string, string> = {}
       for (const [k, v] of Object.entries(o.graphs).slice(0, 50)) {
-        if (typeof v === 'string') graphEntrypoints[cap(k, 100)] = cap(v, 300)
+        if (typeof v === 'string') setOwn(graphEntrypoints, cap(k, 100), cap(v, 300))
       }
       const dependencies = Array.isArray(o.dependencies)
         ? o.dependencies.filter((d): d is string => typeof d === 'string').slice(0, 100).map((d) => cap(d, 200))
         : []
       const unknown: Obj = {}
-      for (const k of Object.keys(o)) if (!KNOWN.has(k)) unknown[k] = o[k]
+      for (const k of Object.keys(o)) if (!KNOWN.has(k)) setOwn(unknown, k, o[k])
       const parts = f.path.split('/')
       const folder = parts.length >= 2 ? parts[parts.length - 2]! : ''
       // CR-02: root-level files have no folder in their path, so fall back to the submission hint

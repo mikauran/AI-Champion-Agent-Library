@@ -30,7 +30,7 @@ import type {
 } from '../kinds.js'
 import { clampExtras, MEMBERS_MAX } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { capText } from '../security.js'
+import { capText, setOwn } from '../security.js'
 import { byShallowest, dirOf, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
@@ -269,7 +269,7 @@ function parseJsoncStyle(files: SubmissionFile[], cf: SubmissionFile, hint: stri
   const hierarchical =
     crew.process === 'hierarchical' || crew.manager_llm !== undefined || crew.manager_agent !== undefined
   const unknown: Obj = {}
-  for (const [k, v] of Object.entries(crew)) if (!CREW_KNOWN.has(k)) unknown[k] = v
+  for (const [k, v] of Object.entries(crew)) if (!CREW_KNOWN.has(k)) setOwn(unknown, k, v)
   const models = new Set<string>()
   if (typeof crew.manager_llm === 'string') models.add(crew.manager_llm)
   return {

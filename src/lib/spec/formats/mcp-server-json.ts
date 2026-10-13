@@ -18,7 +18,7 @@ import { slugify } from '../types.js'
 import type { FormatAdapter, KindInfo, ParseOutcome, SubmissionFile } from '../kinds.js'
 import { clampExtras } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { capText } from '../security.js'
+import { capText, setOwn } from '../security.js'
 import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
@@ -144,7 +144,7 @@ export const mcpServerJsonAdapter: FormatAdapter = {
       envNames(pick(o, 'environment_variables', 'environmentVariables'), env)
 
       const unknown: Obj = {}
-      for (const [k, v] of Object.entries(o)) if (!KNOWN.has(k)) unknown[k] = v
+      for (const [k, v] of Object.entries(o)) if (!KNOWN.has(k)) setOwn(unknown, k, v)
 
       const repoUrl = isObj(o.repository) ? str(o.repository.url) : null
       const githubUrl = repoUrl && /^https?:\/\//i.test(repoUrl) ? cap(repoUrl, 500) : null

@@ -24,7 +24,7 @@ import { slugify } from '../types.js'
 import type { FormatAdapter, KindInfo, ParseOutcome, SubmissionFile } from '../kinds.js'
 import { clampExtras } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { capText, redactSecrets, scanSecrets } from '../security.js'
+import { capText, redactSecrets, scanSecrets, setOwn } from '../security.js'
 import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
@@ -199,7 +199,7 @@ function parseSkill(hit: Extract<Hit, { type: 'skill' }>, now: string): ParseOut
   }
 
   const extras: Obj = {}
-  for (const k of unknownFields) extras[k] = fm[k]
+  for (const k of unknownFields) setOwn(extras, k, fm[k])
   if (fm.license !== undefined) extras.license = fm.license
   if (compat) extras.compatibility = compat
   if (isObj(fm.metadata)) extras.metadata = fm.metadata
@@ -238,7 +238,7 @@ function parseSubagent(hit: Extract<Hit, { type: 'subagent' }>, now: string): Pa
   record.toolNames = toolList(fm.tools, /\s*,\s*/)
 
   const extras: Obj = {}
-  for (const k of unknownFields) extras[k] = fm[k]
+  for (const k of unknownFields) setOwn(extras, k, fm[k])
   const model = str(fm.model)
   if (model) {
     if (MODEL_ALIASES.includes(model.toLowerCase())) extras.modelAlias = model

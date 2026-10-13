@@ -32,7 +32,7 @@ import type {
 } from '../kinds.js'
 import { AGENT_KIND_VALUES, clampExtras, MEMBERS_MAX } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { redactSecrets, scanSecrets } from '../security.js'
+import { redactSecrets, scanSecrets, setOwn } from '../security.js'
 import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
@@ -177,13 +177,13 @@ function parseDoc(doc: Obj, now: string): ParseOutcome {
   const members = parseMembers(doc.members, warnings)
 
   const extras: Obj = {}
-  for (const k of unknownFields) extras[k] = doc[k]
+  for (const k of unknownFields) setOwn(extras, k, doc[k])
   if (kind === 'mcp-server') {
     const mcp: Obj = {}
     const src = isObj(doc.mcp) ? { ...doc.mcp } : {}
     for (const k of MCP_KEYS) {
       const v = doc[k] ?? src[k]
-      if (v !== undefined) mcp[k] = v
+      if (v !== undefined) setOwn(mcp, k, v)
     }
     const names = envNames(doc.env ?? src.env)
     if (names.length > 0) mcp.envVarNames = names

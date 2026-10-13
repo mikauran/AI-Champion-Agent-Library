@@ -33,7 +33,7 @@ import type {
 } from '../kinds.js'
 import { clampExtras, MEMBERS_MAX } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { redactSecrets, scanSecrets } from '../security.js'
+import { redactSecrets, scanSecrets, setOwn } from '../security.js'
 import { safeHttpUrl } from '../../safeUrl.js'
 import { byShallowest, ignoredWarning } from '../paths.js'
 
@@ -180,7 +180,7 @@ function toMember(r: Resolved, role: MemberRole, ctx: Ctx): AgentMember {
 function memberFields(r: Resolved): Obj | null {
   if (!r.comp) return null
   const o: Obj = {}
-  for (const [k, v] of Object.entries(r.comp)) if (!OMIT_FROM_MEMBER_FIELDS.has(k)) o[k] = v
+  for (const [k, v] of Object.entries(r.comp)) if (!OMIT_FROM_MEMBER_FIELDS.has(k)) setOwn(o, k, v)
   return Object.keys(o).length > 0 ? o : null
 }
 
@@ -269,14 +269,15 @@ function readFlow(doc: Obj, ctx: Ctx): SystemRead {
   }
   for (const n of nodes) if (!seen.has(n.ref)) ordered.push(n)
 
-  const nodeTypes: Record<string, number> = {}
+  // Map, not a plain object: author-controlled node types like `constructor` must not read inherited members.
+  const nodeTypes = new Map<string, number>()
   const members: SystemRead['members'] = []
   for (const n of ordered) {
     const t = (n.comp && typeOf(n.comp)) ?? 'unknown'
-    nodeTypes[t] = (nodeTypes[t] ?? 0) + 1
+    nodeTypes.set(t, (nodeTypes.get(t) ?? 0) + 1)
     if (t === 'AgentNode') members.push({ r: n, role: 'step' })
   }
-  const extras: Obj = { nodeTypes }
+  const extras: Obj = { nodeTypes: Object.fromEntries([...nodeTypes].filter(([k]) => k !== '__proto__')) }
   if (start) extras.startNode = start
   if (doc.control_flow_connections !== undefined) extras.controlFlow = doc.control_flow_connections
   return { kind: 'system', topology: 'pipeline', members, extras }
@@ -377,17 +378,17 @@ function parseCandidate(c: Candidate, ctxIn: { now: string }): ParseOutcome {
   const members = picked.map((m) => toMember(m.r, m.role, ctx))
 
   const extras: Obj = { ...read.extras }
-  for (const k of unknownFields) extras[k] = doc[k]
+  for (const k of unknownFields) setOwn(extras, k, doc[k])
   if (isObj(doc.metadata)) {
     const rest: Obj = {}
     const consumed = new Set(['category', 'tags', 'github_url', 'maturity', 'link_label'])
-    for (const [k, v] of Object.entries(doc.metadata)) if (!consumed.has(k)) rest[k] = v
+    for (const [k, v] of Object.entries(doc.metadata)) if (!consumed.has(k)) setOwn(rest, k, v)
     if (Object.keys(rest).length > 0) extras.metadata = rest
   }
   const fields: Obj = {}
   for (const m of picked) {
     const f = memberFields(m.r)
-    if (f) fields[m.r.ref] = f
+    if (f) setOwn(fields, m.r.ref, f)
   }
   if (Object.keys(fields).length > 0) extras.memberFields = fields
   if (type === 'Swarm' && !str(doc.first_agent) && !isObj(doc.first_agent)) {
