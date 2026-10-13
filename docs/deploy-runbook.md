@@ -143,6 +143,7 @@ Notes from the files:
 
 - `GET /health` returns `{"status":"ok"}` and is public even when sign-in is required. The image `HEALTHCHECK` calls it every 30 s.
 - It only proves the process serves HTTP. Also check `/catalog` (needs sign-in unless `AUTH_ENABLED=false`) and, after start, the container log for `Try It Out service failed to start` or `Search warm-up failed` warnings (both non-fatal).
+- Pre-release runtime check: `npm run smoke` builds the server and probes it across all flag configurations (see `docs/smoke-test.md`).
 
 ## 8. Rollback
 
