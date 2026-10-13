@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { isReservedEnvName } from '../envNames'
 import { lineChannel, type Channel } from '../jsonrpc'
 
 export const STDERR_CAP_BYTES = 64 * 1024
@@ -34,6 +35,10 @@ export interface StdioOptions {
 export function spawnStdioChannel(opts: StdioOptions): Channel {
   if (opts.allowLocalExec !== true) {
     throw new StdioSpawnError('exec-not-allowed', 'local execution of a subject requires allowLocalExec: true')
+  }
+  // WR-10: caller variables may not replace PATH, HOME, LANG or change the loader or interpreter.
+  for (const k of Object.keys(opts.env ?? {})) {
+    if (isReservedEnvName(k)) throw new StdioSpawnError('spawn-failed', `reserved environment variable name: ${k.slice(0, 40)}`)
   }
   const home = mkdtempSync(join(tmpdir(), 'aic-mcp-home-'))
   const env: Record<string, string> = { PATH: process.env.PATH ?? '', LANG: process.env.LANG ?? 'C', HOME: home }

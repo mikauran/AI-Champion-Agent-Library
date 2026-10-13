@@ -4,6 +4,7 @@
 // scrubbed environment (core/transports/stdio). Exit codes: 0 verdict PASS, 1 other verdict, 2 usage error.
 import { mkdir, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
+import { isReservedEnvName } from '../src/lib/mcptest/core/envNames'
 import { ReportSchema, renderMatrix, renderSummary, type Report } from '../src/lib/mcptest/core/report'
 import { runSuite } from '../src/lib/mcptest/core/runner'
 import { loadSuite, type SuiteCase } from '../src/lib/mcptest/core/suite'
@@ -133,6 +134,7 @@ function parseArgs(argv: string[]): ParseResult {
       } else if (a === '--out') p.out = v
       else {
         if (!ENV_NAME.test(v)) return { ok: false, error: `${a} must match ${ENV_NAME.source}` }
+        if (isReservedEnvName(v)) return { ok: false, error: `${a} must not name a reserved variable (PATH, HOME, LANG, LD_*, NODE_*, PYTHON* ...)` }
         if (a === '--env-base-url') p.envBaseUrl = v
         else p.envApiKey = v
       }

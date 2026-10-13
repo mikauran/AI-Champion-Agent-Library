@@ -29,7 +29,8 @@ describe('DriverRequestSchema', () => {
     expect(ok({ v: 1, subject: { ...staged, args: ['a/../../x'] } })).toBe(false)
     expect(ok({ v: 1, subject: { ...staged, args: ['/etc/passwd'] } })).toBe(false)
     expect(ok({ v: 1, subject: { ...staged, args: Array(9).fill('a') } })).toBe(false)
-    expect(ok({ v: 1, subject: { ...staged, args: Array(8).fill('a') } })).toBe(true)
+    // WR-10: the first argument must be a script file; this line pinned the 8-argument cap with a bare 'a'.
+    expect(ok({ v: 1, subject: { ...staged, args: ['server.py', ...Array(7).fill('a')] } })).toBe(true)
     expect(ok({ v: 1, subject: { ...staged, cwd: '/work/other' } })).toBe(false)
     expect(ok({ v: 1, subject: { ...staged, cwd: '/work/pkgx' } })).toBe(false)
     expect(ok({ v: 1, subject: { ...staged, cwd: '/work/pkg/../etc' } })).toBe(false)
