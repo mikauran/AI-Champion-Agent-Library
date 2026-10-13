@@ -46,9 +46,11 @@ export function spawnStdioChannel(opts: StdioOptions): Channel {
     }
   }
 
+  // WR-05: the subject gets its own process group so that daemons it forks die with it (POSIX only).
+  const grouped = process.platform !== 'win32'
   let child
   try {
-    child = spawn(opts.command, opts.args ?? [], { cwd: opts.cwd, env, stdio: ['pipe', 'pipe', 'pipe'] })
+    child = spawn(opts.command, opts.args ?? [], { cwd: opts.cwd, env, stdio: ['pipe', 'pipe', 'pipe'], detached: grouped })
   } catch (e) {
     cleanup()
     throw new StdioSpawnError('spawn-failed', e instanceof Error ? e.message : String(e))
@@ -77,6 +79,20 @@ export function spawnStdioChannel(opts: StdioOptions): Channel {
     ch.emitClose({ code, signal })
   })
 
+  /** Signals the whole process group (falls back to the child alone). */
+  const killTree = (sig: NodeJS.Signals) => {
+    try {
+      if (grouped && child.pid) process.kill(-child.pid, sig)
+      else child.kill(sig)
+    } catch {
+      try {
+        child.kill(sig)
+      } catch {
+        /* already gone */
+      }
+    }
+  }
+
   const waitExit = (ms: number) =>
     new Promise<void>((resolve) => {
       if (exited) return resolve()
@@ -102,13 +118,15 @@ export function spawnStdioChannel(opts: StdioOptions): Channel {
       }
       await waitExit(grace)
       if (!exited) {
-        child.kill('SIGTERM')
+        killTree('SIGTERM')
         await waitExit(grace)
       }
       if (!exited) {
-        child.kill('SIGKILL')
+        killTree('SIGKILL')
         await waitExit(grace * 4)
       }
+      // Anything the subject forked into its group must not outlive the case, even after a clean exit.
+      killTree('SIGKILL')
       cleanup()
     }
   }
