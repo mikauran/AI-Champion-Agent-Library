@@ -3,25 +3,30 @@
   import GenerateMcpPanel from './GenerateMcpPanel.svelte'
 
   // Phase 14: generatorEnabled (fed from the detail load, default off) adds a fourth, enabled item.
-  let { generatorEnabled = false }: { generatorEnabled?: boolean } = $props()
+  // Phase 15: testerEnabled (fed from the detail load, default off) appends a link to /mcp-test.
+  let { generatorEnabled = false, testerEnabled = false }: { generatorEnabled?: boolean; testerEnabled?: boolean } = $props()
 
-  type Item = { id: string; label: string; description: string; action?: 'generate' }
+  type Item = { id: string; label: string; description: string; action?: 'generate'; href?: string }
   const placeholders: Item[] = [
     { id: 'configure-fields', label: 'Configure fields', description: 'Choose which agent fields to tailor' },
     { id: 'connect-data', label: 'Connect your data', description: 'Connect your own data sources' },
     { id: 'change-model', label: 'Change model', description: 'Pick a different language model' },
   ]
+  const generateItem: Item = {
+    id: 'generate-mcp',
+    label: 'Generate MCP',
+    description: 'Generate an MCP server from a schema or spec',
+    action: 'generate',
+  }
+  const testerItem: Item = {
+    id: 'mcp-test',
+    label: 'Test MCP servers',
+    description: 'Score an MCP server with the benchmark cases',
+    href: '/mcp-test',
+  }
   const items: Item[] = $derived(
-    generatorEnabled
-      ? [
-          ...placeholders,
-          {
-            id: 'generate-mcp',
-            label: 'Generate MCP',
-            description: 'Generate an MCP server from a schema or spec',
-            action: 'generate',
-          },
-        ]
+    generatorEnabled || testerEnabled
+      ? [...placeholders, ...(generatorEnabled ? [generateItem] : []), ...(testerEnabled ? [testerItem] : [])]
       : placeholders
   )
 
@@ -48,7 +53,7 @@
   let note = $state('')
   let wrapper: HTMLDivElement | undefined = $state()
   let trigger: HTMLButtonElement | undefined = $state()
-  let itemEls: (HTMLButtonElement | undefined)[] = $state([])
+  let itemEls: (HTMLElement | undefined)[] = $state([])
 
   function focusItem(i: number) {
     const n = items.length
@@ -133,7 +138,17 @@
       onkeydown={onMenuKeydown}
     >
       {#each items as item, i (item.id)}
-        {#if item.action === 'generate'}
+        {#if item.href}
+          <a
+            role="menuitem"
+            href={item.href}
+            bind:this={itemEls[i]}
+            class="flex w-full flex-col items-start gap-1 rounded px-3 py-2 text-left text-gray-900 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+          >
+            <span class="text-sm font-medium">{item.label}</span>
+            <span class="text-xs text-gray-600">{item.description}</span>
+          </a>
+        {:else if item.action === 'generate'}
           <button
             type="button"
             role="menuitem"
