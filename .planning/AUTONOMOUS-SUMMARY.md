@@ -1,5 +1,11 @@
 # Autonomous run summary
 
+## Status (read this first)
+- Queue complete: 2.1, 2.2, 3, 4, 9, 10, 11, 12, 13, 14, 15 all built, merged on `autonomous/overnight-improvements`, `npm run check` green (208 files / 2087 tests, tsc clean). Phases 3, 4, 9, 10, 11, 13, 14, 15 end `human_needed` (browser / live-container / real-model checks), Phase 12 passed, Phase 2 still pending its human checkpoint 02-04.
+- Post-queue code review + fix pass done for Phases 13, 14, 15 (reports `13-REVIEW.md`, `14-REVIEW.md`, `15-REVIEW.md`; fixes in `*-REVIEW-FIX.md`; decisions D-200..D-259): Phase 13 redaction bypass, slug collisions, `javascript:` href; Phase 14 scanner ReDoS, allOf fan-out DoS, credentials reaching generated files, generated-code path traversal; Phase 15 false-PASS paths (zero scored checks, missing golden), container path mismatches (user, tsx PATH, staging), HTTP redirect/SSRF, flag-off 405s, `/mcp-test` 500. Phases 3 and 9 had earlier review/security passes.
+- Test-flake fix (D-163): vitest timeouts raised after a load-sensitive `jobs.test.ts` failure.
+- Not yet done: repo-wide docs/dependency/runbook pass, free-exploration loop (UI-02/UI-04, DISC-02, perf profiling, empty/error states, Phase 8 tests), final milestone audit. Updated below as each lands.
+
 ## Completed
 - Phase 2.1 Green Baseline: `npx tsc --noEmit` exits 0 (was 22 errors in 4 test files); `npx vitest run` 43/43 files, 411/411 tests; `npm run check` added and exits 0. Decision D-005. Test files only plus package.json; no production changes.
 - Phase 2.2 Scale and Seed Data: seeded generator of 150 synthetic agents (`npm run fixtures:scale`, output gitignored), ingest of 150 verified idempotent (first ~650ms, re-ingest ~380ms), catalog pagination (7 pages) and every filter verified unmocked against a temp DB. `npm run check` exits 0 (46 files, 426 tests). Decision D-007. Test/script files only; no production or data/ changes.
