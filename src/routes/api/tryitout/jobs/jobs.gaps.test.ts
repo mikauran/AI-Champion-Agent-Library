@@ -238,7 +238,7 @@ describe('GET status / artifact mapping', () => {
 
   it('status exposes events and the (already public) error text of a failed job', async () => {
     const j = jobs.createJob('demo', 't', null)
-    jobs.pushEvent(j.jobId, 'info', 'hello')
+    jobs.pushEvent(j.jobId, 'hello', 'info')
     jobs.setStatus(j.jobId, 'failed', 'container engine unavailable')
     const body = await (await GET_STATUS(get(j.jobId))).json()
     expect(body.status).toBe('failed')

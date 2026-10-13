@@ -202,10 +202,10 @@ describe('usage accounting', () => {
 
 describe('buildUpstreamBody edge cases', () => {
   it.each([
-    [{ max_tokens: -1 }, 'max_tokens'],
-    [{ max_tokens: 0 }, 'max_tokens'],
-    [{ max_tokens: Infinity }, 'max_tokens'],
-    [{ max_tokens: '100' }, 'max_tokens'],
+    [{ max_tokens: -1 }],
+    [{ max_tokens: 0 }],
+    [{ max_tokens: Infinity }],
+    [{ max_tokens: '100' }],
   ])('invalid %j is dropped and replaced by the default cap', (input) => {
     const out = buildUpstreamBody({ messages: [], ...input }, 'm')
     expect(out.max_tokens).toBe(MAX_COMPLETION_TOKENS)
