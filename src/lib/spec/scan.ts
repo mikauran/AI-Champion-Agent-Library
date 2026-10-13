@@ -16,6 +16,26 @@ const BINARY_EXT = new Set([
   '.mp3', '.mp4', '.wasm', '.pyc',
 ])
 
+/** Well-known credential files and key material, matched case-insensitively (IN-04). */
+const SECRET_NAMES = new Set([
+  '.npmrc', '.netrc', '.pypirc', '.htpasswd', '.pgpass', '.git-credentials', '.dockercfg',
+  'credentials', 'credentials.json', 'secrets.json', 'secrets.yaml', 'secrets.yml', 'service-account.json',
+])
+const SECRET_EXT = new Set(['.pem', '.key', '.p12', '.pfx', '.jks', '.keystore', '.ppk', '.kdbx'])
+
+export function isSecretFileName(name: string): boolean {
+  const n = name.toLowerCase()
+  return (
+    n.startsWith('.env') ||
+    n.startsWith('id_rsa') ||
+    n.startsWith('id_dsa') ||
+    n.startsWith('id_ecdsa') ||
+    n.startsWith('id_ed25519') ||
+    SECRET_NAMES.has(n) ||
+    SECRET_EXT.has(ext(n))
+  )
+}
+
 function ext(name: string): string {
   const i = name.lastIndexOf('.')
   return i < 0 ? '' : name.slice(i).toLowerCase()
@@ -28,7 +48,7 @@ export function readSubmissionDir(dir: string): { files: SubmissionFile[]; skipp
 
   const addFile = (abs: string, rel: string): void => {
     const name = basename(abs)
-    if (name.startsWith('.env') || BINARY_EXT.has(ext(name)) || files.length >= SCAN_MAX_FILES) {
+    if (isSecretFileName(name) || BINARY_EXT.has(ext(name)) || files.length >= SCAN_MAX_FILES) {
       skipped.push(rel)
       return
     }

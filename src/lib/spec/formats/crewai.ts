@@ -297,8 +297,10 @@ function parseYamlStyle(af: SubmissionFile, tf: SubmissionFile | undefined, hint
   try {
     adoc = parseYaml(af.text)
     tdoc = tf ? parseYaml(tf.text) : undefined
-  } catch {
-    return failed('crewai-yaml', ['valid config/agents.yaml and config/tasks.yaml'])
+  } catch (e) {
+    return failed('crewai-yaml', ['valid config/agents.yaml and config/tasks.yaml'], [
+      `YAML could not be parsed: ${cap(e instanceof Error ? e.message : 'error', 200)}`,
+    ])
   }
   if (!isObj(adoc)) return failed('crewai-yaml', ['valid config/agents.yaml'])
   const agents: RawAgent[] = []

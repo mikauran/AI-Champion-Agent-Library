@@ -32,7 +32,7 @@ import type {
 } from '../kinds.js'
 import { AGENT_KIND_VALUES, clampExtras, MEMBERS_MAX } from '../kinds.js'
 import { unrecognizedOutcome } from '../outcome.js'
-import { redactSecrets, scanSecrets, setOwn } from '../security.js'
+import { capText, redactSecrets, scanSecrets, setOwn } from '../security.js'
 import { byShallowest, ignoredWarning } from '../paths.js'
 
 type Obj = Record<string, unknown>
@@ -93,6 +93,16 @@ function hasCatalogObject(files: SubmissionFile[]): boolean {
     }
   }
   return false
+}
+
+/** Why a catalog file is unusable: the (clamped) YAML error, e.g. the alias limit, or the missing name. */
+function catalogProblem(text: string): string {
+  try {
+    const doc: unknown = parseYaml(text, { maxAliasCount: 100 })
+    return isObj(doc) ? 'catalog.yaml has no usable name' : 'catalog.yaml is not a mapping'
+  } catch (e) {
+    return `catalog.yaml could not be parsed: ${capText(e instanceof Error ? e.message : 'error', 200).text}`
+  }
 }
 
 function safeHttpUrl(v: unknown): string | null {
@@ -234,7 +244,8 @@ export const manifestAdapter: FormatAdapter = {
       if (load(files)) return { format: FORMAT, confidence: 0.9 }
       // WR-01: a catalog.yaml that parses but has no name is still a catalog manifest. It is
       // detected at low confidence so that parse() can report the missing name (a failure for
-      // the author) instead of the folder being skipped as "not a submission".
+      // the author) instead of the folder being skipped as "not a submission". An unparseable
+      // file stays undetected (pinned by manifest.test.ts; IN-03 is only covered at parse level).
       return hasCatalogObject(files) ? { format: FORMAT, confidence: 0.3 } : null
     } catch {
       return null
@@ -252,7 +263,7 @@ export const manifestAdapter: FormatAdapter = {
         if (f && typeof f.path === 'string' && CATALOG_RE.test(f.path)) {
           return {
             status: 'missing-from-author', format: FORMAT, record: null, kindInfo: null,
-            missingFromAuthor: ['name'], unknownFields: [], warnings: ['catalog.yaml has no usable name'],
+            missingFromAuthor: ['name'], unknownFields: [], warnings: [catalogProblem(f.text)],
           }
         }
       }
