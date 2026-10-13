@@ -25,6 +25,10 @@ export function uiSpecViewerEnabled(
   return typeof v === 'string' && TRUTHY.has(v.trim().toLowerCase())
 }
 
+/** DISC-02 side-by-side agent comparison flag (AGENT_COMPARE), default off. Implemented in
+ * compareFlag.ts so loaders that tests mock `$lib/flags.js` for still read it from the environment (D-364). */
+export { agentCompareEnabled } from './compareFlag.js'
+
 /** Phase 15 MCP tester flag (MCP_TESTER), default off. */
 export function mcpTesterEnabled(
   env: Record<string, string | undefined> = process.env

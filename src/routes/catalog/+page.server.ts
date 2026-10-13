@@ -3,6 +3,7 @@ import { eq, and, asc, inArray } from 'drizzle-orm'
 import { search } from '$lib/server/search/index.js'
 import { parsePage, parseKind } from '$lib/catalogUrl'
 import { agentKindsEnabled } from '$lib/flags.js'
+import { catalogCompareData } from '$lib/compare.js'
 import { effectiveTryItOutMode } from '$lib/spec/kinds.js'
 import type { PageServerLoad } from './$types'
 
@@ -173,6 +174,7 @@ export const load: PageServerLoad = async ({ url }) => {
       }
     })
     return {
+      ...catalogCompareData(url),
       agents: withKind,
       total,
       searchDegraded,
@@ -188,6 +190,7 @@ export const load: PageServerLoad = async ({ url }) => {
   }
 
   return {
+    ...catalogCompareData(url),
     agents: agentList,
     total,
     searchDegraded,

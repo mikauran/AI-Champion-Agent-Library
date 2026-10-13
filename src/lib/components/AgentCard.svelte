@@ -14,8 +14,10 @@
       kind?: string
       framework?: string | null
     }
+    /** DISC-02: only passed when AGENT_COMPARE is on; absent means the card renders exactly as before. */
+    compare?: { checked: boolean; disabled: boolean; onchange: (checked: boolean) => void }
   }
-  let { agent }: Props = $props()
+  let { agent, compare }: Props = $props()
 </script>
 
 <article class="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow motion-reduce:transition-none hover:shadow-md">
@@ -71,4 +73,18 @@
       </a>
     {/if}
   </div>
+  {#if compare}
+    <label class="mt-2 inline-flex min-h-[44px] items-center gap-2 text-sm text-gray-700">
+      <input
+        type="checkbox"
+        name="agents"
+        value={agent.slug}
+        checked={compare.checked}
+        disabled={compare.disabled}
+        onchange={(e) => compare.onchange(e.currentTarget.checked)}
+        class="h-5 w-5 focus-visible:ring-2 focus-visible:ring-indigo-600"
+      />
+      <span>Compare <span class="sr-only">{agent.title}</span></span>
+    </label>
+  {/if}
 </article>
