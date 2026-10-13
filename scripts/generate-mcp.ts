@@ -2,7 +2,8 @@
 // works regardless of the MCP_GENERATOR flag (mcpGeneratorEnabled is never called). It reads
 // exactly one file (the given input path), never env files, never the network, and writes only
 // under --out. The generated Python is never executed.
-import { basename, join } from 'node:path'
+import { basename, join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { MAX_INPUT_BYTES } from '../src/lib/mcpgen/api-contract.js'
 import { validPath } from '../src/lib/mcpgen/bundle.js'
@@ -26,8 +27,9 @@ const USAGE =
   'Usage: npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|auto> <input-file> --out <dir> [--force] [--server-name N] [--max-page-size N] [--result-ceiling N]'
 
 const MAX_STR = 300
-function clean(s: unknown): string {
-  const t = (typeof s === 'string' ? s : String(s)).replace(/[\u0000-\u001f\u007f]+/g, ' ')
+/** C0 and C1 control characters (the C1 range includes the 8-bit CSI) are never printed (review IN-06). */
+export function clean(s: unknown): string {
+  const t = (typeof s === 'string' ? s : String(s)).replace(/[\u0000-\u001f\u007f-\u009f]+/g, ' ')
   return t.length > MAX_STR ? `${t.slice(0, MAX_STR)}...` : t
 }
 
@@ -151,7 +153,16 @@ export async function main(argv: string[], io: CliIo = defaultIo): Promise<numbe
   }
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`
-if (isMain) {
+/** True when this module is the program entry. Compares file URLs, so spaces and non-ASCII paths work. */
+export function isMainModule(metaUrl: string, argv1: string | undefined): boolean {
+  if (!argv1) return false
+  try {
+    return metaUrl === pathToFileURL(resolve(argv1)).href
+  } catch {
+    return false
+  }
+}
+
+if (isMainModule(import.meta.url, process.argv[1])) {
   process.exitCode = await main(process.argv.slice(2))
 }
