@@ -51,6 +51,15 @@ function clean(s: unknown, max = 200): string | undefined {
   return t.length > max ? `${t.slice(0, max - 3).trimEnd()}...` : t
 }
 
+/** Names of the schemes an OpenAPI security value requires, as one comparable string ('-' when absent). */
+function securityKey(v: unknown): string {
+  if (!Array.isArray(v)) return '-'
+  return v
+    .map((r) => (isObj(r) ? Object.keys(r).sort().join('+') : '?'))
+    .sort()
+    .join('|')
+}
+
 class Unsupported extends Error {
   constructor(
     public readonly code: string,
@@ -343,7 +352,12 @@ function parseDoc(input: RawInput): ParseResult {
   let auth: SourceModel['auth'] = { scheme: 'none' }
   const schemes = isObj(root.components) && isObj(root.components.securitySchemes) ? root.components.securitySchemes : {}
   const referenced = Array.isArray(root.security) ? root.security.flatMap((r) => (isObj(r) ? Object.keys(r) : [])) : []
-  const schemeNames = (referenced.length > 0 ? referenced : Object.keys(schemes)).filter((k, i, a) => a.indexOf(k) === i).sort()
+  // An explicit empty list means the API is public (review WR-09): declared schemes must not be applied.
+  const explicitlyPublic = Array.isArray(root.security) && root.security.length === 0
+  const schemeNames = (explicitlyPublic ? [] : referenced.length > 0 ? referenced : Object.keys(schemes)).filter((k, i, a) => a.indexOf(k) === i).sort()
+  if (explicitlyPublic && Object.keys(schemes).length > 0) {
+    gaps.push(gap('auth-public', 'The document sets security to an empty list (a public API); the server sends no credentials although security schemes are declared.', { severity: 'info' }))
+  }
   let picked = false
   let unsupported = 0
   for (const sn of schemeNames) {
@@ -392,6 +406,9 @@ function parseDoc(input: RawInput): ParseResult {
       }
       const where = `GET ${path.slice(0, 120)}`
       ctx.left = OPERATION_SCHEMA_BUDGET
+      if (opNode.security !== undefined && securityKey(opNode.security) !== securityKey(root.security)) {
+        gaps.push(gap('auth-operation-override', `${where}: the operation declares its own security requirement; the generated server applies the document-level authentication to every tool.`, { path: id }))
+      }
       try {
         // Parameters: path-level first, operation-level overrides by (in, name).
         const merged = new Map<string, Obj>()
