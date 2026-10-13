@@ -5,6 +5,7 @@ import { db, agents } from '$lib/server/db.js'
 import { runTryOut } from '$lib/server/try-out.js'
 import { validateInputValues } from '$lib/server/try-out-inputs.js'
 import type { AgentInputField } from '$lib/spec/index.js'
+import { agentKindsEnabled } from '$lib/flags.js'
 import type { RequestHandler } from './$types'
 
 const inputValueSchema = z.union([
@@ -49,6 +50,14 @@ export const POST: RequestHandler = async ({ request }) => {
 
   if (!row) {
     return json({ message: 'Agent not found.' }, { status: 404 })
+  }
+
+  // WR-09 (flag AGENT_KINDS): the backend, not only the UI, refuses to run a non-agent kind.
+  if (agentKindsEnabled()) {
+    const { isNonAgentKind } = await import('$lib/server/kinds.js')
+    if (isNonAgentKind(db as never, row.slug)) {
+      return json({ message: 'Try out is not available for this kind of submission.' }, { status: 403 })
+    }
   }
 
   let inputFields: AgentInputField[]

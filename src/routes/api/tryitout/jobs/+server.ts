@@ -14,6 +14,7 @@ import { runJob } from '$lib/server/tryItOutRunner'
 import { sessionKey } from '$lib/server/tryitout/session'
 import { AgentIdSchema } from '$lib/server/tryItOutPrompts'
 import { getTryItOutService } from '$lib/server/tryitout/service'
+import { agentKindsEnabled } from '$lib/flags.js'
 
 // Threat T4-3: hard cap enforced BEFORE createJob/mkdir/runJob — an
 // unauthenticated public demo endpoint must not allow disk exhaustion or a
@@ -34,6 +35,12 @@ export const POST: RequestHandler = async ({ request, locals, cookies, url, getC
   }
   if (!AgentIdSchema.safeParse(agentId).success) {
     error(400, 'agentId is invalid')
+  }
+
+  // WR-09 (flag AGENT_KINDS): the backend, not only the UI, refuses to run a non-agent kind.
+  if (agentKindsEnabled()) {
+    const [{ isNonAgentKind }, { db }] = await Promise.all([import('$lib/server/kinds.js'), import('$lib/server/db.js')])
+    if (isNonAgentKind(db as never, agentId)) error(403, 'Try It Out is not available for this kind of submission')
   }
 
   // RESEARCH.md Pitfall 3: a browser's empty file-input submission arrives

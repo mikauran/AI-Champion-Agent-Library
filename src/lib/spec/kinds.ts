@@ -75,6 +75,14 @@ export interface FormatAdapter {
   parse(files: SubmissionFile[], ctx: ParseContext): ParseOutcome
 }
 
+/**
+ * Systems, skills, MCP servers and external agents are never runnable; an 'external' link stays.
+ * One rule for the detail page, the catalog cards and the backend (WR-09).
+ */
+export function effectiveTryItOutMode<T extends string | null | undefined>(kind: string, mode: T): T | 'none' {
+  return kind !== 'agent' && mode !== 'external' ? 'none' : mode
+}
+
 export const EXTRAS_MAX_BYTES = 16384
 export const MEMBERS_MAX = 50
 export const TITLE_MAX_BYTES = 200

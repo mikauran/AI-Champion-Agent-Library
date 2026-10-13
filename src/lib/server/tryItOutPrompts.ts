@@ -18,6 +18,16 @@ import { eq } from 'drizzle-orm'
 import { parse as parseYaml } from 'yaml'
 import { z } from 'zod'
 import { db, agents } from './db'
+import { agentKindsEnabled } from '../flags.js'
+
+/** WR-09: flag-on only. Systems, skills, MCP servers and external agents are never run. */
+async function assertRunnableKind(agentId: string): Promise<void> {
+  if (!agentKindsEnabled()) return
+  const { isNonAgentKind } = await import('./kinds.js')
+  if (isNonAgentKind(db as never, agentId)) {
+    throw new Error(`agent ${agentId} is not an agent kind; Try It Out is not available for it`)
+  }
+}
 
 // T3-2: agentId arrives from the client and is joined into a filesystem
 // path. Lowercase-kebab-case only, no leading/trailing hyphen, max 64 chars.
@@ -42,6 +52,7 @@ export interface LoadedPrompt {
 export async function loadPromptFor(agentId: string): Promise<LoadedPrompt> {
   // Validate BEFORE any DB lookup or filesystem read (T3-2).
   AgentIdSchema.parse(agentId)
+  await assertRunnableKind(agentId)
 
   const row = db.select().from(agents).where(eq(agents.slug, agentId)).get()
   if (!row) {
@@ -86,6 +97,7 @@ export function parseSkillFrontmatter(text: string): { name: string | null; desc
 // so Pi will actually load it (R-05).
 export async function loadPiSkill(agentId: string): Promise<{ basePrompt: string; skillMarkdown: string }> {
   AgentIdSchema.parse(agentId) // T3-2 guard before any path join
+  await assertRunnableKind(agentId)
   const row = db.select().from(agents).where(eq(agents.slug, agentId)).get()
   if (!row) throw new Error(`unknown agent: ${agentId}`)
   if (!row.systemPrompt) throw new Error(`agent ${agentId} has an empty system prompt`)
