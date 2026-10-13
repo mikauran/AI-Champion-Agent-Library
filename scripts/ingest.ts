@@ -439,7 +439,7 @@ async function ingestInto(sqlite: Database.Database, dataDir: string, opts?: { e
       searchables.push(recordToSearchable(record))
       succeeded++
     } catch (err) {
-      console.error(`[SKIP] ${file}: ${(err as Error).message}`)
+      console.error(`[SKIP] ${file}: ${sanitizeMessage((err as Error).message)}`)
       failed++
     }
   }
