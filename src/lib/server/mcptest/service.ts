@@ -9,6 +9,7 @@ import { loadSuite, type SuiteCase } from '$lib/mcptest/core/suite'
 import { runSuite } from '$lib/mcptest/core/runner'
 import { listSubjects, resolveSubject } from '$lib/mcptest/core/subjects'
 import { DRIVER_PKG_ROOT, KNOWN_CASE_IDS, type DriverRequest } from '$lib/mcptest/driverRequest'
+import { createClientLimiter, type ClientLimiter } from '../tryitout/clientLimit'
 import { publicErrorMessage, publicText } from '../tryitout/redact'
 import type { ContainerRuntime, StagedFile } from '../tryitout/runtime'
 import { mcpTestRunnerConfig, runInContainer, type PackageFile } from './containerRun'
@@ -183,4 +184,18 @@ export function startRun(runId: string, input: StartRunRequest, store: RunStore 
   void Promise.resolve()
     .then(() => executor(runId, input))
     .catch((err) => store.setStatus(runId, 'failed', publicText(publicErrorMessage(err))))
+}
+
+export const STARTS_PER_CLIENT = 10
+export const START_WINDOW_MS = 10 * 60 * 1000
+let startLimiter: ClientLimiter = createClientLimiter({ max: STARTS_PER_CLIENT, windowMs: START_WINDOW_MS })
+
+/** Per-client start limiter (sliding window); records the admission when it returns true. */
+export function admitStart(clientKey: string | undefined): boolean {
+  return startLimiter.tryAdmit(clientKey ?? 'unknown')
+}
+
+/** Test hook: restore a fresh limiter, optionally with another cap. */
+export function __resetStartLimiterForTests(max: number = STARTS_PER_CLIENT): void {
+  startLimiter = createClientLimiter({ max, windowMs: START_WINDOW_MS })
 }
