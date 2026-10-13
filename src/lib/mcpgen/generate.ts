@@ -27,6 +27,11 @@ export function stableJson(value: unknown): string {
   return JSON.stringify(sort(value), null, 2) + '\n'
 }
 
+/** Source text in Markdown: link, image and tag syntax is neutralised with backslashes (review IN-07). */
+export function mdText(s: string): string {
+  return s.replace(/[\\`\[\]()<>]/g, (c) => `\\${c}`)
+}
+
 function emitReadme(plan: ServerPlan): string {
   const m = plan.model
   const env = resolveEnv(m)
@@ -47,14 +52,14 @@ function emitReadme(plan: ServerPlan): string {
     },
   }
   const out: string[] = [
-    `# ${cleanText(m.name, 80)} MCP server (generated)`,
+    `# ${mdText(cleanText(m.name, 80))} MCP server (generated)`,
     '',
     'Read-only MCP server over stdio, generated deterministically from a source description.',
     'Review it before use. The generator never executed this code.',
     '',
     '## Tools',
     '',
-    ...plan.tools.map((t) => `- \`${t.name}\`: ${cleanText(t.description, 200)}`),
+    ...plan.tools.map((t) => `- \`${t.name}\`: ${mdText(cleanText(t.description, 200))}`),
     '',
     '## Environment variables',
     '',
