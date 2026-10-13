@@ -470,7 +470,7 @@ const getWidget: Handler = async (c, a) => {
 }
 
 const assemble: Handler = async (c, a) => {
-  const id = str(a.id)
+  const id = str(a.id) ?? str(a.component_id) // DRAFT-15-08-fix-1: suite golden uses component_id
   if (!id) return fail('invalid_input', 'id is required.')
   const comp = await c.get(ROUTES.components.replace(':id', enc(id)), {}, 'A')
   if (comp.t !== 'ok') return upFail(c, comp, `Component ${id}`)

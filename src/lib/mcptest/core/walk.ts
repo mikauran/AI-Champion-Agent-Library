@@ -57,10 +57,17 @@ export function findProductByValue(p: unknown, idKeys: string[], value: string):
 
 /** Objects that look like items: carry an id alias or a name-like field. */
 export function findAllProducts(p: unknown, idKeys: string[] = DEFAULT_ID_ALIASES): Dict[] {
+  // DRAFT-15-08-fix-2: outermost item-like objects only; objects nested inside an item (a supplier with an id,
+  // an attribute entry with a key) are parts of that item, not further items.
   const out: Dict[] = []
-  for (const d of iterDicts(p)) {
-    if (idKeys.some((k) => k in d) || NAME_ALIASES.some((k) => k in d)) out.push(d)
+  const visit = (v: unknown) => {
+    if (Array.isArray(v)) for (const x of v) visit(x)
+    else if (isDict(v)) {
+      if (idKeys.some((k) => k in v) || NAME_ALIASES.some((k) => k in v)) out.push(v)
+      else for (const x of Object.values(v)) visit(x)
+    }
   }
+  visit(p)
   return out
 }
 
