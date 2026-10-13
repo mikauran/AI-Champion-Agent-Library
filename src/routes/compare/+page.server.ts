@@ -6,6 +6,7 @@ import { parseJsonArray, parseJsonStringArray } from '$lib/safeJson.js'
 import { isMissingTableError } from '$lib/dbErrors.js'
 import type { PageServerLoad } from './$types'
 import { agentKindsEnabled } from '$lib/flags.js'
+import { effectiveTryItOutMode } from '$lib/spec/kinds.js'
 import { agentCompareEnabled } from '$lib/compareFlag.js'
 import { db, agents } from '$lib/server/db.js'
 import { MAX_COMPARE, buildCompareRows, parseCompareSlugs, type CompareAgentInput } from '$lib/compare.js'
@@ -49,7 +50,8 @@ export const load: PageServerLoad = async ({ url }) => {
         inputFields: parseJsonArray(r.inputSchema),
         requiresHumanApproval: r.requiresHumanApproval,
         maturityStatus: r.maturityStatus,
-        tryItOutMode: r.tryItOutMode,
+        // Same rule as catalog and detail (WR-09): a non-agent kind never shows a runnable mode.
+        tryItOutMode: kindsOn ? effectiveTryItOutMode(k?.kind ?? 'agent', r.tryItOutMode) : r.tryItOutMode,
         githubUrl: r.githubUrl,
         linkLabel: r.linkLabel,
         customizableFields: r.customizableFields ? parseJsonStringArray(r.customizableFields) : null,
