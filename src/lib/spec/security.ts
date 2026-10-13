@@ -14,8 +14,8 @@ const KEY_DENY =
 const KEY_AUTH = /(^|[_.-])auth($|[_.-])/i
 const SK_VALUE = /^sk-.{8,}/
 
-/** Inline token shapes recognised inside free text (descriptions, prompts, bodies). */
-const INLINE_PATTERNS: readonly RegExp[] = [
+/** Inline token shapes recognised inside free text. The one shared list: every redaction surface applies it (G2, D-440). */
+export const INLINE_TOKEN_PATTERNS: readonly RegExp[] = [
   /\bsk-[A-Za-z0-9_-]{16,}/g,
   /\bgh[pousr]_[A-Za-z0-9]{20,}/g,
   /\bxox[abprs]-[A-Za-z0-9-]{10,}/g,
@@ -32,7 +32,7 @@ export function isSecretKey(key: string | null): boolean {
 /** Replace inline secret-looking tokens in free text. Idempotent. */
 export function redactText(text: string): string {
   let out = text
-  for (const re of INLINE_PATTERNS) out = out.replace(re, REDACTED)
+  for (const re of INLINE_TOKEN_PATTERNS) out = out.replace(re, REDACTED)
   return out
 }
 

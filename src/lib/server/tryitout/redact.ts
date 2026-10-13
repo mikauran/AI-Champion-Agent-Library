@@ -4,6 +4,7 @@
 // Detail is logged server-side only, after redaction (WR-06, D-17).
 
 import { isTryItOutRuntimeError } from './runtime'
+import { redactText } from '../../spec/security'
 
 const SECRET_PATTERNS: RegExp[] = [
   /(?<![A-Za-z0-9_])sk-[A-Za-z0-9_*.-]{3,}/g, // OpenAI-style keys, including masked ones (sk-proj-****abcd); not inside words like task-force
@@ -14,7 +15,8 @@ const SECRET_PATTERNS: RegExp[] = [
 export function redactSecrets(s: string): string {
   let out = s
   for (const re of SECRET_PATTERNS) out = out.replace(re, '[redacted]')
-  return out
+  // Shared list (G2): ghp_/xox/AKIA/PEM shapes are masked here too; the extras above stay.
+  return redactText(out)
 }
 
 const MAX_PUBLIC_CHARS = 200
