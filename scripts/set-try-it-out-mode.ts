@@ -12,6 +12,7 @@ const DB_PATH = process.env.CATALOG_DB_PATH ?? './db/catalog.db'
 const UPDATES: Array<{ slug: string; mode: string; url: string | null; taskTemplate: string | null }> = [
   { slug: 'demo-rfi-triage', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'hvac-load-calculator', mode: 'none', url: null, taskTemplate: null },
+  { slug: 'etim-classification-repair', mode: 'runnable', url: null, taskTemplate: null },
 ]
 
 export function setTryItOutMode(dbPath: string): Array<{ slug: string; mode: string; changes: number }> {

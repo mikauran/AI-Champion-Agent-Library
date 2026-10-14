@@ -42,20 +42,23 @@ describe('setTryItOutMode edge cases', () => {
     seed(p, [
       { slug: 'demo-rfi-triage', mode: 'link', url: 'https://x', tpl: 'T' },
       { slug: 'hvac-load-calculator', mode: 'runnable', url: 'https://y', tpl: 'U' },
+      { slug: 'etim-classification-repair', mode: 'link', url: 'https://z', tpl: 'V' },
     ])
     setTryItOutMode(p)
     const rows = read(p)
     expect(rows.map((r) => [r.slug, r.m, r.u, r.t])).toEqual([
       ['demo-rfi-triage', 'runnable', null, null],
+      ['etim-classification-repair', 'runnable', null, null],
       ['hvac-load-calculator', 'none', null, null],
     ])
   })
 
-  it('never touches rows other than the two targeted slugs', () => {
+  it('never touches rows other than the targeted targeted slugs', () => {
     const p = tmpDb()
     seed(p, [
       { slug: 'demo-rfi-triage' },
       { slug: 'hvac-load-calculator' },
+      { slug: 'etim-classification-repair' },
       { slug: 'other-agent', mode: 'link', url: 'https://keep', tpl: 'keep' },
       { slug: 'demo-rfi-triage-2', mode: 'runnable' },
     ])
@@ -69,17 +72,18 @@ describe('setTryItOutMode edge cases', () => {
 
   it('returns results in the declared order with one changed row each', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'hvac-load-calculator' }, { slug: 'demo-rfi-triage' }])
+    seed(p, [{ slug: 'etim-classification-repair' }, { slug: 'hvac-load-calculator' }, { slug: 'demo-rfi-triage' }])
     expect(setTryItOutMode(p)).toEqual([
       { slug: 'demo-rfi-triage', mode: 'runnable', changes: 1 },
       { slug: 'hvac-load-calculator', mode: 'none', changes: 1 },
+      { slug: 'etim-classification-repair', mode: 'runnable', changes: 1 },
     ])
   })
 
   it('an already-correct row still counts as one change (SQLite counts matched rows)', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'demo-rfi-triage', mode: 'runnable' }, { slug: 'hvac-load-calculator', mode: 'none' }])
-    expect(setTryItOutMode(p).map((r) => r.changes)).toEqual([1, 1])
+    seed(p, [{ slug: 'demo-rfi-triage', mode: 'runnable' }, { slug: 'hvac-load-calculator', mode: 'none' }, { slug: 'etim-classification-repair', mode: 'runnable' }])
+    expect(setTryItOutMode(p).map((r) => r.changes)).toEqual([1, 1, 1])
   })
 
   it('a missing hvac row throws naming that slug', () => {
@@ -118,7 +122,7 @@ describe('setTryItOutMode edge cases', () => {
 
   it('a case-differing slug does not match (slugs are exact)', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'Demo-RFI-Triage' }, { slug: 'hvac-load-calculator' }])
+    seed(p, [{ slug: 'Demo-RFI-Triage' }, { slug: 'hvac-load-calculator' }, { slug: 'etim-classification-repair' }])
     expect(() => setTryItOutMode(p)).toThrow(/demo-rfi-triage/)
   })
 })
