@@ -1,99 +1,33 @@
-# Autonomous run summary
+# Autonomous run summary (short report, 2026-10-14)
 
-## Status (read this first)
-- Queue complete: 2.1, 2.2, 3, 4, 9, 10, 11, 12, 13, 14, 15 all built, merged on `autonomous/overnight-improvements`, `npm run check` green (208 files / 2087 tests, tsc clean). Phases 3, 4, 9, 10, 11, 13, 14, 15 end `human_needed` (browser / live-container / real-model checks), Phase 12 passed, Phase 2 still pending its human checkpoint 02-04.
-- Post-queue code review + fix pass done for Phases 13, 14, 15 (reports `13-REVIEW.md`, `14-REVIEW.md`, `15-REVIEW.md`; fixes in `*-REVIEW-FIX.md`; decisions D-200..D-259): Phase 13 redaction bypass, slug collisions, `javascript:` href; Phase 14 scanner ReDoS, allOf fan-out DoS, credentials reaching generated files, generated-code path traversal; Phase 15 false-PASS paths (zero scored checks, missing golden), container path mismatches (user, tsx PATH, staging), HTTP redirect/SSRF, flag-off 405s, `/mcp-test` 500. Phases 3 and 9 had earlier review/security passes.
-- Test-flake fix (D-163): vitest timeouts raised after a load-sensitive `jobs.test.ts` failure.
-- Repo-wide pass done: `docs/dependency-health.md` (npm audit 18 -> 9 findings, 0 high; in-range bumps only, D-253..D-257), `docs/deploy-runbook.md`, README/TECHNICAL_DOCUMENTATION/PROJECT/STATE/REQUIREMENTS synced. Found and fixed a hidden build break (D-264-ish, B-002): `vite build` failed on route-module exports; helpers moved to `src/lib/pageFlags.ts`, guard test `routeExports.test.ts` added, `npx vite build` verified exit 0.
-- Exploration loop so far: E1 UI-04 raw spec viewer behind `UI_SPEC_VIEWER` (default off; shows re-serialised stored record, redacted, size-capped; D-300..D-302; browser check pending human). E2 profiling: `npm run bench`, `docs/performance.md` (linear scaling to 5000 agents; yaml parse ~70% of ingest; no code change). E3: ~235 new Phase 8 tests (7 files) + one real bug fixed (secret redaction mangled words like "task-force", D-340).
-- E4 DISC-02 comparison view behind `AGENT_COMPARE` (default off): Compare checkboxes (max 3) in the catalog, server-rendered `/compare?agents=a,b,c` table with differences marked, friendly handling of bad slugs, 404 when flag off (D-360..D-365). Memory/deployment/invocation-style rows are not in the data model, so not invented (D-362). Browser check pending human.
-- E5 UI-02 dark/light/system theme behind `UI_DARK_MODE` (default off): cookie preference, `data-theme` stamped server-side (no flash), palette remapped centrally in `app.css`, all 45 colour pairs proven >= AA by `contrast.dark.test.ts` (D-380..D-384). Needs a human look in a browser.
-- E6 error/empty-state audit: five real crash paths fixed (no `+error.svelte`; empty DB gave 500s; one row with bad JSON broke three pages; missing `db/` dir crashed every route; malformed job POST gave 500), D-400..D-404. Copy/UX proposals are under Questions for Ville.
-- E7 runtime smoke test: `npm run smoke` builds and runs the real server for 8 flag configurations, 104 probes, all pass (found no product defects).
-- Milestone audit written: `.planning/v1.0-MILESTONE-AUDIT.md`, status `gaps_found` but every open item is human-gated (Phase 2 checkpoint 02-04, browser/screen-reader/live-container/real-model checks). `complete-milestone` and `cleanup` NOT run (D-002).
-- Audit follow-up fixes (D-440..D-444): compare page now uses the shared try-it-out mode rule for non-agent kinds; redaction patterns shared across the five redactors (ghp_/xox/AKIA/PEM now masked on every surface); legacy ingest no longer prints raw error text; AGENT_COMPARE/UI_SPEC_VIEWER/UI_DARK_MODE and other env vars documented; flaky `jobs.test.ts` fixed at its probable root cause (`mockReset` instead of `clearAllMocks`, running-job test waits for its mock call) - 6 of 6 full runs green afterwards, but the flake was intermittent, so treat as "likely fixed", not proven (B-003).
-- FINAL verified state: 237 files / 2559 tests (1 skipped), tsc clean, `vite build` exit 0, `npm run smoke` 104/104. All work is on `autonomous/overnight-improvements`, nothing pushed.
-- Remaining backlog: nothing safe left that does not need your decision, apart from tech-debt consolidation listed in the audit (flag-parsing helper, shared walkers/size caps) and the optional items under Questions for Ville.
+The long per-phase log that used to be here now lives in the phase `*-SUMMARY.md` and `*-VERIFICATION.md` files, the exploration notes and the decisions log. Nothing unique was dropped (checked against the phase files, `AUTONOMOUS-DECISIONS.md`, `docs/` and the HUMAN-UAT files).
 
-## Completed
-- Phase 2.1 Green Baseline: `npx tsc --noEmit` exits 0 (was 22 errors in 4 test files); `npx vitest run` 43/43 files, 411/411 tests; `npm run check` added and exits 0. Decision D-005. Test files only plus package.json; no production changes.
-- Phase 2.2 Scale and Seed Data: seeded generator of 150 synthetic agents (`npm run fixtures:scale`, output gitignored), ingest of 150 verified idempotent (first ~650ms, re-ingest ~380ms), catalog pagination (7 pages) and every filter verified unmocked against a temp DB. `npm run check` exits 0 (46 files, 426 tests). Decision D-007. Test/script files only; no production or data/ changes.
-- Phase 3 Search, plans 03-01 and 03-02 (wave 1) done: additive `agent_embeddings` table, `@huggingface/transformers` dependency (D-009, install with `ONNXRUNTIME_NODE_INSTALL_CUDA=skip`), search documents/embedder/fake, ingest embedding step with staleness skip and graceful BM25-only degradation, tokenizer, in-TS BM25 with prefix matching, cosine/RRF/hybridSearch. `SEARCH_EMBEDDINGS=off` in vitest config; no test loads a model. `npm run check` exits 0 (51 files, 460 tests). Plans 03-04 (UI) still open.
-- Phase 3 plans 03-03 and 03-05 (wave 2) done: refreshable search service with timeout-guarded hybrid (BM25 never blocked by model load), `GET /api/search`, `/catalog?q=` server-side ranked results (D-010); labeled accuracy set of 46 queries with BM25 hit@3 = 1.00 enforced in CI and a skip-by-default real-model test (D-011). `npm run check` exits 0 (54 files passed, 1 skipped, 489 tests).
-- Phase 3 plan 03-04 (wave 3) done: debounced SearchBar, `buildCatalogParams`, catalog wiring with q in URL, query-specific no-results copy, aria-live count (D-012). `npm run check` now runs `svelte-kit sync` first (D-013); exits 0 (56 files passed, 1 skipped, 498 tests).
+## Final status
+- Branch `autonomous/overnight-improvements`; all work committed, nothing pushed.
+- Phases 1-20 are built and recorded. Phases 16-20 were executed outside the normal GSD flow (no PLAN files by design). Phases 21-23 are planned, not started.
+- Phase 2 is the only earlier phase not closed: it needs the human checkpoint 02-04 (D-001).
+- `npm run check` twice exit 0: 269 test files passed (1 skipped), 3072 tests passed (1 skipped).
+- `SEARCH_EMBEDDINGS=off npx vite build` exit 0. `npm run smoke` 104/104 (8 flag configurations).
+- Generated packages' own pytest pass on FastMCP 3.4.8 and 4.1.0 (counts in `phases/18-live-verification-and-container-path-fixes/18-VERIFICATION.md`).
+- Not run: OData with filter/split proposal ops; real MCP calls against a live OData service.
 
-- Phase 3 Search (code complete, verification human_needed): hybrid BM25 + embeddings (RRF), /api/search, catalog `?q=`, debounced SearchBar, 46-query labeled set (BM25 hit@3 1.00 on keyword/NL). Code review (1 critical, 8 warnings) all fixed, security audit SECURED. 58 files / 554 tests green. Decisions D-009..D-014.
-- Phase 4 Customization Placeholder done (04-01): `CustomizeMenu` (accessible disabled "Coming soon" menu) on every detail page, CUST-01 complete, D-015. `npm run check` exits 0 (60 files passed, 1 skipped, 565 tests).
-- Phase 9 plan 09-01 (security review of Try It Out code): `09-SECURITY-REVIEW.md` with 15 findings, 13 fixed test-first (budget cap + reserve-then-reconcile, owner-scoped orphan sweep, archive size/stream/proto/entry-cap handling, unhandled rejection, dot segments, MemorySwap, JSONL line cap) and 2 accepted. Deferred Phase 8 items WR-05, WR-08, WR-09, IN-01, IN-02, IN-04, IN-05 closed. Decisions D-016..D-018. `npm run check` exits 0 (60 files passed, 1 skipped, 581 tests). Operator note: set `APP_INSTANCE_NAME` in compose deployments (D-017).
-- Phase 9 plans 09-02, 09-03, 09-04 (chaos tests and live-check list): 5 chaos test files (lease races incl. 200 seeded interleavings, hung/failing engine, reaper timing, proxy budget/token reuse, malformed/oversized Pi JSONL), all offline (fake runtime, fake timers, mocked fetch). They exposed 8 defects, all fixed: double container removal, unbounded hung `remove`/`putFiles`/`getFiles`, NaN/negative/missing upstream usage defeating the token budget, unbounded mapper memory and job event list, throwing parser consumer. Decisions D-019..D-022; security findings overall: 15 (13 fixed, 2 accepted). `npm run check` exits 0. Live Podman checks are listed, unchecked, in `.planning/phases/09-try-it-out-hardening/09-HUMAN-UAT.md`. README documents `APP_INSTANCE_NAME` and the new limits.
-- Phase 10 Accessibility (UI-03), plans 10-01..10-03: `10-AUDIT.md` (60 findings over 13 surfaces, all resolved or verified, 6 pending human) drove fixes: skip link, `main#main-content`, Primary nav landmark, catalog page title, h2 card headings, global `:focus-visible` ring, label-in-name card links, new-tab hints, focus handed back after Clear search / Clear filters / pagination, one persistent live region for count and degraded notice, try-it-out progress as `role=log` with status/alert announcements, control borders raised to gray-500 for 3:1. Tooling: dependency-free contrast calculator + test (all token pairs enforced) and axe-core as the only new (dev) dependency (D-023). 7 new a11y test files including composed layout+catalog+detail axe checks; axe found one real defect (a `role=status` inside `role=menu` in CustomizeMenu), fixed. Decisions D-023..D-025. `npm run check` exits 0. Visual/screen-reader checks are unchecked in `.planning/phases/10-accessibility-ui-03/10-HUMAN-UAT.md`.
-- Phase 11 Related agents (DISC-01), plans 11-01 and 11-02: pure `relatedAgents` (embedding cosine, Jaccard tags + category + tools fallback, mixed-vector merge), `SearchService.related()` reusing the hash-checked vector cache, accessible `RelatedAgents` section on the agent detail page (hidden when empty, errors swallowed). precision@4 on the 150-agent scale corpus measured 1.0 on fallback, fake-embedding and mixed paths. Also fixed stale `agent` on navigation between detail pages (`$derived`). Decisions D-027, D-028. No new deps, no schema changes.
-- Phase 12 Agent types and intake research (docs only), plans 12-01..12-03: `docs/agent-types.md` (kind x topology x framework taxonomy, 13 per-format findings with confidence flags), `docs/agent-capability-matrix.md`, `docs/agent-intake-guide.md` (repo-first answer, checklist, 103-word reply template), `docs/agent-hosting-decision-memo.md` (additive flag-gated `AGENT_KINDS` model proposal with revert stories, ranked adapters, open questions), linked from README and PROJECT.md, plus `12-PHASE13-HANDOFF.md`. Decisions D-029..D-032. No code changes; facts come only from 12-RESEARCH.md and unverified items are flagged.
-- Phase 13 Multi-agent and multi-format hosting (flag `AGENT_KINDS`, default off), plans 13-01..13-09: additive sidecar table `agent_kinds` (D-033; `agents` untouched), tolerant adapter registry that never throws, adapters for Oracle AgentSpec systems/A2A, `catalog.yaml`, SKILL.md + Claude subagent, CrewAI (JSONC and YAML), MCP `server.json`, `langgraph.json` detector; flag-gated ingest, search text, loader and related weight; system detail page (kind badge, Members, no runnable Try It Out); catalog kind badge, Type filter and `?kind=`; `npm run validate-submission`. Proof: `scripts/flag-off.golden.test.ts` and `scripts/flag-regression.test.ts` (flag unset/0/off byte-identical), `scripts/ingest.allformats.test.ts` (13 fixture folders, idempotent), `src/lib/server/search/loader.flagon.test.ts`. 13-09 also fixed two gaps: inline `sk-` tokens in extras strings are now redacted (D-100) and the Customization panel no longer lists LLM/system prompt for systems (D-101). Docs: `docs/phase13-adapters.md`, intake guide and memo updated. Decisions D-033..D-040, D-050/051, D-060..062, D-070..073, D-080/081, D-090, D-100..102 (each with revert steps). No new dependencies, no existing test edited. Try it: `AGENT_KINDS=on npm run ingest` against fixtures copied to a temp dir, then `npm run validate-submission -- fixtures/submissions`. Verification: `.planning/phases/13-multi-agent-and-multi-format-hosting-flagged/13-VERIFICATION.md` (status human_needed for browser checks).
-- Phase 14 MCP generator (flag `MCP_GENERATOR`, default off), plans 14-01..14-07: `RESEARCH-SYNTHESIS.md` first, then `docs/mcp-generator-design.md`; `src/lib/mcpgen/` with one `InputAdapter` interface (adapters listed only in `adapters/index.ts`), adapters for OpenAPI 3.x, tabular-catalog header/dictionary text and SQL DDL (CUST-02), a deterministic planner and Python FastMCP stdio emitter (behaviour checklist rows 1-9, generated pytest, report, `DerivedTool` extension point for synthesized filters), credential scanner that rejects rather than redacts, `npm run generate-mcp`, flag-gated `POST /api/mcp-generate` (zip) and a flag-gated Customize "Generate MCP" panel (flag off leaves the placeholder unchanged). Proof: golden files, guarded py_compile, `src/lib/mcpgen/criteria.test.ts` invariants, no new dependencies, no existing test edited. Generated Python was never run. Decisions D-140..D-162. Docs: `docs/mcp-generator.md`; verification `human_needed`: `.planning/phases/14-mcp-generator-generalized-from-research-flagged/14-VERIFICATION.md`. Known limitation: sql/dataset planners ignore `operations` (D-162); SQL ORDER BY now covers all PK columns (D-161).
+## Read first
+1. `.planning/STATE.md` (position, Pending on Ville, how to resume)
+2. `.planning/ROADMAP.md` (Progress table, Phases 16-23)
+3. `.planning/v1.0-MILESTONE-AUDIT.md`
+4. `.planning/AUTONOMOUS-DECISIONS.md` (index at the top)
+5. `.planning/AUTONOMOUS-BLOCKERS.md`
+6. `docs/human-verification-guide.md`
 
-- Phase 15 MCP test platform (flag `MCP_TESTER`, default off, runtime variable `MCP_TESTER_RUNTIME=container` opt-in), plans 15-01..15-13: black-box scorer for MCP servers. `src/lib/mcptest/` has a minimal own MCP client (stdio and Streamable HTTP, no SDK), a loopback mock upstream with seeded data, strict params and fault injection, in-process fake servers used only as scorer fixtures (good plus about 20 flawed variants), 12 synthetic cases in the source-compatible `case.yaml`/`golden.jsonl`/`rubric.yaml` formats, scoring (Tier 1 gate, Tier 2+3 score, Tier 4 flags, verdicts), report JSON + summary, the Phase 14 generator as an in-process subject with generator-side checks, `npm run mcp-test`, an in-container driver and runner image definition (not built), flag-gated `/api/mcp-test/runs` routes with a TTL store, a flag-gated `/mcp-test` page and Customize entry. Proof: the scorer discriminates (good fake 100, each flawed variant fails exactly its listed checks), `src/lib/mcptest/criteria.test.ts` invariants (no forbidden tokens, loopback only, purity, no existing test edited). `npm run check` exits 0 (175 files, 1746 tests). Decisions D-164..D-181. Docs: `docs/mcp-test-platform.md`, `docs/mcp-test-port-fidelity.md`; verification `human_needed`: `.planning/phases/15-mcp-test-platform-flagged/15-VERIFICATION.md`. Honest limits: no real FastMCP server run, runner image never built, headline score formula assumed.
+## Phases 16-23
+- 16 Review and Hardening Pass (done): reviews and fixes for 13-15, audit fixes, build fix, error states, smoke, perf, dependency health, the seven user decisions (D-460..D-466)
+- 17 Optional UI Features (done, flagged): spec viewer, compare, dark mode; browser checks pending
+- 18 Live Verification and Container-Path Fixes (done): real-model search run, FastMCP 3.4.8/4.1.0, live Podman run and fixes
+- 19 Generator Input Kinds (done): Swagger 2.0, OAuth2, OpenAPI 3.1 audit, SQL dialects, Prisma, OData
+- 20 Proposal Layer and Context Pack (done): stages 1-2, no in-platform model calls
+- 21 Generator Stage 0 (planned): description cleanup, annotations, outputSchema, deterministic order
+- 22 Proposal Layer Follow-ups (planned): first real proposal, baseline vs proposal run, hygiene tuning, OData derived_filter
+- 23 Code Review of New Generator Code (planned): review, fixes and security audit of everything since the Phase 14 review
 
-## Pending human
-- Phase 15: FastMCP pin check, generate-then-score through the CLI with `--allow-local-exec`, runner image build and sanity run, container run through the platform (`MCP_TESTER=1 MCP_TESTER_RUNTIME=container npm run dev`), fake-vs-real comparison, T2-CATALOG-DUMP real run, browser/keyboard/screen-reader checks with the flag on and off, auth-hook check for `/api/mcp-test/*` and `/api/mcp-generate`: `.planning/phases/15-mcp-test-platform-flagged/15-HUMAN-UAT.md`.
-- Phase 11: browser check of the Related agents section and real-catalog suggestion quality: `.planning/phases/11-related-agents-disc-01/11-HUMAN-UAT.md`.- Phase 2 checkpoint 02-04 (see D-001): the only remaining Phase 2 item; Phase 2 is not marked complete.
-- Phase 4: browser check of the Customize menu (`.planning/phases/04-customization-placeholder/04-HUMAN-UAT.md`).
-- Phase 3: real-model accuracy run + SIM_FLOOR tuning, real-embedding ingest, browser feel (03-HUMAN-UAT.md).
-- Phase 3 real-model accuracy run, real-embedding ingest, SIM_FLOOR retune, live-typing browser feel (item 3): `.planning/phases/03-search/03-HUMAN-UAT.md`.
-- Phase 9: nine live Podman checks (smoke, hardening inspect, network guard, owner-scoped sweep, hostile archive, hung engine, budget with real model, reaper timing, cleanup): `.planning/phases/09-try-it-out-hardening/09-HUMAN-UAT.md`.
-- Phase 10: keyboard walk, NVDA/VoiceOver announcements, focus-ring visibility, 200%/400% zoom, real-browser contrast (axe DevTools/Lighthouse), reduced motion/forced colours: `.planning/phases/10-accessibility-ui-03/10-HUMAN-UAT.md`.
-
-- Phase 13: browser checks of the system detail page and the catalog kind badge / Type filter with `AGENT_KINDS=1`: `.planning/phases/13-multi-agent-and-multi-format-hosting-flagged/13-HUMAN-UAT.md`.
-- Phase 14: fastmcp pin check on PyPI (`fastmcp>=3.4,<4` and `mcp.tool(fn)`), running a generated `test_server.py` in a throwaway venv, CLI generation from each fixture, browser checks of the Generate MCP panel and zip download (flag on and off): `.planning/phases/14-mcp-generator-generalized-from-research-flagged/14-HUMAN-UAT.md`.
-
-## Questions for Ville
-- Phase 10: control borders now use gray-500 (darker than before) to meet 3:1; confirm the look is acceptable. Card/panel borders were left light (decorative).
-- Phase 12 (from `docs/agent-hosting-decision-memo.md`, section 6; defaults apply until you answer):
-  1. Should multi-agent system members be separate catalog rows or inline only? Default: inline with an optional slug link.
-  2. Is `catalog.yaml` an acceptable AIC intake convention, or should authors fill a web form? Default: `catalog.yaml` plus reply-with-answers.
-  3. Should Try It Out ever run systems? Default: no (none or external only).
-  4. Which frameworks do AIC authors actually use? A quick survey of the 100+ agents would re-weight the adapter ranking.
-  5. Which unverified facts matter to you (A2A card fields, Flowise export, Dify extension, LlamaIndex deploy config, AutoGen Studio JSON, MAF workflow status, AgentSpec YAML shape)? Default: no Phase 13 adapters depend on them.
-  6. Should edges (handoff graph) ship in v1? Default: defer.
-- Phase 13 (defaults apply until you answer):
-  1. Confirm the sidecar table `agent_kinds` over `ALTER TABLE agents` columns (D-033; the memo proposed columns).
-  2. Confirm `catalog.yaml` as the AIC intake convention (now implemented behind the flag).
-  3. With the flag on, ingest scans sub-directories, so `data/agents/fixtures/minimal-agent` appears in the catalog (D-039). Acceptable, or should `fixtures` be skipped?
-  4. Re-check the unverified facts (AgentSpec `relationships` / `$component_ref` shape, MCP registry schema, ADK/MAF/Pydantic AI/A2A) before promoting those adapters; AutoGen stays deferred even though the roadmap goal mentions it.
-  5. `?kind=agent` only matches agents that have a sidecar row (D-080); fine?
-- Phase 14 (defaults apply until you answer; from RESEARCH-SYNTHESIS section 6 and `docs/mcp-generator-design.md` section 9):
-  1. Is generated output for authors to download and run (default, delivered as a zip package) or should the platform host it (Phase 8 runtime)?
-  2. Ceilings: default is an optional author-supplied `limits` block with conservative defaults and a warning gap when unknown. Acceptable?
-  3. Tabular adapter takes header, dictionary and at most 5 sample rows only; rows over 5 are rejected (D-150). OK?
-  4. FastMCP pin `fastmcp>=3.4,<4` is UNVERIFIED against PyPI; please check or tell me the version you want.
-  5. Should the generator stay purely deterministic (default, D-159) or do you want an opt-in LLM-assisted layer later?
-  6. Ask the study author why openapi-mcp-generator scored 0 of 5 on functional checks and whether the `combined` arm was ever benchmarked.
-  7. For Phase 15: should the per-case alias/binding config live next to the generated server or with the test case?
-  8. The reference repos had uncommitted changes when the synthesis was written; if the committed versions differ, some arm rows may not match history.
-  9. The generate route adds no authentication of its own; confirm the deployment's global hook protects it as you expect (not verified in this run).
-- Phase 15 (defaults apply until you answer; decisions D-164..D-181):
-  1. Headline score formula: unweighted mean of Tier 2 and Tier 3 case pass-rates (D-167) is an assumption. Is that what the study uses?
-  2. A pending-human scoring case blocks PASS (D-168): the good fake scores FAIL over all 12 cases because the real-runtime dump case is pending human. Keep that, or let PENDING_HUMAN not block PASS (needs a change to an existing scoring test)?
-  3. Phase 14 finding (D-174): the generator emits a tool for an operation with a stale example (example field absent from the schema) and reports no gap, so the partial-spec case fails with SILENT_GUESS. Should Phase 14 report example/schema mismatches, or is that acceptable?
-  4. Phase 8 container user is `pi`, the runner image user is `node` (D-178). Add a `pi` user to the image or make the Phase 8 user configurable?
-  5. Auth for `/api/mcp-test/*` and `/api/mcp-generate` (D-179): is the global hook enforced for `/api/*`? Is 10 starts per client per 10 minutes right for production?
-  6. Case content versus the source files: all 12 cases are re-authored synthetic Acme content; is the stand-in faithful enough to the study's case structure?
-  7. Did you want an SDK dependency (`@modelcontextprotocol/sdk`) instead of our own minimal client (D-164)? Default: no new dependency.
-  8. Real partner profile text for the profile case (never to be committed), and who owns the runner image pin (`fastmcp>=3.4,<4` is unverified) and tag.
-  9. Legacy arms calibration: the study's legacy arms are not registered as runnable; do you want calibration runs against them?
-  10. Submitted-server uploads: v1 accepts only fake variants and generator samples through the API (D-176). Should uploaded servers ever be run, after an isolation review?
-- None else yet. (Phase 9 note: compose deployments should set `APP_INSTANCE_NAME`; decide whether to add it to `podman-compose.yml`.)
-
-### From the error-state audit (E6) and the milestone audit
-- Empty library copy: a fresh install currently says "No agents match your filters". Should it say there are no agents yet and point at `npm run ingest`?
-- Error JSON shape: the auth hook's 401 uses `{error}` while other routes use `{message}`. Unify (edits `hooks.server.test.ts`)?
-- Should job-route 404 messages stop echoing the id?
-- Should `/health` check the database and return 503 when tables are missing?
-- Should there be a `handleError` that returns a reference id for support?
-- Tech-debt consolidation (no behaviour change, your call on timing): one `envFlag()` helper, shared directory walker and size-cap constants, one safe-YAML wrapper, one UUID regex.
-- `/api/mcp-generate` has size caps but no per-client rate limit, and auth for `/api/mcp-*` depends on the deployment's global hook (D-179). Add a limiter / confirm auth?
-
-## Look at first
-- `.planning/phases/10-accessibility-ui-03/10-AUDIT.md` (findings and Resolution table), D-023..D-026.
-- `.planning/phases/02.2-scale-and-seed-data-inserted/02.2-0*-SUMMARY.md`, D-007.
-- `.planning/phases/02.1-green-baseline-inserted/02.1-0*-SUMMARY.md`, D-005.
+## What needs you
+See STATE.md "Pending on Ville": paid-key check 7, Phase 9 check 9 re-run, Phase 15 browser/cancel/auth items and container run, the browser checks in the human guide, Phase 2 checkpoint 02-04, Phase 3 `/catalog` UI checks, and the few still-open questions. Environment: this machine has 3.7 GB RAM; do not run Podman checks next to heavy agents.

@@ -2,6 +2,41 @@
 
 Format: ID — decision | alternatives | why | revert
 
+## Index of decision IDs
+
+IDs are unique (checked: no duplicates) but NOT in numeric order in the file: entries were appended in the order the work happened, and some drafts were consolidated later (for example D-009 precedes D-008, D-050/D-051 precede D-038, D-240..D-252 precede D-200..D-206, D-500..D-508 follow D-520..D-549). Search by ID, not by position.
+
+| IDs | Work covered |
+|---|---|
+| D-001..D-008 | Autonomous run rules; Phase 2 pending human; Phases 2.1 (green baseline) and 2.2 (scale data) |
+| D-009..D-014 | Phase 3 Search (embeddings dependency, search service, accuracy set, UI) |
+| D-015 | Phase 4 Customization placeholder |
+| D-016..D-022 | Phase 9 Try It Out hardening (security review, chaos tests) |
+| D-023..D-026 | Phase 10 Accessibility |
+| D-027, D-028 | Phase 11 Related agents |
+| D-029..D-032 | Phase 12 Agent types research |
+| D-033..D-102 | Phase 13 Multi-agent and multi-format hosting (sparse: 033-040, 050-051, 060-062, 070-073, 080-081, 090, 100-102) |
+| D-140..D-162 | Phase 14 MCP generator |
+| D-163 | Test-suite flake fix (vitest timeouts) |
+| D-164..D-181 | Phase 15 MCP test platform |
+| D-200..D-206, D-220..D-236, D-240..D-252 | Phase 16: code review fixes for Phases 13, 14, 15 respectively |
+| D-253..D-257 | Phase 16: dependency health |
+| D-258 | Phase 16: build break fix (route-module exports) |
+| D-300..D-302, D-360..D-365, D-380..D-384 | Phase 17: spec viewer (E1), compare (E4), dark mode (E5) |
+| D-340 | Phase 16: redaction word-boundary fix (E3) |
+| D-400..D-404, D-420 | Phase 16: error states (E6), smoke test (E7) |
+| D-440..D-444 | Phase 16: milestone integration audit fixes |
+| D-445, D-460..D-466 | Phase 16: the user's code decisions (APP_INSTANCE_NAME; /health, {message}, handleError, example-schema-mismatch, pi user, rate limit, fixtures skip) |
+| D-467..D-478 | Phase 16: design defaults of Phases 12-15 confirmed, empty-library copy kept, tech-debt consolidation deferred |
+| D-479 | Phase 18: FastMCP pin widened to <5 |
+| D-500..D-508 | Phase 18: container-path fixes (E10) |
+| D-520..D-522, D-530..D-532 | Phase 19: Swagger 2.0, OAuth2, OpenAPI 3.1/3.2 audit (E11) |
+| D-540..D-549 | Phase 19: SQL dialects and Prisma (E12) |
+| D-560..D-572 | Phase 19: OData and sax (E13) |
+| D-580..D-596 | Phase 20: proposal layer and context pack (E14) |
+
+Phases 21-23 are planned and have no decision IDs yet (next free range: D-600 and up).
+
 - D-001 — Phase 2 left as "pending human": only 02-04 (human-verification checkpoint) remains and cannot be faked. Proceeding to Phase 3 despite its dependency on Phase 2, since 02-01..02-03 shipped and are tested. | Block everything on Phase 2 | Nothing else is gated on a human; saves the whole run | Run /gsd-verify-work 2 later.
 - D-002 — Autonomous lifecycle: run milestone audit only; skip complete-milestone and cleanup (archiving/deleting phase dirs is not safe unattended and Phase 2 is unverified). | Full lifecycle | Guardrails say no destructive changes | Run /gsd-complete-milestone manually.
 - D-003 — Workflow prompts (human_needed / gaps_found / blockers) auto-resolved: human_needed -> defer; gaps -> one gap-closure attempt then defer and log; blocker -> log in AUTONOMOUS-BLOCKERS.md, skip phase. | Ask user | User is away.

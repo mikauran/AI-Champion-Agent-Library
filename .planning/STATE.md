@@ -1,16 +1,16 @@
 ---
 gsd_state_version: "1.0"
 milestone: v1.0
-current_phase: 2
-current_phase_name: Catalog and Detail
+current_phase: 21
+current_phase_name: Generator Stage 0
 status: human_verification_pending
-stopped_at: Autonomous queue complete (phases 2.1-15 built); Phase 2 only needs human checkpoint 02-04; repo-wide hygiene pass done 2026-10-13
-last_updated: "2026-10-13T00:00:00.000Z"
-last_activity: 2026-10-13
-last_activity_desc: Docs sync, dependency health and deploy runbook (AUTONOMOUS-RUN item 9)
+stopped_at: Phases 1-20 recorded; Phase 2 only needs human checkpoint 02-04; Phases 21-23 planned, not started; .planning made GSD-conformant 2026-10-14
+last_updated: "2026-10-14T00:00:00.000Z"
+last_activity: 2026-10-14
+last_activity_desc: Recorded phases 16-20 (executed outside the GSD flow), planned phases 21-23, planning docs audited and synced
 progress:
-  total_phases: 17
-  completed_phases: 16
+  total_phases: 25
+  completed_phases: 21
   total_plans: 75
   completed_plans: 74
   percent: 99
@@ -21,29 +21,30 @@ milestone_name: milestone
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-19)
+See: .planning/PROJECT.md (updated 2026-10-14)
 
 **Core value:** Tech evaluators and executives can find the right AI agent for their use case within seconds — through semantic search or category browsing — and understand what it does, how it works, and how to get it.
-**Current focus:** Autonomous run on branch `autonomous/overnight-improvements` is past its phase queue (2.1, 2.2, 3, 4, 9-15 built and merged; review fixes for 13-15 done). Next: free-exploration backlog and the final milestone audit, then human verification (see Deferred Verification).
+**Current focus:** Phases 1-20 are built and recorded (16-20 were executed outside the normal GSD flow, with SUMMARY and VERIFICATION files but no PLAN files). Next planned work: Phase 21 Generator Stage 0, Phase 22 Proposal Layer Follow-ups, Phase 23 Code Review of New Generator Code. Many human checks are pending: see "Pending on Ville".
 
 ## Current Position
 
-Phase: 2 (Catalog and Detail) is the only phase not closed; all other phases (1, 2.1, 2.2, 3-15) are code complete.
-Plan: 02-04 (human checkpoint) not executed, not faked.
-Status: 8 phases verified `passed` (1, 2.1, 2.2, 5, 6, 7, 8, 12); 8 phases `human_needed` (3, 4, 9, 10, 11, 13, 14, 15: automated evidence complete, browser / live-container / real-model checks pending); Phase 2 pending its human checkpoint. `npm run check` exits 0 (208 files passed, 1 skipped, 2087 tests).
-Last activity: 2026-10-13, hygiene pass (dependencies bumped in range, docs synced, `docs/deploy-runbook.md`, `docs/dependency-health.md`).
+Phase: 21 (Generator Stage 0) is the next phase to plan; Phases 21-23 are planned, not started. Of the 25 roadmap phases, 21 are built (1, 2.1, 2.2, 3-20); Phase 2 is the only earlier phase not closed (human checkpoint 02-04).
+Plan: 02-04 (human checkpoint) not executed, not faked. Phases 21-23 have no PLAN files yet.
+Status: Verification per phase: `passed` for 1, 2.1, 2.2, 5, 6, 7, 8, 12, 20; `human_needed` for 3, 4, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19 (automated evidence complete; browser, live-container, paid-key and real-service checks pending); Phase 2 has no VERIFICATION file (pending its checkpoint).
+Final verified numbers on main (2026-10-14, after the last merge): `npm run check` (svelte-kit sync, tsc, vitest) twice exit 0: 269 test files passed (1 skipped), 3072 tests passed (1 skipped); `SEARCH_EMBEDDINGS=off npx vite build` exit 0; `npm run smoke` 104/104 (8 flag configurations). Generated packages' own pytest pass on FastMCP 3.4.8 and 4.1.0 (counts in `18-VERIFICATION.md`).
+Last activity: 2026-10-14, phases 16-20 recorded, phases 21-23 planned, `.planning` audited.
 
-Progress: [##########] 74/75 plans (the missing plan is 02-04, pending human)
+Progress: [##########] 74/75 planned plans (the missing plan is 02-04, pending human); phases 16-20 have no plans by design.
 
 ## Missing / Open Work
 
-- **Phase 2: only 02-04 remains (pending human).** Do not mark Phase 2 complete until it runs or is waived (D-001). 02-04-PLAN.md has no SUMMARY.md.
-- **Phase 3 (Search)**: built (5/5 plans, hybrid BM25 + local embeddings, `/api/search`, `?q=`). Pending human: real-model accuracy run, SIM_FLOOR tuning, live-typing feel (`03-HUMAN-UAT.md`).
-- **Phase 4 (Customization placeholder)**: built; browser check of the Customize menu pending (`04-HUMAN-UAT.md`).
-- **Phase 9 (Try It Out hardening)**: built, security findings fixed; nine live Podman checks pending (`09-HUMAN-UAT.md`).
-- **Phases 10, 11, 13, 14, 15**: built; pending human lists in each `*-HUMAN-UAT.md` (indexed in `docs/deploy-runbook.md` section 9).
-- **Build blocker B-002 (resolved)**: `vite build` failed on route-module exports; helpers moved to `src/lib/pageFlags.ts`, guard test `src/routes/routeExports.test.ts` added, real `vite build` verified exit 0.
-- Open design questions for Ville are in `.planning/AUTONOMOUS-SUMMARY.md` ("Questions for Ville").
+- **Phase 2: only 02-04 remains (pending human).** Do not mark Phase 2 complete until it runs or is waived (D-001). 02-04-PLAN.md has no SUMMARY.md (health I001, expected).
+- **Pending human items** are consolidated in "Pending on Ville" below; per-phase lists are the `*-HUMAN-UAT.md` files and `docs/human-verification-guide.md`.
+- **Planned phases:** 21 Generator Stage 0 (description cleanup, tool annotations, outputSchema/structuredContent, deterministic order; goldens will churn), 22 Proposal Layer Follow-ups, 23 Code Review of New Generator Code. See ROADMAP.md.
+- **Deferred v2 (no phase):** GraphQL (introspection JSON only), core POST-for-reads transport, gRPC/OpenRPC (REQUIREMENTS CUST-04..CUST-06).
+- **Known health items (`/gsd:health`):** W009 for Phases 12 and 15 (RESEARCH.md has a Validation Architecture but no VALIDATION.md; not fabricated); W019 for the five non-canonical `AUTONOMOUS-*.md` root files (referenced by many docs and tests; not moved).
+- **Non-registry directory:** `.planning/exploration/` (notes E1..E14 for Phases 16-20; referenced, not moved).
+- Run-time facts that are still unknown: real MCP calls against a live OData service; OData with filter/split proposal ops; the `auth_failure` wrong-key relaunch ERROR inside the container (unanalysed, Phase 18).
 
 ## Performance Metrics
 
@@ -146,10 +147,11 @@ None yet.
 
 ### Blockers/Concerns
 
-- B-001 (test flake) and B-002 (build failure on route-module exports) are both resolved. Full list: `.planning/AUTONOMOUS-BLOCKERS.md`.
+- B-001 (test flake) and B-002 (build failure on route-module exports) are resolved; B-003 (intermittent `jobs.test.ts` 409) is likely fixed (root cause found, D-443; unproven because the failure was intermittent; reopen if it recurs). Full list: `.planning/AUTONOMOUS-BLOCKERS.md`.
 - Phase 2's 02-04 human-verification checkpoint was never executed; Phase 2 cannot be marked fully complete until it runs (or is explicitly waived).
-- RETIRED: "Oracle AgentSpec field structure not inspected" (Phase 1 shipped PIPE-01/02) and "embedding model validation before Phase 3" (Phase 3 shipped with all-MiniLM-L6-v2; the real-model accuracy run is a pending human item).
-- Unverified facts carried by flagged phases: `fastmcp>=3.4,<4` pin (Phase 14/15), several framework format details (Phase 12/13). See the HUMAN-UAT files.
+- RETIRED: "Oracle AgentSpec field structure not inspected", "embedding model validation before Phase 3" (real-model run done in Phase 18, MiniLM kept), and the `fastmcp` pin concern (verified live, D-479).
+- The new generator code (Phases 19-20) has had no code review yet: Phase 23.
+- This machine has 3.7 GB RAM: do not run Podman checks alongside heavy agents or full test runs.
 
 ### Quick Tasks Completed
 
@@ -170,11 +172,16 @@ None yet.
 - Phase 2.1 and 2.2 done (D-005, D-007); Phases 3, 4, 9, 10, 11 built by the autonomous run; Phases 12-15 built (12 docs only; 13-15 behind flags `AGENT_KINDS`, `MCP_GENERATOR`, `MCP_TESTER`, all default off). Post-queue review/fix passes for 13, 14, 15 (D-200..D-259).
 - Phases 5, 6, and 7 together form one continuous "Try It Out" initiative, executed as a self-contained branch off Phase 2 — independent of, and completed ahead of, Phases 3 and 4.
 
+- Phases 16-20 added after the fact (2026-10-14) and **executed outside the normal GSD flow**: the work was done by directly launched agents (reviewers, fixers, exploration agents in worktrees, a human-supervised live session) under an autonomous run and then at Ville's decisions, so there is no discuss/plan/execute cycle and no PLAN files by design; each phase has `NN-01-SUMMARY.md` (marked `execution: outside-gsd-flow`) and `NN-VERIFICATION.md`, and the exploration notes remain in `.planning/exploration/`. 16 Review and Hardening Pass, 17 Optional UI Features (flagged), 18 Live Verification and Container-Path Fixes, 19 Generator Input Kinds, 20 Proposal Layer and Context Pack.
+- Phases 21-23 added (2026-10-14, planned, not started): 21 Generator Stage 0, 22 Proposal Layer Follow-ups, 23 Code Review of New Generator Code.
+
 ## Session Continuity
 
-Last session: 2026-10-13 (autonomous run, hygiene pass)
-Stopped at: docs sync, dependency health and deploy runbook committed on the worktree branch
-Resume file: None
+Last session: 2026-10-14 (documentation sync; `.planning` made GSD-conformant; pause handoff written by the orchestrator)
+Stopped at: all work committed on `autonomous/overnight-improvements`; nothing pushed; no phase in progress
+Resume file: None (see `.continue-here.md` if the orchestrator's pause-work created one)
+
+**How to resume:** run `/gsd:resume-work`. Read order: this file (STATE.md, especially "Pending on Ville"), ROADMAP.md (Progress table and Phases 21-23), `.planning/v1.0-MILESTONE-AUDIT.md`, the index at the top of `.planning/AUTONOMOUS-DECISIONS.md`, `.planning/AUTONOMOUS-BLOCKERS.md`, `docs/human-verification-guide.md`. Then pick: do the human checks, or `/gsd:discuss-phase 21`.
 
 ## Deferred Verification
 
@@ -189,3 +196,32 @@ Resume file: None
 | 13 | verification_deferred_human | /gsd-verify-work 13 (`13-HUMAN-UAT.md`) |
 | 14 | verification_deferred_human | /gsd-verify-work 14 (`14-HUMAN-UAT.md`) |
 | 15 | verification_deferred_human | /gsd-verify-work 15 (pending-human list: `.planning/phases/15-mcp-test-platform-flagged/15-HUMAN-UAT.md`; decisions D-164..D-181 in AUTONOMOUS-DECISIONS.md) |
+| 16 | verification_deferred_human | `16-VERIFICATION.md`: `/health` 503, error-page reference id and 401 `{message}` with `AUTH_ENABLED=true` (guide) |
+| 17 | verification_deferred_human | `17-VERIFICATION.md`: browser checks of spec viewer, compare and dark mode (guide sections 6-7) |
+| 18 | verification_deferred_human | `18-VERIFICATION.md`: check 7 (paid key), check 9 re-run, cancel path, `/catalog` UI (guide section 8) |
+| 19 | verification_deferred_human | `19-VERIFICATION.md`: no live OData service run; code review is Phase 23 |
+| 20 | passed | `20-VERIFICATION.md`; real proposal review and side-by-side run are Phase 22 |
+
+## Pending on Ville
+
+Environment constraint: this machine has 3.7 GB RAM. Do not run Podman checks alongside heavy agents or a full test run.
+
+**Live and paid checks**
+1. **Check 7** (Phase 9): the budget run with a real, paid OpenAI key (needs your key and budget). `09-HUMAN-UAT.md`.
+2. **Re-run Phase 9 check 9** (compose down), after the wording fix. `docs/human-verification-guide.md` section 8.
+3. **Phase 15 browser, cancel and auth-enabled items**: `15-HUMAN-UAT.md` (cancel path, sweep-vs-run-in-flight, `AUTH_ENABLED=true` 401 on `/api/mcp-generate` and `/api/mcp-test/*`).
+4. **Phase 15 container run**: steps in `docs/human-verification-guide.md` section 8 ("Phase 15 container run"); includes the unanalysed `auth_failure` ERROR inside the container.
+
+**Browser checks** (`docs/human-verification-guide.md`, sections 1-7): Phase 2 checkpoint **02-04** (the only thing blocking Phase 2); Phase 3 `/catalog` UI items 3 and 4 (`03-HUMAN-UAT.md`); Phase 4 Customize menu; Phase 10 keyboard/screen-reader/zoom/contrast; Phase 11 related agents; Phase 13 system detail and Type filter; Phase 14 Generate MCP panel and zip; Phase 17 spec viewer, compare and dark mode; flags-off check.
+
+**Still-unanswered questions** (from AUTONOMOUS-SUMMARY "Questions for Ville", minus everything answered by decisions D-445, D-460..D-479; the defaults apply until you answer):
+- Phase 10: control borders now use gray-500; is the darker look acceptable?
+- Should job-route 404 messages stop echoing the id?
+- Phase 12 question 4: which frameworks do AIC authors actually use (a survey of the 100+ agents would re-weight the adapter ranking)?
+- Phase 14 questions 6 and 8: ask the study author why openapi-mcp-generator scored 0 of 5 and whether the `combined` arm was benchmarked; the reference repos had uncommitted changes when the synthesis was written.
+- Phase 15 question 6: are the re-authored synthetic Acme cases faithful enough to the study's case structure?
+- Phase 15 question 8: real partner profile text for the profile case (never to be committed) and who owns the runner image tag.
+- Phase 15 question 9: calibration runs against the study's legacy arms? Question 10: should uploaded servers ever be run (default: no, only fake variants and generator samples)?
+- Phase 14 question 1 (zip download vs platform-hosted output) and the tabular 5-row limit were covered by D-478 (all remaining defaults confirmed).
+
+**Next planned work (needs a go from you):** Phases 21, 22, 23 (ROADMAP.md). Phase 22 starts with a first real proposal from an agent session for you to review.

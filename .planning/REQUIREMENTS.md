@@ -52,11 +52,14 @@ Added mid-project (see STATE.md "Roadmap Evolution") as a self-contained initiat
 
 - [x] **CUST-02** *(Phase 14, flagged `MCP_GENERATOR`, default off; live checks pending human)*: MCP generator — user provides a database schema (SQL DDL), OpenAPI spec or tabular catalog header, platform generates a Python FastMCP package. As built it takes schema or spec only and rejects anything that looks like a credential (never stores credentials or data); SQL DDL is one adapter among three
 - **CUST-03**: Additional customization wizard flows for other well-defined agent types
+- **CUST-04** *(deferred, no phase)*: GraphQL input for the MCP generator, from introspection JSON only (no SDL parser)
+- **CUST-05** *(deferred, no phase)*: core POST-for-reads transport for the generator (the generator core stays frozen until then)
+- **CUST-06** *(deferred, no phase)*: later input kinds gRPC and OpenRPC for the MCP generator
 
 ### Discovery Enhancements
 
 - [x] **DISC-01** *(Phase 11; browser check pending human)*: Related agents panel on detail page (similar agents by embedding distance)
-- **DISC-02**: Side-by-side agent comparison view
+- [x] **DISC-02** *(Phase 17, flagged `AGENT_COMPARE`, default off; browser check pending human)*: Side-by-side agent comparison view
 - **DISC-03**: Agent collections / curated bundles
 
 ### Auth & Deployment
@@ -67,9 +70,9 @@ Added mid-project (see STATE.md "Roadmap Evolution") as a self-contained initiat
 
 ### UI Polish
 
-- **UI-02**: Dark / light mode theme toggle
+- [x] **UI-02** *(Phase 17, flagged `UI_DARK_MODE`, default off; browser check pending human)*: Dark / light mode theme toggle
 - [x] **UI-03** *(Phase 10; keyboard/screen-reader/zoom checks pending human, `10-HUMAN-UAT.md`)*: WCAG AA accessibility (keyboard nav, screen reader labels)
-- **UI-04**: AgentSpec raw viewer (syntax-highlighted spec file on detail page)
+- [x] **UI-04** *(Phase 17, flagged `UI_SPEC_VIEWER`, default off; browser check pending human)*: AgentSpec raw viewer (re-serialised stored record, redacted and size-capped; not syntax-highlighted)
 
 ## Out of Scope
 
@@ -104,14 +107,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRCH-03 | Phase 3 | Complete (code); live-typing feel pending human (03-HUMAN-UAT.md) |
 | CUST-01 | Phase 4 | Complete (04-01); browser check of the menu pending human (04-HUMAN-UAT.md) |
 | CUST-02 | Phase 14 | Complete (code), behind flag `MCP_GENERATOR` (default off); live checks pending human (14-HUMAN-UAT.md) |
+| DISC-02 | Phase 17 | Delivered (code), behind flag `AGENT_COMPARE` (default off); browser check pending human (see 17-VERIFICATION.md) |
+| UI-02 | Phase 17 | Delivered (code), behind flag `UI_DARK_MODE` (default off); browser check pending human (17-VERIFICATION.md) |
+| UI-04 | Phase 17 | Delivered (code), behind flag `UI_SPEC_VIEWER` (default off); browser check pending human (17-VERIFICATION.md) |
 | DISC-01 | Phase 11 | Complete (code); browser check pending human (11-HUMAN-UAT.md) |
 | UI-03 | Phase 10 | Complete (code and jsdom/axe checks); keyboard, screen-reader, zoom and contrast checks pending human (10-HUMAN-UAT.md) |
+
+Phases 16-20 were executed outside the normal GSD flow (no PLAN files; records in their `*-SUMMARY.md` and `*-VERIFICATION.md`): Phase 17 carries UI-02, UI-04 and DISC-02; Phases 19 and 20 extend CUST-02; Phases 16 and 18 have no REQ-IDs. Phases 21-23 (planned, not started) extend or harden CUST-02. CUST-04..CUST-06 are deferred v2 items without a phase.
 
 Phases 12 (research docs), 13 (multi-agent and multi-format hosting, flag `AGENT_KINDS`) and 15 (MCP test platform, flag `MCP_TESTER`) were added by the autonomous run without REQ-IDs; they are tracked by their ROADMAP success criteria and the `*-VERIFICATION.md` files (status `human_needed` for 13 and 15, `passed` for 12). Phases 2.1 and 2.2 (green baseline, scale data) likewise have no REQ-IDs (`passed`).
 
 **Coverage:**
 - v1 requirements: 15 total (all implemented in code; human checks still pending for the seven Phase 2 rows, SRCH-01, SRCH-03 and CUST-01)
-- Mapped to phases: 15 (plus v2 items CUST-02, DISC-01, UI-03 now delivered by Phases 14, 11, 10)
+- Mapped to phases: 15 (plus v2 items CUST-02, DISC-01, UI-03, UI-02, UI-04, DISC-02 now delivered by Phases 14, 11, 10, 17; all 21 delivered requirements are tracked above)
 - Unmapped: 0 ✓
 - Phase 2 status (NOT verified, not marked complete): the ONLY remaining Phase 2 item is the human checkpoint 02-04 (pending human). All code is done; Phase 2 is intentionally not marked complete.
 - Note (added 2026-08-20 during a phase-consistency pass): 02-04-PLAN.md is Phase 2's single human-verification checkpoint for the seven rows above (`requirements:` frontmatter lists exactly BROW-01/02/03, DETL-01/02/03, UI-01) and has never been executed — no 02-04-SUMMARY.md exists. The underlying code shipped and is unit-tested (02-01/02/02/02/03), but browser-level sign-off is outstanding. See STATE.md "Missing / Open Work".
@@ -119,4 +127,4 @@ Phases 12 (research docs), 13 (multi-agent and multi-format hosting, flag `AGENT
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-10-13 — traceability synced with code and phase VERIFICATION files (Phase 2 deliberately not marked verified)*
+*Last updated: 2026-10-14 — UI-02, UI-04, DISC-02 delivered flagged in Phase 17; deferred CUST-04..CUST-06 added; Phase 2 deliberately not marked verified*
