@@ -41,7 +41,13 @@ function ext(name: string): string {
   return i < 0 ? '' : name.slice(i).toLowerCase()
 }
 
-export function readSubmissionDir(dir: string): { files: SubmissionFile[]; skipped: string[] } {
+export interface ScanOptions {
+  /** Directory names (case-insensitive, any depth) that are skipped and reported in `skipped`. Default: none beyond node_modules and .git. */
+  skipDirNames?: readonly string[]
+}
+
+export function readSubmissionDir(dir: string, opts: ScanOptions = {}): { files: SubmissionFile[]; skipped: string[] } {
+  const extraSkip = new Set((opts.skipDirNames ?? []).map((n) => n.toLowerCase()))
   const files: SubmissionFile[] = []
   const skipped: string[] = []
   let total = 0
@@ -91,7 +97,7 @@ export function readSubmissionDir(dir: string): { files: SubmissionFile[]; skipp
       if (st.isSymbolicLink()) {
         skipped.push(rel)
       } else if (st.isDirectory()) {
-        if (SKIP_DIRS.has(name) || depth + 1 > SCAN_MAX_DEPTH) skipped.push(rel)
+        if (SKIP_DIRS.has(name) || extraSkip.has(name.toLowerCase()) || depth + 1 > SCAN_MAX_DEPTH) skipped.push(rel)
         else walk(child, depth + 1)
       } else if (st.isFile()) {
         addFile(child, rel)
