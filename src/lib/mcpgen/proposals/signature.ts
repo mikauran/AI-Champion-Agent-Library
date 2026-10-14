@@ -41,7 +41,10 @@ const STD_DESC: Record<string, string> = {
 
 /** Baseline signature, in emitted order. Tools a proposal created carry their own `wrapper.params`. */
 export function baselineSignature(plan: ServerPlan, tool: PlannedTool): SigArg[] {
-  if (tool.proposed?.wrapper) return tool.proposed.wrapper.params
+  if (tool.proposed?.wrapper) {
+    const ps = tool.proposed.wrapper.params
+    return [...ps.filter((p) => p.required && p.default === undefined), ...ps.filter((p) => !(p.required && p.default === undefined))]
+  }
   const own = new Set(tool.params.map((p) => p.name))
   return rawSignature(plan, tool).map((a) => (a.description || own.has(a.name) || !STD_DESC[a.name] ? a : { ...a, description: STD_DESC[a.name] }))
 }

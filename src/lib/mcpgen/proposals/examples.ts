@@ -44,7 +44,7 @@ export function buildExamples(
   const kindOf = (t: PlannedTool) => toolKind(baseline, t)
   const nonDescribe = tools.filter((t) => kindOf(t) !== 'describe')
   const withArg = (names: string[]) => nonDescribe.find((t) => sigOf(t).some((a) => names.includes(a.name)))
-  const doc = (ops: unknown[]) => ({ version: 1, baseline: { fingerprint }, producer: { kind: 'script', note: 'example generated from the baseline inventory' }, ops })
+  const doc = (ops: unknown[]) => ({ version: 1, baseline: { fingerprint }, producer: { kind: 'tool', note: 'example generated from the baseline inventory' }, ops })
   const base = (id: string) => ({ id, reason: 'Example only: shows the shape of this op for the reviewer.' })
   const candidates: { op: OpType; ops: unknown[] | null; why?: string }[] = []
 

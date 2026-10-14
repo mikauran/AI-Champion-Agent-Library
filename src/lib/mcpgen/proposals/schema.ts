@@ -129,7 +129,7 @@ export function buildProposalSchema(strict: boolean) {
   return z.strictObject({
     version: z.literal(PROPOSAL_VERSION),
     baseline: z.strictObject({ fingerprint: z.string().regex(/^[0-9a-f]{64}$/) }),
-    producer: z.strictObject({ kind: z.enum(['human', 'external-agent', 'script']), note: z.string().max(200).optional() }).optional(),
+    producer: z.strictObject({ kind: z.enum(['human', 'external-agent', 'tool']), note: z.string().max(200).optional() }).optional(),
     ops: z.array(ops).max(MAX_OPS),
   })
 }
