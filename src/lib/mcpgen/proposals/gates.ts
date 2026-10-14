@@ -200,6 +200,8 @@ export function checkOps(ops: ProposalOp[], ctx: GateCtx): Issue[] {
   let newToolCount = 0
 
   for (const op of ops) {
+    // The reason is free text for the reviewer; it is never emitted, but it is shown in reviews and reports.
+    checkText(push, op, ctx, op.reason, 'reason', LIMITS.reason, 'reason')
     switch (op.op) {
       case 'rename_tool': {
         const t = toolGround(op, op.tool)
