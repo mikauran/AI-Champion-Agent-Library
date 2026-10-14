@@ -9,6 +9,8 @@
   let message = $derived(
     status >= 500 ? 'An unexpected error occurred. Please try again in a moment.' : ($page.error?.message ?? 'The request could not be completed.')
   )
+  // D-462: the short reference from handleError (shown for 5xx only, and only if it has the expected shape).
+  let ref = $derived(status >= 500 && /^[0-9a-f]{8}$/.test($page.error?.ref ?? '') ? $page.error?.ref : null)
 </script>
 
 <svelte:head>
@@ -19,6 +21,9 @@
   <p class="text-sm font-medium text-gray-700">Error {status}</p>
   <h1 class="mt-1 text-2xl font-semibold text-gray-900">{title}</h1>
   <p class="mt-3 text-sm text-gray-700 break-words">{message}</p>
+  {#if ref}
+    <p class="mt-2 text-sm text-gray-700">Reference: <code class="font-mono">{ref}</code></p>
+  {/if}
   <p class="mt-6">
     <a
       href="/catalog"

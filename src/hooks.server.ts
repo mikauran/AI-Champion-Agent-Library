@@ -1,4 +1,6 @@
-import { json, redirect, type Handle, type ServerInit } from '@sveltejs/kit'
+import { randomBytes } from 'node:crypto'
+import { json, redirect, type Handle, type HandleServerError, type ServerInit } from '@sveltejs/kit'
+import { redactText } from '$lib/spec/security'
 import { AUTH_COOKIE_NAME, authCookieOptions, getAuthService } from '$lib/server/auth'
 import { isAuthenticationEnabled } from '$lib/server/auth-config'
 import { resolveWithTheme } from '$lib/theme'
@@ -25,6 +27,17 @@ export const init: ServerInit = async () => {
       console.warn('Search warm-up failed:', err instanceof Error ? err.message : err)
     }
   }
+}
+
+// D-462: unexpected errors are logged server-side under a short reference id (details redacted with the
+// shared inline-token redaction) and the visitor only gets { message: 'Internal Error', ref }.
+// Handled errors (4xx, 404 for unmatched routes) keep SvelteKit's own message.
+export const handleError: HandleServerError = ({ error, event, status, message }) => {
+  if (status < 500) return { message }
+  const ref = randomBytes(4).toString('hex')
+  const detail = error instanceof Error ? `${error.name}: ${error.message}\n${error.stack ?? ''}` : String(error)
+  console.error(`[ref ${ref}] ${event.request.method} ${event.url.pathname} failed (${status}):`, redactText(detail))
+  return { message: 'Internal Error', ref }
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
