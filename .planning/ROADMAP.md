@@ -40,6 +40,13 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 21: Generator Stage 0** - Description cleanup, tool annotations, outputSchema, deterministic tool order (not started)
 - [ ] **Phase 22: Proposal Layer Follow-ups** - First real proposal reviewed, baseline vs proposal run, hygiene tuning, derived_filter on OData (not started)
 - [ ] **Phase 23: Code Review of New Generator Code** - Review, fixes and security audit of everything added since the Phase 14 review (not started)
+- [ ] **Phase 24: Agent Inventory and Catalog Template** - see details (not started; execution order 24-30 first, then 21-23)
+- [ ] **Phase 25: Design-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
+- [ ] **Phase 26: Sourcing-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
+- [ ] **Phase 27: Manufacturing-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
+- [ ] **Phase 28: Site and Handover Agents** - see details (not started; execution order 24-30 first, then 21-23)
+- [ ] **Phase 29: Further DDC-skill Agents** - see details (not started; execution order 24-30 first, then 21-23)
+- [ ] **Phase 30: Release Preparation** - see details (not started; execution order 24-30 first, then 21-23)
 
 ## Phase Details
 
@@ -558,3 +565,85 @@ Phases execute in numeric order, with decimal phases between their integers: 1, 
 | 21. Generator Stage 0 | 0/0 | Not started | - |
 | 22. Proposal Layer Follow-ups | 0/0 | Not started | - |
 | 23. Code Review of New Generator Code | 0/0 | Not started | - |
+
+### Phase 24: Agent inventory, catalog entry template, MCP-server entries and DDC license check
+
+**Goal:** Audit which of the 12 consortium agents already exist fully or partly in data/agents (e.g. RFI triage, HVAC, submittal review); define the catalog entry template (purpose, stage, inputs, outputs, data sources, assumptions, gaps; every output is a draft for engineer review); add Ville's own MCP agents (stk-mcp and others from ~/projects/mcp-gen-comparison and -2) as MCP-server kind entries; check the DDC_Skills_for_AI_Agents_in_Construction license and record attribution; start the combined gaps list for Ville and Jussi (docs/consortium-agents-gaps.md). Source slide is TUNI-confidential: names only, own wording, slide never committed. Spend: $0.50 per agent run, $10 total, running log in STATE.md.
+**Requirements**: TBD
+**Depends on:** Phase 23
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 24 to break down)
+
+### Phase 25: Design-stage agents (ETIM & classification repair, QTO normalization, clash prioritization, RFI generation)
+
+**Goal:** Build or complete agents 1 ETIM & classification repair, 2 QTO normalization, 3 Clash prioritization, 4 RFI generation (IFC/BIM stage). Done bar per agent: complete catalog entry plus one concrete step run through Try it out in the Pi container with a real model, smoke-tested, evidence in VERIFICATION/UAT; otherwise the reason is recorded. Public or synthetic sample data only, labelled; gaps and assumptions recorded in the entry and the combined list.
+**Requirements**: TBD
+**Depends on:** Phase 24
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 25 to break down)
+
+### Phase 26: Sourcing-stage agents (product sourcing E-BOM to M-BOM, quote comparison, carbon and EPD enrichment)
+
+**Goal:** Build or complete agents 5 Product sourcing (E-BOM to M-BOM), 6 Quote comparison, 7 Carbon & EPD enrichment (LVI-INFO catalog stage). Use Ville's MCP servers (stk-mcp etc.) for catalog data where applicable. Same done bar, data labelling and gap recording as Phase 25.
+**Requirements**: TBD
+**Depends on:** Phase 25
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 26 to break down)
+
+### Phase 27: Manufacturing-stage agents (cut-sheet QA, spooling and cutting)
+
+**Goal:** Build or complete agents 8 Cut-sheet QA and 9 Spooling & cutting (prefab and cut sheets). Same done bar, data labelling and gap recording as Phase 25.
+**Requirements**: TBD
+**Depends on:** Phase 26
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 27 to break down)
+
+### Phase 28: Site and handover agents (D2 code validation, O&M completeness, BMS digital twin)
+
+**Goal:** Build or complete agents 10 D2 code validation, 11 O&M completeness, 12 BMS digital twin (O&M, BMS stage). Same done bar, data labelling and gap recording as Phase 25.
+**Requirements**: TBD
+**Depends on:** Phase 27
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 28 to break down)
+
+### Phase 29: Further DDC-skill one-step agents (same done bar)
+
+**Goal:** Choose further DDC skills that make useful one-step agents and build them to the same done bar. Quality over count; list remaining candidates instead of rushing them. Attribution per the Phase 24 license check.
+**Requirements**: TBD
+**Depends on:** Phase 28
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 29 to break down)
+
+### Phase 30: Release preparation (clean release branch, production build, PR description, release notes, deploy checklist)
+
+**Goal:** Prepare the release for the publishing repo (PR opened by Ville, published by someone else): a clean release branch with the MCP generator and test queue behind their flags and switched off, a production build with smoke passing, a PR description, release notes (including the agent count) and a deploy checklist. Do not push and do not open PRs.
+**Requirements**: TBD
+**Depends on:** Phase 29
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 30 to break down)
+
+
+## Backlog (noted, postponed, not built)
+
+- A public agent counter for the consortium.
+- A Pi orchestration layer: a manager that polls a Pi job until it is done and returns the result.
+- Multi-agent systems: a manager agent that assembles a team; research on self-organization.
+- Making the MCP generator and test queue ready for public release.
+
+## Execution order (autonomous run 2026-10-14)
+
+Phases 24-30 run first (agents, then release prep), then 21-23 (generator roadmap). Use `/gsd:autonomous --only N`.
