@@ -211,6 +211,8 @@ export async function runJob(opts: Opts, deps: RunDeps = {}): Promise<number> {
   const finish = (code: number, status: string, note: string): number => {
     ev.durationS = Math.round((Date.now() - start) / 100) / 10
     ev.status = status
+    // A rejected submission (no job id) cannot have spent tokens: no reserve is kept.
+    if (ev.jobId === null && status === 'http-error') ev.estCostUsd = 0
     writeLedgerRow(opts.ledger, {
       ...row, jobId: ev.jobId ?? '', model: ev.model, totalTokens: String(ev.totalTokens),
       requests: String(ev.requests), costUsd: ev.estCostUsd, status, note: `label=${opts.label}; ${note}`,

@@ -3,3 +3,5 @@ Cap: 10.00 USD total for the autonomous run; the harness refuses to start when t
 
 | run_id | date | plan | agent | job_id | model | total_tokens | requests | cost_usd | status | note |
 |---|---|---|---|---|---|---|---|---|---|---|
+| 2026-10-14T22:37:17.345Z-demo-rfi-triage | 2026-10-14T22:37:17.345Z | 25-01 | demo-rfi-triage |  | unknown | unknown | unknown | 0.0000 | http-error | label=synthetic; POST jobs -> HTTP 403 (Origin mismatch, no job created) |
+| 2026-10-14T22:37:25.314Z-demo-rfi-triage | 2026-10-14T22:37:25.314Z | 25-01 | demo-rfi-triage | 1e15df20-234c-4c3f-9def-4b2417fe39ff | gpt-4.1-mini | 7652 | 3 | 0.0122 | succeeded | label=synthetic; ok |
