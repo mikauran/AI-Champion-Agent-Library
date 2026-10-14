@@ -1,4 +1,4 @@
-name: STK Catalog MCP (stk-catalog-mcp)
+name: STK Catalog MCP
 kind: mcp-server
 summary: >-
   Read-only MCP server over a local STK (sahkonumerot.fi) Excel workbook, implemented as a plain

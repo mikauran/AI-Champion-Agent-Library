@@ -1,4 +1,4 @@
-name: LVI-INFO MCP (hand-authored)
+name: LVI-INFO MCP
 kind: mcp-server
 summary: >-
   Read-only MCP server wrapping the LVI-INFO Read-API, a Finnish building-products catalog for HVAC,

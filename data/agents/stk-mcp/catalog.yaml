@@ -1,4 +1,4 @@
-name: STK Products MCP (stk-mcp)
+name: STK MCP
 kind: mcp-server
 summary: >-
   Read-only MCP server that lets an agent search and look up electrical products from a local STK
