@@ -10,6 +10,7 @@
     "bench": "svelte-kit sync && tsx scripts/bench.ts",
     "fixtures:scale": "tsx scripts/fixtures/generate-scale.ts",
     "validate-submission": "tsx scripts/validate-submission.ts",
+    "validate-entries": "tsx scripts/validate-entries.ts",
     "generate-mcp": "tsx scripts/generate-mcp.ts",
     "mcp-test": "tsx scripts/mcp-test.ts",
     "mcp-propose-eval": "tsx scripts/mcp-propose-eval.ts",
