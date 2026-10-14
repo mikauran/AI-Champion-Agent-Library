@@ -58,7 +58,7 @@
     if (res.status === 404) return 'The MCP test platform is not available.'
     try {
       const body = await res.json()
-      if (body && typeof body.error === 'string') return body.error
+      if (body && typeof body.message === 'string') return body.message
     } catch {
       /* fall through */
     }

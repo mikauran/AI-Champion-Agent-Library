@@ -11,7 +11,7 @@ import { runPipeline } from '$lib/mcpgen/pipeline.js'
 import type { Gap, GenerateOptions } from '$lib/mcpgen/types.js'
 
 const fail = (status: number, code: string, message: string) => {
-  const body: GenerateErrorResponse = { ok: false, gaps: [{ code, message, severity: 'error' } as Gap] }
+  const body: GenerateErrorResponse = { ok: false, message, gaps: [{ code, message, severity: 'error' } as Gap] }
   return json(body, { status })
 }
 
@@ -74,7 +74,7 @@ export const POST: RequestHandler = async ({ request }) => {
   if (options === null) return fail(400, 'bad-request', 'Field "options" must be an object.')
 
   const result = runPipeline(body.input, { adapterId, options })
-  if (!result.ok) return json({ ok: false, gaps: result.gaps } satisfies GenerateErrorResponse, { status: 422 })
+  if (!result.ok) return json({ ok: false, message: result.gaps[0]?.message ?? 'The input could not be converted.', gaps: result.gaps } satisfies GenerateErrorResponse, { status: 422 })
 
   let zip: Uint8Array
   try {

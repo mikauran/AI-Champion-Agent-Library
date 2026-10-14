@@ -240,6 +240,8 @@ describe('no pre-existing test file was modified by Phase 15', () => {
     'src/routes/api/tryitout/jobs/jobs.test.ts',
     'src/routes/agents/customize-button.mcp.test.ts',
     'src/routes/agents/customize-button.mcptest.test.ts',
+    // E8 decisions (D-461..D-466, decided by Ville 2026-10-14): each file below pins behaviour Ville changed; see .planning/exploration/E8-decisions-impl.md.
+    'src/hooks.server.test.ts', // D-461: auth 401 body is { message }
   ]
   it('git diff --diff-filter=M against the baseline lists no test file', () => {
     let start = ''

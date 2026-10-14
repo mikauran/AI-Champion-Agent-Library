@@ -11,10 +11,10 @@ export const GET: RequestHandler = ({ params }) => {
   const run = runStore.getRun(params.id)
   if (!run) error(404, 'Not found')
   if (run.status === 'queued' || run.status === 'running') {
-    return json({ ok: false, error: 'The run has not finished yet.' }, { status: 409 })
+    return json({ ok: false, message: 'The run has not finished yet.' }, { status: 409 })
   }
   if (run.status === 'failed' || run.report === null) {
-    return json({ ok: false, error: 'The run failed and has no report.' }, { status: 404 })
+    return json({ ok: false, message: 'The run failed and has no report.' }, { status: 404 })
   }
   return new Response(run.report, {
     headers: {

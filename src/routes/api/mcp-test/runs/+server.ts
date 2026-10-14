@@ -11,7 +11,7 @@ import { methodNotAllowed } from '$lib/server/mcptest/methodFallback.js'
 import { admitStart, isAllowedSubject, isKnownCase, startRun } from '$lib/server/mcptest/service.js'
 import { sessionKey } from '$lib/server/tryitout/session.js'
 
-const fail = (status: number, message: string) => json({ ok: false, error: message } satisfies ApiError, { status })
+const fail = (status: number, message: string) => json({ ok: false, message } satisfies ApiError, { status })
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
 function validate(body: unknown): StartRunRequest | string {

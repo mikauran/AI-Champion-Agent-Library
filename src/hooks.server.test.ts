@@ -55,7 +55,7 @@ describe('hooks.server auth handling', () => {
     authEnabled.mockReturnValue(true)
     const { res, resolve } = await run('/api/tryitout/jobs')
     expect(res?.status).toBe(401)
-    expect(await res?.json()).toEqual({ error: 'Authentication required' })
+    expect(await res?.json()).toEqual({ message: 'Authentication required' })
     expect(resolve).not.toHaveBeenCalled()
   })
 

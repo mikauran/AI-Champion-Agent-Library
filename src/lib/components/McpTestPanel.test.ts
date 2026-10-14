@@ -76,7 +76,7 @@ describe('McpTestPanel run', () => {
     [413, 'Body too large.'],
     [429, 'A run is already in progress.']
   ])('shows the %i error body in the alert', async (status, error) => {
-    const fn = (async () => jsonRes({ ok: false, error }, status)) as unknown as typeof fetch
+    const fn = (async () => jsonRes({ ok: false, message: error }, status)) as unknown as typeof fetch
     mount(fn)
     await run()
     await vi.waitFor(() => expect(screen.getByRole('alert').textContent).toBe(error))

@@ -50,7 +50,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.route.id === null
   if (!event.locals.user && !isPublic) {
     if (event.url.pathname.startsWith('/api/')) {
-      return json({ error: 'Authentication required' }, { status: 401 })
+      return json({ message: 'Authentication required' }, { status: 401 })
     }
     const next = `${event.url.pathname}${event.url.search}`
     redirect(303, `/login?next=${encodeURIComponent(next)}`)

@@ -7,5 +7,5 @@ import { mcpTesterEnabled } from '$lib/flags.js'
 
 export function methodNotAllowed(allow: string): Response {
   if (!mcpTesterEnabled()) error(404, 'Not found')
-  return json({ ok: false, error: 'Method not allowed.' }, { status: 405, headers: { allow } })
+  return json({ ok: false, message: 'Method not allowed.' }, { status: 405, headers: { allow } })
 }
