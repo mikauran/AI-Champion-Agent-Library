@@ -3,6 +3,7 @@
 // This repository never runs them; they ship with the generated package and seed Phase 15 cases.
 import type { Entity, Operation, Param, PlannedTool, ServerPlan } from '../types.js'
 import { effectiveMaxPageSize, resolveEnv, toolKind } from '../plan.js'
+import { hasOdata, odataTests } from './odata.js'
 import { joinLines, pyLit, pyNum, pyStr } from './pyutil.js'
 
 function sample(p: Param): unknown {
@@ -472,7 +473,7 @@ function localTests(plan: ServerPlan): string[] {
 }
 
 export function emitPytest(plan: ServerPlan): string {
-  const lines = plan.model.backend.kind === 'http' ? httpTests(plan) : localTests(plan)
+  const lines = plan.model.backend.kind === 'http' ? (hasOdata(plan) ? odataTests(plan, HEAD(plan.model.name), commonTests) : httpTests(plan)) : localTests(plan)
   // Trim the extra blank lines left at the end of the last test.
   while (lines.length && lines[lines.length - 1] === '') lines.pop()
   return joinLines(lines)

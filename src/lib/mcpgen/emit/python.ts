@@ -12,23 +12,24 @@ import {
   toolKind,
 } from '../plan.js'
 import { cleanSource, cleanText, joinLines, pyIdent, pyLit, pyNum, pyStr, sqlIdent } from './pyutil.js'
-import { RUNTIME_COMMON, RUNTIME_DATASET, RUNTIME_QUERY, RUNTIME_SQL, runtimeHttp } from './runtime.js'
+import { odataGetTool, odataListTool, odataTable, hasOdata, isOdataTool } from './odata.js'
+import { RUNTIME_COMMON, RUNTIME_DATASET, RUNTIME_QUERY, RUNTIME_SQL, RUNTIME_ODATA, runtimeHttp } from './runtime.js'
 
 const PYTYPE: Record<string, string> = { string: 'str', integer: 'int', number: 'float', boolean: 'bool', unknown: 'str' }
 const I32_MIN = -2147483648
 const I32_MAX = 2147483647
 
-const FAIL_TAIL = ['    except _Fail as exc:', '        return _fail(exc)', '    except Exception:', '        return _err("internal", _INTERNAL_MESSAGE)']
+export const FAIL_TAIL = ['    except _Fail as exc:', '        return _fail(exc)', '    except Exception:', '        return _err("internal", _INTERNAL_MESSAGE)']
 
-function entityOf(plan: ServerPlan, id: string): Entity {
+export function entityOf(plan: ServerPlan, id: string): Entity {
   return plan.model.entities.find((e) => e.id === id)!
 }
-function opOf(plan: ServerPlan, tool: PlannedTool): Operation | undefined {
+export function opOf(plan: ServerPlan, tool: PlannedTool): Operation | undefined {
   return plan.model.operations.find((o) => o.id === tool.operation)
 }
-const ind = (n: number, s: string) => '    '.repeat(n) + s
+export const ind = (n: number, s: string) => '    '.repeat(n) + s
 
-function sigParam(p: Param): string {
+export function sigParam(p: Param): string {
   pyIdent(p.name)
   const t = PYTYPE[p.type] ?? 'str'
   const required = p.required || p.in === 'path'
@@ -36,14 +37,14 @@ function sigParam(p: Param): string {
 }
 
 /** The result ceiling as a checked number: anything but a finite number throws (review WR-04). */
-function ceilingOf(m: ServerPlan['model']): number | undefined {
+export function ceilingOf(m: ServerPlan['model']): number | undefined {
   const c = m.limits.resultCeiling
   if (c === undefined) return undefined
   pyNum(c)
   return c
 }
 
-function ceilingWarning(ceiling: number, hint: string): string {
+export function ceilingWarning(ceiling: number, hint: string): string {
   return `Result ceiling reached: results beyond position ${ceiling} are not available. Narrow the request with ${hint} instead of paging deeper.`
 }
 
@@ -53,7 +54,7 @@ function partitionHint(params: Param[]): string {
 }
 
 /** Validation lines for one argument (inside try, indent level 2). */
-function paramChecks(p: Param): string[] {
+export function paramChecks(p: Param): string[] {
   const out: string[] = []
   const required = p.required || p.in === 'path'
   const guard = required ? '' : `${p.name} is not None and `
@@ -94,7 +95,7 @@ function pathExpr(op: Operation): string {
   return segs.map((s) => (typeof s === 'string' ? pyStr(s) : `_seg(${s.param})`)).join(' + ')
 }
 
-function doc(summary: string, args: [string, string][], notes: string[] = []): string[] {
+export function doc(summary: string, args: [string, string][], notes: string[] = []): string[] {
   const out = [ind(1, `"""${cleanText(summary, 400)}`)]
   for (const n of notes) out.push('', ind(1, cleanText(n, 300)))
   if (args.length) {
@@ -105,11 +106,11 @@ function doc(summary: string, args: [string, string][], notes: string[] = []): s
   return out
 }
 
-function paramArgs(params: Param[]): [string, string][] {
+export function paramArgs(params: Param[]): [string, string][] {
   return params.map((p) => [p.name, (p.description ? cleanSource(p.description, 160) : '') || (p.in === 'path' ? 'Identifier of the item.' : `Optional ${p.name} filter.`)] as [string, string])
 }
 
-const FIELDS_DOC = 'Optional list of field names to return (at most 12; unknown names are ignored).'
+export const FIELDS_DOC = 'Optional list of field names to return (at most 12; unknown names are ignored).'
 
 function httpListTool(plan: ServerPlan, tool: PlannedTool): string[] {
   const op = opOf(plan, tool)!
@@ -384,7 +385,9 @@ export function emitPython(plan: ServerPlan): string {
     '',
   )
   const std = ['math', 'os']
+  const odata = kind === 'http' && hasOdata(plan)
   if (kind === 'http') std.push('json', 'time', 'urllib.parse')
+  if (odata) std.push('datetime', 're')
   if (kind === 'dataset') std.push('csv')
   if (kind === 'sql') std.push('pathlib', 'sqlite3')
   out.push(...std.sort().map((x) => `import ${x}`), 'from typing import Optional', '')
@@ -408,7 +411,8 @@ export function emitPython(plan: ServerPlan): string {
   if (kind === 'sql') out.push(`DSN_ENV = ${pyStr(env.dsn!)}`)
   out.push('', '')
   out.push(RUNTIME_COMMON.trimEnd())
-  if (kind === 'http') out.push(runtimeHttp(auth.scheme).replace(/\n+$/, ''))
+  if (kind === 'http') out.push(runtimeHttp(auth.scheme, odata).replace(/\n+$/, ''))
+  if (odata) out.push(RUNTIME_ODATA.replace(/\n+$/, ''))
   if (kind === 'dataset') out.push(RUNTIME_QUERY.replace(/\n+$/, ''), RUNTIME_DATASET.replace(/\n+$/, ''))
   if (kind === 'sql') out.push(RUNTIME_QUERY.replace(/\n+$/, ''), RUNTIME_SQL.replace(/\n+$/, ''))
   out.push('', '')
@@ -419,6 +423,7 @@ export function emitPython(plan: ServerPlan): string {
   const allowed = Object.fromEntries(ents.map((id) => [id, entityFieldNames(entityOf(plan, id))]))
   const dflt = Object.fromEntries(ents.map((id) => [id, plan.tools.find((t) => t.entity === id)!.projection]))
   out.push(`_ALLOWED = ${pyLit(allowed)}`, '', `_DEFAULT = ${pyLit(dflt)}`, '')
+  if (odata) out.push(`_ODATA = ${pyLit(odataTable(plan))}`, '')
   if (kind !== 'http') out.push(`_SCHEMA = ${pyLit(schemaLiteral(plan))}`, '')
   if (kind === 'sql') {
     const tables = Object.fromEntries(
@@ -438,8 +443,10 @@ export function emitPython(plan: ServerPlan): string {
   for (const [i, tool] of plan.tools.entries()) {
     const k = toolKind(plan, tool)
     out.push(...(i === 0 ? [''] : ['', '']))
+    const odataBody = isOdataTool(plan, tool) ? (k === 'list' ? odataListTool(plan, tool) : k === 'get' ? odataGetTool(plan, tool) : undefined) : undefined
     const body =
-      k === 'list' || k === 'search'
+      odataBody ??
+      (k === 'list' || k === 'search'
         ? httpListTool(plan, tool)
         : k === 'get'
           ? httpGetTool(plan, tool)
@@ -447,7 +454,7 @@ export function emitPython(plan: ServerPlan): string {
             ? httpFilterTool(plan, tool)
             : k === 'query'
               ? queryTool(plan, tool)
-              : describeTool(tool)
+              : describeTool(tool))
     out.push(...body)
     names.push(pyIdent(tool.name))
   }

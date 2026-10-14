@@ -14,6 +14,8 @@ export type FieldType =
   | 'array'
   | 'object'
   | 'unknown'
+/** How a value is written as an OData URL literal (strings quoted and doubled, guid and date unquoted, enum members qualified). */
+export type ODataKind = 'string' | 'guid' | 'date' | 'datetimeoffset' | 'timeofday' | 'number' | 'boolean' | 'enum'
 export interface Field {
   name: string
   type: FieldType
@@ -24,6 +26,8 @@ export interface Field {
   classLike?: boolean
   nullable?: boolean
   enum?: string[]
+  /** OData only: the literal kind used when the field is compiled into `$filter`, and whether it may be filtered at all. */
+  odata?: { kind: ODataKind; filterable: boolean; enumType?: string }
 }
 export interface NestedCollection {
   field: string
@@ -47,12 +51,16 @@ export interface Param {
   max?: number
   enum?: string[]
   description?: string
+  /** The name on the wire when it differs from the tool argument name (OData `$top`, `$skip`, key property names). */
+  wireName?: string
 }
 export interface Operation {
   id: string
   kind: 'list' | 'get' | 'search' | 'other'
   method: 'GET' | 'SELECT' | 'DATASET'
   path?: string
+  /** 'odata' routes the operation to the OData templates (default: plain REST). `path` is then the entity set path. */
+  protocol?: 'rest' | 'odata'
   entity: string
   params: Param[]
   pageParam?: string
@@ -101,6 +109,8 @@ export interface InputAdapter {
   label: string
   detect(input: RawInput): number
   parse(input: RawInput, options?: GenerateOptions): ParseResult
+  /** Optional: load something asynchronously (a dynamically imported parser) before the synchronous `parse`. */
+  prepare?(input: RawInput): Promise<void>
 }
 export interface DerivedTool {
   id: string

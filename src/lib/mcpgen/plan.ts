@@ -37,6 +37,8 @@ export type ToolKind = 'list' | 'search' | 'get' | 'filter' | 'query' | 'describ
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/
 const ENV_NAME = /^[A-Z][A-Z0-9_]{0,63}$/
 const PATH_OK = /^\/[A-Za-z0-9_\-.~/{}]*$/
+/** An OData entity set path: one safe segment (the set name), written into generated code as a constant. */
+const ODATA_SET_PATH = /^\/[A-Za-z_][A-Za-z0-9_]{0,127}$/
 const FREE_TEXT = new Set(['q', 'query', 'search', 'keyword', 'keywords', 'text', 'term', 'free_text'])
 
 const PY_KEYWORDS = new Set(
@@ -433,6 +435,42 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
       }
       if (op.kind === 'other') {
         gaps.push(gap('operation-skipped', `Operation ${op.id} is neither list, get nor search; no task-oriented tool could be derived.`, { severity: 'info', path: op.id }))
+        continue
+      }
+      if (op.protocol === 'odata') {
+        // OData (D-562): the path is the entity set; paging (`$top`/`$skip`), `$select`, `$filter` and the key
+        // predicate are written by the emitter's fixed helpers, so only key parameters and the filter arguments are tool arguments.
+        const pr = toolParams(op, new Set(), false)
+        if (!ODATA_SET_PATH.test(op.path ?? '') || (op.kind !== 'list' && op.kind !== 'get') || pr.omit || (op.kind === 'get' && !pr.params.some((p) => p.in === 'path'))) {
+          gaps.push(gap('tool-omitted', `Operation ${op.id} was omitted: ${pr.omit ?? 'an OData operation needs a safe entity set path and, for a lookup, key arguments'}.`, { path: op.id }))
+          continue
+        }
+        gaps.push(...pr.dropped)
+        const en = snake(entity.id)
+        let name: string
+        let description: string
+        let params = pr.params
+        if (op.kind === 'get') {
+          const ident = pr.params.map((p) => snake(p.name)).join('_and_')
+          name = uniqueName(`lookup_${en}_by_${ident}`, used)
+          description = withSummary(`Look up one ${words(entity.id)} by ${words(ident.replace(/_and_/g, ' and '))}. Says clearly when it does not exist.`, op)
+        } else {
+          anyList = true
+          name = uniqueName(`list_${plural(en)}`, used)
+          description = withSummary(`List ${plural(words(entity.id))}, one page at a time.`, op)
+          if (entity.fields.some((f) => f.odata?.filterable)) {
+            description += ' Give field, value and match to filter on one field (equals, contains or startsWith for text).'
+            params = [
+              { name: 'field', in: 'column', type: 'string', required: false },
+              { name: 'value', in: 'column', type: 'string', required: false },
+              { name: 'match', in: 'column', type: 'string', required: false, enum: ['equals', 'contains', 'startsWith'] },
+            ]
+          } else params = []
+        }
+        tools.push({ name, description, entity: entity.id, operation: op.id, params, projection: projection(entity) })
+        const pub = publishesSourceText(op, params)
+        if (pub.copied) copiedFrom.push(name)
+        if (pub.flagged) flaggedIn.push(name)
         continue
       }
       if (!pathSegments(op)) {
