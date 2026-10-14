@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import Database from 'better-sqlite3'
-import { existsSync, rmSync, readFileSync } from 'node:fs'
+import { existsSync, rmSync, readFileSync, readdirSync } from 'node:fs'
 import { validateSubmissionPath } from './validate-submission.js'
 import { ingest } from './ingest.js'
 import { createFakeEmbedder } from '../src/lib/server/search/embedder.fake.js'
@@ -89,6 +89,8 @@ describe('mcp-server entries in data/agents', () => {
     const slugs = q<{ slug: string }>(DB_OFF, 'SELECT slug FROM agents').map((r) => r.slug)
     for (const s of SLUGS) expect(slugs).not.toContain(s)
     expect(slugs).toContain('rfi-triage-assistant')
-    expect(slugs).toHaveLength(13)
+    // Derived from data/agents so adding a catalog agent needs no edit here: top-level agent YAMLs (mcp-server entries live in subdirectories).
+    const agentYamls = readdirSync(REAL_DIR).filter((f) => f.endsWith('.yaml')).length
+    expect(slugs).toHaveLength(agentYamls)
   })
 })

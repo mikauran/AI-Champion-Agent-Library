@@ -1,6 +1,7 @@
 // BM25 accuracy over the labeled set (enforced), plus hybrid plumbing with the fake embedder.
 // Paraphrase accuracy needs real embeddings: see accuracy.real.test.ts (skipped by default).
 import { describe, it, expect } from 'vitest'
+import { readdirSync } from 'node:fs'
 import { buildBm25Index } from './bm25.js'
 import { hybridSearch } from './hybrid.js'
 import { tokenize } from './tokenize.js'
@@ -62,8 +63,10 @@ describe('fixture sanity', () => {
     expect(loadScaleCorpus().docs.map((d) => d.slug)).toEqual(scaleCorpus.docs.map((d) => d.slug))
   })
 
-  it('real corpus has the 13 catalog agents', () => {
-    expect(realCorpus.docs).toHaveLength(13)
+  it('real corpus has all the catalog agents (count derived from data/agents)', () => {
+    // Top-level agent YAMLs in data/agents; adding a catalog agent needs no edit here.
+    const agentYamls = readdirSync('./data/agents').filter((f) => f.endsWith('.yaml')).length
+    expect(realCorpus.docs).toHaveLength(agentYamls)
   })
 
   it('paraphrase queries share no vocabulary with topic keywords or tool names', () => {
