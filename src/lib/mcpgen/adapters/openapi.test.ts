@@ -21,7 +21,8 @@ describe('openapi adapter: detect', () => {
   it('scores OpenAPI 3 in YAML and JSON, Swagger 2 low, others zero', () => {
     expect(openApiAdapter.detect({ text: good })).toBe(0.95)
     expect(openApiAdapter.detect({ text: '{"openapi": "3.1.0", "paths": {}}' })).toBe(0.95)
-    expect(openApiAdapter.detect({ text: 'swagger: "2.0"\ninfo: {}' })).toBe(0.1)
+    // D-520: Swagger 2.0 is read by this adapter now (was 0.1 and rejected)
+    expect(openApiAdapter.detect({ text: 'swagger: "2.0"\ninfo: {}' })).toBe(0.95)
     expect(openApiAdapter.detect({ text: 'a,b,c\n1,2,3' })).toBe(0)
     expect(openApiAdapter.detect({ text: '' })).toBe(0)
   })
@@ -99,9 +100,9 @@ describe('openapi adapter: gaps', () => {
     const warn = ok(r).gaps.filter((g) => g.code !== 'no-identifier')
     expect(warn.every((g) => g.severity === 'warn' || g.severity === 'info')).toBe(true)
   })
-  it('explains Swagger 2.0 and rejects it', () => {
+  it('reads Swagger 2.0 (D-520); an empty one has nothing usable', () => {
     const r = parse('swagger: "2.0"\ninfo:\n  title: Old\n  version: "1"\npaths: {}\n')
-    expect(r).toMatchObject({ rejected: [{ code: 'swagger-2-unsupported', severity: 'error' }] })
+    expect(r).toMatchObject({ rejected: [{ code: 'no-operations', severity: 'error' }] })
   })
   it('rejects a document with nothing usable and raises severity to error', () => {
     const r = parse('openapi: 3.0.0\ninfo: {title: Acme Empty, version: "1"}\npaths:\n  /x:\n    get:\n      responses: {"204": {description: none}}\n')

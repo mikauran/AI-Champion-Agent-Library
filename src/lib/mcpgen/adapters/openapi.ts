@@ -11,6 +11,7 @@ import { MAX_INPUT_BYTES } from '../api-contract.js'
 import { gap } from '../diagnostics.js'
 import { snake } from '../plan.js'
 import { redactSecrets } from '../redact.js'
+import { isSwagger2, swagger2Paths } from './openapi-swagger2.js'
 import type {
   Entity,
   Field,
@@ -22,6 +23,7 @@ import type {
   Param,
   ParseResult,
   RawInput,
+  Severity,
   SourceModel,
 } from '../types.js'
 
@@ -61,6 +63,34 @@ function securityKey(v: unknown): string {
     .join('|')
 }
 
+/**
+ * Constructs the adapter meets in the document but does not model (OpenAPI 3.1/3.2 audit, D-530). Collected per
+ * parse() call (the parse is synchronous), reported once per stable code, never with text copied from the document.
+ */
+let audit: Map<string, { message: string; severity: Severity }> | null = null
+function note(code: string, message: string, severity: Severity = 'info'): void {
+  if (audit && !audit.has(code)) audit.set(code, { message, severity })
+}
+function flushAudit(gaps: Gap[]): void {
+  if (!audit) return
+  for (const code of [...audit.keys()].sort()) {
+    const a = audit.get(code)!
+    gaps.push(gap(code, a.message, { severity: a.severity }))
+  }
+  audit.clear()
+}
+
+/** Keywords next to a $ref that only annotate it; any other sibling is not merged (3.0 ignores it, 3.1 would apply it). */
+const REF_ANNOTATIONS = new Set(['$ref', '$comment', 'description', 'summary', 'title', 'example', 'examples', 'deprecated', 'readOnly', 'writeOnly'])
+/** JSON Schema keywords that change the shape of a value but are not read by this adapter. */
+const UNREAD_KEYWORDS = ['$dynamicRef', '$recursiveRef', 'contains', 'dependentSchemas', 'else', 'if', 'not', 'patternProperties', 'prefixItems', 'propertyNames', 'then', 'unevaluatedItems', 'unevaluatedProperties']
+/** The OpenAPI 3.1 and 3.2 base dialects and plain JSON Schema 2020-12, which read the same for the shapes used here. */
+const KNOWN_DIALECTS = new Set([
+  'https://spec.openapis.org/oas/3.1/dialect/base',
+  'https://spec.openapis.org/oas/3.2/dialect/base',
+  'https://json-schema.org/draft/2020-12/schema',
+])
+
 class Unsupported extends Error {
   constructor(
     public readonly code: string,
@@ -95,6 +125,12 @@ function deref(root: Obj, node: unknown): { node: Obj; name?: string } {
   while (isObj(cur) && typeof cur.$ref === 'string') {
     if (++hops > MAX_REF_DEPTH) throw new Unsupported('ref-depth-exceeded', 'A $ref chain is too deep or circular.')
     const ref = cur.$ref
+    if (Object.keys(cur).some((k) => !REF_ANNOTATIONS.has(k) && !k.startsWith('x-'))) {
+      note('ref-sibling-keywords-ignored', 'A $ref has sibling keywords other than annotations (for example type, nullable or properties); only the referenced schema is read and the siblings are not merged.')
+    }
+    if (ref.startsWith('#') && !ref.startsWith('#/')) {
+      throw new Unsupported('ref-anchor-unsupported', 'A $ref names an anchor or the whole document; only JSON pointers (#/...) are resolved.')
+    }
     if (!ref.startsWith('#/')) throw new Unsupported('external-ref-unsupported', 'An external $ref was found; external references are never fetched.')
     if (name === undefined) name = ref.split('/').pop()
     cur = pointer(root, ref)
@@ -137,6 +173,7 @@ function schemaProps(root: Obj, schema: unknown, ctx: SchemaCtx, depth = 0, note
     if (hit.merged && notes) notes.merged = true
     return hit.props
   }
+  noteUnreadKeywords(node)
   // A null-prototype object, so property names such as constructor or __proto__ are ordinary fields.
   const props: Obj = Object.create(null)
   const local = { merged: false }
@@ -169,9 +206,23 @@ function schemaProps(root: Obj, schema: unknown, ctx: SchemaCtx, depth = 0, note
   return props
 }
 
+function noteUnreadKeywords(node: Obj): void {
+  const unread = UNREAD_KEYWORDS.filter((k) => hasOwn(node, k))
+  if (unread.length > 0) {
+    note('schema-keyword-unsupported', `A schema uses keywords that are not read and do not change the tools (${unread.join(', ')}); the fields come from properties and allOf only.`)
+  }
+}
+
 function typeOf(node: Obj): FieldType {
   let t = node.type
-  if (Array.isArray(t)) t = t.find((x) => x !== 'null')
+  if (Array.isArray(t)) {
+    const kinds = t.filter((x) => x !== 'null')
+    if (kinds.length > 1) {
+      note('multi-type-unsupported', 'A schema allows several non-null types (type is a list); the field type is reported as unknown.')
+      return 'unknown'
+    }
+    t = kinds[0]
+  }
   switch (t) {
     case 'string':
     case 'integer':
@@ -186,7 +237,7 @@ function typeOf(node: Obj): FieldType {
   return 'unknown'
 }
 
-const isNullable = (node: Obj) => node.nullable === true || (Array.isArray(node.type) && node.type.includes('null'))
+const isNullable = (node: Obj) => node.nullable === true || node['x-nullable'] === true || (Array.isArray(node.type) && node.type.includes('null'))
 
 function enumOf(node: Obj): string[] | undefined {
   if (!Array.isArray(node.enum)) return undefined
@@ -209,6 +260,7 @@ function fieldFlags(name: string, entityId: string): Pick<Field, 'identifier' | 
 
 function buildField(root: Obj, ctx: SchemaCtx, name: string, schema: unknown, entityId: string): { field: Field; nested?: NestedCollection } {
   const { node } = deref(root, schema)
+  noteUnreadKeywords(node)
   const type = typeOf(node)
   const field: Field = { name, type, ...fieldFlags(name, entityId) }
   const description = clean(node.description)
@@ -324,6 +376,8 @@ function responseExamples(root: Obj, responses: unknown, schemaNode: Obj): unkno
     }
   }
   if (schemaNode.example !== undefined) out.push(schemaNode.example)
+  // OpenAPI 3.1: schema `examples` is an array of values.
+  if (Array.isArray(schemaNode.examples)) out.push(...schemaNode.examples.slice(0, 3))
   return out.slice(0, 5)
 }
 
@@ -382,7 +436,9 @@ function detect(input: RawInput): number {
   try {
     const t = typeof input?.text === 'string' ? input.text.slice(0, 65536) : ''
     if (/^\s*\{[\s\S]*?"openapi"\s*:\s*"3\.\d+/.test(t) || /^openapi\s*:\s*["']?3\.\d+/m.test(t)) return 0.95
-    if (/^\s*\{[\s\S]*?"swagger"\s*:\s*"2\./.test(t) || /^swagger\s*:\s*["']?2\./m.test(t)) return 0.1
+    // Swagger 2.0 is read by this adapter too (D-520); another swagger version is recognised but rejected.
+    if (/^\s*\{[\s\S]*?"swagger"\s*:\s*"2\.0"/.test(t) || /^swagger\s*:\s*["']?2(\.0)?["']?\s*(#.*)?$/m.test(t)) return 0.95
+    if (/^\s*\{[\s\S]*?"swagger"\s*:\s*"/.test(t) || /^swagger\s*:/m.test(t)) return 0.1
     return 0
   } catch {
     return 0
@@ -405,16 +461,32 @@ function parseDoc(input: RawInput): ParseResult {
     return { rejected: [gap('parse-failed', 'The document could not be parsed as YAML or JSON.', { severity: 'error' })] }
   }
   if (!isObj(doc)) return { rejected: [gap('parse-failed', 'The document is not an OpenAPI object.', { severity: 'error' })] }
-  if (doc.swagger !== undefined) {
-    return { rejected: [gap('swagger-2-unsupported', 'Swagger 2.0 documents are not supported; convert to OpenAPI 3.x.', { severity: 'error' })] }
+  const swagger2 = isSwagger2(doc)
+  if (doc.swagger !== undefined && !swagger2) {
+    return { rejected: [gap('unsupported-version', 'Only Swagger 2.0 and OpenAPI 3.x documents are supported.', { severity: 'error' })] }
   }
-  if (typeof doc.openapi !== 'string' || !/^3\./.test(doc.openapi)) {
-    return { rejected: [gap('unsupported-version', 'Only OpenAPI 3.x documents are supported.', { severity: 'error' })] }
+  if (!swagger2 && (typeof doc.openapi !== 'string' || !/^3\./.test(doc.openapi))) {
+    return { rejected: [gap('unsupported-version', 'Only Swagger 2.0 and OpenAPI 3.x documents are supported.', { severity: 'error' })] }
   }
-  if (!isObj(doc.paths)) return { rejected: [gap('no-paths', 'The document has no paths object.', { severity: 'error' })] }
   const root = doc
-  const paths: Obj = doc.paths
+  // OpenAPI 3.1/3.2 constructs that are not modelled (D-530): reported, never guessed.
+  if (isObj(root.webhooks) && Object.keys(root.webhooks).length > 0) {
+    note('webhooks-ignored', 'The document declares webhooks; they describe calls made to the consumer and are ignored (only paths are read).')
+  }
+  if (typeof root.jsonSchemaDialect === 'string' && !KNOWN_DIALECTS.has(root.jsonSchemaDialect)) {
+    note('json-schema-dialect-unsupported', 'jsonSchemaDialect names a dialect other than the OpenAPI base dialect or JSON Schema 2020-12; schemas are read as the OpenAPI dialect and never fetched.', 'warn')
+  }
+  if (!isObj(root.paths)) {
+    const rejected = [gap('no-paths', 'The document has no paths object.', { severity: 'error' })]
+    flushAudit(rejected)
+    return { rejected }
+  }
   const gaps: Gap[] = []
+  const ignoredBodyOps: string[] = []
+  const paths: Obj = swagger2 ? swagger2Paths(root, deref, ignoredBodyOps) : (root.paths as Obj)
+  for (const where of ignoredBodyOps.slice(0, 50)) {
+    gaps.push(gap('swagger2-body-param-ignored', `${where}: a body or formData parameter was ignored; a read operation is called without a body.`, { severity: 'info' }))
+  }
 
   const info = isObj(root.info) ? root.info : {}
   let name = clean(info.title, 80)
@@ -426,7 +498,12 @@ function parseDoc(input: RawInput): ParseResult {
 
   // Authentication: names only. Supported schemes referenced by global security win.
   let auth: SourceModel['auth'] = { scheme: 'none' }
-  const schemes = isObj(root.components) && isObj(root.components.securitySchemes) ? root.components.securitySchemes : {}
+  const schemes: Obj =
+    isObj(root.components) && isObj(root.components.securitySchemes)
+      ? root.components.securitySchemes
+      : swagger2 && isObj(root.securityDefinitions)
+        ? root.securityDefinitions
+        : {}
   const referenced = Array.isArray(root.security) ? root.security.flatMap((r) => (isObj(r) ? Object.keys(r) : [])) : []
   // An explicit empty list means the API is public (review WR-09): declared schemes must not be applied.
   const explicitlyPublic = Array.isArray(root.security) && root.security.length === 0
@@ -447,6 +524,8 @@ function parseDoc(input: RawInput): ParseResult {
     if (s.type === 'apiKey' && s.in === 'header' && typeof s.name === 'string') candidate = { scheme: 'apiKeyHeader', paramName: s.name, envVar: `${prefix}_API_KEY` }
     else if (s.type === 'apiKey' && s.in === 'query' && typeof s.name === 'string') candidate = { scheme: 'apiKeyQuery', paramName: s.name, envVar: `${prefix}_API_KEY` }
     else if (s.type === 'http' && typeof s.scheme === 'string' && s.scheme.toLowerCase() === 'bearer') candidate = { scheme: 'bearer', envVar: `${prefix}_TOKEN` }
+    // OAuth2 and OpenID Connect (D-521): no flow runs; the operator supplies an access token that is sent as a bearer token.
+    else if (s.type === 'oauth2' || s.type === 'openIdConnect') candidate = { scheme: 'bearer', envVar: `${prefix}_ACCESS_TOKEN`, oauth2: true }
     if (!candidate) {
       unsupported++
       continue
@@ -457,9 +536,12 @@ function parseDoc(input: RawInput): ParseResult {
     }
     auth = candidate
     picked = true
+    if (candidate.oauth2) {
+      note('oauth2-flow-not-implemented', `The API uses ${s.type === 'openIdConnect' ? 'OpenID Connect' : 'OAuth2'}; no flow is implemented. The server reads an access token you obtained from ${prefix}_ACCESS_TOKEN and sends it as a bearer token; it never stores or refreshes it.`, 'warn')
+    }
   }
   if (!picked && unsupported > 0) {
-    gaps.push(gap('auth-unsupported', 'The declared security scheme is not supported (only API key in header or query, and bearer); the server sends no credentials.'))
+    gaps.push(gap('auth-unsupported', 'The declared security scheme is not supported (only API key in header or query, bearer, and OAuth2 or OpenID Connect as a supplied access token); the server sends no credentials.'))
   }
 
   const ctx = newCtx()
@@ -470,8 +552,20 @@ function parseDoc(input: RawInput): ParseResult {
   const pageSizeMax: number[] = []
 
   for (const path of Object.keys(paths).sort()) {
-    const item = own(paths, path)
+    let item = own(paths, path)
     if (!isObj(item)) continue
+    // components.pathItems (3.1): a path item may be a local $ref.
+    if (typeof item.$ref === 'string') {
+      try {
+        item = deref(root, item).node
+      } catch (e) {
+        gaps.push(gap(e instanceof Unsupported ? e.code : 'ref-unresolved', `${path.slice(0, 120)}: the path item $ref could not be resolved; the path was skipped.`, { path: path.slice(0, 120) }))
+        continue
+      }
+    }
+    if (isObj(item.query) || isObj(item.additionalOperations)) {
+      note('query-method-unsupported', 'A path item declares a query operation or additionalOperations (OpenAPI 3.2); only GET operations are modelled and these are skipped.')
+    }
     for (const method of METHODS) {
       const opNode = own(item, method)
       if (!isObj(opNode)) continue
@@ -497,6 +591,7 @@ function parseDoc(input: RawInput): ParseResult {
         }
         const params: Param[] = []
         for (const d of merged.values()) {
+          if (d.in === 'querystring') note('querystring-param-unsupported', 'An operation declares a querystring parameter (OpenAPI 3.2); it is not exposed as a tool argument.')
           if (d.in !== 'query' && d.in !== 'path') continue
           const sch = d.schema !== undefined ? deref(root, d.schema).node : {}
           const p: Param = { name: String(d.name), in: d.in, type: paramType(sch), required: d.in === 'path' ? true : d.required === true }
@@ -654,6 +749,7 @@ function parseDoc(input: RawInput): ParseResult {
     })
   kept.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
 
+  flushAudit(gaps)
   if (kept.length === 0) {
     gaps.push(gap('no-operations', 'No GET operation could be turned into a model; nothing usable remains.', { severity: 'error' }))
     return reject(gaps)
@@ -679,9 +775,12 @@ export const openApiAdapter: InputAdapter = {
   parse(input: RawInput): ParseResult {
     try {
       const text = typeof input?.text === 'string' ? input.text : ''
+      audit = new Map()
       return parseDoc({ ...input, text })
     } catch {
       return { rejected: [gap('parse-failed', 'The document could not be read.', { severity: 'error' })] }
+    } finally {
+      audit = null
     }
   },
 }
