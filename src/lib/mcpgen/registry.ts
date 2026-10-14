@@ -49,13 +49,13 @@ export function parseInput(
     // SQL dump row data (COPY ... FROM stdin blocks) is never ingested, so the scan sees only the
     // text the sql-ddl adapter reads. Applies only when that adapter is the one that will parse it.
     let scanText = text
-    let sqlDump = false
+    let sqlDumpAdapter: InputAdapter | undefined
     const stripped = stripSqlDumpData(text)
     if (stripped.changed) {
       const sql = adapters.find((a) => a.id === 'sql-ddl')
       if (sql && (opts.adapterId === 'sql-ddl' || (opts.adapterId === undefined && detectAdapters({ ...raw, text: stripped.text }, adapters)[0]?.adapter === sql))) {
         scanText = stripped.text
-        sqlDump = true
+        sqlDumpAdapter = sql
       }
     }
     const findings = scanForCredentials(scanText)
@@ -63,8 +63,8 @@ export function parseInput(
 
     const input: RawInput = { ...raw, text }
     let adapter: InputAdapter | undefined
-    if (sqlDump) {
-      adapter = adapters.find((a) => a.id === 'sql-ddl')
+    if (sqlDumpAdapter) {
+      adapter = sqlDumpAdapter
     } else if (opts.adapterId !== undefined) {
       adapter = adapters.find((a) => a.id === opts.adapterId)
       if (!adapter) {
