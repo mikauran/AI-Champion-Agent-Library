@@ -25,21 +25,28 @@ For EVERY element row, in input order, decide one issue value:
 - `ambiguous` : two or more excerpt classes plausibly fit.
 - `no-match` : no excerpt class fits; say "excerpt does not cover".
 
+Decide in this order and use the FIRST that applies:
+1. current class present but not in the excerpt -> `unknown-code`.
+2. no excerpt class fits the element -> `no-match` (even when classification_current is empty; never use `missing` for it).
+3. two or more excerpt classes plausibly fit, or the description does not tell which product it is -> `ambiguous` (even when classification_current is empty; never use `missing` for it).
+4. current class present and in the excerpt: fits -> `ok`, otherwise `wrong`.
+5. current empty and exactly one excerpt class clearly fits -> `missing`.
+
 ## Output format
 
 A markdown table with exactly these columns, one row per element id (no row skipped, none invented):
 
 `element_id | issue | current | proposed class | confidence | evidence | review`
 
-- proposed class: copied exactly from the excerpt, or the literal `NONE`. For `ambiguous`, give the best candidate and name the alternative in evidence; for `no-match` use `NONE`.
+- proposed class: exactly one code copied from the excerpt, or the literal `NONE`, nothing else in the cell (no words, no parentheses). For `ambiguous`, put the best candidate code there and name the alternative code in evidence; for `no-match` and `unknown-code` use `NONE`.
 - confidence: high, medium or low.
 - evidence: one short clause quoting the element's own fields (name, description, ifc_type).
-- review: `YES` for everything except a high-confidence `ok`.
+- review: `YES` for every row EXCEPT a row whose issue is `ok` with high confidence, which gets `NO`. So `missing`, `wrong`, `unknown-code`, `ambiguous` and `no-match` rows are always `YES`, whatever the confidence.
 
 After the table add:
 
 1. `## Needs engineer decision` : bullet list of every element with review YES and one line why.
-2. `## Counts` : one line with the number of rows per issue value.
+2. `## Counts` : one line with the number of rows per issue value, computed from the issue column of your own table.
 3. The line: `Draft for engineer review. Classes come only from the supplied synthetic excerpt; no ETIM lookup was made.`
 
 Do not wrap the whole file in a code fence.
