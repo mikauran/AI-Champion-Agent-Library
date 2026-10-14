@@ -12,6 +12,7 @@
     "validate-submission": "tsx scripts/validate-submission.ts",
     "generate-mcp": "tsx scripts/generate-mcp.ts",
     "mcp-test": "tsx scripts/mcp-test.ts",
+    "mcp-propose-eval": "tsx scripts/mcp-propose-eval.ts",
     "tryout:configure": "tsx scripts/set-try-it-out-mode.ts",
     "db:push": "drizzle-kit push",
     "build": "npm run db:push && npm run ingest && npm run tryout:configure && vite build",
