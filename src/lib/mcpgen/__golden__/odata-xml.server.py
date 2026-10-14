@@ -264,7 +264,7 @@ def _nested_hits(entries, key_fields, value_fields, needle, value):
 
 _ODATA_GUID = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 _ODATA_DATE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
-_ODATA_DATETIME = re.compile(
+_ODATA_STAMP = re.compile(
     r"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9](\.[0-9]{1,12})?)?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$"
 )
 _ODATA_TIME = re.compile(r"^([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9](\.[0-9]{1,12})?)?$")
@@ -307,7 +307,7 @@ def _odata_literal(spec, value):
             raise _odata_bad("A date such as 2026-01-31 is required.")
         return text
     if kind == "datetimeoffset":
-        if not _ODATA_DATETIME.match(text):
+        if not _ODATA_STAMP.match(text):
             raise _odata_bad("A date and time with offset such as 2026-01-31T12:00:00Z is required.")
         return text
     if kind == "timeofday":
