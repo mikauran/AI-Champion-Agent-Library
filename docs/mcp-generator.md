@@ -114,6 +114,34 @@ A Prisma `schema.prisma` (D-546..D-548), read by hand, no Prisma tooling: `model
 
 Auto-detection: text with `model Name {` at the start of a line (and no `CREATE TABLE` statement at a line start) is Prisma; SQL wins whenever a `CREATE TABLE` statement is present, and the sql-ddl adapter then reports `ambiguous-input` when the text also looks like Prisma (force `--adapter prisma` to override).
 
+### odata
+
+OData `$metadata` documents (D-561..D-572): **CSDL JSON** (OData 4.0 and 4.01: `$Version`, `$EntityContainer`, `EntityType` with `$Key`, properties, navigation properties, entity sets) and **EDMX XML** (4.0 and 4.01). The generated server is an HTTP server like the `openapi` ones; GET only.
+
+- **Tools.** Per entity set a `list_<entities>` tool (`page`, `page_size`, optional `field`/`value`/`match`, `fields`) and, when the key is usable, a `lookup_<entity>_by_<key>` tool (one argument per key property, composite keys supported). Paging is `$top` and `$skip` (`$skip = (page - 1) * page_size`); the page size is clamped (default maximum 100 unless `--max-page-size`), the result ceiling warning works as for REST, and `@odata.nextLink` is never followed (`odata-nextlink-not-followed`).
+- **Filters.** One field per call, compiled by fixed generated helpers into `$filter`: `equals` (`Name eq 'x'`), `contains` and `startsWith` (text fields only: `contains(Name,'x')`, `startswith(Name,'x')`). Values are checked against the declared type and only then written as an OData literal: text in single quotes with `'` doubled (control characters rejected, 256 characters at most), GUIDs, dates (`2026-01-31`), date-times with offset, times of day, booleans and numbers unquoted after a pattern check, enum members as `Namespace.Type'Member'` from the declared member list. An unknown or unfilterable field, an invalid value or a text mode on a non-text field is a structured `invalid_argument` error before any request is made. `Capabilities.FilterRestrictions` (`Filterable`, `NonFilterableProperties`) is honoured. Key values use the same literals (`/Parts(OrderID=7,LineNumber=2)`, `/Suppliers('A%2F1')`). The query string is percent-encoded by the generated code (spaces as `%20`, `$` kept in option names).
+- **Projection.** `$select` carries the projection (at most 12 fields, as everywhere). `$expand` is never used; navigation properties are reported (`odata-navigation-not-expanded`).
+- **Types.** `Edm.String`, `Guid`, `Date`, `DateTimeOffset`, `TimeOfDay` become text; `Boolean` boolean; `Byte`, `SByte`, `Int16`, `Int32` integer; `Single`, `Double` number; `Int64` and `Decimal` text (no precision loss, `odata-precision-as-string`; filters still use number literals); enum types text with the member list; complex and collection properties are returned as they come but cannot be filtered; `Edm.Binary`, `Edm.Stream` and geospatial properties are left out (`unsupported-type`).
+- **Not exposed, reported.** Actions (writes: listed as dropped, `write-dropped`), functions (`odata-function-unsupported`; unbound functions are not called even when they look harmless), singletons (`odata-singleton-unsupported`), derived types (flattened, `odata-derived-types-flattened`), open types, keys given by alias path (`odata-key-unsupported`), `edmx:Reference` and other external schema documents (never fetched, `external-reference-not-fetched`), `Annotations` blocks that target other elements (`odata-external-annotations-ignored`). Only `Core.Description`, `Capabilities.FilterRestrictions` and `Authorization.Authorizations` are read from inline annotations; the rest are counted (`odata-annotations-ignored`).
+- **Auth.** An `Authorization.Authorizations` annotation on the container chooses: OAuth2 or OpenID Connect gives a supplied bearer token from `<PREFIX>_ACCESS_TOKEN` (D-521, `oauth2-flow-not-implemented`), HTTP bearer `<PREFIX>_TOKEN`, an API key in a header or query option `<PREFIX>_API_KEY`; HTTP basic and anything else is `auth-unsupported` and no credentials are sent. Without the annotation the server sends none. The base address is always `<PREFIX>_BASE_URL`; no URL from the document reaches the output.
+- **OData V2 and V3** (`edmx` namespace `.../ado/2007/06/edmx`, schema namespaces `.../ado/20xx/edm`) are recognised and rejected with `odata-version-unsupported`; nothing is guessed. A JSON document without an OData 4.x `$Version` is rejected the same way.
+- **XML safety (D-560).** The one XML dependency is `sax@1.6.1`, loaded with a dynamic `import()` only when EDMX text is parsed. Before the parser sees the text, a fail-closed pre-check rejects `<!DOCTYPE`, `<!ENTITY` and every other `<!` construct except comments and CDATA (`doctype-rejected`, `xml-markup-rejected`) and every processing instruction except a leading `<?xml ...?>` (`xml-pi-rejected`); entities are never defined, so none can expand. While parsing: nesting depth at most 32, 20,000 elements, 64 attributes per element, 4,096 characters per attribute value, 1,000,000 characters of text (`xml-depth-exceeded`, `xml-limit-exceeded`, `xml-malformed`). Metadata is also capped at 500 entity types, 5,000 schema members, 100 entity sets and 200 properties per entity. No file or URL named in the document is ever read.
+- **Entry points.** XML parsing needs the lazy load, so the CLI and the API route call `runPipelineAsync` (library users: `await prepareInput(...)` before `parseInput`/`runPipeline`; without it EDMX input is rejected with `odata-xml-unavailable`). CSDL JSON needs no preparation.
+- **Real metadata and the size cap.** The 262,144 byte input cap is unchanged. Real `$metadata` documents of large services (hundreds of entity types, long annotation blocks) are often 1 to 10 MB, so they do not fit; slice the document to the entity types you want or save a reduced copy. See E13.
+
+```json
+{
+  "$Version": "4.01",
+  "$EntityContainer": "Acme.Catalog.Container",
+  "Acme.Catalog": {
+    "Product": { "$Kind": "EntityType", "$Key": ["ID"], "ID": { "$Type": "Edm.Guid" }, "Name": {} },
+    "Container": { "$Kind": "EntityContainer", "Products": { "$Collection": true, "$Type": "Acme.Catalog.Product" } }
+  }
+}
+```
+
+Auto-detection: XML whose root is `Edmx` in an OData EDMX namespace, or JSON with a `$Version` string and `$EntityContainer` or `$Reference` (0.95); a schema-only JSON with just `$Version` scores 0.5. A document that also looks like OpenAPI or Swagger is read as OData with the warn gap `ambiguous-input` (force `--adapter openapi` to read it the other way). The other adapters' detection is unchanged.
+
 ## Entry points
 
 **CLI** (author tool, no flag needed):
@@ -122,7 +150,7 @@ Auto-detection: text with `model Name {` at the start of a line (and no `CREATE 
 npm run generate-mcp -- --adapter openapi spec.yaml --out ./my-server
 ```
 
-Options: `--adapter <openapi|tabular-catalog|sql-ddl|prisma|auto>`, `--out <dir>`, `--force` (allow a non-empty output directory), `--server-name`, `--max-page-size`, `--result-ceiling`. Exit codes: 0 generated, 2 rejected or failed (gaps printed, nothing written), 64 usage. The CLI reads only the given input file, refuses `.env*` file names and inputs over the size cap.
+Options: `--adapter <openapi|tabular-catalog|sql-ddl|prisma|odata|auto>`, `--out <dir>`, `--force` (allow a non-empty output directory), `--server-name`, `--max-page-size`, `--result-ceiling`. Exit codes: 0 generated, 2 rejected or failed (gaps printed, nothing written), 64 usage. The CLI reads only the given input file, refuses `.env*` file names and inputs over the size cap.
 
 **API route** `POST /api/mcp-generate` (flag-gated). Request JSON: `{ "adapter": "auto"|id, "input": "<text>", "options": { serverName, allowWrite, limits: { maxPageSize, resultCeiling, maxResponseItems } } }`. Success: `200 application/zip` (header `x-mcp-gaps` carries the gap count). Failure: JSON `{ ok: false, message, gaps: [...] }` (`message` is the first gap's message, D-461) with 400 (bad request), 404 (flag off), 429 (too many requests from this client or too many simultaneous generations; body `{ message }` only, with `Retry-After`; limits `MCP_GENERATOR_RATE_MAX` default 20, `MCP_GENERATOR_RATE_WINDOW_SEC` default 600, `MCP_GENERATOR_MAX_CONCURRENT` default 2, `0` = unlimited, D-465), 413 (input over 262,144 bytes; the raw body is capped at twice that), 422 (rejected input or oversize output over 2,000,000 bytes, D-155). The route adds no authentication logic of its own, writes nothing, logs nothing and never echoes the input. Authentication: with `AUTH_ENABLED=true` the global request hook (`src/hooks.server.ts`) protects `/api/mcp-generate` like every other `/api/*` route (401 `{ message: 'Authentication required' }` without a session); confirmed by Ville 2026-10-14 (D-476). The generator is deterministic only: LLM-assisted synthesis stays deferred and the generated server does not depend on `@modelcontextprotocol/sdk` (D-475).
 
@@ -172,7 +200,7 @@ Plus bounded retries on 429/5xx, response size caps and parameterised read-only 
 
 ## Not supported and reported
 
-Docs-only inputs, row data (COPY blocks and INSERT values are skipped, never read), profile documents, repositories, composite inputs, Swagger versions other than 2.0, OAuth2 flows (the token is supplied), external `$ref`, non-SQLite DSNs, spreadsheets, and write operations. Each produces a gap or report line, not a guess. LLM-assisted synthesis is deferred (D-159).
+Docs-only inputs, row data (COPY blocks and INSERT values are skipped, never read), profile documents, repositories, composite inputs, Swagger versions other than 2.0, OData V2 and V3, OData actions and functions, OAuth2 flows (the token is supplied), external `$ref`, non-SQLite DSNs, spreadsheets, and write operations. Each produces a gap or report line, not a guess. LLM-assisted synthesis is deferred (D-159).
 
 Known limitations of the current core:
 
@@ -239,6 +267,38 @@ Messages name tables, columns and type words only, never values from the input (
 | `config-blocks-ignored` | info | Prisma datasource and generator blocks were skipped without being read |
 | `relation-fields-skipped` | info | Prisma relation fields are not columns |
 | `unterminated-block` | warn | a Prisma block is not closed; it and the rest were skipped |
+
+## Gap codes (odata adapter)
+
+Messages name entity sets, types and property names (only ones that pass the identifier check), counts and type words, never values or URLs from the document.
+
+| Code | Severity | Meaning |
+| --- | --- | --- |
+| `odata-version-unsupported` | error | OData V1, V2 or V3 metadata, or no OData 4.x version; rejected |
+| `odata-version-detected` | info | the version and format that were read |
+| `doctype-rejected` | error | the XML declares a DOCTYPE, entity or other markup declaration; rejected before parsing |
+| `xml-markup-rejected`, `xml-pi-rejected` | error | an XML markup declaration or processing instruction other than the allowed ones; rejected |
+| `xml-depth-exceeded`, `xml-limit-exceeded`, `xml-malformed` | error | an XML limit was exceeded or the text is not well formed |
+| `odata-xml-unavailable` | error | EDMX parsed without the prepare step (library use only) |
+| `odata-not-edmx`, `odata-not-metadata` | error | the XML root is not an OData EDMX element, or the text is neither XML nor a JSON object |
+| `odata-too-large` | error | more than 500 entity types or 5,000 schema members |
+| `no-entity-sets` | error | no entity container with entity sets |
+| `too-many-entity-sets`, `odata-too-many-properties` | warn | the first 100 sets or 200 properties were read |
+| `external-reference-not-fetched` | warn | `edmx:Reference` or `$Reference` documents are never fetched; types defined only there are unknown |
+| `odata-type-unresolved` | warn | an entity set type, base type or property type is not defined in the document; it was left out |
+| `unsupported-type` | warn | binary, stream or geospatial properties were left out |
+| `odata-key-unsupported`, `no-identifier` | warn | no lookup tool: key by alias path, key property missing or not writable in a key predicate, or no key |
+| `unsafe-identifier`, `duplicate-table` | warn | a name that cannot be used safely, or a repeated entity, was left out |
+| `odata-container-unresolved`, `odata-multiple-containers` | warn | the first container was used |
+| `odata-schema-skipped` | warn | a Schema in an unknown namespace was skipped |
+| `oauth2-flow-not-implemented`, `auth-unsupported` | warn | OAuth2 token supplied by the author, or an unsupported scheme (basic): no credentials sent |
+| `ambiguous-input` | warn | the document also looks like OpenAPI or Swagger |
+| `odata-navigation-not-expanded`, `odata-derived-types-flattened`, `odata-open-type`, `odata-entity-renamed` | info | navigation properties not expanded, derived types flattened, open type, entity exposed under the set name |
+| `odata-function-unsupported`, `odata-singleton-unsupported` | info | functions and singletons are not exposed; actions appear as `write-dropped` |
+| `odata-precision-as-string`, `odata-nextlink-not-followed` | info | Int64 and Decimal as text; `@odata.nextLink` never followed |
+| `odata-annotations-ignored`, `odata-external-annotations-ignored` | info | annotations that are not read or not applied |
+
+Environment variables of a generated OData server: `<PREFIX>_BASE_URL`, plus `<PREFIX>_ACCESS_TOKEN` (OAuth2), `<PREFIX>_TOKEN` (bearer) or `<PREFIX>_API_KEY`, when the metadata declares authorization.
 
 ## Extension point for synthesized capability
 
