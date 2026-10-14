@@ -174,7 +174,7 @@ Synthesis section 6:
 - Q1 Product scope: the author downloads and runs the output. It is a small package directory: `server.py`, `test_server.py`, `requirements.txt`, a README snippet and the generation report (delivered as a zip).
 - Q2 Ceilings: an optional author-supplied `limits` block, with conservative defaults and a warning gap when the ceiling is unknown.
 - Q3 Tabular input: header, schema and dictionary text only; rows are never ingested (section 3).
-- Q4 FastMCP pin: `fastmcp>=3.4,<4`. UNVERIFIED against PyPI; a live check is pending human.
+- Q4 FastMCP pin: `fastmcp>=3.4,<5`. Verified 2026-10-14: generated test suites (openapi 23, tabular 11, sql 35) pass on fastmcp 3.4.8 and 4.1.0 and the servers answer real MCP calls over stdio on both.
 - Q5 LLM layer: none in this phase; deterministic only. A later optional layer would need a separate decision.
 
 ## 10. Entry points

@@ -11,7 +11,7 @@ SEARCH_EMBEDDINGS=off npm run db:push && npm run ingest
 ```
 
 ## 1. FastMCP pin check
-Status: pending human
+Status: DONE 2026-10-14 (run by Claude with Ville present). PyPI latest is fastmcp 4.1.0; 3.4.8 is the latest 3.x. Generated servers + tests pass on both; pin widened to `>=3.4,<5` (see decision log). `mcp.tool(fn)` registration works on both.
 - [ ] Create a throwaway venv and see which version resolves:
   ```
   python3 -m venv /tmp/mcp-venv

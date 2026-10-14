@@ -98,7 +98,7 @@ The zip contains one folder named after the server:
 | --- | --- |
 | `server.py` | FastMCP stdio server, helpers and tools |
 | `test_server.py` | pytest tests for the behaviour checklist against a stubbed upstream, temp CSV or temp SQLite |
-| `requirements.txt` | pins (`fastmcp>=3.4,<4`, `httpx` for http backends only; the pin is UNVERIFIED against PyPI) |
+| `requirements.txt` | pins (`fastmcp>=3.4,<5`, `httpx` for http backends only; verified on fastmcp 3.4.8 and 4.1.0 on 2026-10-14) |
 | `README.generated.md` | env var table, run command, `.mcp.json` snippet with placeholders |
 | `report.json` | tools emitted and dropped, gaps, assumptions, env vars |
 

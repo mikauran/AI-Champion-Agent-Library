@@ -18,7 +18,7 @@ export function buildReport(plan: ServerPlan): GenerationReport {
   if (env.dsn) envVars.push({ name: env.dsn, purpose: 'Location of the SQLite database file (opened read-only)' })
 
   const assumptions: string[] = [
-    'FastMCP is pinned as fastmcp>=3.4,<4. UNVERIFIED against the package index; confirm before use.',
+    'FastMCP is pinned as fastmcp>=3.4,<5 (verified on 3.4.8 and 4.1.0 on 2026-10-14).',
     'Tools are registered with mcp.tool(function) and called directly in the generated tests. UNVERIFIED against the pinned FastMCP version.',
     'The generated Python was syntax-checked at most; it was never executed or installed by the generator.',
   ]

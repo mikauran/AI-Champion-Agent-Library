@@ -64,7 +64,7 @@ describe.each(MODELS)('generate: %s backend', (_n, model) => {
     expect(result.report.toolsEmitted.length).toBeGreaterThan(0)
     expect(result.report.envVars.length).toBeGreaterThan(0)
     expect(result.report.assumptions.join(' ')).toContain('UNVERIFIED')
-    expect(result.files.find((f) => f.path === 'requirements.txt')!.content).toContain('fastmcp>=3.4,<4')
+    expect(result.files.find((f) => f.path === 'requirements.txt')!.content).toContain('fastmcp>=3.4,<5')
   })
   it('README has an env table and an .mcp.json snippet with placeholders only', () => {
     const readme = result.files.find((f) => f.path === 'README.generated.md')!.content
