@@ -101,6 +101,7 @@ The zip contains one folder named after the server:
 | `requirements.txt` | pins (`fastmcp>=3.4,<5`, `httpx` for http backends only; verified on fastmcp 3.4.8 and 4.1.0 on 2026-10-14) |
 | `README.generated.md` | env var table, run command, `.mcp.json` snippet with placeholders |
 | `report.json` | tools emitted and dropped, gaps, assumptions, env vars |
+| `mcptest-binding.json` | tool binding for the MCP test platform: suite check id or behaviour kind to emitted tool name, plus an `argMap` from the suite's argument names to this tool's parameter names (see below) |
 
 Environment variable convention: `<NAME>_BASE_URL`, `<NAME>_API_KEY` or `<NAME>_TOKEN`, `<NAME>_DATA_PATH`, `<NAME>_DB_PATH`, where `<NAME>` derives from the server name. Documentation and snippets only ever contain placeholders such as `<ACME_PARTS_API_KEY>`.
 
@@ -219,7 +220,18 @@ and review the diff.
 
 ## Relation to Phase 15
 
-The generated `test_server.py` asserts the behaviour checklist against a stub, which makes it a seed set of cases for the Phase 15 test platform. How a case binds to the field names of an arbitrary generated server (per-case binding config, emitted next to the server or kept with the case) is an open question (synthesis section 6 Q7).
+The generated `test_server.py` asserts the behaviour checklist against a stub, which makes it a seed set of cases for the Phase 15 test platform.
+
+**Where the per-case binding lives (answer to the open question, synthesis section 6 Q7; decided in E10, D-502).** The suite names tools by regex hints (`^lookup_item$`, `^search_items$`), which a generated server never matches (`lookup_part_by_id`, `search_part`). The generator therefore emits `mcptest-binding.json` next to `server.py`, derived from the plan (`src/lib/mcpgen/binding.ts`, one function, deterministic):
+
+```json
+{
+  "lookup_by_id": { "tool": "lookup_part_by_id", "argMap": { "id": "partId" } },
+  "search_keyword": { "tool": "search_part", "argMap": { "query": "q", "per_page": "page_size" } }
+}
+```
+
+Keys are suite check ids (`tool_exists_lookup`, `search_keyword`, ...) or behaviour kinds (`lookup_by_id`, `pagesize_clamp`, ...). `tool` is the explicit binding and wins over the regex hints; `argMap` renames the suite's argument names and keeps their values (a literal `args` object, if present, replaces the suite's arguments instead). Roles the plan has no tool for are omitted and the check reports `no tool`. The file holds tool and parameter names only, never values or secrets. The test platform's in-process generator subject reads this same emitted file, and the runner loads `<package>/mcptest-binding.json` for subjects that run a server from a package directory (`cmd:` and container). Roles are mapped from tool kinds (get, search, list, filter) by name and parameter shape; a server whose tools do not fit those kinds scores `no tool` for the roles it lacks, which is a finding, not a scorer fault.
 
 ## Design basis
 
