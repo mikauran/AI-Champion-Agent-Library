@@ -244,7 +244,7 @@ describe('no pre-existing test file was modified by Phase 15', () => {
     'src/hooks.server.test.ts', // D-461: auth 401 body is { message }
     'src/routes/errorStates.api.test.ts', // D-462: it pinned that hooks define no handleError; now handleError exists and must stay generic
     'scripts/ingest.kinds.test.ts', // D-466: flag-on ingest skips fixtures directories, so the catalog no longer gains minimal-agent
-    'src/lib/mcptest/containerfile.test.ts', // D-464: the image ends with USER pi (was node)
+    'src/lib/mcptest/containerfile.test.ts', // D-464: the image ends with USER pi (was node); D-500 (E10): install in /deps and move, not --prefix /
     'src/lib/server/mcptest/containerRun.fixes.test.ts', // D-464: RUNNER_USER and the Containerfile user are pi
     'src/lib/mcpgen/generate.test.ts', // FastMCP pin widened to <5 after live verification on 3.4.8 and 4.1.0 (2026-10-14)
     'src/lib/mcptest/generatorSubject.test.ts', // D-463: the stale example is now a reported gap, so the partial-spec case passes gap_reported
