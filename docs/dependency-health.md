@@ -58,6 +58,10 @@ Because `Containerfile.mcp-test-runner` pins `yaml`, `zod`, `fflate` and `tsx` t
 
 `npx vite build` (and therefore `npm run build` and the Containerfile build) fails on this branch, before and after the bumps: `Invalid export 'mcpGeneratorData' in src/routes/agents/[slug]/+page.server.ts`. SvelteKit allows only `load`, `prerender`, `csr`, `ssr`, `trailingSlash`, `config`, `actions`, `entries` and `_`-prefixed names from a `+page.server.ts`. `mcpGeneratorData` and `mcpTesterData` are exported for two existing tests, so `npm run check` stays green and hides it. Fix (needs test edits, so not done here): move both helpers to a `$lib` module and import them from there in the route and in `customize-button.mcp.test.ts` / `customize-button.mcptest.test.ts`. See `.planning/AUTONOMOUS-BLOCKERS.md` B-002. Verified identical with the original SvelteKit 2.55.0.
 
+## Runtime dependency added: sax (D-560, 2026-10-14)
+
+`sax@1.6.1` (exact pin) is the one XML dependency of the MCP generator, used only to read OData EDMX (`$metadata`) documents. Zero transitive dependencies, 62 kB, licence BlueOak-1.0.0, no published security advisory (GitHub security page, 2026-10-14). It is event based, never expands custom entities, and is loaded with a dynamic `import('sax')` only when an EDMX document is parsed. Inputs are pre-checked fail-closed (no DOCTYPE, no entity declaration, no processing instruction except the XML declaration) and capped (depth, element count, attribute count and length). Alternatives rejected: fast-xml-parser (6 transitive packages and entity-expansion CVEs in 2026), @xmldom/xmldom (ten advisories in August 2026, two of them quadratic time), saxes (unmaintained). `npm audit` after adding it: 9 findings (3 low, 6 moderate, 0 high), the same as before, with the same packages. Revisit when `sax` ships a release: `npm view sax version time.modified`, then `npm audit`.
+
 ## Re-running
 
 ```bash
