@@ -4,7 +4,7 @@
 
 The original four phases deliver a public browse-and-discovery catalog for 100+ AI agents. The data pipeline is the foundational dependency — nothing else can be built until normalized agent data flows through the shim layer. Catalog browse and agent detail pages come next, sharing the same component surface. Hybrid search follows once the detail page components and curated semantic summary fields exist. The customization placeholder closes out v1 as an isolated, low-risk addition.
 
-Phases 5-7 were added after the fact (see "Roadmap Evolution" in STATE.md) as a self-contained "Try It Out" initiative, branching off Phase 2 rather than blocking on Phase 3/4: Phase 5 adds the optional `try_it_out` field to the catalog shape, Phase 6 builds a mock-backed runnable demo flow against a frozen client contract, and Phase 7 replaces the mock with a real (no-container) SvelteKit backend that calls an LLM directly. All three are complete; Phases 3 and 4 remain not started and are independent of this work.
+Phases 5-7 were added after the fact (see "Roadmap Evolution" in STATE.md) as a self-contained "Try It Out" initiative, branching off Phase 2 rather than blocking on Phase 3/4: Phase 5 adds the optional `try_it_out` field to the catalog shape, Phase 6 builds a mock-backed runnable demo flow against a frozen client contract, and Phase 7 replaces the mock with a real (no-container) SvelteKit backend that calls an LLM directly. All three are complete. Phases 3 and 4 were built later by the autonomous run; Phases 9-15 hardened the Try It Out runtime and added agent types, the MCP generator and the MCP test platform. Phases 16-20 record work executed outside the normal GSD flow (see STATE.md "Roadmap Evolution"), and Phases 21-23 are planned.
 
 ## Phases
 
@@ -29,9 +29,17 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 10: Accessibility (UI-03)** - WCAG AA keyboard navigation and screen-reader labels across catalog and detail
 - [x] **Phase 11: Related Agents (DISC-01)** - Similar-agents panel on the detail page using Phase 3 embeddings
 - [x] **Phase 12: Agent Types and Intake Research** - Taxonomy of hostable agent types/systems, per-format capability matrix, author intake guide
-- [ ] **Phase 13: Multi-Agent and Multi-Format Hosting (flagged)** - Canonical model extension, adapters, validate-submission CLI, system detail rendering, all behind a feature flag
-- [ ] **Phase 14: MCP Generator (generalized from research, flagged)** - Research synthesis first, then input-adapter generator (DB schema/CUST-02 is one adapter among OpenAPI, tabular catalogs, ...) (code complete 2026-10-12, verification human_needed: see 14-HUMAN-UAT.md)
+- [x] **Phase 13: Multi-Agent and Multi-Format Hosting (flagged)** - Canonical model extension, adapters, validate-submission CLI, system detail rendering, all behind a feature flag
+- [x] **Phase 14: MCP Generator (generalized from research, flagged)** - Research synthesis first, then input-adapter generator (DB schema/CUST-02 is one adapter among OpenAPI, tabular catalogs, ...) (code complete 2026-10-12, verification human_needed: see 14-HUMAN-UAT.md)
 - [x] **Phase 15: MCP Test Platform (flagged)** - Port the existing benchmark harness (offline mock pattern, D1-D6 scoring, tier gates) to score any MCP server (code complete 2026-10-13, verification human_needed: see 15-HUMAN-UAT.md)
+- [x] **Phase 16: Review and Hardening Pass** - Code review and fixes for 13-15, audit fixes, build fix, error states, smoke, perf, dependency health, the user's seven decisions (executed outside the GSD flow, 2026-10-14)
+- [x] **Phase 17: Optional UI Features (flagged)** - UI-04 spec viewer, DISC-02 compare, UI-02 dark mode, all default off (outside the GSD flow; browser checks pending human)
+- [x] **Phase 18: Live Verification and Container-Path Fixes** - Real-model search run, FastMCP 3.4.8 and 4.1.0, live Podman run and fixes, human guide (outside the GSD flow; remaining checks pending human)
+- [x] **Phase 19: Generator Input Kinds** - Swagger 2.0, OAuth2, OpenAPI 3.1 audit, SQL dialects, Prisma, OData (outside the GSD flow)
+- [x] **Phase 20: Proposal Layer and Context Pack** - Data-only proposals and context pack, stages 1-2 (outside the GSD flow)
+- [ ] **Phase 21: Generator Stage 0** - Description cleanup, tool annotations, outputSchema, deterministic tool order (not started)
+- [ ] **Phase 22: Proposal Layer Follow-ups** - First real proposal reviewed, baseline vs proposal run, hygiene tuning, derived_filter on OData (not started)
+- [ ] **Phase 23: Code Review of New Generator Code** - Review, fixes and security audit of everything added since the Phase 14 review (not started)
 
 ## Phase Details
 
@@ -94,11 +102,11 @@ Plans:
 
 Plans:
 
-- [ ] 03-01-PLAN.md — Embedding storage (agent_embeddings), Embedder interface + transformers impl, ingest embedding step with staleness skip (wave 1)
-- [ ] 03-02-PLAN.md — Tokenizer, in-TS BM25 with prefix matching, cosine, weighted RRF hybrid ranking (wave 1)
-- [ ] 03-03-PLAN.md — Lazy search service, /api/search route, catalog loader `q` support (wave 2)
-- [ ] 03-04-PLAN.md — Debounced SearchBar, URL/q handling, no-results and live-region UI (wave 3)
-- [ ] 03-05-PLAN.md — Search validation: 20+ labeled queries on the 2.2 scale corpus, BM25 hit@3 gate, real-embedding test (skip by default, pending human) (wave 2)
+- [x] 03-01-PLAN.md — Embedding storage (agent_embeddings), Embedder interface + transformers impl, ingest embedding step with staleness skip (wave 1)
+- [x] 03-02-PLAN.md — Tokenizer, in-TS BM25 with prefix matching, cosine, weighted RRF hybrid ranking (wave 1)
+- [x] 03-03-PLAN.md — Lazy search service, /api/search route, catalog loader `q` support (wave 2)
+- [x] 03-04-PLAN.md — Debounced SearchBar, URL/q handling, no-results and live-region UI (wave 3)
+- [x] 03-05-PLAN.md — Search validation: 20+ labeled queries on the 2.2 scale corpus, BM25 hit@3 gate, real-embedding test (skip by default, pending human) (wave 2)
 
 ### Phase 4: Customization Placeholder
 
@@ -164,22 +172,6 @@ Plans:
 **Wave 3** *(blocked on Wave 2 completion)*
 
 - [x] 06-03-PLAN.md — COVERAGE.md no-external-API declaration, staged runnable demo row in the dev DB, and human verification of both outcomes in a browser
-
-## Progress
-
-**Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
-Note: Phase 4 depends only on Phase 2 and can begin after Phase 2 completes; it does not require Phase 3. Phase 5 depends only on Phase 2 and can begin any time after Phase 2 completes. Phase 6 depends on Phase 5 (replaces its disabled runnable button). Phase 7 depends on Phase 6 (rewires the mock client to a real backend). Phases 5, 6, and 7 together form one continuous "Try It Out" initiative (field → mock flow → real demo backend) and were executed as a self-contained branch off Phase 2, independent of — and now ahead of — Phases 3/4.
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Data Pipeline | 2/2 | Complete   | 2026-03-19 |
-| 2. Catalog and Detail | 3/4 | In Progress|  |
-| 3. Search | 0/3 | Not started | - |
-| 4. Customization Placeholder | 0/1 | Not started | - |
-| 5. Try It Out Field | 2/2 | Complete    | 2026-08-19 |
-| 6. Runnable Try It Out Flow (mock-backed) | 3/3 | Complete    | 2026-08-19 |
-| 7. No-Container Demo Backend for Try It Out | 5/5 | Complete    | 2026-08-20 |
 
 ### Phase 7: No-Container Demo Backend for Try It Out
 
@@ -296,10 +288,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Security review (09-SECURITY-REVIEW.md) and fixes with tests (budget, sweep scope, tar/zip, JSONL cap)
-- [ ] 09-02-PLAN.md — Chaos tests: lease races, hung engine, reaper timing (fake runtime/timers)
-- [ ] 09-03-PLAN.md — Chaos tests: budget exhaustion, token reuse, malformed/oversized Pi JSONL
-- [ ] 09-04-PLAN.md — Pending-human Podman checklist (09-HUMAN-UAT.md), decision log, docs
+- [x] 09-01-PLAN.md — Security review (09-SECURITY-REVIEW.md) and fixes with tests (budget, sweep scope, tar/zip, JSONL cap)
+- [x] 09-02-PLAN.md — Chaos tests: lease races, hung engine, reaper timing (fake runtime/timers)
+- [x] 09-03-PLAN.md — Chaos tests: budget exhaustion, token reuse, malformed/oversized Pi JSONL
+- [x] 09-04-PLAN.md — Pending-human Podman checklist (09-HUMAN-UAT.md), decision log, docs
 
 ### Phase 10: Accessibility (UI-03)
 
@@ -316,9 +308,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — Audit (10-AUDIT.md), axe-core jsdom helper, WCAG contrast calculator and test
-- [ ] 10-02-PLAN.md — Fixes: skip link, landmarks, titles, heading order, focus styles, labels, focus management, live regions, contrast tokens
-- [ ] 10-03-PLAN.md — Per-component and page-level a11y tests (axe, keyboard, live regions), 10-HUMAN-UAT.md
+- [x] 10-01-PLAN.md — Audit (10-AUDIT.md), axe-core jsdom helper, WCAG contrast calculator and test
+- [x] 10-02-PLAN.md — Fixes: skip link, landmarks, titles, heading order, focus styles, labels, focus management, live regions, contrast tokens
+- [x] 10-03-PLAN.md — Per-component and page-level a11y tests (axe, keyboard, live regions), 10-HUMAN-UAT.md
 
 ### Phase 11: Related Agents (DISC-01)
 
@@ -334,8 +326,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — relatedAgents algorithm (cosine + tag/category fallback), service method, scale-set precision@4 validation
-- [ ] 11-02-PLAN.md — RelatedAgents component, detail page load wiring, axe + load tests
+- [x] 11-01-PLAN.md — relatedAgents algorithm (cosine + tag/category fallback), service method, scale-set precision@4 validation
+- [x] 11-02-PLAN.md — RelatedAgents component, detail page load wiring, axe + load tests
 
 ### Phase 12: Agent Types and Intake Research
 
@@ -354,9 +346,9 @@ Plans:
 
 Plans:
 
-- [ ] 12-01-PLAN.md — Taxonomy (docs/agent-types.md) and capability matrix (docs/agent-capability-matrix.md)
-- [ ] 12-02-PLAN.md — Author intake guide with ready-to-send reply template (docs/agent-intake-guide.md)
-- [ ] 12-03-PLAN.md — Decision memo with minimal additive Phase 13 proposal, README/PROJECT links, Phase 13 handoff note
+- [x] 12-01-PLAN.md — Taxonomy (docs/agent-types.md) and capability matrix (docs/agent-capability-matrix.md)
+- [x] 12-02-PLAN.md — Author intake guide with ready-to-send reply template (docs/agent-intake-guide.md)
+- [x] 12-03-PLAN.md — Decision memo with minimal additive Phase 13 proposal, README/PROJECT links, Phase 13 handoff note
 
 ### Phase 13: Multi-Agent and Multi-Format Hosting (flagged)
 
@@ -445,3 +437,124 @@ Plans:
 - [x] 15-11-PLAN.md — (Wave 7) Flag-gated run API (202, poll, report), TTL job store, container run path tested on the fake runtime
 - [x] 15-12-PLAN.md — (Wave 8) /mcp-test page and panel (flag-gated), Customize entry only when flag on, flag-off regression, axe
 - [x] 15-13-PLAN.md — (Wave 9) docs, 15-HUMAN-UAT.md, decision consolidation, invariant self-check, VERIFICATION
+
+### Phase 16: Review and Hardening Pass
+
+**Executed outside the normal GSD flow** (no PLAN files by design; directly launched agents; record: `16-01-SUMMARY.md`, `16-VERIFICATION.md`; notes in `.planning/exploration/`).
+**Goal:** Review and harden what the autonomous run built: code review and fixes for Phases 13-15, milestone integration audit, build and flake fixes, error states, smoke test, performance profile, dependency health, and the user's seven code decisions.
+**Requirements**: none (hardening)
+**Depends on:** Phase 15
+**Status:** Complete 2026-10-14; verification `human_needed` (auth-enabled and browser checks)
+**Plans:** 0 plans (outside the GSD flow; 1 summary)
+
+### Phase 17: Optional UI Features (flagged)
+
+**Executed outside the normal GSD flow** (record: `17-01-SUMMARY.md`, `17-VERIFICATION.md`).
+**Goal:** Optional UI features behind default-off flags: UI-04 raw spec viewer (`UI_SPEC_VIEWER`), DISC-02 comparison (`AGENT_COMPARE`), UI-02 dark mode (`UI_DARK_MODE`).
+**Requirements**: UI-04, DISC-02, UI-02
+**Depends on:** Phase 10, Phase 13
+**Status:** Complete 2026-10-13 (delivered, flagged); verification `human_needed` (browser checks)
+**Plans:** 0 plans (outside the GSD flow; 1 summary)
+
+### Phase 18: Live Verification and Container-Path Fixes
+
+**Executed outside the normal GSD flow** (record: `18-01-SUMMARY.md`, `18-VERIFICATION.md`).
+**Goal:** Run for real what had only been proven offline (real-model search, FastMCP, rootless Podman), fix the defects found, and write the human verification guide.
+**Requirements**: none (verification of Phases 3, 9, 14, 15)
+**Depends on:** Phase 16
+**Status:** Complete 2026-10-14; verification `human_needed` (check 7 paid key, check 9 re-run, cancel path, browser)
+**Plans:** 0 plans (outside the GSD flow; 1 summary)
+
+### Phase 19: Generator Input Kinds
+
+**Executed outside the normal GSD flow** (record: `19-01-SUMMARY.md`, `19-VERIFICATION.md`).
+**Goal:** Extend the Phase 14 generator with Swagger 2.0, OAuth2 bearer-from-env, an OpenAPI 3.1/3.2 audit, SQL dialects (pg_dump, SQLite, mysqldump), a hand-rolled Prisma reader and OData (CSDL JSON, EDMX XML via hardened sax), without changing the core.
+**Requirements**: CUST-02 (extends)
+**Depends on:** Phase 14, Phase 18
+**Status:** Complete 2026-10-14; verification `human_needed` (no live OData service run; no code review yet, see Phase 23)
+**Plans:** 0 plans (outside the GSD flow; 1 summary)
+
+### Phase 20: Proposal Layer and Context Pack
+
+**Executed outside the normal GSD flow** (record: `20-01-SUMMARY.md`, `20-VERIFICATION.md`).
+**Goal:** Stages 1-2 of the proposal layer: a data-only proposal format (13 op types, gates, fingerprint) and a context pack for an external agent session; no model calls inside the platform.
+**Requirements**: CUST-02 (extends)
+**Depends on:** Phase 19
+**Status:** Complete 2026-10-14; verification `passed` for the scoped machinery (real use is Phase 22)
+**Plans:** 0 plans (outside the GSD flow; 1 summary)
+
+### Phase 21: Generator Stage 0
+
+**Goal:** Improve every generated server's baseline quality: description cleanup (hygiene filter on spec-derived text), tool annotations (read-only hints), `outputSchema`/`structuredContent`, deterministic tool order.
+**Requirements**: CUST-02 (extends)
+**Depends on:** Phase 20
+**Success Criteria** (what must be TRUE):
+
+  1. Spec-derived descriptions pass a hygiene filter (no URLs, markup, template syntax or credential-shaped text reach tool descriptions)
+  2. Every generated read tool carries read-only annotations; no tool claims write behaviour
+  3. Tools declare an `outputSchema` and return `structuredContent` consistent with it
+  4. Tool order is deterministic and stable across runs and input orderings
+  5. Applies to every generated server; goldens will churn: regenerate in a dedicated commit (proposal goldens may need `UPDATE_GOLDEN=1`); generated packages' pytest still pass on FastMCP 3.4.8 and 4.1.0
+
+**Plans:** 0 plans (not started; run /gsd:discuss-phase 21 then /gsd:plan-phase 21)
+
+### Phase 22: Proposal Layer Follow-ups
+
+**Goal:** Finish the parts of stages 1-2 that need real use. The agreed scope (an external agent session writes proposals; the format supports structural edits merge/split/hide/rename/defaults/composite; the context pack exports spec, samples, domain docs and the deterministic baseline; the Phase 15 scorer is the gate; no model calls inside the platform) is built in Phase 20.
+**Requirements**: CUST-02 (extends)
+**Depends on:** Phase 20, Phase 21
+**Success Criteria** (what must be TRUE):
+
+  1. A first real proposal from an agent session exists and has been reviewed by Ville
+  2. Baseline and proposal-assisted packages have been run through `mcp-test --allow-local-exec` and compared with the Phase 15 scorer
+  3. Hygiene false positives (D-585) are tuned from real proposals
+  4. `derived_filter` on OData (currently `odata-unsupported-op`, skipped in examples) is supported or its limitation is documented as final
+
+**Plans:** 0 plans (not started)
+
+### Phase 23: Code Review of New Generator Code
+
+**Goal:** `gsd-code-review` (plus fix) and a security audit of everything added since the Phase 14 review: Swagger 2.0/OAuth2/3.1 audit, SQL dialects and Prisma, OData and sax, proposals, context pack and the evaluation script, the binding file, the container-path fixes, the CLI changes.
+**Requirements**: CUST-02 (hardening)
+**Depends on:** Phase 20 (best after Phases 21-22 so the review covers the final code)
+**Success Criteria** (what must be TRUE):
+
+  1. `23-REVIEW.md` covers all code added since the Phase 14 review, with severity-classified findings
+  2. Critical and warning findings are fixed with tests (`23-REVIEW-FIX.md`), or explicitly accepted with a decision id
+  3. Security audit of the sax reader, the proposal and context-pack file inputs, and the binding file loader concludes SECURED or lists open threats
+  4. `npm run check`, `vite build` and `npm run smoke` still pass
+
+**Plans:** 0 plans (not started)
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order, with decimal phases between their integers: 1, 2, 2.1, 2.2, 3, 4, 5, ... 23. Phase 4 and Phases 5-7 depend only on Phase 2 and were built ahead of Phase 3. Phases 16-20 were executed outside the normal GSD flow and recorded afterwards.
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Data Pipeline | 2/2 | Complete | 2026-03-19 |
+| 2. Catalog and Detail | 3/4 | In Progress (02-04 human checkpoint pending) | - |
+| 2.1 Green Baseline | 2/2 | Complete | 2026-10-12 |
+| 2.2 Scale and Seed Data | 2/2 | Complete | 2026-10-12 |
+| 3. Search | 5/5 | Complete (human_needed: UI items 3-4) | 2026-10-12 |
+| 4. Customization Placeholder | 1/1 | Complete (human_needed: browser) | 2026-10-12 |
+| 5. Try It Out Field | 2/2 | Complete | 2026-08-19 |
+| 6. Runnable Try It Out Flow (mock-backed) | 3/3 | Complete | 2026-08-19 |
+| 7. No-Container Demo Backend for Try It Out | 5/5 | Complete | 2026-08-20 |
+| 8. Container-backed Try It Out | 8/8 | Complete | 2026-10-08 |
+| 9. Try It Out Hardening | 4/4 | Complete (human_needed: live Podman) | 2026-10-12 |
+| 10. Accessibility | 3/3 | Complete (human_needed) | 2026-10-12 |
+| 11. Related Agents | 2/2 | Complete (human_needed) | 2026-10-12 |
+| 12. Agent Types and Intake Research | 3/3 | Complete | 2026-10-12 |
+| 13. Multi-Agent and Multi-Format Hosting | 9/9 | Complete (human_needed) | 2026-10-12 |
+| 14. MCP Generator | 7/7 | Complete (human_needed) | 2026-10-12 |
+| 15. MCP Test Platform | 13/13 | Complete (human_needed) | 2026-10-13 |
+| 16. Review and Hardening Pass | outside GSD flow | Complete (human_needed) | 2026-10-14 |
+| 17. Optional UI Features | outside GSD flow | Complete (human_needed) | 2026-10-13 |
+| 18. Live Verification and Container-Path Fixes | outside GSD flow | Complete (human_needed) | 2026-10-14 |
+| 19. Generator Input Kinds | outside GSD flow | Complete (human_needed) | 2026-10-14 |
+| 20. Proposal Layer and Context Pack | outside GSD flow | Complete (passed) | 2026-10-14 |
+| 21. Generator Stage 0 | 0/0 | Not started | - |
+| 22. Proposal Layer Follow-ups | 0/0 | Not started | - |
+| 23. Code Review of New Generator Code | 0/0 | Not started | - |
