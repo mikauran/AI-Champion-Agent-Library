@@ -65,7 +65,30 @@ Status: COUNTED (entry validated, real-model container run, rubric met after one
 - Ledger: two 25-02 rows in .planning/spend-log.md (0.0160 not counted, 0.0169 counted)
 
 ### Agent 2: QTO normalization
-_pending_
+COUNTED (SKILL revision 1).
+
+- Entry: data/agents/qto-normalization.yaml (validate-submission INGESTIBLE, validate-entries 0 errors). Option A, gpt-4.1-mini, Pi container.
+- Run 1 (SKILL v1), job 5ecd9f99-c1e2-4253-b78d-ac4ce366c66e, 10958 tokens, 3 requests, est. 0.0175 USD. All 20 rows and all conversions correct, but the totals section was wrong (m2 1769.2 vs 2020.1, m3 42.845 vs 43.145, m -0 vs 8.505, pcs list included a merged duplicate) and one original_unit contained a NUL character (m-squared). Not counted.
+- Run 2 (SKILL revision 1: explicit addend lists in totals, ASCII units), job af4663e3-f128-4272-9b77-e0eace2acc6c, gpt-4.1-mini, 11384 tokens, 3 requests, est. 0.0182 USD. Input label: synthetic (data/tryitout-prompts/qto-normalization/sample-qto-table.txt, 20 rows).
+- Answer key vs result: duplicates Q-004/Q-020 (merged-duplicate, both ids logged); conversions Q-008 mm 0.001, Q-009 cm 0.01 plus decimal comma, Q-010/Q-011 l 0.001, Q-012 t 1000 (all numerically correct: 12.5, 8.505, 0.3, 0.045, 2000); decimal comma Q-001/Q-009, thousands separator Q-006; missing unit Q-015 and bag Q-016 -> UNRESOLVED and logged; zero Q-018 and negative Q-019 flagged; group labels wall/WALLS -> Walls mapped.
+- Rubric: 20 normalised rows for 20 input ids; unchanged-unit rows keep identical digits; every converted row states its factor and original*factor == quantity (checked Q-008, Q-009, Q-010, Q-011, Q-012); UNRESOLVED rows not guessed; draft caveat in the output footer and entry system prompt. Totals recomputed by hand and correct: m2 2020.1, m3 43.145, m 8.505, kg 3850, pcs 59. Verdict: pass.
+- Quality notes: Q-017 (cable tray in pcs, a length item) not flagged as ambiguous; the original_unit column shows normalised spelling for Q-006 (m2 instead of m^2) and the spelling change is not logged for Q-001/Q-006; a spurious group-label change Cable tray -> Cable trays was logged. No quantity was altered wrongly.
+- Output excerpt (output/result.md):
+  ```
+  Q-008 | Pipes | Copper pipe DN22 | 12.5 | m | 12500 | mm | unit conversion
+  Q-009 | Pipes | Copper pipe DN15 | 8.505 | m | 850,5 | cm | unit conversion, number format
+  Q-012 | Rebar | Reinforcement steel B500 | 2000 | kg | 2 | t | unit conversion
+  Q-015 | Windows | Window 1200x1500 | 18 | UNRESOLVED | 18 |  | missing unit
+  Q-016 | Masonry mortar | 40 | UNRESOLVED | 40 | bag | unknown unit
+  Q-020 | Doors | Single door 900x2100 | 24 | pcs | 24 | pcs | merged-duplicate
+  ## Totals (re-check required)
+  m2: Q-001 245.5 + Q-002 310.2 + Q-003 128 + Q-006 1250 + Q-014 86.4 = 2020.1
+  m: Q-008 12.5 + Q-009 8.505 + Q-018 0 + Q-019 -12.5 = 8.505
+  Draft for engineer review. Synthetic input; quantities were not checked against any model geometry.
+  ```
+- Caveat: draft for engineer review; model-computed totals must be re-checked; synthetic input only.
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: two 25-03 rows in .planning/spend-log.md (0.0175 not counted, 0.0182 counted)
 
 ### Agent 3: Clash prioritization
 _pending_

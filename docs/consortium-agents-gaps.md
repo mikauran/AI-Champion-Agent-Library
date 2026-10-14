@@ -16,3 +16,8 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-010 | 1 ETIM & classification repair | No MCP class lookup from the container (no network except the LLM proxy); LVI-INFO/stk-mcp search is done by the engineer or an excerpt is pasted into the input. | tool | open | Phase 25 | open |
 | G-011 | 1 ETIM & classification repair | Input is text extracted from IFC; real IFC parsing is out of scope. | tool | open | Phase 25 | open |
 | G-012 | 1 ETIM & classification repair | No feature-value validation against a real class definition; one model call, no per-element tool use. | tool | open | Phase 25 | open |
+| G-013 | 2 QTO normalization | No access to the BIM model: cannot check quantities against geometry. | data | open | Phase 25 | open |
+| G-014 | 2 QTO normalization | Text input only (CSV text), no IFC or Excel parsing. | tool | open | Phase 25 | open |
+| G-015 | 2 QTO normalization | No mapping to a cost classification or CWICR rates (licence and scope). | data | open | Phase 25 | open |
+| G-016 | 2 QTO normalization | Arithmetic is done by the model in one call; totals were wrong in the first run and must be re-checked by the engineer. | tool | open | Phase 25 | open |
+| G-017 | 2 QTO normalization | No unit dictionary beyond the canonical set in the prompt; ambiguous pcs on length items is not reliably flagged (observed in run af4663e3). | tool | open | Phase 25 | open |
