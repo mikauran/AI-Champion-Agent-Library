@@ -7,8 +7,19 @@ Template for consortium agents (Phases 25-29). The entry is one Oracle AgentSpec
 1. Copy [templates/agent-entry.template.yaml](templates/agent-entry.template.yaml) to `data/agents/<slug>.yaml`.
 2. Replace every `TEMPLATE` value; keep the comments you find useful, delete the rest.
 3. Check the file against the AgentSpec schema: `npm run validate-submission -- data/agents/<slug>.yaml`
-4. Check the consortium fields: `npm run validate-entries -- data/agents/<slug>.yaml` (added in Plan 24-02).
+4. Check the consortium fields: `npm run validate-entries -- data/agents/<slug>.yaml`. With no argument it checks every top-level file in `data/agents`.
 5. Add any gap you found to `metadata.gaps` and to [consortium-agents-gaps.md](consortium-agents-gaps.md).
+
+### validate-entries output and exit codes
+
+```
+[OK] docs/templates/agent-entry.template.yaml
+1 entry: 0 error(s)
+```
+
+Entries without any consortium key (the older agents) print `[SKIPPED]` and are not errors. A failing entry lists the field, for example `- metadata.gaps must be a list of strings (key present, may be empty)`.
+
+Exit codes: 0 all entries ok or skipped, 1 at least one entry has errors, 2 path not found. The same checks run in `npm test` through `scripts/validate-entries.test.ts`, so they are part of `npm run check`.
 
 ## Fields
 
