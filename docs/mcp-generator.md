@@ -128,6 +128,10 @@ Options: `--adapter <openapi|tabular-catalog|sql-ddl|prisma|auto>`, `--out <dir>
 
 **Customize menu**: the "Generate MCP" item on an agent detail page opens a panel: paste text, pick an adapter (default auto-detect), generate, and the zip downloads. The pasted text is cleared after a successful download and nothing is stored in the browser.
 
+### Proposal-assisted generation (data only)
+
+`generate-mcp` also accepts a proposal file: `--proposals <file>` (strict, all or nothing) with `--proposals-lenient` (apply the valid ops, report the rest), `--validate-only` (run the gates and print a before/after review, write nothing), `--context-pack <dir>` with repeatable `--docs <path>` and `--samples <path>` (a directory an external agent session can read), and `--emit-proposal-schema <file>`. The proposal is data, never code, and the generator stays deterministic: same input plus same proposal file gives byte-identical output. `report.json` and the package README carry the sha256 of the proposal file, so a reviewer can see a package was proposal-assisted. Full reference: [mcp-generator-proposals.md](mcp-generator-proposals.md).
+
 ## Generated package layout
 
 The zip contains one folder named after the server:
