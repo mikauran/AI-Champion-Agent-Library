@@ -14,7 +14,7 @@ export const MAX_NEW_TOOLS = 20
 
 /** Documented limits (gate 3 and 4 enforce them with stable codes). */
 export const LIMITS = {
-  toolDescription: 600,
+  toolDescription: 400,
   argDescription: 160,
   reason: 500,
   constString: 256,

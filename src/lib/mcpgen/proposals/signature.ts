@@ -98,14 +98,22 @@ export function finalSignature(plan: ServerPlan, tool: PlannedTool): SigArg[] {
     if (e.pin !== undefined) continue
     const next: SigArg = { ...a, name: e.name ?? a.name }
     if (e.description) next.description = e.description
+    if (e.keepAlias && e.name) {
+      // New name optional with no default; the alias keeps the effective default (the emitter does the same).
+      const effective = e.default !== undefined ? e.default : a.default
+      const alias: SigArg = { ...a, required: false, description: `Alias of ${e.name}.` }
+      delete alias.default
+      if (effective !== undefined) alias.default = effective
+      const fresh: SigArg = { ...next, required: false }
+      delete fresh.default
+      out.push(fresh, alias)
+      continue
+    }
     if (e.default !== undefined) {
       next.default = e.default
       next.required = false
     }
-    if (e.keepAlias && e.name) {
-      next.required = false
-      out.push(next, { ...a, required: false, description: `Alias of ${e.name}.` })
-    } else out.push(next)
+    out.push(next)
   }
   // Python needs arguments without a default first; the stable partition is what the emitter does.
   return [...out.filter((x) => x.required), ...out.filter((x) => !x.required)]

@@ -1,0 +1,17 @@
+Proposal review (strict mode)
+  proposal file sha256: 9e85370c97cbee5f99f7bf2652599741c78483768811c2da9d8f50b72908e79d
+  baseline fingerprint: aca3c031cf55f36ba1d51abf2956c7e0171705eb4782c5d3353ee8805d35ffe4
+  result: ACCEPTED
+
+Applied ops (1):
+  - composite-orders [composite_tool]: test
+
+Changes per tool (before -> after):
+  NEW orders_of_customer (composite)
+    description: Finds the first customer whose name contains the text and returns their orders. Says clearly when nothing matches.
+    arguments: (name)
+    steps: who -> query_customer; orders -> query_order; at most 2 read-only calls
+
+Tools offered after applying (6): describe_acme_schema, orders_of_customer, query_customer, query_note_log, query_order, query_order_line
+
+Human review is required before any proposal-assisted package is published. Nothing was published.

@@ -194,27 +194,28 @@ export function applyArgEdits(lines: string[], tool: PlannedTool): string[] {
     }
     const name = ed.name ?? e.name
     pyIdent(name)
-    const next: Entry = { name, type: e.type, dflt: e.dflt }
-    if (ed.default !== undefined) {
-      next.dflt = pyLit(ed.default)
-      if (wasRequired) next.type = bare(e.type)
-    }
     const doc: { name?: string; text?: string; alias?: string } = {}
     if (name !== e.name) doc.name = name
     if (ed.description !== undefined) doc.text = cleanText(ed.description, 160)
     if (ed.keepAlias && name !== e.name) {
-      // The new name first, the old name as an optional alias; the body keeps using the old name.
-      if (wasRequired && ed.default === undefined) {
-        next.type = `Optional[${bare(e.type)}]`
-        next.dflt = 'None'
-      }
-      out.push(next, { name: e.name, type: `Optional[${bare(e.type)}]`, dflt: 'None' })
+      // The new name is optional (None); the old name stays as an optional alias that carries the default.
+      // The body keeps using the old name: it takes the new value when one is given.
+      const effective = ed.default !== undefined ? pyLit(ed.default) : e.dflt
+      out.push(
+        { name, type: `Optional[${bare(e.type)}]`, dflt: 'None' },
+        { name: e.name, type: wasRequired && effective === undefined ? `Optional[${bare(e.type)}]` : e.type, dflt: effective ?? 'None' },
+      )
       prologue.push(ind(2, `if ${name} is not None:`), ind(3, `${e.name} = ${name}`))
       if (wasRequired && ed.default === undefined) {
         prologue.push(ind(2, `if ${e.name} is None:`), ind(3, `return _err("invalid_argument", ${pyStr(`${name} is required.`)})`))
       }
       doc.alias = `Alias of ${name} (kept for compatibility).`
     } else {
+      const next: Entry = { name, type: e.type, dflt: e.dflt }
+      if (ed.default !== undefined) {
+        next.dflt = pyLit(ed.default)
+        if (wasRequired) next.type = bare(e.type)
+      }
       out.push(next)
       if (name !== e.name) prologue.push(ind(2, `${e.name} = ${name}`))
     }

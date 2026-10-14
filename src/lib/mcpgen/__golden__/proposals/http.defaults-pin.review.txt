@@ -1,0 +1,26 @@
+Proposal review (strict mode)
+  proposal file sha256: 1289b4ce513e2413d034d91875bbff375877a9eba0bd54cc78068adb09b0919e
+  baseline fingerprint: 7d8411e7f528d1bd254e266371249de0fba6d32d7dec9f7337025152971f03ff
+  result: ACCEPTED
+
+Applied ops (3):
+  - paging [set_paging_default]: test
+  - pin-pages [pin_arg]: test
+  - projection [set_projection]: test
+
+Changes per tool (before -> after):
+  filter_part_by_features
+    arguments: before: (key, value?, q?, max_pages=5, fields?)
+               after:  (key, value?, q?, fields?)
+    pinned: max_pages = 3 (not an argument any more)
+    default fields: partId, name, category, features -> partId, name, category
+  lookup_part_by_id
+    default fields: partId, name, category, features -> partId, name, category
+  search_part
+    arguments: before: (page=1, page_size=20, q?, fields?)
+               after:  (page=1, page_size=10, q?, fields?)
+    default fields: partId, name, category, features -> partId, name, category
+
+Tools offered after applying (3): filter_part_by_features, lookup_part_by_id, search_part
+
+Human review is required before any proposal-assisted package is published. Nothing was published.
