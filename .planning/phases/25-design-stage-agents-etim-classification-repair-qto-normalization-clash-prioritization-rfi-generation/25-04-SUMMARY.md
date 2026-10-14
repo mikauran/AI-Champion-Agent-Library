@@ -7,7 +7,7 @@ requirements: [CONS-A3]
 
 # 25-04 Summary
 
-Agent 3 (Clash prioritization): ATTEMPTED-NOT-COUNTED.
+Agent 3 (Clash prioritization): COUNTED on retry (redesigned SKILL, 2026-10-15). The first three runs were attempted-not-counted; see Retry below.
 
 ## Built
 - data/agents/clash-prioritization.yaml (stage design, agent_no 3, DDC attribution), SKILL.md and a synthetic labelled 16-row clash report in data/tryitout-prompts/clash-prioritization/.
@@ -23,3 +23,7 @@ Agent 3 (Clash prioritization): ATTEMPTED-NOT-COUNTED.
 ## Deviations
 - Three runs instead of one (two SKILL revisions allowed). Total 0.0568 USD.
 - Suggested follow-up: deterministic clustering/ranking tool with the model writing rationale only. The shared findings format is unchanged for Plan 25-05.
+
+## Retry (redesigned SKILL, counted)
+- SKILL redesigned: one row per input clash with a fixed checklist (tests A-E), clusters by copying a `location_key` column, cluster and findings tables copied from the rows, no counts. Sample gained a `location_key` column (assumption, gap G-029). 8-column findings format kept.
+- Run 4 job 50656bb4-0cbc-4f96-81e9-d312ab561ddf (0.0215 USD): FAIL, priority rule mis-applied on 6 rows. Run 5 job 1aa6f1be-baf2-465a-8b4a-a101a2bc5d20 (14239 tokens, 0.0228 USD): rubric PASS, counted. Inventory row 3 now partial.

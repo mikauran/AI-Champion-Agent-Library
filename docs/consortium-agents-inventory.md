@@ -22,7 +22,7 @@ Only the agent names are used here, with our own wording. The source slide is TU
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | ETIM & classification repair | Design | partial | data/agents/etim-classification-repair.yaml | Counted: entry plus one container run with a synthetic sample (Phase 25, 25-02). Classification lookup and real ETIM data missing. | 25 |
 | 2 | QTO normalization | Design | partial | data/agents/qto-normalization.yaml | Counted: entry plus one container run on a synthetic table (Phase 25, 25-03); no model access, no cost mapping. | 25 |
-| 3 | Clash prioritization | Design | missing | data/agents/clash-prioritization.yaml | Entry exists but attempted-not-counted: three container runs (SKILL v1 + 2 revisions) on a synthetic clash report failed the rubric (a clash lost from the findings table, P1-P3 rule mis-applied); needs a deterministic clustering/ranking tool. | 25 |
+| 3 | Clash prioritization | Design | partial | data/agents/clash-prioritization.yaml | Counted: entry plus one container run on a synthetic clash report (Phase 25, 25-04, redesigned one-row-per-clash SKILL after three failed runs); no model access, generic priority scale; the report must carry a precomputed location_key (real clash exports need a preprocessing step). | 25 |
 | 4 | RFI generation | Design | partial | data/agents/rfi-triage-assistant.yaml, data/agents/demo-rfi-triage.yaml, data/agents/rfi-generation-from-findings.yaml | Counted: new entry driven by findings plus one container run on synthetic findings (Phase 25, 25-05). The assistant and demo entries stay as they were (conversational drafting/routing, single-RFI triage); no RFI log or numbering, no attachments. | 25 |
 | 5 | Product sourcing E-BOM to M-BOM | Sourcing | missing | none | Nothing maps engineering bills of materials to manufacturing ones; stk-mcp and lvi-info-mcp (Plan 24-03) are catalog data sources, not this agent. | 26 |
 | 6 | Quote comparison | Sourcing | missing | none | No entry compares supplier quotes. | 26 |
@@ -33,7 +33,7 @@ Only the agent names are used here, with our own wording. The source slide is TU
 | 11 | O&M completeness | Site and handover | missing | none | No entry checks handover documentation. | 28 |
 | 12 | BMS digital twin | Site and handover | missing | none | No entry connects building management data to a model. | 28 |
 
-Summary: 0 full, 4 partial (1, 2, 4, 8), 8 missing.
+Summary: 0 full, 5 partial (1, 2, 3, 4, 8), 7 missing.
 
 Stage names: Design (IFC/BIM), Sourcing (LVI-INFO catalog), Manufacturing (prefab and cut sheets), Site and handover (O&M, BMS).
 

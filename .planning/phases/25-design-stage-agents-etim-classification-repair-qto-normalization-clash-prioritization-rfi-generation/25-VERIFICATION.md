@@ -91,13 +91,36 @@ COUNTED (SKILL revision 1).
 - Ledger: two 25-03 rows in .planning/spend-log.md (0.0175 not counted, 0.0182 counted)
 
 ### Agent 3: Clash prioritization
-ATTEMPTED-NOT-COUNTED (rubric FAIL after SKILL v1 plus the maximum of 2 revisions).
+COUNTED after redesign (retry 2026-10-15). History: three earlier runs (below) were attempted-not-counted; the SKILL was then redesigned and two further live runs made (run 4 FAIL on rule application, run 5 PASS).
 
 - Entry: data/agents/clash-prioritization.yaml (validate-submission INGESTIBLE, validate-entries 0 errors). Option A, gpt-4.1-mini, Pi container (usage observed, runs were countable by infrastructure). Input label: synthetic (data/tryitout-prompts/clash-prioritization/sample-clash-report.txt, 16 rows, invented building).
 - Answer key: cluster A CL-001..004 (duct SD-12 across beams, P1); cluster B CL-005..007 (riser RS-3, 3 clashes, P1); resolved CL-008, CL-015 (excluded); CL-009 hard 210 mm Structural (P1); soft CL-010, CL-011, CL-012, CL-016 (P3, separate); CL-013 isolated architectural/HVAC (P2); CL-014 missing penetration, Structural (P1 by the stated rule).
 - Run 1 (SKILL v1), job 57e5c2cc-f130-47b7-96af-755ece27e18c, 10561 tokens, 3 requests, est. 0.0169 USD: CL-012 lost entirely, a phantom "cluster 4" repeated ids CL-005..007 with no priority, summary counts wrong (4 P1). FAIL.
 - Run 2 (revision 1: one-by-one assignment, counts must match, coverage check), job ab20a259-c5c6-40c5-86fd-7406d918a43c, 13244 tokens, 3 requests, est. 0.0212 USD: every id covered exactly once, resolved excluded, findings table with the exact 8-column header. But CL-013 (Architectural/HVAC) rationale falsely said "hard clash with Structural" and was ranked P1, CL-014 (Structural) under-ranked P2, and four unrelated soft clashes across L0-L3 were merged into one cluster with a false "level/grid" reason. FAIL.
 - Run 3 (revision 2: literal Structural test, no unrelated merges), job 2141f80e-2c6b-4b00-b48f-36bc84206bf4, 11678 tokens, 3 requests, est. 0.0187 USD: CL-012 listed in the coverage check under cluster 4 but missing from the ranked table and from the findings table (lost finding), the 3-clash riser cluster ranked P2 (rule says P1), soft CL-016 ranked P2. CL-009, CL-014 correctly P1, resolved ids excluded, coverage check claims 14 + 2 = 16 although only 13 open ids are in ranked rows. FAIL.
+- Reason for the first three failures: gpt-4.1-mini in one call did not reliably apply the P1-P3 rule or keep every id in the multi-section output.
+
+#### Retry with redesigned SKILL (agent 3, counted)
+- Redesign: output ONE ROW PER INPUT CLASH in input order (clash_id | status | cluster_label | priority | reason, reason = fixed checklist plus the rule that fired); clusters only by copying the `location_key`; cluster and findings tables copy from the rows; no summary counts. Input adaptation (assumption, gap G-029): the synthetic sample got a hand-made `location_key` column (SD-12, RS-3, otherwise level-grid); real clash exports need a preprocessing step. The 8-column findings format is kept and was produced exactly.
+- Run 4 (redesign v1), job 50656bb4-0cbc-4f96-81e9-d312ab561ddf, 13427 tokens, 3 requests, est. 0.0215 USD: all 16 ids once, in order, clusters correct, resolved excluded, findings header exact; but the model contradicted its own checklist (wrote "P2 hard clash with Structural element") so CL-002..004, CL-006, CL-007 and CL-014 got P2 instead of P1 per row. FAIL, not counted. Fix: explicit tests A-E whose Y/N answers decide the priority.
+- Run 5 (redesign v2 with A-E tests), job 1aa6f1be-baf2-465a-8b4a-a101a2bc5d20, 14239 tokens, 3 requests, est. 0.0228 USD, Option A, gpt-4.1-mini, Pi container, usage observed, countable by infrastructure. Input label: synthetic. Retry total 0.0443 USD.
+- Rubric: every input id appears once in the per-clash table, in input order (diff against the input id list identical, 16 rows); resolved CL-008 and CL-015 are `excluded` and absent from cluster and findings tables; CL-001..004 grouped (CLU-SD-12, P1), CL-005..007 grouped (CLU-RS-3, P1 via 3 members); CL-009 (210 mm Structural) P1; CL-014 (Structural, penetration unknown) P1 with "confidence lower: penetration missing"; soft CL-010, 011, 012, 016 each P3 and separate; CL-013 P2; exact 8-column findings header, 9 rows for 9 clusters; no invented ids, elements or numbers; caveat present. PASS.
+- Minor imperfections (not rubric failures): F-01 location rendered `L2, C/3/C/4/C/5/C/6`; F-02 disciplines list omits Structural although CL-005 is Plumbing/Structural; owners are proposals only.
+- Excerpt:
+  ```
+  CL-006 | open | CLU-RS-3 | P1 | resolved=N; type=hard; struct=N; pen=40; pen100=N; A=N B=N C=Y D=Y E=N; key=RS-3; others=CL-005,CL-007; fired: P1 because C=Y
+  CL-009 | open | CLU-L0-B/2 | P1 | resolved=N; type=hard; struct=Y; pen=210; pen100=Y; A=Y B=Y C=N D=Y E=N; key=L0-B/2; others=none; fired: P1 because A=Y
+  CL-014 | open | CLU-L1-A/3 | P1 | ...pen=unknown; pen100=N; confidence lower: penetration missing; A=Y B=N C=N D=Y E=N; ...fired: P1 because A=Y
+  CL-016 | open | CLU-L0-C/1 | P3 | ... A=N B=N C=N D=N E=N; ... fired: P3 because A-E all N
+  F-01 | CL-001,CL-002,CL-003,CL-004 | P1 | HVAC, Structural | L2, C/3/C/4/C/5/C/6 | Supply duct and Beam clashes (multiple) | Structural engineer | none
+  F-08 | CL-014 | P1 | Electrical, Structural | L1, A/3 | Conduit bank and Wall clash | Structural engineer | penetration missing
+  Draft for engineer review. Priorities use only the report columns and a generic P1-P3 rule; the model was not consulted.
+  ```
+- Caveat: draft for engineer review; synthetic input only; single sample, reliability on larger reports unproven.
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: rows 50656bb4 (not counted) and 1aa6f1be (counted) in .planning/spend-log.md.
+
+#### Original attempted-not-counted record
 - Reason: gpt-4.1-mini in one call does not reliably apply the P1-P3 rule or keep every id in the ranked and findings tables; losing a clash silently is exactly the failure a coordinator cannot catch. No evidence is claimed. Mitigation idea (not done, cap reached): a deterministic pre-processing step (script tool) for clustering and ranking, with the model only writing rationale and findings.
 - Excerpt of the last output (for the record, wrong rows marked): `2 | CL-005, CL-006, CL-007 | P2 | ... (Rule: cluster of 2)` (should be P1); `CL-012: cluster 4` but no cluster 4 row in the ranked or findings tables.
 - Caveat: draft for engineer review; synthetic input only.
