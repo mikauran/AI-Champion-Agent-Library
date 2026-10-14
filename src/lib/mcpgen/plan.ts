@@ -30,22 +30,22 @@ export const DERIVED_MAX_PAGES = 10
 export const MAX_LIMIT = 1_000_000_000
 
 /** Gap codes that describe something the generator dropped (shown as toolsDropped in the report). */
-export const DROP_CODES = ['write-dropped', 'write-not-supported', 'operation-skipped', 'tool-omitted']
+export const DROP_CODES = ['write-dropped', 'write-not-supported', 'operation-skipped', 'tool-omitted', 'proposal-hidden']
 
-export type ToolKind = 'list' | 'search' | 'get' | 'filter' | 'query' | 'describe'
+export type ToolKind = 'list' | 'search' | 'get' | 'filter' | 'query' | 'describe' | 'proposed'
 
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/
 const ENV_NAME = /^[A-Z][A-Z0-9_]{0,63}$/
 const PATH_OK = /^\/[A-Za-z0-9_\-.~/{}]*$/
 const FREE_TEXT = new Set(['q', 'query', 'search', 'keyword', 'keywords', 'text', 'term', 'free_text'])
 
-const PY_KEYWORDS = new Set(
+export const PY_KEYWORDS = new Set(
   'False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield match case type'.split(
     ' ',
   ),
 )
 /** Names the emitted Python bodies use (builtins, modules, locals). A parameter may not shadow them. */
-const RESERVED_NAMES = new Set(
+export const RESERVED_NAMES = new Set(
   (
     'str int float bool len list dict set tuple range min max sum any all sorted isinstance zip enumerate print dir ' +
     'os json time csv math sqlite3 httpx mcp server Any Optional functools urllib pathlib Exception BaseException ' +
@@ -53,7 +53,7 @@ const RESERVED_NAMES = new Set(
     'base_query spec conn cur sql args col pages hint ident entry'
   ).split(' '),
 )
-const STANDARD_ARGS = new Set(['page', 'page_size', 'fields', 'limit', 'offset', 'field', 'value', 'match', 'key', 'max_pages'])
+export const STANDARD_ARGS = new Set(['page', 'page_size', 'fields', 'limit', 'offset', 'field', 'value', 'match', 'key', 'max_pages'])
 
 export function snake(s: string): string {
   let t = String(s)
@@ -211,7 +211,7 @@ function isFreeText(p: Param): boolean {
   return p.in === 'query' && p.type !== 'array' && p.type !== 'object' && FREE_TEXT.has(p.name.toLowerCase())
 }
 
-function safeParamName(name: string, reserved: Set<string>, allowStandard = false): boolean {
+export function safeParamName(name: string, reserved: Set<string>, allowStandard = false): boolean {
   return (
     IDENT.test(name) &&
     !name.startsWith('_') &&
@@ -324,6 +324,7 @@ function publishesSourceText(op: Operation | undefined, params: Param[]): { copi
 
 /** Which kind of tool a PlannedTool is. Derived from the plan, so the contract types stay unchanged. */
 export function toolKind(plan: ServerPlan, tool: PlannedTool): ToolKind {
+  if (tool.proposed?.wrapper) return 'proposed'
   if (tool.derived) return tool.derived.kind === 'schemaDiscovery' ? 'describe' : 'filter'
   if (tool.operation) {
     const op = plan.model.operations.find((o) => o.id === tool.operation)
@@ -497,7 +498,7 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
         continue
       }
       seenIds.add(d.id)
-      wanted.push({ d: { ...d, origin: 'user' }, nested })
+      wanted.push({ d: { ...d, origin: d.origin === 'proposed' ? 'proposed' : 'user' }, nested })
     }
     for (const { d } of wanted) {
       const entity = entityById.get(d.entity)!

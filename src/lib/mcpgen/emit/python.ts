@@ -13,6 +13,7 @@ import {
 } from '../plan.js'
 import { cleanSource, cleanText, joinLines, pyIdent, pyLit, pyNum, pyStr, sqlIdent } from './pyutil.js'
 import { RUNTIME_COMMON, RUNTIME_DATASET, RUNTIME_QUERY, RUNTIME_SQL, runtimeHttp } from './runtime.js'
+import { applyArgEdits, emitWrapper, RUNTIME_PROPOSED } from './proposed.js'
 
 const PYTYPE: Record<string, string> = { string: 'str', integer: 'int', number: 'float', boolean: 'bool', unknown: 'str' }
 const I32_MIN = -2147483648
@@ -53,7 +54,7 @@ function partitionHint(params: Param[]): string {
 }
 
 /** Validation lines for one argument (inside try, indent level 2). */
-function paramChecks(p: Param): string[] {
+export function paramChecks(p: Param): string[] {
   const out: string[] = []
   const required = p.required || p.in === 'path'
   const guard = required ? '' : `${p.name} is not None and `
@@ -411,13 +412,16 @@ export function emitPython(plan: ServerPlan): string {
   if (kind === 'http') out.push(runtimeHttp(auth.scheme).replace(/\n+$/, ''))
   if (kind === 'dataset') out.push(RUNTIME_QUERY.replace(/\n+$/, ''), RUNTIME_DATASET.replace(/\n+$/, ''))
   if (kind === 'sql') out.push(RUNTIME_QUERY.replace(/\n+$/, ''), RUNTIME_SQL.replace(/\n+$/, ''))
+  // Hidden tools and tools a proposal merged or split stay as private functions (plan.internal).
+  const all = [...plan.tools, ...(plan.internal ?? [])]
+  if (all.some((t) => t.proposed?.wrapper)) out.push(RUNTIME_PROPOSED.replace(/\n+$/, '').replace(/^\n+/, '\n'))
   out.push('', '')
 
   // Data tables: per-entity allow-list and default projection.
-  const ents = [...new Set(plan.tools.filter((t) => t.entity !== '*').map((t) => t.entity))].sort()
+  const ents = [...new Set(all.filter((t) => t.entity !== '*').map((t) => t.entity))].sort()
   // fromEntries creates own properties, so an entity named __proto__ or constructor stays a plain key.
   const allowed = Object.fromEntries(ents.map((id) => [id, entityFieldNames(entityOf(plan, id))]))
-  const dflt = Object.fromEntries(ents.map((id) => [id, plan.tools.find((t) => t.entity === id)!.projection]))
+  const dflt = Object.fromEntries(ents.map((id) => [id, all.find((t) => t.entity === id)!.projection]))
   out.push(`_ALLOWED = ${pyLit(allowed)}`, '', `_DEFAULT = ${pyLit(dflt)}`, '')
   if (kind !== 'http') out.push(`_SCHEMA = ${pyLit(schemaLiteral(plan))}`, '')
   if (kind === 'sql') {
@@ -435,11 +439,13 @@ export function emitPython(plan: ServerPlan): string {
 
   // Tools.
   const names: string[] = []
-  for (const [i, tool] of plan.tools.entries()) {
+  for (const [i, tool] of all.entries()) {
     const k = toolKind(plan, tool)
     out.push(...(i === 0 ? [''] : ['', '']))
-    const body =
-      k === 'list' || k === 'search'
+    const baseBody =
+      k === 'proposed'
+        ? emitWrapper(plan, tool)
+        : k === 'list' || k === 'search'
         ? httpListTool(plan, tool)
         : k === 'get'
           ? httpGetTool(plan, tool)
@@ -448,8 +454,8 @@ export function emitPython(plan: ServerPlan): string {
             : k === 'query'
               ? queryTool(plan, tool)
               : describeTool(tool)
-    out.push(...body)
-    names.push(pyIdent(tool.name))
+    out.push(...(tool.proposed?.args && k !== 'proposed' ? applyArgEdits(baseBody, tool) : baseBody))
+    if (i < plan.tools.length) names.push(pyIdent(tool.name))
   }
   out.push('', '', '# Register every tool with the server (read-only tools only).', 'for _tool in (')
   for (const n of names) out.push(`    ${n},`)
