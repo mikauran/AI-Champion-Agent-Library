@@ -7,7 +7,7 @@ import { MAX_INPUT_BYTES } from '$lib/mcpgen/api-contract.js'
 import type { GenerateErrorResponse } from '$lib/mcpgen/api-contract.js'
 import { toZip } from '$lib/mcpgen/bundle.js'
 import { listAdapters } from '$lib/mcpgen/registry.js'
-import { runPipeline } from '$lib/mcpgen/pipeline.js'
+import { runPipelineAsync } from '$lib/mcpgen/pipeline.js'
 import type { Gap, GenerateOptions } from '$lib/mcpgen/types.js'
 import { generatorGate } from '$lib/mcpgen/limits.js'
 
@@ -72,7 +72,7 @@ async function generate(request: Request): Promise<Response> {
   const options = sanitizeOptions(body.options)
   if (options === null) return fail(400, 'bad-request', 'Field "options" must be an object.')
 
-  const result = runPipeline(body.input, { adapterId, options })
+  const result = await runPipelineAsync(body.input, { adapterId, options })
   if (!result.ok) return json({ ok: false, message: result.gaps[0]?.message ?? 'The input could not be converted.', gaps: result.gaps } satisfies GenerateErrorResponse, { status: 422 })
 
   let zip: Uint8Array

@@ -33,6 +33,23 @@ export function detectAdapters(
   return hits.map(({ adapter, confidence }) => ({ adapter, confidence }))
 }
 
+/**
+ * Async preparation for adapters that load a parser on demand (the OData adapter's XML reader, D-560). Call it, and await it,
+ * before `parseInput` / `runPipeline`; it picks the same adapter `parseInput` will pick and never throws.
+ */
+export async function prepareInput(raw: RawInput, opts: { adapterId?: string; adapters?: InputAdapter[] } = {}): Promise<void> {
+  try {
+    const adapters = opts.adapters ?? ADAPTERS
+    const text = typeof raw?.text === 'string' ? raw.text : ''
+    if (Buffer.byteLength(text, 'utf8') > MAX_INPUT_BYTES) return
+    const input: RawInput = { ...raw, text }
+    const adapter = opts.adapterId !== undefined ? adapters.find((a) => a.id === opts.adapterId) : detectAdapters(input, adapters)[0]?.adapter
+    await adapter?.prepare?.(input)
+  } catch {
+    /* parse reports what is missing */
+  }
+}
+
 export function parseInput(
   raw: RawInput,
   opts: { adapterId?: string; adapters?: InputAdapter[]; options?: GenerateOptions } = {},

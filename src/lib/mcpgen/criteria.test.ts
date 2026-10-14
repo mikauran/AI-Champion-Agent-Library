@@ -56,7 +56,7 @@ describe('criterion 1: research first, design cites it', () => {
 
 describe('criterion 2: adapters sit behind one interface, core does not know them', () => {
   it('registered adapter ids', () => {
-    expect(ADAPTERS.map((a) => a.id).sort()).toEqual(['openapi', 'prisma', 'sql-ddl', 'tabular-catalog'])
+    expect(ADAPTERS.map((a) => a.id).sort()).toEqual(['odata', 'openapi', 'prisma', 'sql-ddl', 'tabular-catalog'])
   })
   it('only adapters/ and registry.ts reference adapter modules; registry goes through adapters/index', () => {
     const importRe = /from\s+['"]([^'"]*adapters\/[^'"]*)['"]/g
@@ -184,6 +184,8 @@ describe('criterion 7: decisions logged, no reference data or secrets', () => {
       expect(f.startsWith('acme-'), f).toBe(true)
       const text = read(join(MCPGEN, 'testing/fixtures', f))
       for (const m of text.matchAll(/https?:\/\/([^\s/"')]+)/g)) {
+        // E13 (D-561): OData EDMX documents must declare the standard XML namespace URIs; they identify a format and are never fetched.
+        if (['docs.oasis-open.org', 'schemas.microsoft.com'].includes(m[1])) continue
         expect(m[1], `${f} host`).toMatch(/\.example$/)
       }
     }

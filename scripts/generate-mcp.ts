@@ -8,7 +8,7 @@ import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { MAX_INPUT_BYTES } from '../src/lib/mcpgen/api-contract.js'
 import { validPath } from '../src/lib/mcpgen/bundle.js'
 import { formatGaps } from '../src/lib/mcpgen/diagnostics.js'
-import { runPipeline } from '../src/lib/mcpgen/pipeline.js'
+import { runPipelineAsync } from '../src/lib/mcpgen/pipeline.js'
 import type { GenerateOptions } from '../src/lib/mcpgen/types.js'
 
 export interface CliIo {
@@ -24,7 +24,7 @@ export interface CliIo {
 }
 
 const USAGE =
-  'Usage: npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|prisma|auto> <input-file> --out <dir> [--force] [--server-name N] [--max-page-size N] [--result-ceiling N]'
+  'Usage: npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|prisma|odata|auto> <input-file> --out <dir> [--force] [--server-name N] [--max-page-size N] [--result-ceiling N]'
 
 const MAX_STR = 300
 /** C0 and C1 control characters (the C1 range includes the 8-bit CSI) are never printed (review IN-06). */
@@ -106,7 +106,7 @@ export async function main(argv: string[], io: CliIo = defaultIo): Promise<numbe
       return 2
     }
     const text = await io.readFile(args.input)
-    const result = runPipeline(text, {
+    const result = await runPipelineAsync(text, {
       adapterId: args.adapter,
       options: args.options,
       filename: basename(args.input),
