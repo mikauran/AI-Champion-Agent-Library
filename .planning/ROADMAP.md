@@ -581,12 +581,17 @@ Plans:
 ### Phase 25: Design-stage agents (ETIM & classification repair, QTO normalization, clash prioritization, RFI generation)
 
 **Goal:** Build or complete agents 1 ETIM & classification repair, 2 QTO normalization, 3 Clash prioritization, 4 RFI generation (IFC/BIM stage). Done bar per agent: complete catalog entry plus one concrete step run through Try it out in the Pi container with a real model, smoke-tested, evidence in VERIFICATION/UAT; otherwise the reason is recorded. Public or synthetic sample data only, labelled; gaps and assumptions recorded in the entry and the combined list.
-**Requirements**: TBD
+**Requirements**: CONS-RUN, CONS-A1, CONS-A2, CONS-A3, CONS-A4, CONS-VER
 **Depends on:** Phase 24
-**Plans:** 0 plans
+**Plans:** 6 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 25 to break down)
+- [ ] 25-01-PLAN.md - Try It Out run harness (scripts/tryout-run.ts), spend ledger, live-run procedure, one live run on demo-rfi-triage
+- [ ] 25-02-PLAN.md - Agent 1 ETIM & classification repair
+- [ ] 25-03-PLAN.md - Agent 2 QTO normalization
+- [ ] 25-04-PLAN.md - Agent 3 Clash prioritization
+- [ ] 25-05-PLAN.md - Agent 4 RFI generation from findings
+- [ ] 25-06-PLAN.md - Verification aggregation, npm run check, STATE.md
 
 ### Phase 26: Sourcing-stage agents (product sourcing E-BOM to M-BOM, quote comparison, carbon and EPD enrichment)
 
