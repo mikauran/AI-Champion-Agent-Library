@@ -1,0 +1,54 @@
+# Third-party notices
+
+## DDC Skills for AI Agents in Construction
+
+- Source: https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction
+- License: MIT
+- Retrieved: 2026-10-14 (LICENSE and NOTICE.md read from the `main` branch; the live text matched the earlier check)
+
+License text, reproduced verbatim:
+
+```
+MIT License
+
+Copyright (c) 2026 DataDrivenConstruction
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+### What the MIT license covers (per the repository's NOTICE.md)
+
+- Covered by MIT: the `SKILL.md` instruction files and the documentation.
+- Not covered, all rights reserved by the author (Artem Boiko): the "Data-Driven Construction" book (`Books/`) and the GuideBook PDF.
+- Not MIT: the DDC CWICR cost database is CC BY-NC 4.0 for the DDC compilation, plus a separate DDC commercial license for commercial use.
+- Trademarks: product names such as Revit, Autodesk, Procore belong to their owners and are used for identification only.
+- Curated skills in the DDC repository (category `4_DDC_Curated`) come from other public collections and keep those sources' licenses; do not adapt those from the DDC repository without checking the source license.
+
+### Policy for this repository
+
+- a. `SKILL.md` instructions and documentation may be adapted, with the copyright notice retained (this file).
+- b. Never copy the book, the PDF or CWICR data into the repo, into agent prompts or into samples.
+- c. An adapted entry sets `metadata.attribution` to "Adapted from DDC skill <name>, MIT, (c) 2026 DataDrivenConstruction" and gets a row in the table below (entry slug, DDC skill path, date).
+- d. Trademarks (Revit, Autodesk, Procore and so on) are used for identification only.
+
+### Adapted entries
+
+| Entry slug | DDC skill path | Date |
+| --- | --- | --- |
+| none yet; Phases 25-29 | | |
