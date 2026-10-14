@@ -238,3 +238,4 @@ Order: 24 -> 30, then 21 -> 23. Cap: $0.50 per agent run, $10 total.
 
 ### Progress
 - Phase 24: done, verification passed (3099 tests). Inventory: 0 full, 2 partial (RFI generation, Cut-sheet QA), 10 missing. 3 MCP-server entries added.
+- Phase 25 / Agent 1 ETIM & classification repair: COUNTED (live run job ca984d20…, gpt-4.1-mini, 10568 tokens, ~$0.017). Spend total so far ~$0.045 (see .planning/spend-log.md). Harness: scripts/tryout-run.ts, procedure docs/tryitout-live-run.md.
