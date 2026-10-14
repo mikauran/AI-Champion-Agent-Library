@@ -18,15 +18,17 @@ For each line fill this fixed checklist (copy, then decide):
 - `req_class`: copied from the line.
 - `req_dn`: copied, `any` if empty.
 - `req_mat`: copied, `any` if empty.
-- `U`: Y if both req_dn and req_mat are `any`, else N.
-- `cand`: the product_ids of the catalog rows whose class text equals req_class AND (req_dn is `any` OR the dn text equals req_dn) AND (req_mat is `any` OR the material text equals req_mat). Exact text equality only: no synonyms, no "similar", no partial matches. `NONE` if no row qualifies. Copy the ids from the catalog, in catalog order.
+- `U`: Y ONLY if req_dn is `any` AND req_mat is `any` (both). If at least one of them has a value, U=N (for example req_dn=any with req_mat=cast iron is U=N).
+- `same_class`: scan ALL catalog rows from the first to the last and list the product_ids of EVERY row whose class text equals req_class exactly (for example class `SYN-EC107` matches only rows whose class column reads `SYN-EC107`). Copy the ids in catalog order; do not stop early, do not include rows of another class. `NONE` if no row has that class.
+- `tests`: for EVERY id in `same_class` write `<id>:dn=<dn text of that catalog row or empty>,mat=<material text of that catalog row>,dn_ok=<Y|N>,mat_ok=<Y|N>`. dn_ok is Y if req_dn is `any` or the dn text equals req_dn exactly, else N; mat_ok is Y if req_mat is `any` or the material text equals req_mat exactly, else N. Exact text equality: `steel` is not `stainless steel`, `22` equals `22`, no synonyms, no "similar". Write the tests BEFORE `cand`.
+- `cand`: the ids from `tests` with dn_ok=Y AND mat_ok=Y, in order. `NONE` if there is none. `cand` can never contain an id that is not in `same_class`.
 
 The status is decided ONLY by `cand`: NONE -> `no-match`; exactly one id -> `matched`; more than one id -> `ambiguous`.
 
 - `unit_ok`: for `matched` rows Y if the E-BOM unit text equals the sales_unit text of that candidate, else N (write both units in the reason). NEVER convert units or quantities. `-` for other statuses.
-- `near_miss`: for `no-match` rows only, the product_ids of catalog rows with the same class text (copied), else `-`. For other statuses `-`.
+- `near_miss`: for `no-match` rows only, the product_ids from `same_class` copied (product ids such as CP-10, never a class code); the column is `-` ONLY when `same_class` is NONE. For other statuses `-`.
 - `review`: `NO` only when status is matched AND unit_ok is Y AND U is N; otherwise `YES`.
-- `reason`: the checklist in one line plus the rule that fired, for example `req_class=SYN-EC101; req_dn=22; req_mat=copper; U=N; cand=CP-01; fired: matched because cand=CP-01`. Add `underspecified` when U=Y. For candidates whose in_stock is N add `in_stock=N for <id>` (copied, not interpreted). For unit_ok=N add `unit pcs vs sales_unit pack10` style text with the copied values.
+- `reason`: the checklist in one line plus the rule that fired, for example `req_class=SYN-EC101; req_dn=22; req_mat=copper; U=N; same_class=CP-01,CP-02,CP-03,CP-12; tests=CP-01:dn=22,mat=copper,dn_ok=Y,mat_ok=Y|CP-02:dn=28,mat=copper,dn_ok=N,mat_ok=Y|...; cand=CP-01; sup=SynSupplier A; su=m; fired: matched because cand=CP-01`. For matched rows `sup` and `su` are the supplier and sales_unit text of THE ROW OF THE CANDIDATE id in the catalog (look that row up by its product_id; do not take them from another row). Add `underspecified` when U=Y. For candidates whose in_stock is N add `in_stock=N for <id>` (copied, not interpreted). For unit_ok=N add `unit pcs vs sales_unit pack10` style text with the copied values.
 
 ## Output, plain ASCII, no code fence around the whole file, in this order
 
@@ -36,7 +38,7 @@ The status is decided ONLY by `cand`: NONE -> `no-match`; exactly one id -> `mat
 line_id | description | qty | unit | candidates | status | unit_ok | near_miss | review | reason
 ```
 
-2. `## M-BOM draft`: the rows with status `matched`, in line order, columns `line_id | product_id | supplier | qty | unit | sales_unit`. product_id, supplier and sales_unit are copied from the catalog row, qty and unit from the E-BOM line. If no row is matched write `none`. Ambiguous and no-match lines are NOT in this table.
+2. `## M-BOM draft`: the rows with status `matched`, in line order, columns `line_id | product_id | supplier | qty | unit | sales_unit`. product_id comes from the row, supplier and sales_unit are copied from the `sup=` and `su=` fields of the same per-line row, qty and unit from the E-BOM line. If no row is matched write `none`. Ambiguous and no-match lines are NOT in this table.
 
 3. `## Open items for the engineer`: one line per per-line row with review=YES, copied from the table: `line_id, status, one-clause reason`. No counts.
 
