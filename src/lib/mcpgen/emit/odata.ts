@@ -270,8 +270,10 @@ export function odataTests(plan: ServerPlan, head: string[], common: (names: str
       '',
     )
   }
-  if (gets[0]) {
-    const get = gets[0]
+  // Prefer a lookup with a text key: it also gets the test that key text cannot escape the predicate.
+  const textKey = (t: PlannedTool) => table[t.entity].key.some((n) => table[t.entity].fields[n].kind === 'string')
+  const get = gets.find(textKey) ?? gets[0]
+  if (get) {
     const keyArgs = get.params.filter((p) => p.in === 'path')
     const gspec = table[get.entity]
     const sampleFor = (kind: string, enums?: string[]): [string, string] => {
