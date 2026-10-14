@@ -7,6 +7,7 @@ import { mkdir, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { isReservedEnvName } from '../src/lib/mcptest/core/envNames'
+import { loadPackageBinding } from '../src/lib/mcptest/core/packageBinding'
 import { ReportSchema, renderMatrix, renderSummary, type Report } from '../src/lib/mcptest/core/report'
 import { runSuite } from '../src/lib/mcptest/core/runner'
 import { loadSuite, type SuiteCase } from '../src/lib/mcptest/core/suite'
@@ -88,9 +89,13 @@ export function cmdSubject(argv: string[], envNames: { baseUrl?: string; apiKey?
     status: 'installed',
     transports: ['stdio'],
     async prepare(): Promise<PrepareWithStderr> {
+      // E10 D3: <package>/mcptest-binding.json next to the server script, when present, is the explicit binding.
+      const script = argv.slice(1).find((a) => /\.(py|js|mjs|cjs)$/.test(a))
+      const binding = script ? await loadPackageBinding(dirname(resolve(script))) : undefined
       return {
         status: 'PASS',
         launch: { kind: 'stdio', command: argv[0], args: argv.slice(1), cwd: process.cwd() },
+        ...(binding ? { binding } : {}),
         envNames: { baseUrl: envNames.baseUrl ?? 'ACME_BASE_URL', apiKey: envNames.apiKey ?? 'ACME_API_KEY' }
       }
     }

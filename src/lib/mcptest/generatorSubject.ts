@@ -4,10 +4,12 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { BINDING_FILE } from '../mcpgen/binding'
 import { validPath } from '../mcpgen/bundle'
 import { runPipeline } from '../mcpgen/pipeline'
 import type { Gap } from '../mcpgen/types'
 import type { CaseDef, PrepareResult, Subject } from './core/types'
+import { parseBindingFile } from './core/bindingSchema'
 import { runGeneratorSideChecks, type PipelineFn } from './generatorChecks'
 
 export interface GeneratorSample {
@@ -29,33 +31,9 @@ export function resolveSample(id: string): GeneratorSample | null {
   return SAMPLES.find((s) => `generator:${s.id}` === id || s.id === id) ?? null
 }
 
-type Binding = NonNullable<PrepareResult['binding']>
-
-/** Pure: map emitted tool names to behaviour bindings. Unmatched kinds are omitted (the check FAILs 'no tool'). */
-export function deriveBinding(toolsEmitted: string[]): Binding {
-  const first = (re: RegExp) => toolsEmitted.find((t) => re.test(t))
-  const gets = toolsEmitted.filter((t) => /^(get|lookup|query)_/.test(t))
-  const lookup = gets[0]
-  const search = first(/^search_/)
-  const list = first(/^list_/)
-  const b: Binding = {}
-  if (lookup) {
-    b.lookup_by_id = { tool: lookup, args: { id: 'ACM-000001' } }
-    b.projection = { tool: lookup, args: { id: 'ACM-000001' } }
-    b.bad_input = { tool: lookup, args: { id: '' } }
-    b.empty_vs_error = { tool: lookup, args: { id: 'ACM-NOSUCH' } }
-    if (gets.length > 1) b.lookup_by_alt_key = { tool: gets[1], args: { code: 'ACM-ALT-1' } }
-    b.partition_filter = { tool: lookup, args: {} }
-  }
-  const pager = list ?? search
-  if (pager) {
-    b.pagesize_clamp = { tool: pager, args: { per_page: 100000 } }
-    b.pagination_ceiling = { tool: pager, args: { page: 100000 } }
-  }
-  const filt = first(/^filter_/) ?? list
-  if (filt) b.derived_filter = { tool: filt, args: {} }
-  return b
-}
+// ONE derivation (E10 D3): src/lib/mcpgen/binding.ts. generate() emits it as mcptest-binding.json; this subject reads
+// that emitted file, so the in-process subject and a runner that loads the package file see the same binding.
+export { deriveBinding } from '../mcpgen/binding'
 
 /** Env names the generated server reads, by suffix rule. */
 export function deriveEnvNames(envVars: { name: string }[]): NonNullable<PrepareResult['envNames']> {
@@ -142,7 +120,7 @@ export function generatorSubjects(deps: GeneratorSubjectDeps = {}): Subject[] {
         status: 'PASS',
         launch: { kind: 'stdio', command: 'python3', args: [server ? server.path : 'server.py'], cwd: pkg },
         generationMs,
-        binding: deriveBinding(r.report.toolsEmitted),
+        binding: parseBindingFile(r.files.find((f) => f.path === BINDING_FILE)?.content ?? '') ?? {},
         envNames: deriveEnvNames(r.report.envVars),
         notes: gapNotes(r.report.gaps),
         extraChecks

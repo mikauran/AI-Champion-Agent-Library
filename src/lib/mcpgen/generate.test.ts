@@ -22,7 +22,7 @@ describe.each(MODELS)('generate: %s backend', (_n, model) => {
     expect(JSON.stringify(model)).toBe(before)
   })
   it('emits the package files in a fixed order', () => {
-    expect(result.files.map((f) => f.path)).toEqual(['server.py', 'test_server.py', 'requirements.txt', 'README.generated.md', 'report.json'])
+    expect(result.files.map((f) => f.path)).toEqual(['server.py', 'test_server.py', 'requirements.txt', 'README.generated.md', 'report.json', 'mcptest-binding.json'])
   })
   it('uses fastmcp over stdio and no other server SDK', () => {
     expect(py).toContain('from fastmcp import FastMCP')

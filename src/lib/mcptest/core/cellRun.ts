@@ -7,7 +7,7 @@ import { ENV_VARS, HINTS } from '../mock/contract'
 import { McpClient, type Finding } from './client'
 import { lineChannel } from './jsonrpc'
 import { evaluateExpect } from './expect'
-import { bindTool } from './binding'
+import { bindTool, boundArgs } from './binding'
 import { makeRedactor } from './redact'
 import type { SuiteCase } from './suite'
 import type { PrepareWithStderr, RunnableSubject } from './subjects'
@@ -268,7 +268,7 @@ export async function runOnce(inp: CellInput): Promise<CellResult> {
       const override = prep.binding?.[kind]
       const spec = { tool: line?.tool, tool_hint: line?.tool_hint ?? (line ? HINTS[kind] : undefined) }
       const r = bindTool(spec, tools, override)
-      const args = override?.args ?? line?.args ?? {}
+      const args = boundArgs(override, line?.args)
       if (r.status === 'ambiguous') return { args, boundBy: 'none', error: `ambiguous tool binding: ${r.matches.join(', ') || 'bad hint'}` }
       if (r.status === 'no_tool' || !r.tool) return { args, boundBy: 'none' }
       return { tool: r.tool, args, boundBy: r.boundBy }
@@ -384,7 +384,7 @@ async function runLine(
   const kind = line.type === 'auth' ? 'auth' : 'call'
   if (r.status === 'ambiguous') return mk(line.id, kind, dim, 'ERROR', `ambiguous tool hint: ${r.matches.join(', ')}`)
   if (r.status !== 'ok' || !r.tool) return mk(line.id, kind, dim, 'FAIL', 'no tool')
-  const args = prep.binding?.[line.id]?.args ?? line.args ?? {}
+  const args = boundArgs(prep.binding?.[line.id], line.args)
   let target: ToolCaller = caller
   if (line.type === 'auth') {
     const re = await relaunch('wrong-key-0000')

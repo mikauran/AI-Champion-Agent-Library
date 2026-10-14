@@ -30,7 +30,7 @@ The CLI ignores `MCP_TESTER` (it is an author tool, like `generate-mcp`).
 npm run mcp-test -- --list
 npm run mcp-test -- --subject fake:good
 npm run mcp-test -- --subject generator:openapi --case T2-CATALOG-API --reruns 3 --format markdown --out /tmp/report.json
-npm run mcp-test -- --subject cmd:"/tmp/mcp-venv/bin/python /tmp/acme-server/<server-dir>/server.py" --env-base-url <BASE_URL_VAR> --env-api-key <API_KEY_VAR> --case T2-CATALOG-API --reruns 3 --allow-local-exec --out /tmp/report.json
+npm run mcp-test -- --subject cmd:"/tmp/mcp-venv/bin/python /tmp/acme-server/server.py" --env-base-url <BASE_URL_VAR> --env-api-key <API_KEY_VAR> --case T2-CATALOG-API --reruns 3 --allow-local-exec --out /tmp/report.json
 ```
 
 Flags: `--subject`, `--case ID` (repeatable), `--reruns 1-3`, `--format text|markdown|json`, `--out FILE`, `--allow-local-exec`, `--env-base-url NAME`, `--env-api-key NAME`, `--list`. A `cmd:` subject is a real process and is only spawned with `--allow-local-exec` (no shell, argv split, allowlisted environment, fresh temporary HOME). The exit code is 0 on a PASS verdict (or `--list`), 1 for any other verdict, 2 for usage errors.
@@ -104,6 +104,10 @@ A case is a directory under `src/lib/mcptest/suite/<CASE-ID>/` using the source-
 
 Implement the `Subject` interface (`src/lib/mcptest/core/types.ts`): `prepare` must never throw and returns a status, a launch descriptor (stdio command or loopback HTTP URL), optional tool binding and the environment variable names to fill with the mock URL and key. Register it in `src/lib/mcptest/core/subjects.ts`. New fake behaviours go in `src/lib/mcptest/fake/variants.ts`; every description must start with `Scorer fixture:`.
 
+### Tool binding for packaged servers (E10, D-502)
+
+For subjects that run a server from a package directory (`cmd:"python3 /path/server.py"` on the CLI, and the container path), the runner loads `mcptest-binding.json` from the directory of the server script when it exists (`src/lib/mcptest/core/packageBinding.ts`; in the container the driver reads `/work/pkg/.../mcptest-binding.json`). The generator emits that file (see `docs/mcp-generator.md`, "Relation to Phase 15"). An entry maps a suite check id or behaviour kind to `{ tool, args?, argMap? }`; the explicit tool wins over the regex `tool_hint`, `argMap` renames the suite's argument names (values and `{{templates}}` kept) and `args` replaces them. The file is read with a 64 KiB cap and a strict schema; an absent or invalid file means regex hints only. A package author can steer the binding with this file, in the same way a tool named to match a hint already could; the scored behaviour still comes from real calls to the server. A binding in the container request wins per key over the package file.
+
 ## Safety rules
 
 - The runner never touches a real API or key. The mock binds 127.0.0.1 on an ephemeral port and answers a non-loopback Host header with 421; the HTTP transport accepts only loopback hosts, follows no redirects and reads responses through byte caps (a stream that passes the cap is cancelled).
@@ -125,9 +129,9 @@ Everything below needs a real Python process, a container engine or a browser an
 # 1. Pin the FastMCP version in a throwaway venv, then update the generator pin and goldens
 python3 -m venv /tmp/mcp-venv && /tmp/mcp-venv/bin/pip install fastmcp httpx pyyaml && /tmp/mcp-venv/bin/pip show fastmcp
 
-# 2. Generate a server and score it from the CLI (outputs go to /tmp)
+# 2. Generate a server and score it from the CLI (outputs go to /tmp; the output directory is flat and holds mcptest-binding.json)
 npm run generate-mcp -- --adapter openapi src/lib/mcpgen/testing/fixtures/acme-openapi.yaml --out /tmp/acme-server
-npm run mcp-test -- --subject cmd:"/tmp/mcp-venv/bin/python /tmp/acme-server/<server-dir>/server.py" --env-base-url <BASE_URL_VAR> --env-api-key <API_KEY_VAR> --case T2-CATALOG-API --reruns 3 --allow-local-exec --out /tmp/report.json
+npm run mcp-test -- --subject cmd:"/tmp/mcp-venv/bin/python /tmp/acme-server/server.py" --env-base-url <BASE_URL_VAR> --env-api-key <API_KEY_VAR> --case T2-CATALOG-API --reruns 3 --allow-local-exec --out /tmp/report.json
 
 # 3. Build the runner image
 podman build -t localhost/mcp-test-runner:latest -f Containerfile.mcp-test-runner .

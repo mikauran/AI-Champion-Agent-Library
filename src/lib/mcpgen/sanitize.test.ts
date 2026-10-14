@@ -129,7 +129,7 @@ describe('generated files carry no credential text (CR-03)', () => {
     expect(JSON.stringify(r.report)).not.toContain('Sup3rS3cret')
   })
   it('the sample models still generate (the output check has no false positives on them)', () => {
-    expect(generate(acmeHttp).files.length).toBe(5)
+    expect(generate(acmeHttp).files.length).toBe(6) // E10 D3: + mcptest-binding.json
   })
   it('a spec that hides the key word with a unicode escape is neutralised on the way out', () => {
     // The raw text has no readable key word, so the input scan passes; the decoded summary does.

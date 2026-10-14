@@ -23,7 +23,10 @@ describe('Containerfile.mcp-test-runner (static checks, never built here)', () =
   })
   it('installs yaml, zod, fflate and tsx at the package.json versions under /', () => {
     const run = code.join('\n')
-    expect(run).toContain('npm install --prefix /')
+    // D4: `npm install --prefix /` fails on npm 10.9; install in /deps and move node_modules to /.
+    expect(run).not.toContain('--prefix')
+    expect(run).toMatch(/mkdir \/deps && cd \/deps/)
+    expect(run).toContain('mv /deps/node_modules /node_modules')
     expect(run).toContain(`yaml@${exact(pkg.dependencies.yaml)}`)
     expect(run).toContain(`zod@${exact(pkg.dependencies.zod)}`)
     expect(run).toContain(`fflate@${exact(pkg.dependencies.fflate)}`)

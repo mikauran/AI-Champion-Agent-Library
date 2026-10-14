@@ -2,6 +2,7 @@
 // no file reads, no clock. The generated Python is text only; it is never executed here.
 import { MAX_OUTPUT_BYTES } from './api-contract.js'
 import { scanForCredentials } from './credentials.js'
+import { BINDING_FILE, emitBinding } from './binding.js'
 import { gap } from './diagnostics.js'
 import { emitPython } from './emit/python.js'
 import { emitPytest } from './emit/pytest.js'
@@ -100,6 +101,8 @@ export function generate(model: SourceModel, options: GenerateOptions = {}, extr
     { path: 'requirements.txt', content: emitRequirements(plan) },
     { path: 'README.generated.md', content: emitReadme(plan) },
     { path: 'report.json', content: stableJson(report) },
+    // E10 D3: tool binding for the test platform, next to the server (docs/mcp-generator.md).
+    { path: BINDING_FILE, content: emitBinding(plan) },
   ]
   // Output-side guarantee (review CR-03): whatever the input scan let through, no credential-like text
   // may leave in any generated file. Findings carry file, line and kind only, never the text.

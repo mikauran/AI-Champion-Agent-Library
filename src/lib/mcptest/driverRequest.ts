@@ -1,6 +1,7 @@
 // Single shared definition of the in-container driver request (plan 15-10; imported by the host side in 15-11).
 // Pure: zod only, no server imports, no I/O.
 import { z } from 'zod'
+import { BindingSchema } from './core/bindingSchema'
 import { isReservedEnvName } from './core/envNames'
 
 export const DRIVER_REQUEST_MAX_BYTES = 64 * 1024
@@ -65,12 +66,7 @@ const Staged = z
       .min(1)
       .max(80)
       .regex(/^[A-Za-z0-9:._-]+$/),
-    binding: z
-      .record(
-        z.string().max(40),
-        z.object({ tool: z.string().min(1).max(100), args: z.record(z.string(), z.unknown()).optional() }).strict()
-      )
-      .optional(),
+    binding: BindingSchema.optional(),
     envNames: z.object({ baseUrl: envName.optional(), apiKey: envName.optional(), baseUrlB: envName.optional() }).strict().optional()
   })
   .strict()

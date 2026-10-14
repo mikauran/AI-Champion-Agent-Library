@@ -5,9 +5,13 @@ status: pending human
 
 # Phase 9 Try It Out hardening: Human UAT (pending human)
 
+**E10 update 2026-10-14: the wording defects found by the live run (D5) are fixed in the items below (labels, capability output, podman service PID, compose down networks, Origin header); no item was re-run, so no tick changed.**
+
 **Update 2026-10-14 (E9 live run, Claude with Ville present, rootless Podman 4.9.3, AUTH_ENABLED=false, details in `.planning/exploration/E9-live-podman.md`): items 1-6, 8, 9 were run live; item 7 skipped (needs a paid key).** The note below describes the original state.
 
 Nothing below was run autonomously. The autonomous run used a fake runtime, fake timers and a mocked upstream fetch only; no Podman, Docker or network was touched. Every item is **pending human** and every checkbox is deliberately unchecked.
+
+Notes for a live run on podman 4.9.3 (E10): any `POST` to the dev or compose app needs an `Origin` header equal to `ORIGIN` (SvelteKit CSRF check; compose takes `ORIGIN` from `.env`, for example `http://localhost:5173`), for example `curl -X POST ... -H 'Origin: http://localhost:5173'`. `head -1` of `podman ps` picks the oldest container, which can predate Phase 9 and lack `aic.owner`; pick the container you just warmed (`podman ps --latest`).
 
 Common setup (rootless Podman host, repo root):
 
@@ -41,9 +45,10 @@ Validates: SEC-13 and the Phase 8 container profile. Start the app, open a runna
 C=$(podman ps --filter label=aic.tryitout --format '{{.Names}}' | head -1)
 podman inspect "$C" --format 'user={{.Config.User}} ro={{.HostConfig.ReadonlyRootfs}} capdrop={{.HostConfig.CapDrop}} secopt={{.HostConfig.SecurityOpt}} mem={{.HostConfig.Memory}} swap={{.HostConfig.MemorySwap}} pids={{.HostConfig.PidsLimit}} ports={{.NetworkSettings.Ports}}'
 podman inspect "$C" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^(AIC_|OPENAI)'
+podman exec "$C" grep -E 'CapEff|CapBnd|NoNewPrivs' /proc/self/status   # expect CapEff=0000000000000000 CapBnd=0000000000000000 NoNewPrivs=1
 ```
 
-Expected: `user=pi`, `ro=true` (tmpfs mode), `capdrop=[ALL]`, `secopt` contains `no-new-privileges`, `mem` equals `swap` (default 1073741824), `pids=200`, no published ports; only `AIC_LLM_TOKEN=...` matches the grep and no `OPENAI_API_KEY`.
+Expected: `user=pi`, `ro=true` (tmpfs mode), `capdrop` printing the full expanded default capability list (podman 4.9.3 expands `ALL` on inspect and does not print `[ALL]`; the real check is the empty effective set below), `secopt` contains `no-new-privileges`, `mem` equals `swap` (default 1073741824), `pids=200`, no published ports; only `AIC_LLM_TOKEN=...` matches the grep and no `OPENAI_API_KEY`.
 
 - [x] all values as expected, with one literal difference. Container `aic-pi-381bccb56cb1`: `user=pi ro=true secopt=[no-new-privileges] mem=1073741824 swap=1073741824 pids=200 ports=map[]`, only `AIC_LLM_TOKEN` in the env grep, no `OPENAI*`. `capdrop` prints the 11 expanded default caps (`[CAP_CHOWN CAP_DAC_OVERRIDE ... CAP_SYS_CHROOT]`), not `[ALL]`: podman 4.9.3 expands ALL on inspect. Effective result verified: `/proc/self/status` `CapEff=0000000000000000 CapBnd=0000000000000000 NoNewPrivs=1`. Note `head -1` picked a pre-Phase-9 container; use the newest one.
 
@@ -79,7 +84,7 @@ Validates: D-017. Two app instances with different owners on one socket.
 ```bash
 APP_INSTANCE_NAME=owner-a npm run dev -- --port 5173 &   # instance A, warm a container via its UI
 APP_INSTANCE_NAME=owner-b npm run dev -- --port 5174 &   # instance B, warm another via its UI
-podman ps --filter label=aic.tryitout --format '{{.Names}} {{.Label "aic.owner"}} {{.Label "aic.instance"}}'
+podman ps --filter label=aic.tryitout --format '{{.Names}} {{.Labels}}'   # podman 4.9.3: {{.Label "x"}} is invalid; read aic.owner and aic.instance from the map
 # restart only instance B, then list again
 ```
 
@@ -111,7 +116,8 @@ Expected: the symlink is skipped, the oversized entry is rejected as `output exc
 Validates: 09-02 chaos fixes (warm bound, REMOVE_TIMEOUT_MS 15 s, ENGINE_CALL_TIMEOUT_MS 60 s).
 
 ```bash
-PID=$(pgrep -u "$USER" -f 'podman system service' | head -1)
+podman info >/dev/null   # wake the socket-activated service first; it idle-exits, so pgrep is usually empty
+PID=$(systemctl --user show -p MainPID --value podman.service)
 kill -STOP "$PID"       # pause the engine, then open a runnable agent page / start a job
 sleep 100               # warm wait (PI_RUNNER_WARM_WAIT_MS=90000 default)
 kill -CONT "$PID"
@@ -157,13 +163,14 @@ Expected: gone within about 16 s plus up to one reaper tick (30 s). Stalled warm
 ```bash
 podman-compose down
 podman ps -a --filter label=aic.tryitout
-podman network ls | grep aic-pi-internal
+podman network ls | grep aic-pi-internal    # podman-compose 1.0.6 down leaves the networks in place (expected)
+podman network rm aic-pi-internal aic-agent-library_default   # removal step; recreated on the next up
 podman volume ls | grep -E 'tryout-sessions|auth-data'
 ```
 
-Expected: no containers with the label; `aic-pi-internal` is removed with the stack (the compose file declares it); volumes stay (they hold data).
+Expected: no containers with the label; podman-compose 1.0.6 `down` leaves `aic-pi-internal` and `aic-agent-library_default` in place (E10: expectation adjusted, an explicit `podman network rm` removes them); volumes stay (they hold data).
 
-- [ ] FAIL (partial): containers PASS, network FAIL. `podman-compose -f podman-compose.yml -f override.yml down` (2.4 s, podman-compose 1.0.6) stopped and removed `aic-agent-library`; `podman ps -a --filter label=aic.tryitout` empty (the app's graceful shutdown also removed its warm Pi container). But `podman network ls` still lists `aic-pi-internal` and `aic-agent-library_default`: podman-compose 1.0.6 `down` does not remove networks (the compose file declares `aic-pi-internal` with an explicit name). Volumes `aic-agent-library_tryout-sessions` and `aic-agent-library_auth-data` stayed, as expected. Either the Expected text should say the network stays (the app recreates it idempotently, smoke `ensureNetwork` PASS), or the runbook should add `podman network rm aic-pi-internal`.
+- [ ] (E10: expectation corrected above; not re-run, so left unticked. The E9 observation below matches the corrected expectation: containers PASS, networks left behind by podman-compose 1.0.6.) FAIL (partial) at the time: containers PASS, network FAIL. `podman-compose -f podman-compose.yml -f override.yml down` (2.4 s, podman-compose 1.0.6) stopped and removed `aic-agent-library`; `podman ps -a --filter label=aic.tryitout` empty (the app's graceful shutdown also removed its warm Pi container). But `podman network ls` still lists `aic-pi-internal` and `aic-agent-library_default`: podman-compose 1.0.6 `down` does not remove networks (the compose file declares `aic-pi-internal` with an explicit name). Volumes `aic-agent-library_tryout-sessions` and `aic-agent-library_auth-data` stayed, as expected. Either the Expected text should say the network stays (the app recreates it idempotently, smoke `ensureNetwork` PASS), or the runbook should add `podman network rm aic-pi-internal`.
 
 ## Known accepted risks
 
