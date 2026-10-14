@@ -64,7 +64,7 @@ The first line holds column codes. `skip_rows` is the number of label lines afte
 
 ### sql-ddl
 
-`CREATE TABLE` statements only (CUST-02, D-151): primary keys (inline, table-level, composite), foreign keys, quoted names, comments, `IF NOT EXISTS`, schema-qualified names.
+`CREATE TABLE` statements (CUST-02, D-151) from plain SQL, `pg_dump --schema-only`, SQLite `.schema` / `.dump` and `mysqldump --no-data` (D-540..D-545): primary keys (inline, table-level, composite, or added with `ALTER TABLE ... ADD CONSTRAINT`), foreign keys, unique constraints, quoted names (double quotes, backticks, `[brackets]`), comments, `IF NOT EXISTS`, schema-qualified names (`public.customer` becomes `customer`).
 
 ```sql
 CREATE TABLE customer (
@@ -74,7 +74,33 @@ CREATE TABLE customer (
 );
 ```
 
-INSERT/UPDATE/DELETE/DROP/ALTER/TRUNCATE/GRANT are ignored and recorded in the report as dropped writes; views, indexes and triggers are reported as unsupported. The generated backend is read-only SQLite (`<NAME>_DB_PATH`).
+How the dialects are read:
+
+- **ALTER TABLE.** `ADD [CONSTRAINT x] PRIMARY KEY (...)`, `FOREIGN KEY (...) REFERENCES t (...)` and `UNIQUE (...)` are folded into the table (pg_dump writes its keys this way; before D-540 they were dropped as writes and the keys were lost). `CHECK` is tolerated. `ALTER COLUMN ... SET NOT NULL` is folded. `SET DEFAULT nextval(...)`, identity changes and `OWNER TO` are ignored quietly. Every other ALTER (`ADD COLUMN`, `DROP ...`, `RENAME`) is a reported write (`statement-ignored`, listed in `writeOperationsDropped`).
+- **COPY data.** A `COPY t (cols) FROM stdin;` block (a pg_dump made without `--schema-only`) is removed before anything else reads the text. Only the number of lines is reported (`data-rows-skipped`); no row is parsed, kept or echoed, and the credential scan sees only the text outside the blocks, so a dump with data is not rejected for its rows. Everything outside the blocks (an `INSERT`, a comment, a header) is still scanned. psql meta-lines (`\connect`, `\restrict ...`) are dropped.
+- **Types.** `serial`, `bigserial`, `integer`, `bigint` map to integer; `numeric(p,s)`, `double precision`, `real` to number; `boolean` to boolean; text, `varchar(n)`, `uuid`, `date`, `timestamp`, `timestamptz` to string; `jsonb`, `json`, arrays (`text[]`) and composite types become string with an `unsupported-type` gap; unknown types (`bytea`, `inet`) become string with an info gap. `CREATE TYPE ... AS ENUM (...)` (PostgreSQL) and inline `enum(...)` (MySQL) become the allowed values of the column (`Field.enum`).
+- **Noise.** `SET`, `SELECT pg_catalog.set_config`, `COMMENT ON`, `CREATE SEQUENCE`, `CREATE EXTENSION`, `CREATE SCHEMA`, `CREATE INDEX`, `GRANT`/`REVOKE`, `DROP ... IF EXISTS`, `LOCK TABLES`, `PRAGMA`, `BEGIN`/`COMMIT`, MySQL conditional comments and the SQLite `sqlite_sequence` table are counted in one info gap (`dialect-noise-ignored`) when a dialect was recognised. Views, functions, triggers and non-enum types are reported as `unsupported-statement`.
+- **Generated columns, CHECK, partitions.** Generated columns and `CHECK` constraints are tolerated; `PARTITION OF` and `LIKE` tables are reported.
+
+Dialect support matrix:
+
+| Input | Detected by | Read | Reported or limited |
+| --- | --- | --- | --- |
+| Plain SQL | no dialect markers | tables, keys, types | writes, views, indexes, triggers as before; no dialect gaps |
+| PostgreSQL `pg_dump` (schema-only or with data) | `pg_catalog`, `ALTER TABLE ONLY`, `OWNER TO`, `CREATE SEQUENCE`, `nextval(`, `COPY ... FROM stdin`, enum types | `public.` names, ALTER constraints, enums, `$$` function bodies skipped, `E'..'` strings | COPY rows skipped (count only), jsonb and arrays as text with a gap, `sqlite-backend-only` |
+| SQLite `.schema` / `.dump` | `AUTOINCREMENT`, `WITHOUT ROWID`, `STRICT`, `sqlite_sequence`, `PRAGMA` | all quoting styles, typeless columns, `WITHOUT ROWID`, `STRICT` | `sqlite_sequence` skipped; the native backend, so no backend caveat |
+| MySQL `mysqldump --no-data` | `ENGINE=`, `AUTO_INCREMENT`, `/*!40101`, `UNIQUE KEY`, `LOCK TABLES` | backticks, `AUTO_INCREMENT`, inline `KEY` / `UNIQUE KEY` / `CONSTRAINT ... FOREIGN KEY`, `enum(...)`, backslash escapes | table options ignored, `sqlite-backend-only` |
+| Markers of two dialects | both | read as generic SQL | `dialect-ambiguous` (warn); nothing is guessed |
+
+**SQLite only.** The generated sql server reads a SQLite database file, read-only (`<NAME>_DB_PATH`). A schema folded from PostgreSQL or MySQL (or Prisma) only describes tables: the author must provide a SQLite file with the same tables and columns. This is reported as the info gap `sqlite-backend-only`.
+
+INSERT/UPDATE/DELETE/DROP/TRUNCATE and unreadable ALTERs are ignored and recorded in the report as dropped writes; views, functions and triggers are reported as unsupported.
+
+### prisma
+
+A Prisma `schema.prisma` (D-546..D-548), read by hand, no Prisma tooling: `model` blocks become tables (the `@@map` name when present), scalar fields become columns (the `@map` name when present), `?` marks optional, `@id` and `@@id([a, b])` give the identifier, `@unique` and `@@unique` a note on the field, `@relation(fields: [..], references: [..])` a foreign key, `enum` blocks the allowed values (with `@map`). `String`, `Boolean`, `Int`, `BigInt`, `Float`, `Decimal`, `DateTime` map to integer, number, boolean or string; `Json`, `Bytes`, `Unsupported(...)` and list fields (`String[]`) become string with an `unsupported-type` gap; fields that point at another model are not columns (one info gap, `relation-fields-skipped`). `datasource` and `generator` blocks are skipped without reading them: no provider, no URL, no `env("...")` name reaches the model, the report or the generated code (info gap `config-blocks-ignored`). `@default(...)` values and `@db.*` native types are never read. A literal connection URL with credentials is rejected by the credential scan before the adapter runs, like any other input. `view`, `type` and `@@ignore` are reported. The generated backend is the same read-only SQLite file (`sqlite-backend-only`).
+
+Auto-detection: text with `model Name {` at the start of a line (and no `CREATE TABLE` statement at a line start) is Prisma; SQL wins whenever a `CREATE TABLE` statement is present, and the sql-ddl adapter then reports `ambiguous-input` when the text also looks like Prisma (force `--adapter prisma` to override).
 
 ## Entry points
 
@@ -84,7 +110,7 @@ INSERT/UPDATE/DELETE/DROP/ALTER/TRUNCATE/GRANT are ignored and recorded in the r
 npm run generate-mcp -- --adapter openapi spec.yaml --out ./my-server
 ```
 
-Options: `--adapter <openapi|tabular-catalog|sql-ddl|auto>`, `--out <dir>`, `--force` (allow a non-empty output directory), `--server-name`, `--max-page-size`, `--result-ceiling`. Exit codes: 0 generated, 2 rejected or failed (gaps printed, nothing written), 64 usage. The CLI reads only the given input file, refuses `.env*` file names and inputs over the size cap.
+Options: `--adapter <openapi|tabular-catalog|sql-ddl|prisma|auto>`, `--out <dir>`, `--force` (allow a non-empty output directory), `--server-name`, `--max-page-size`, `--result-ceiling`. Exit codes: 0 generated, 2 rejected or failed (gaps printed, nothing written), 64 usage. The CLI reads only the given input file, refuses `.env*` file names and inputs over the size cap.
 
 **API route** `POST /api/mcp-generate` (flag-gated). Request JSON: `{ "adapter": "auto"|id, "input": "<text>", "options": { serverName, allowWrite, limits: { maxPageSize, resultCeiling, maxResponseItems } } }`. Success: `200 application/zip` (header `x-mcp-gaps` carries the gap count). Failure: JSON `{ ok: false, message, gaps: [...] }` (`message` is the first gap's message, D-461) with 400 (bad request), 404 (flag off), 429 (too many requests from this client or too many simultaneous generations; body `{ message }` only, with `Retry-After`; limits `MCP_GENERATOR_RATE_MAX` default 20, `MCP_GENERATOR_RATE_WINDOW_SEC` default 600, `MCP_GENERATOR_MAX_CONCURRENT` default 2, `0` = unlimited, D-465), 413 (input over 262,144 bytes; the raw body is capped at twice that), 422 (rejected input or oversize output over 2,000,000 bytes, D-155). The route adds no authentication logic of its own, writes nothing, logs nothing and never echoes the input. Authentication: with `AUTH_ENABLED=true` the global request hook (`src/hooks.server.ts`) protects `/api/mcp-generate` like every other `/api/*` route (401 `{ message: 'Authentication required' }` without a session); confirmed by Ville 2026-10-14 (D-476). The generator is deterministic only: LLM-assisted synthesis stays deferred and the generated server does not depend on `@modelcontextprotocol/sdk` (D-475).
 
@@ -134,7 +160,7 @@ Plus bounded retries on 429/5xx, response size caps and parameterised read-only 
 
 ## Not supported and reported
 
-Docs-only inputs, data dumps, profile documents, repositories, composite inputs, Swagger 2.0, external `$ref`, non-SQLite DSNs, spreadsheets, and write operations. Each produces a gap or report line, not a guess. LLM-assisted synthesis is deferred (D-159).
+Docs-only inputs, row data (COPY blocks and INSERT values are skipped, never read), profile documents, repositories, composite inputs, Swagger 2.0, external `$ref`, non-SQLite DSNs, spreadsheets, and write operations. Each produces a gap or report line, not a guess. LLM-assisted synthesis is deferred (D-159).
 
 Known limitations of the current core:
 
@@ -157,6 +183,35 @@ Every gap carries a code, a severity (`error`, `warn`, `info`), a message and, f
 | `example-schema-mismatch` | warn | a response example contradicts its own schema (a property the schema does not define, a wrong type, null where not nullable); the message names the property path and the type words, never the example value (D-463) | kept, generated from the schema |
 
 The Phase 15 tester treats a planted defect that produces neither a gap nor an omitted tool as `SILENT_GUESS`; since D-463 the partial-spec case's stale example is reported, so the generator passes `gap_reported` for it.
+
+## Gap codes (sql-ddl and prisma adapters)
+
+Messages name tables, columns and type words only, never values from the input (row data, defaults, connection strings).
+
+| Code | Severity | Meaning |
+| --- | --- | --- |
+| `data-rows-skipped` | info | N data lines in COPY blocks were skipped (count only) |
+| `copy-block-unterminated` | warn | a COPY block has no `\.` line; the rest of the text was skipped as data |
+| `sql-dialect-detected` | info | the input was recognised as pg_dump, SQLite or mysqldump output |
+| `dialect-ambiguous` | warn | markers of two dialects; read as generic SQL |
+| `sqlite-backend-only` | info | the generated server reads a SQLite file; supply one with the same tables and columns (pg_dump, mysqldump, Prisma input) |
+| `dialect-noise-ignored` | info | N housekeeping statements (SET, COMMENT ON, GRANT, OWNER TO, sequences, indexes, DROP IF EXISTS, ALTER COLUMN defaults) were ignored |
+| `statement-ignored` | warn / info | a write (INSERT, UPDATE, DELETE, DROP, ALTER that is not a constraint, TRUNCATE, GRANT) was ignored; INSERT/UPDATE/DELETE are info |
+| `unsupported-statement` | warn / info | a view, function, trigger, non-enum type or other statement is not supported |
+| `alter-target-missing` | warn | an ALTER TABLE constraint names a table that is not in the input |
+| `unparsable-constraint` | warn | an ALTER TABLE or Prisma constraint could not be read or names a missing column |
+| `duplicate-primary-key` | warn | a second primary key was added to a table that has one; it was ignored |
+| `alter-may-hold-keys` | warn | a table has no primary key and an unreadable key-like ALTER TABLE statement on it may define one |
+| `no-identifier` | warn | a table has no primary key; list and query only |
+| `unsupported-type` | warn | jsonb, arrays, composite types, Prisma `Json`, `Bytes`, lists or `Unsupported(...)`; exposed as text |
+| `unknown-type` | info | a type was not recognised; string was used |
+| `fk-target-missing` | info | a foreign key points at a table that is not in the input |
+| `unsafe-identifier` | warn | a table or column name has characters that cannot be used safely; it was left out |
+| `unparsable-table`, `duplicate-column`, `duplicate-table`, `too-many-tables`, `no-tables` | warn / error | a table could not be read, was repeated, exceeded the cap of 100 tables or 200 columns, or nothing usable was found |
+| `ambiguous-input` | warn | the text looks like both SQL and a Prisma schema |
+| `config-blocks-ignored` | info | Prisma datasource and generator blocks were skipped without being read |
+| `relation-fields-skipped` | info | Prisma relation fields are not columns |
+| `unterminated-block` | warn | a Prisma block is not closed; it and the rest were skipped |
 
 ## Extension point for synthesized capability
 
