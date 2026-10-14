@@ -91,9 +91,18 @@ describe('POST /api/mcp-generate', () => {
   })
 })
 
-describe('hooks (no handleError override: SvelteKit default sanitises to "Internal Error")', () => {
-  it('does not define handleError, so unexpected errors never echo message or stack to the client', async () => {
+describe('hooks (handleError returns only a generic message and a reference, D-462)', () => {
+  it('defines handleError, so unexpected errors never echo message or stack to the client', async () => {
     const hooks = (await import('../hooks.server')) as Record<string, unknown>
-    expect(hooks.handleError).toBeUndefined()
+    expect(typeof hooks.handleError).toBe('function')
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const out = (hooks.handleError as (i: unknown) => { message: string; ref?: string })({
+      error: new Error('SqliteError: no such table: agents'),
+      status: 500,
+      message: 'Internal Error',
+      event: { request: new Request('http://x/'), url: new URL('http://x/') },
+    })
+    expect(JSON.stringify(out)).not.toMatch(/Sqlite|agents|\bat /)
+    expect(out.message).toBe('Internal Error')
   })
 })
