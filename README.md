@@ -135,7 +135,7 @@ Off by default. Set `AGENT_KINDS=on` and re-run `npm run ingest` to host multi-a
 
 ### MCP generator (flagged)
 
-Off by default. Set `MCP_GENERATOR=1` to enable a "Generate MCP" entry in the Customize menu and the `POST /api/mcp-generate` route. The route is rate limited per client and capped on concurrency (`MCP_GENERATOR_RATE_MAX`, `MCP_GENERATOR_RATE_WINDOW_SEC`, `MCP_GENERATOR_MAX_CONCURRENT`; see the environment table). Authors can also run `npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|auto> <input-file> --out <dir>` (works without the flag). It turns an OpenAPI 3.x spec, a tabular catalog header or `CREATE TABLE` DDL into a Python FastMCP stdio server package with generated tests; schema or spec only, never credentials or data. Details: `docs/mcp-generator.md`.
+Off by default. Set `MCP_GENERATOR=1` to enable a "Generate MCP" entry in the Customize menu and the `POST /api/mcp-generate` route. The route is rate limited per client and capped on concurrency (`MCP_GENERATOR_RATE_MAX`, `MCP_GENERATOR_RATE_WINDOW_SEC`, `MCP_GENERATOR_MAX_CONCURRENT`; see the environment table). Authors can also run `npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|prisma|auto> <input-file> --out <dir>` (works without the flag). It turns an OpenAPI 3.x spec, a tabular catalog header, `CREATE TABLE` DDL (also pg_dump, SQLite and mysqldump output) or a Prisma schema into a Python FastMCP stdio server package with generated tests; schema or spec only, never credentials or data. Details: `docs/mcp-generator.md`.
 
 ### MCP test platform (flagged)
 

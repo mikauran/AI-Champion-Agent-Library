@@ -22,8 +22,8 @@ const fake = (over: Partial<InputAdapter> = {}): InputAdapter => ({
 })
 
 describe('registry', () => {
-  it('lists the three v1 adapters', () => {
-    expect(listAdapters().map((a) => a.id)).toEqual(['openapi', 'tabular-catalog', 'sql-ddl'])
+  it('lists the registered adapters', () => {
+    expect(listAdapters().map((a) => a.id)).toEqual(['openapi', 'tabular-catalog', 'sql-ddl', 'prisma'])
   })
   it('reports unrecognized input', () => {
     expect(parseInput({ text: 'hello' })).toMatchObject({

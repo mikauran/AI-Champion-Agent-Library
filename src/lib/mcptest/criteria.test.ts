@@ -249,6 +249,9 @@ describe('no pre-existing test file was modified by Phase 15', () => {
     'src/lib/mcpgen/generate.test.ts', // FastMCP pin widened to <5 after live verification on 3.4.8 and 4.1.0 (2026-10-14)
     'src/lib/mcptest/generatorSubject.test.ts', // D-463: the stale example is now a reported gap, so the partial-spec case passes gap_reported
     'src/lib/mcpgen/adapters/openapi.test.ts', // D-520: Swagger 2.0 is read now (detect 0.95; an empty one is rejected as no-operations), see E11-swagger2.md
+    // E12 (D-546): the prisma adapter is registered, so the adapter id lists in these two tests gain 'prisma'; see .planning/exploration/E12-sql-dialects.md.
+    'src/lib/mcpgen/registry.test.ts',
+    'src/lib/mcpgen/criteria.test.ts',
   ]
   it('git diff --diff-filter=M against the baseline lists no test file', () => {
     let start = ''

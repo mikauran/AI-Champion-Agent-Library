@@ -42,7 +42,8 @@ v1 adapters, all deterministic (synthesis 5.1):
 |---|---|---|
 | `openapi` | Swagger 2.0 and OpenAPI 3.x JSON or YAML (Swagger 2.0 normalised inside the adapter, D-520) | operations, params (min/max/enum), response schemas, security schemes; GET only by default |
 | `tabular-catalog` | Header, schema and field-dictionary text (CSV-style header lines, dictionary pairs) | column names, labels, types, identifier columns |
-| `sql-ddl` | `CREATE TABLE` statements | tables, columns, types, PK/FK; read-only SELECT tools (roadmap requirement CUST-02) |
+| `sql-ddl` | `CREATE TABLE` statements; pg_dump, SQLite `.schema`, mysqldump dialects (D-540..D-545) | tables, columns, types, PK/FK (also from `ALTER TABLE ... ADD CONSTRAINT`), enums; read-only SELECT tools (roadmap requirement CUST-02) |
+| `prisma` | Prisma `schema.prisma` (D-546) | models, scalar fields, `@id`/`@@id`, `@relation`, enums; datasource and generator blocks ignored |
 
 Tabular input is header, schema or dictionary text only. Data rows are never ingested; only a few synthetic sample rows may appear in tests. This answers synthesis open question 3 (section 6).
 
