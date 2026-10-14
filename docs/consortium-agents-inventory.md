@@ -20,7 +20,7 @@ Only the agent names are used here, with our own wording. The source slide is TU
 
 | No | Agent | Stage | Status | Evidence | Notes / what is missing | Target phase |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | ETIM & classification repair | Design | missing | none | No existing YAML deals with ETIM or classification codes; the energy, load and fixture agents work on BIM quantities, not classification. | 25 |
+| 1 | ETIM & classification repair | Design | partial | data/agents/etim-classification-repair.yaml | Counted: entry plus one container run with a synthetic sample (Phase 25, 25-02). Classification lookup and real ETIM data missing. | 25 |
 | 2 | QTO normalization | Design | missing | none | `plumbing-fixture-unit-counter` counts fixtures from BIM but does not normalise quantity take-off data, so it is not counted as a match. | 25 |
 | 3 | Clash prioritization | Design | missing | none | No entry reads or ranks clash reports. | 25 |
 | 4 | RFI generation | Design | partial | data/agents/rfi-triage-assistant.yaml, data/agents/demo-rfi-triage.yaml | The assistant drafts, classifies and routes field RFIs through a conversation; it is not driven by model or clash findings, and the demo entry only triages one uploaded text. | 25 |
@@ -33,7 +33,7 @@ Only the agent names are used here, with our own wording. The source slide is TU
 | 11 | O&M completeness | Site and handover | missing | none | No entry checks handover documentation. | 28 |
 | 12 | BMS digital twin | Site and handover | missing | none | No entry connects building management data to a model. | 28 |
 
-Summary: 0 full, 2 partial (4, 8), 10 missing.
+Summary: 0 full, 3 partial (1, 4, 8), 9 missing.
 
 Stage names: Design (IFC/BIM), Sourcing (LVI-INFO catalog), Manufacturing (prefab and cut sheets), Site and handover (O&M, BMS).
 

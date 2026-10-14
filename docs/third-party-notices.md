@@ -51,4 +51,9 @@ SOFTWARE.
 
 | Entry slug | DDC skill path | Date |
 | --- | --- | --- |
-| none yet; Phases 25-29 | | |
+| etim-classification-repair | 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai | 2026-10-15 |
+| (further entries: Phases 25-29) | | |
+
+### Skills adapted in this repository
+
+- etim-classification-repair: approach adapted from DDC skill 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai (MIT); own design for ETIM-style mapping; no DDC code or data copied

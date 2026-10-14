@@ -12,3 +12,7 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-006 | 5 Product sourcing | The five other LVI-INFO arms (gsd, plain, mcpybarra, from_openapi, openapi-mcp-generator) are not catalogued; add them if wanted. | tool | Ville | Phase 24 | open |
 | G-007 | 5 Product sourcing | stk-catalog-mcp has no tests. | tool | Ville | Phase 24 | open |
 | G-008 | MCP servers | The existing ingest tests `scripts/ingest.kinds.test.ts` and `scripts/ingest.allformats.hinted.test.ts` assert that the flag-on catalog from `data/agents` equals the flag-off catalog, which the three new mcp-server directories break (see .planning/AUTONOMOUS-BLOCKERS.md B-004). | tool | open | Phase 24 | open |
+| G-009 | 1 ETIM & classification repair | No live ETIM release: ETIM is licensed and not redistributed; the sample uses a small synthetic SYN- class list. | data | Ville | Phase 25 | open |
+| G-010 | 1 ETIM & classification repair | No MCP class lookup from the container (no network except the LLM proxy); LVI-INFO/stk-mcp search is done by the engineer or an excerpt is pasted into the input. | tool | open | Phase 25 | open |
+| G-011 | 1 ETIM & classification repair | Input is text extracted from IFC; real IFC parsing is out of scope. | tool | open | Phase 25 | open |
+| G-012 | 1 ETIM & classification repair | No feature-value validation against a real class definition; one model call, no per-element tool use. | tool | open | Phase 25 | open |
