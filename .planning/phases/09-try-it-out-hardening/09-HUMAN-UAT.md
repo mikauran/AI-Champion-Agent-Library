@@ -5,6 +5,8 @@ status: pending human
 
 # Phase 9 Try It Out hardening: Human UAT (pending human)
 
+**Update 2026-10-14 (E9 live run, Claude with Ville present, rootless Podman 4.9.3, AUTH_ENABLED=false, details in `.planning/exploration/E9-live-podman.md`): items 1-6, 8, 9 were run live; item 7 skipped (needs a paid key).** The note below describes the original state.
+
 Nothing below was run autonomously. The autonomous run used a fake runtime, fake timers and a mocked upstream fetch only; no Podman, Docker or network was touched. Every item is **pending human** and every checkbox is deliberately unchecked.
 
 Common setup (rootless Podman host, repo root):
@@ -28,8 +30,8 @@ npx tsx scripts/smoke-pi-runner.ts --proxy-host aic-agent-library   # DNS + egre
 
 Expected: every line `PASS` (dns line may `SKIP` without the app running; `external egress blocked` is a `PASS`), final `cleanup: 0 smoke containers left`. If `createAndStart` fails with a memory/swap error, Podman rejected `MemorySwap`: revert the `MemorySwap = Memory` create option (see the 09-01 SUMMARY and D-018).
 
-- [ ] tmpfs run all PASS
-- [ ] compose run with `--proxy-host aic-agent-library` all PASS
+- [x] tmpfs run all PASS (2026-10-14: 11 lines, dns SKIP as expected, `PASS cleanup: 0 smoke containers left`, 11 s)
+- [x] compose run with `--proxy-host aic-agent-library` all PASS (2026-10-14: `PASS dns aic-agent-library: 10.89.0.7`, external egress blocked exit=3, getFiles round trip PASS, cleanup 0 left). Compose needed an override file (`-f podman-compose.yml -f override.yml` with `AUTH_ENABLED: "false"`), app image rebuilt first: 27m48s, image 2.68 GB.
 
 ## 2. Container hardening (pending human)
 
@@ -43,7 +45,7 @@ podman inspect "$C" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep 
 
 Expected: `user=pi`, `ro=true` (tmpfs mode), `capdrop=[ALL]`, `secopt` contains `no-new-privileges`, `mem` equals `swap` (default 1073741824), `pids=200`, no published ports; only `AIC_LLM_TOKEN=...` matches the grep and no `OPENAI_API_KEY`.
 
-- [ ] all values as expected
+- [x] all values as expected, with one literal difference. Container `aic-pi-381bccb56cb1`: `user=pi ro=true secopt=[no-new-privileges] mem=1073741824 swap=1073741824 pids=200 ports=map[]`, only `AIC_LLM_TOKEN` in the env grep, no `OPENAI*`. `capdrop` prints the 11 expanded default caps (`[CAP_CHOWN CAP_DAC_OVERRIDE ... CAP_SYS_CHROOT]`), not `[ALL]`: podman 4.9.3 expands ALL on inspect. Effective result verified: `/proc/self/status` `CapEff=0000000000000000 CapBnd=0000000000000000 NoNewPrivs=1`. Note `head -1` picked a pre-Phase-9 container; use the newest one.
 
 ## 3. Network guard live (pending human)
 
@@ -67,8 +69,8 @@ PI_RUNNER_NETWORK=aic-pi-open PI_RUNNER_ALLOW_OPEN_EGRESS=false npx tsx scripts/
 podman network rm aic-pi-open
 ```
 
-- [ ] external blocked, app reachable, peer result recorded
-- [ ] guard refuses the non-internal network, network removed afterwards
+- [x] external blocked, app reachable, peer result recorded: external `BLOCKED ENETUNREACH`, `app 200`, peer (10.89.0.10:3000) `ECONNREFUSED`.
+- [x] guard refuses the non-internal network, network removed afterwards: `FAIL ensureNetwork: network "aic-pi-open" is not internal; refusing to run Pi with open egress...`; `podman network rm aic-pi-open` done.
 
 ## 4. Orphan sweep owner scoping, WR-08 / SEC-05 (pending human)
 
@@ -83,8 +85,8 @@ podman ps --filter label=aic.tryitout --format '{{.Names}} {{.Label "aic.owner"}
 
 Expected: after B restarts, A's container is still there (different owner); B's previous container (same owner, old instance id) is removed. Containers created before Phase 9 (no `aic.owner` label) survive. Stop both dev servers afterwards.
 
-- [ ] A's container survives B restart
-- [ ] B's stale container swept on B restart
+- [x] A's container survives B restart (owner-a `aic-pi-d9bac4664a30` and the compose-app owner's containers survived)
+- [x] B's stale container swept on B restart (owner-b `aic-pi-258bf39e143e` gone after restart; the pre-Phase-9 container without `aic.owner` survived). Spec defect: `{{.Label "aic.owner"}}` is not valid in `podman ps --format` on 4.9.3 (`can't evaluate field Label`); use `{{.Labels}}`. Also `pkill -f` patterns in a shell script can match the script itself.
 
 ## 5. Hostile output archive live (pending human)
 
@@ -101,8 +103,8 @@ ss -xp | grep -c podman.sock                                  # stream count bef
 
 Expected: the symlink is skipped, the oversized entry is rejected as `output exceeds ... bytes` (the 256 MB work tmpfs may refuse 300 MB first; either outcome is fine), `__proto__` is kept as an ordinary name, app RSS stays roughly flat (no 300 MB jump), and the socket connection count returns to its earlier value (no leaked archive stream).
 
-- [ ] symlink skipped, big file rejected
-- [ ] RSS flat, no leaked stream
+- [x] symlink skipped, big file rejected: `getFiles(...maxBytes 20971520)` on `aic-pi-381bccb56cb1` gave `REJECTED: output exceeds 20971520 bytes` (big.bin 250 MB; the 256 MB tmpfs refused 300 MB first: `No space left on device`); with big.bin removed: `OK keys: ['__proto__']` (symlink `link` skipped, `__proto__` is an own key on a null-prototype object).
+- [x] RSS flat, no leaked stream: tsx process RSS 105 MB before, 107 MB after (+6 s); `ss -xp | grep -c podman.sock` 0 before and 0 after. Caveat: measured in a standalone tsx process through `createDockerodeRuntime`, not inside the app (the app runs in a container here; `pgrep -f 'vite|node build'` on the host would hit an unrelated vite).
 
 ## 6. Hung engine live (pending human)
 
@@ -118,8 +120,8 @@ podman ps -a --filter label=aic.tryitout --format '{{.Names}} {{.Status}}'
 
 Expected: the UI shows a bounded failure (warm timeout or "container engine error", never an endless spinner); after `kill -CONT` the app recovers and a new job works; no `aic-pi-*` container is left that no lease owns.
 
-- [ ] bounded failure while paused
-- [ ] recovery and no leaked container after resume
+- [x] bounded failure while paused: `kill -STOP` on the `podman system service` MainPID (the service is socket-activated and idle-exits, so `pgrep ... | head -1` is usually empty; get the PID with `systemctl --user show -p MainPID --value podman.service` right after a ping). Job `d239ee09...` stayed `claiming container...` for exactly 90 s (08:33:52 to 08:35:22), then `container unavailable, falling back to direct model call` (PI_FALLBACK_ENABLED=true) and ended `succeeded`. App log: `Try It Out warm-up failed: container warm-up timed out`. Never an endless spinner. Note: with the fallback on, the job made a real direct model call (the app's own .env supplies a key).
+- [x] recovery and no leaked container after resume: after `kill -CONT` a new job `4b6d383e...` ran in a warm container (`using warm container`, `pi session started`, `succeeded`); later `podman ps -a --filter label=aic.tryitout` showed only containers owned by leases or reaped by TTL.
 
 ## 7. Budget enforcement with a real model (pending human, needs OPENAI_API_KEY, user-run only)
 
@@ -130,6 +132,8 @@ PI_JOB_TOKEN_BUDGET=3000 PI_JOB_REQUEST_BUDGET=5 npm run dev -- --host
 ```
 
 Run a job with a long task. Expected: the job ends `failed` with `job token budget exceeded (N tokens, M requests)`, and the provider dashboard shows spend no more than the budget plus one capped completion (4096 tokens).
+
+SKIPPED 2026-10-14 (E9): needs a paid OpenAI key; not run.
 
 - [ ] job stopped with the budget message
 - [ ] dashboard spend within budget + one capped completion: ____
@@ -145,8 +149,8 @@ podman ps --filter label=aic.tryitout --format '{{.Names}}'; sleep 16; sleep 30;
 
 Expected: gone within about 16 s plus up to one reaper tick (30 s). Stalled warm: `kill -STOP` the engine mid-create (item 6) and confirm the stuck lease frees its slot within 2x `PI_RUNNER_WARM_WAIT_MS`.
 
-- [ ] idle container removed after TTL plus at most one tick
-- [ ] stalled warm freed within 2x warm wait
+- [x] idle container removed after TTL plus at most one tick (PI_RUNNER_IDLE_TTL_MS=15000, owner-c dev instance: container gone 29 s after creation, bound is 15 + 30 s)
+- [x] stalled warm freed within 2x warm wait (PI_RUNNER_WARM_WAIT_MS=5000, PI_RUNNER_MAX_CONTAINERS=1, engine STOPped: a job at t+2 s got `all Try It Out slots are busy`, jobs at t+8 s and t+14 s were admitted, i.e. the slot freed within 2x5 s; after CONT the late create landed as one container under the lease and was reaped by TTL)
 
 ## 9. Cleanup after compose down (pending human)
 
@@ -159,7 +163,7 @@ podman volume ls | grep -E 'tryout-sessions|auth-data'
 
 Expected: no containers with the label; `aic-pi-internal` is removed with the stack (the compose file declares it); volumes stay (they hold data).
 
-- [ ] no leftover containers, network gone
+- [ ] FAIL (partial): containers PASS, network FAIL. `podman-compose -f podman-compose.yml -f override.yml down` (2.4 s, podman-compose 1.0.6) stopped and removed `aic-agent-library`; `podman ps -a --filter label=aic.tryitout` empty (the app's graceful shutdown also removed its warm Pi container). But `podman network ls` still lists `aic-pi-internal` and `aic-agent-library_default`: podman-compose 1.0.6 `down` does not remove networks (the compose file declares `aic-pi-internal` with an explicit name). Volumes `aic-agent-library_tryout-sessions` and `aic-agent-library_auth-data` stayed, as expected. Either the Expected text should say the network stays (the app recreates it idempotently, smoke `ensureNetwork` PASS), or the runbook should add `podman network rm aic-pi-internal`.
 
 ## Known accepted risks
 

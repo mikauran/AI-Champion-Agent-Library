@@ -1,6 +1,8 @@
 # Phase 15 human UAT (MCP test platform)
 
-Every item below is **pending human**. None of it was run unattended: no real FastMCP server, no container engine, no browser. All outputs go to `/tmp`; nothing here needs a real credential. Tick the box and note the outcome beside each item.
+**E9 update 2026-10-14 (Claude with Ville present, details in `.planning/exploration/E9-live-podman.md`): items 2, 3, 4 and 5 were run as far as possible without a browser or credentials; items 3 and 4 uncovered two real defects (see there). Items 1, 6 to 9 untouched or not applicable (see notes).**
+
+Every item below was originally **pending human**. None of it was run unattended: no real FastMCP server, no container engine, no browser. All outputs go to `/tmp`; nothing here needs a real credential. Tick the box and note the outcome beside each item.
 
 Run all commands from the repository root. Setup once:
 
@@ -22,13 +24,13 @@ Status: DONE 2026-10-14 (run by Claude with Ville present). PyPI latest is fastm
 - Expected: version 3.x resolves. Unverified: the pin has never been checked against the package index.
 
 ## 2. Generate a server, then score it through the CLI
-Status: pending human
-- [ ] Generate:
+Status: RUN 2026-10-14 (E9), CLI path works, finding below
+- [x] Generate (ran; note: output is flat, `/tmp/acme-server/server.py`, there is no `<server-dir>` subdirectory; vars are `ACME_PARTS_BASE_URL` and `ACME_PARTS_API_KEY`):
   ```
   npm run generate-mcp -- --adapter openapi src/lib/mcpgen/testing/fixtures/acme-openapi.yaml --out /tmp/acme-server
   ```
   Open `/tmp/acme-server/<server-dir>/README.generated.md` and note the base-URL and API-key variable names (`<BASE_URL_VAR>`, `<API_KEY_VAR>`).
-- [ ] Install the generated requirements and score (the platform runs the server as a real process here, hence `--allow-local-exec`):
+- [x] Install the generated requirements and score (venv resolved fastmcp 4.1.0; server started, serverInfo `Acme Parts API 4.1.0`, tools `filter_part_by_features, lookup_part_by_id, search_part`; no crash, no ERROR cells; verdict FAIL, score 0, all 19 T2-CATALOG-API checks FAIL with `no matching tool`/`no tool` because `golden.jsonl` binds `tool_hint` `^lookup_item$` and `^search_items$` while the generator names tools `lookup_part_by_id` and `search_part`; this is a generator-vs-suite naming mismatch, see E9 defect D3) (the platform runs the server as a real process here, hence `--allow-local-exec`):
   ```
   /tmp/mcp-venv/bin/pip install -r /tmp/acme-server/<server-dir>/requirements.txt
   npm run mcp-test -- --subject cmd:"/tmp/mcp-venv/bin/python /tmp/acme-server/<server-dir>/server.py" --env-base-url <BASE_URL_VAR> --env-api-key <API_KEY_VAR> --case T2-CATALOG-API --reruns 3 --allow-local-exec --out /tmp/report.json
@@ -36,13 +38,13 @@ Status: pending human
 - Expected: protocol or banner surprises are likely (stdout noise, protocol version); they should show as findings, not crashes. Record the verdict and any `ERROR` cells (scorer problems) in the notes.
 
 ## 3. Build the runner image
-Status: pending human
-- [ ] Build and sanity-check:
+Status: FAIL as written (2026-10-14, E9); passes with a workaround
+- [ ] FAIL: Build and sanity-check. `podman build -t localhost/mcp-test-runner:latest -f Containerfile.mcp-test-runner .` fails at STEP 4/12: `npm error Tracker "idealTree" already exists` (npm 10.9.3 in node:22.19-bookworm-slim; `npm install --prefix /` with cwd `/` is broken, reproduced with a bare `podman run ... npm install --prefix / yaml@2.9.1`). Workaround used (scratch copy, repo file unchanged): `RUN mkdir /deps && cd /deps && npm install --no-save ... && cd / && mv /deps/node_modules /node_modules && rm -rf /deps`. With it the build succeeds in 2m30s, image 606 MB. Sanity: `node --version` = v22.19.0.
   ```
   podman build -t localhost/mcp-test-runner:latest -f Containerfile.mcp-test-runner .
   podman run --rm --network none localhost/mcp-test-runner:latest node --version
   ```
-- [ ] Check what the review fixes (CR-03, CR-04) assume about the image; none of this was built or run unattended:
+- [x] (on the workaround image) Check what the review fixes (CR-03, CR-04) assume about the image: output `pi`, uid 1000, `tsx v4.23.15`, `/node_modules/.bin/tsx`, `Python 3.11.2` (python3 on PATH is /opt/venv; fastmcp 4.1.0, httpx 0.28.1, PyYAML 6.0.3 installed). `/work` is `pi:pi`. (original text:)
   ```
   podman run --rm --network none localhost/mcp-test-runner:latest sh -c 'id -un && /node_modules/.bin/tsx --version && command -v tsx && python3 --version'
   ```
@@ -51,27 +53,28 @@ Status: pending human
 - [ ] Decide who owns the image tag and how the pins are updated (Question for Ville).
 
 ## 4. Container run through the platform
-Status: pending human
-- [ ] Start the app with the flag and the explicit runtime opt-in:
+Status: FAIL (2026-10-14, E9): the container run fails at the driver start (defects D1, D2); with both worked around the path works end to end
+- [x] Start the app with the flag and the explicit runtime opt-in:
   ```
   MCP_TESTER=1 MCP_TESTER_RUNTIME=container npm run dev
   ```
-- [ ] Open `/mcp-test`, run `generator:openapi` with a small case set, watch progress, download `report.json`.
+- [ ] FAIL: Open `/mcp-test`, run `generator:openapi` with a small case set, watch progress, download `report.json`. Done through the API (no browser): `/mcp-test` 200, `POST /api/mcp-test/runs {"subject":"generator:openapi","cases":["T1-STD-CATALOG","T2-CATALOG-API","T4-PARTIAL-SPEC"],"reruns":1}` -> 202, run status `failed` after 8 s: `driver exited with code 1: ... code: 'ERR_REQUIRE_ASYNC_MODULE' Node.js v22.19.0`. Root cause (D1, verified by hand in the image): the driver tree is staged without a `package.json` with `"type":"module"`, so tsx compiles `driver.ts` as CJS and rejects its top-level await (`Top-level await is currently not supported with the "cjs" output format`, driver.ts:126). Mounting `{"type":"module"}` as `/work/package.json` fixes that. Next failure (D2): `ERR_MODULE_NOT_FOUND file:///work/src/lib/spec/security`, because `src/lib/mcptest/core/redact.ts` imports `../../spec/security` and `TREE_ROOTS` stages only `src/lib/mcptest` and `src/lib/mcpgen`.
 - Expected: report runtime label is the container label; T4-PARTIAL-SPEC is dropped in container mode (documented limit).
 - Code-side fix applied after the review (CR-03, D-241): the runner config for this image sets `runUser` and `mountAgentDir: false`, so `buildCreateOptions` names the user the Containerfile ends with and mounts no `/home/pi/agent` tmpfs (the Pi image is unchanged). User mismatch RESOLVED (D-464, decided by Ville 2026-10-14): the image now has the `pi` user (the Phase 8 runtime default) instead of `node`, `RUNNER_USER` is `pi`, and `/node_modules`, `/opt/venv` are world-readable/executable and `/work` is owned by pi. The image build itself is still pending human; nothing was built or run. Still pending human: confirm the engine accepts the create options with `ReadonlyRootfs` plus the `/work` and `/tmp` tmpfs mounts, that the staged files are writable and readable by uid 1000, and that the driver writes `/work/out/report.json`.
-- [ ] Confirm no `mcptest-*` container is left behind after a normal run, after a timeout and after a cancel (`podman ps -a --filter label=aic.mcptest=1`). Containers now also carry `aic.tryitout=1` and `aic.owner`, so the Try It Out orphan sweep removes leftovers from a previous process; confirm that sweep does not touch a run in flight.
-- [ ] Open the downloaded report and check that `cases` contains every requested case with real checks (not zero checks): the driver tree now includes `golden.jsonl` and the csv fixtures, and an empty golden is an error.
+- [ ] PARTIAL: Confirm no `mcptest-*` container is left behind after a normal run, after a timeout and after a cancel. Checked: after the failed API run and after a run with `MCPTEST_JOB_TIMEOUT_MS=4000` (`failed: the container run timed out`, 5.2 s) `podman ps -a` was empty. Cancel path not exercised (no cancel route used). Sweep-vs-in-flight not exercised. Run through the production `executeRun` with a runtime shim that adds the two missing staged files (E9 `shim.mts`): status done in 18.3 s, no container left, network `aic-mcptest-internal` created by the platform (removed by hand afterwards). Also: the container-mode T4-PARTIAL-SPEC drop is documented behaviour, request with it still succeeded. (`podman ps -a --filter label=aic.mcptest=1`). Containers now also carry `aic.tryitout=1` and `aic.owner`, so the Try It Out orphan sweep removes leftovers from a previous process; confirm that sweep does not touch a run in flight.
+- [ ] BLOCKED on the repo code (passes only with the shim above): report from the shimmed run has `run.runtime=container`, `runtimeLabel="container runtime (sandboxed)"`, both requested cases present with 12 (T1) and 19 (T2) real checks, `timings` set; verdict DISQUALIFIED, all T1 and 16/19 T2 checks FAIL because of the tool-name mismatch (D3). Open the downloaded report and check that `cases` contains every requested case with real checks (not zero checks): the driver tree now includes `golden.jsonl` and the csv fixtures, and an empty golden is an error.
 
 ## 5. Fake versus real comparison
-Status: pending human
-- [ ] Produce a fake report for the same case and compare cell by cell with the real report from item 2:
+Status: DONE 2026-10-14 (E9)
+- [x] Produce a fake report for the same case and compare cell by cell with the real report from item 2:
   ```
   npm run mcp-test -- --subject fake:good --case T2-CATALOG-API --out /tmp/report-fake.json
   ```
+- Result: fake:good passes 19/19 T2-CATALOG-API checks (verdict INCOMPLETE because only one case was requested); the real generated server (CLI, local exec) passes 0/19 (verdict FAIL); all 19 cells differ. The container run of the same server (shimmed) differs from the CLI run in only three cells (pagesize_clamp, pagination_ceiling, bad_input PASS in the container, FAIL in CLI), probably because those checks pass on a failing/erroring server in the container where no mock upstream is reachable; not analysed further. Cause of the main discrepancy: fake:good exposes `lookup_item`, `search_items` (the names in the suite's `tool_hint`), the generator emits `lookup_part_by_id`, `search_part`, `filter_part_by_features`.
 - Expected: differences are discrepancies in the fake model or the real server; list them. Fake variants are scorer fixtures, not predictions.
 
 ## 6. T2-CATALOG-DUMP real run
-Status: pending human
+Status: pending human (E9 tried once: the tabular server generated from `acme-catalog-header.csv` with env `ACME_WIDGETS_DATA_PATH`, but `--case T2-CATALOG-DUMP` came back `NA` / `INCOMPLETE` (coverage 0/0), so the case did not run; not pursued)
 - [ ] Generate a tabular server and run the dump case with a data path (the runner supplies the dump fixture path through the env for real-runtime cases; check the printed command):
   ```
   npm run generate-mcp -- --adapter tabular-catalog src/lib/mcpgen/testing/fixtures/<tabular-fixture> --out /tmp/acme-tabular
