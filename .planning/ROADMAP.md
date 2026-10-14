@@ -596,12 +596,15 @@ Plans:
 ### Phase 26: Sourcing-stage agents (product sourcing E-BOM to M-BOM, quote comparison, carbon and EPD enrichment)
 
 **Goal:** Build or complete agents 5 Product sourcing (E-BOM to M-BOM), 6 Quote comparison, 7 Carbon & EPD enrichment (LVI-INFO catalog stage). Use Ville's MCP servers (stk-mcp etc.) for catalog data where applicable. Same done bar, data labelling and gap recording as Phase 25.
-**Requirements**: TBD
+**Requirements**: CONS-A5, CONS-A6, CONS-A7, CONS-VER
 **Depends on:** Phase 25
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 26 to break down)
+- [ ] 26-01-PLAN.md - Agent 5 Product sourcing (E-BOM to M-BOM), wave 1
+- [ ] 26-02-PLAN.md - Agent 6 Quote comparison, wave 1 (run after 26-01)
+- [ ] 26-03-PLAN.md - Agent 7 Carbon and EPD enrichment, wave 1 (run after 26-02)
+- [ ] 26-04-PLAN.md - Verification aggregation, npm run check, STATE.md, wave 2
 
 ### Phase 27: Manufacturing-stage agents (cut-sheet QA, spooling and cutting)
 
