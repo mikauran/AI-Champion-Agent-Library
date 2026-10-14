@@ -263,6 +263,9 @@ export async function runInContainer(
       containerId = await created
       const id = containerId
       const staged: StagedFile[] = [
+        // D1: /work is a tmpfs, so a package.json in the image would not help. Without it tsx compiles the driver
+        // as CommonJS and rejects its top-level await (ERR_REQUIRE_ASYNC_MODULE).
+        { path: 'package.json', content: '{"type":"module"}' },
         { path: 'in', type: 'dir' },
         { path: 'out', type: 'dir', mode: 0o777 },
         { path: 'in/request.json', content: JSON.stringify(parsed.data) },
