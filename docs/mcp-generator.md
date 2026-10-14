@@ -20,7 +20,7 @@ One adapter per input type. The registry detects the best match, or you force on
 
 ### openapi
 
-OpenAPI 3.x as YAML or JSON. Local `#/` references only. Swagger 2.0 is reported (`swagger-2-unsupported`), external references are reported and never fetched. Only GET operations become tools; every other method is listed in the report as dropped. The `servers` URL and defaults are never read; the server gets a `<NAME>_BASE_URL` variable instead. Response examples are never copied into the output; they are read only to check them against their own schema (gap `example-schema-mismatch`, below).
+Swagger 2.0 (`swagger: "2.0"`) and OpenAPI 3.0, 3.1 and 3.2, as YAML or JSON, all read by this one adapter (id `openapi`; auto-detect prefers it for both, D-520). Local `#/` references only; external references and anchors are reported and never fetched. Only GET operations become tools; every other method is listed in the report as dropped. The `servers` URL and defaults are never read; the server gets a `<NAME>_BASE_URL` variable instead (for Swagger 2.0 the same holds for `host`, `basePath` and `schemes`: put the full address, including any base path, in the variable). Response examples are never copied into the output; they are read only to check them against their own schema (gap `example-schema-mismatch`, below).
 
 ```yaml
 openapi: 3.0.3
@@ -40,6 +40,18 @@ paths:
                 type: array
                 items: { type: object, properties: { partId: { type: string }, name: { type: string } } }
 ```
+
+#### Swagger 2.0
+
+A Swagger 2.0 document is normalised inside the adapter (`adapters/openapi-swagger2.ts`) into the same model path as OpenAPI 3.x: `definitions` are resolved in place with the same memoisation and budgets, `#/parameters/...` and `#/responses/...` references work, query and path parameters carry `type`, `enum`, `minimum` and `maximum`, and `x-nullable` marks a nullable field. `produces` (operation, then document) decides whether a JSON response exists; if it lists no JSON type the operation is omitted with `missing-response-schema`. `consumes`, body and formData parameters belong to write operations, which are dropped like every non-GET method; a body or formData parameter on a GET is ignored and reported (`swagger2-body-param-ignored`, info). `securityDefinitions` of type `apiKey` (header or query) and `oauth2` are supported; `basic` is reported as `auth-unsupported` and no credentials are sent. A Swagger 2.0 document is never fetched or converted by an outside service.
+
+#### OAuth2 and OpenID Connect
+
+For a Swagger 2.0 `oauth2` definition and an OpenAPI 3.x `oauth2` or `openIdConnect` scheme no flow is implemented (D-521). The generated server reads a bearer access token from `<PREFIX>_ACCESS_TOKEN` (for example `ACME_LEDGER_ACCESS_TOKEN`), described as "OAuth2 access token obtained by you; never stored", and sends `Authorization: Bearer <token>` on every request. It never contacts an authorization or token endpoint, never refreshes a token and never writes one anywhere; scopes are not checked. The generator reports `oauth2-flow-not-implemented` (warn). If the token is missing the tool fails with a fixed message naming the variable. Other schemes keep their variables (`<PREFIX>_API_KEY`, `<PREFIX>_TOKEN` for `http` bearer). The credential scanner is unchanged: a token or client secret found in the input rejects it.
+
+#### OpenAPI 3.1 and 3.2
+
+Supported: `type: [x, "null"]` and `nullable` (a nullable field), `$ref` next to annotation keywords such as `description`, schema `example` and `examples` (array) for the example check, local `$defs` references, `components.pathItems` referenced from `paths`, `$self` (ignored, nothing is resolved against it), and the `device authorization` OAuth2 flow (same access-token behaviour). Everything else the adapter does not model is reported with a stable code, see the table below; nothing is guessed.
 
 ### tabular-catalog
 
@@ -134,7 +146,7 @@ Plus bounded retries on 429/5xx, response size caps and parameterised read-only 
 
 ## Not supported and reported
 
-Docs-only inputs, data dumps, profile documents, repositories, composite inputs, Swagger 2.0, external `$ref`, non-SQLite DSNs, spreadsheets, and write operations. Each produces a gap or report line, not a guess. LLM-assisted synthesis is deferred (D-159).
+Docs-only inputs, data dumps, profile documents, repositories, composite inputs, Swagger versions other than 2.0, OAuth2 flows (the token is supplied), external `$ref`, non-SQLite DSNs, spreadsheets, and write operations. Each produces a gap or report line, not a guess. LLM-assisted synthesis is deferred (D-159).
 
 Known limitations of the current core:
 
@@ -155,6 +167,21 @@ Every gap carries a code, a severity (`error`, `warn`, `info`), a message and, f
 | `oneof-merged` | info | a oneOf with a discriminator was merged into one field set | kept |
 | `auth-operation-override` | warn | an operation declares its own security; the document-level scheme is used for every tool | kept |
 | `example-schema-mismatch` | warn | a response example contradicts its own schema (a property the schema does not define, a wrong type, null where not nullable); the message names the property path and the type words, never the example value (D-463) | kept, generated from the schema |
+| `oauth2-flow-not-implemented` | warn | the API uses OAuth2 or OpenID Connect; the server reads a token you supply from `<PREFIX>_ACCESS_TOKEN` (D-521) | kept |
+| `auth-unsupported` | warn | only a scheme the server cannot send (for example HTTP basic) is declared; no credentials are sent | kept |
+| `swagger2-body-param-ignored` | info | a GET in a Swagger 2.0 document declared a body or formData parameter | kept |
+| `webhooks-ignored` | info | the document declares `webhooks` (3.1+); only `paths` are read (D-530) | kept |
+| `json-schema-dialect-unsupported` | warn | `jsonSchemaDialect` names a dialect other than the OpenAPI base dialect or JSON Schema 2020-12; never fetched | kept |
+| `multi-type-unsupported` | info | `type` lists several non-null types; the field type is `unknown` | kept |
+| `ref-sibling-keywords-ignored` | info | a `$ref` has siblings other than annotations (for example `type` or `nullable`); they are not merged | kept |
+| `schema-keyword-unsupported` | info | a schema uses keywords that are not read (`if`, `then`, `else`, `not`, `patternProperties`, `prefixItems`, `propertyNames`, `contains`, `dependentSchemas`, `unevaluatedItems`, `unevaluatedProperties`, `$dynamicRef`, `$recursiveRef`); the message names them | kept |
+| `ref-anchor-unsupported` | warn | a `$ref` names an anchor or the whole document (only `#/...` pointers resolve) | omitted |
+| `ref-unresolved`, `ref-depth-exceeded`, `external-ref-unsupported`, `schema-budget-exceeded`, `ambiguous-oneof` | warn | unresolvable, endless, external or too large schema composition; also reported for a path item `$ref` (the path is skipped) | omitted |
+| `query-method-unsupported` | info | a path item has a `query` operation or `additionalOperations` (3.2); only GET is modelled | skipped |
+| `querystring-param-unsupported` | info | a `querystring` parameter (3.2) is not exposed as an argument | kept |
+| `unsupported-version` | error | not Swagger 2.0 and not OpenAPI 3.x (`swagger-2-unsupported` is no longer emitted) | rejected |
+
+Environment variables of a generated HTTP server: `<PREFIX>_BASE_URL` always; plus one of `<PREFIX>_API_KEY` (API key), `<PREFIX>_TOKEN` (HTTP bearer) or `<PREFIX>_ACCESS_TOKEN` (OAuth2 or OpenID Connect). `<PREFIX>` is the upper-case server name.
 
 The Phase 15 tester treats a planted defect that produces neither a gap nor an omitted tool as `SILENT_GUESS`; since D-463 the partial-spec case's stale example is reported, so the generator passes `gap_reported` for it.
 

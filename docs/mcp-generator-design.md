@@ -40,7 +40,7 @@ v1 adapters, all deterministic (synthesis 5.1):
 
 | Adapter id | Input | v1 scope |
 |---|---|---|
-| `openapi` | OpenAPI 3.x JSON or YAML | operations, params (min/max/enum), response schemas, security schemes; GET only by default |
+| `openapi` | Swagger 2.0 and OpenAPI 3.x JSON or YAML (Swagger 2.0 normalised inside the adapter, D-520) | operations, params (min/max/enum), response schemas, security schemes; GET only by default |
 | `tabular-catalog` | Header, schema and field-dictionary text (CSV-style header lines, dictionary pairs) | column names, labels, types, identifier columns |
 | `sql-ddl` | `CREATE TABLE` statements | tables, columns, types, PK/FK; read-only SELECT tools (roadmap requirement CUST-02) |
 
