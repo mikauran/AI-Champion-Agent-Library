@@ -4,6 +4,7 @@ import {
   DERIVED_MAX_PAGES,
   effectiveMaxPageSize,
   entityFieldNames,
+  OAUTH2_PURPOSE,
   pathSegments,
   resolveAuth,
   resolveEnv,
@@ -372,7 +373,7 @@ export function emitPython(plan: ServerPlan): string {
   const out: string[] = []
   const envRows: string[] = []
   if (env.baseUrl) envRows.push(`#   ${env.baseUrl}  base address of the upstream service`)
-  if (env.auth) envRows.push(`#   ${env.auth}  API key for the upstream service`)
+  if (env.auth) envRows.push(`#   ${env.auth}  ${m.auth.oauth2 ? OAUTH2_PURPOSE : 'API key for the upstream service'}`)
   if (env.dataFile) envRows.push(`#   ${env.dataFile}  location of the data file (CSV)`)
   if (env.dsn) envRows.push(`#   ${env.dsn}  location of the database file (SQLite)`)
   out.push(
@@ -398,7 +399,7 @@ export function emitPython(plan: ServerPlan): string {
     out.push(`AUTH_NAME = ${pyStr(auth.name)}`)
     out.push('MAX_RETRIES = 2')
     out.push('MAX_RESPONSE_CHARS = 2000000')
-    out.push(`_AUTH_MESSAGE = ${pyStr(env.auth ? `Authentication failed: check the API key configured in ${env.auth}` : 'Authentication failed: the upstream service refused the request.')}`)
+    out.push(`_AUTH_MESSAGE = ${pyStr(env.auth ? `Authentication failed: check the ${m.auth.oauth2 ? 'OAuth2 access token' : 'API key'} configured in ${env.auth}` : 'Authentication failed: the upstream service refused the request.')}`)
     out.push(`_UPSTREAM_MESSAGE = ${pyStr('The upstream service is unavailable; try again later.')}`)
   }
   const delimiter = m.backend.delimiter ?? ','

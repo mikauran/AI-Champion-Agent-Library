@@ -76,6 +76,8 @@ export interface SourceModel {
     scheme: 'none' | 'apiKeyHeader' | 'apiKeyQuery' | 'bearer'
     paramName?: string
     envVar?: string
+    /** The token comes from an OAuth2 or OpenID Connect scheme: a bearer access token the operator obtains (no flow runs). */
+    oauth2?: boolean
   }
   entities: Entity[]
   operations: Operation[]

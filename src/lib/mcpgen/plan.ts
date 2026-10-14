@@ -108,6 +108,9 @@ export function resolveEnv(model: SourceModel): EnvNames {
   return env
 }
 
+/** Env var purpose for an OAuth2 or OpenID Connect scheme (no flow is implemented, D-521). */
+export const OAUTH2_PURPOSE = 'OAuth2 access token obtained by you; never stored'
+
 export interface AuthSpec {
   scheme: SourceModel['auth']['scheme']
   name: string

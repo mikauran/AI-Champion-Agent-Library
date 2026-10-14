@@ -1,6 +1,6 @@
 // GenerationReport: what was emitted, what was dropped and why, what was assumed (design doc 7, 9).
 import { cmp, formatGaps } from './diagnostics.js'
-import { DROP_CODES, pageSizeKnown, resolveEnv, toolKind } from './plan.js'
+import { DROP_CODES, OAUTH2_PURPOSE, pageSizeKnown, resolveEnv, toolKind } from './plan.js'
 import type { Gap, GenerationReport, ServerPlan } from './types.js'
 
 export function buildReport(plan: ServerPlan): GenerationReport {
@@ -13,7 +13,7 @@ export function buildReport(plan: ServerPlan): GenerationReport {
 
   const envVars: { name: string; purpose: string }[] = []
   if (env.baseUrl) envVars.push({ name: env.baseUrl, purpose: 'Base address of the upstream service' })
-  if (env.auth) envVars.push({ name: env.auth, purpose: 'API key for the upstream service (value never stored in the package)' })
+  if (env.auth) envVars.push({ name: env.auth, purpose: plan.model.auth.oauth2 ? OAUTH2_PURPOSE : 'API key for the upstream service (value never stored in the package)' })
   if (env.dataFile) envVars.push({ name: env.dataFile, purpose: 'Location of the CSV data file' })
   if (env.dsn) envVars.push({ name: env.dsn, purpose: 'Location of the SQLite database file (opened read-only)' })
 

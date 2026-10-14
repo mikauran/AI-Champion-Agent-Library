@@ -7,7 +7,7 @@ import { emitPython } from './emit/python.js'
 import { emitPytest } from './emit/pytest.js'
 import { emitRequirements } from './emit/requirements.js'
 import { cleanText } from './emit/pyutil.js'
-import { buildPlan, resolveEnv, serverSlug } from './plan.js'
+import { buildPlan, OAUTH2_PURPOSE, resolveEnv, serverSlug } from './plan.js'
 import { buildReport } from './report.js'
 import type { DerivedTool, GenerateOptions, GeneratedFile, GenerationResult, ServerPlan, SourceModel } from './types.js'
 
@@ -39,7 +39,7 @@ function emitReadme(plan: ServerPlan): string {
   const envNames = [env.baseUrl, env.auth, env.dataFile, env.dsn].filter((x): x is string => !!x)
   const purposes: Record<string, string> = {}
   if (env.baseUrl) purposes[env.baseUrl] = 'Base address of the upstream service'
-  if (env.auth) purposes[env.auth] = 'API key for the upstream service'
+  if (env.auth) purposes[env.auth] = m.auth.oauth2 ? OAUTH2_PURPOSE : 'API key for the upstream service'
   if (env.dataFile) purposes[env.dataFile] = 'Location of the CSV data file'
   if (env.dsn) purposes[env.dsn] = 'Location of the SQLite database file'
   const snippet = {
