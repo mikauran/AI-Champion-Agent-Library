@@ -27,3 +27,8 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-021 | 3 Clash prioritization | Suggested owners are proposals, responsibility is decided by the coordinator. | process | open | Phase 25 | open |
 | G-022 | 3 Clash prioritization | Report size limited by the 200 KB upload cap and one model call. | tool | open | Phase 25 | open |
 | G-023 | 3 Clash prioritization | Attempted-not-counted: in three runs (SKILL v1 + 2 revisions, jobs 57e5c2cc, ab20a259, 2141f80e) gpt-4.1-mini lost a clash (CL-012) from the ranked/findings tables or mis-applied the P1-P3 rule; clustering and ranking need a deterministic tool, not one model call. | tool | open | Phase 25 | open |
+| G-024 | 4 RFI generation | No model or clash tool access: it cannot verify a finding, it writes only from the table | tool | open | Phase 25 | open |
+| G-025 | 4 RFI generation | Attachments (screenshots, viewpoints, drawing sheets) are not generated: placeholders only | tool | open | Phase 25 | open |
+| G-026 | 4 RFI generation | No RFI numbering or log: the coordinator assigns numbers and dates | process | open | Phase 25 | open |
+| G-027 | 4 RFI generation | No project directory: addressed party is a discipline/role | data | open | Phase 25 | open |
+| G-028 | 4 RFI generation | Chaining from agent 3 is manual (paste its findings table); agent 3 is attempted-not-counted, so findings come from a manual list for now | process | open | Phase 25 | open |

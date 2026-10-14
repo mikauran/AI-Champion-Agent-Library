@@ -105,4 +105,24 @@ ATTEMPTED-NOT-COUNTED (rubric FAIL after SKILL v1 plus the maximum of 2 revision
 - Ledger: three 25-04 rows in .planning/spend-log.md (0.0169, 0.0212, 0.0187; total 0.0568 USD, all not counted)
 
 ### Agent 4: RFI generation
-_pending_
+COUNTED (rubric met on the first run, SKILL v1).
+
+- Entry: data/agents/rfi-generation-from-findings.yaml (validate-submission INGESTIBLE, validate-entries 0 errors); rfi-triage-assistant.yaml and demo-rfi-triage unchanged. Option A, gpt-4.1-mini, Pi container.
+- Job a5ef49db-1061-440b-bbce-72a522f20e0c, 11393 tokens, 3 requests, est. 0.0182 USD, 28.6 s, usage observed (countable). Input label: synthetic (data/tryitout-prompts/rfi-generation-from-findings/sample-findings.txt, 6 findings F-01..F-06, invented building, shared 8-column format).
+- Answer key: F-06 has empty open_question and unclear owner, so it needs `TO BE DECIDED BY COORDINATOR`, a `(derived)` question and a Missing information entry; F-04/F-05 are model-data findings (clash_ids `-`).
+- Rubric check: 6 findings, 6 index rows, 6 RFI blocks, each F-xx exactly once, ids RFI-DRAFT-01..06 (no final numbers); response date `to be set by coordinator` in all six; no date, sheet, project or person name beyond the input (grep: only ids and names present in the input); F-06 flagged as expected; options labelled `Proposal:`, none decided; caveat in the footer. PASS. Minor: blocks F-01..F-05 say Missing information `none` though no drawing references exist in the input (acceptable, not a rubric item).
+- Excerpt:
+```
+### RFI-DRAFT-06
+Source finding: F-06 (CL-016)
+Priority: P3
+Subject: Clearance conflict between cable tray and duct in L0 plant room
+To: TO BE DECIDED BY COORDINATOR
+Question: What is the required clearance or resolution for the cable tray and duct conflict? (derived)
+Options proposed: none proposed
+Requested response date: to be set by coordinator
+Missing information: no suggested owner, no open question
+```
+- Caveat: draft for engineer review; synthetic input only.
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: one 25-05 row in .planning/spend-log.md (0.0182 USD, counted)
