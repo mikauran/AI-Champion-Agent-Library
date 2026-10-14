@@ -552,8 +552,9 @@ function parseDoc(input: RawInput): ParseResult {
   const pageSizeMax: number[] = []
 
   for (const path of Object.keys(paths).sort()) {
-    let item = own(paths, path)
-    if (!isObj(item)) continue
+    const rawItem = own(paths, path)
+    if (!isObj(rawItem)) continue
+    let item: Obj = rawItem
     // components.pathItems (3.1): a path item may be a local $ref.
     if (typeof item.$ref === 'string') {
       try {
