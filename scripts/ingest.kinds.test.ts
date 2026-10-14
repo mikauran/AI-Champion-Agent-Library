@@ -165,10 +165,13 @@ describe('ingest with AGENT_KINDS on', () => {
     const onAll = q<Record<string, unknown>>(`SELECT ${BASE_COLS} FROM agents ORDER BY slug`)
     const offSlugs = new Set(off.map(r => r.slug))
     expect(onAll.filter(r => offSlugs.has(r.slug))).toEqual(off)
-    expect(onAll.filter(r => !offSlugs.has(r.slug)).map(r => r.slug)).toEqual([])
+    // Phase 24: data/agents/<slug>/catalog.yaml holds the library's own mcp-server entries; only those are added.
+    const extra = onAll.filter(r => !offSlugs.has(r.slug)).map(r => r.slug)
+    const mcpKinds = q<{ slug: string }>(`SELECT slug FROM agent_kinds WHERE kind = 'mcp-server' ORDER BY slug`).map(r => r.slug)
+    expect([...extra].sort()).toEqual(mcpKinds)
     const kinds = q<{ kind: string }>('SELECT kind FROM agent_kinds')
     expect(kinds).toHaveLength(onAll.length)
-    expect(kinds.every(k => k.kind === 'agent')).toBe(true)
+    expect(kinds.filter(k => k.kind !== 'mcp-server').every(k => k.kind === 'agent')).toBe(true)
   })
 
   it('never overwrites try_it_out columns on upsert (D-07)', async () => {

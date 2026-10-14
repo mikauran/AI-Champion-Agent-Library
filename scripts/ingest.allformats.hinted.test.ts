@@ -166,7 +166,7 @@ describe('flag-on ingest of all fixtures/submissions', () => {
     const golden = JSON.parse(readFileSync(GOLDEN, 'utf8')).ingest.top.rows as Array<Record<string, unknown>>
     const legacy = mkdtempSync(join(tmpdir(), 'allformats-legacy-'))
     try {
-      cpSync('./data/agents', legacy, { recursive: true, filter: s => !s.endsWith('fixtures') && !s.includes('/fixtures/') })
+      cpSync('./data/agents', legacy, { recursive: true, filter: s => !s.endsWith('fixtures') && !s.includes('/fixtures/') && !existsSync(join(s, 'catalog.yaml')) && !/data\/agents\/[^/]+\/catalog\.yaml$/.test(s) })
       const res = await ingest(legacy, TEST_DB, { embedder: null })
       expect(res.failed).toBe(0)
       const rows = q<Record<string, unknown>>('SELECT * FROM agents ORDER BY slug').map(r => {

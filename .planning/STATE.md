@@ -226,3 +226,15 @@ Environment constraint: this machine has 3.7 GB RAM. Do not run Podman checks al
 - Phase 14 question 1 (zip download vs platform-hosted output) and the tabular 5-row limit were covered by D-478 (all remaining defaults confirmed).
 
 **Next planned work (needs a go from you):** Phases 21, 22, 23 (ROADMAP.md). Phase 22 starts with a first real proposal from an agent session for you to review.
+
+
+## Autonomous run 2026-10-14 (phases 24-30, then 21-23)
+
+Order: 24 -> 30, then 21 -> 23. Cap: $0.50 per agent run, $10 total.
+
+### Spend log (OpenAI real-model runs)
+| Run | Agent | Est. cost USD | Running total |
+|-----|-------|---------------|---------------|
+
+### Progress
+- Phase 24: done, verification passed (3099 tests). Inventory: 0 full, 2 partial (RFI generation, Cut-sheet QA), 10 missing. 3 MCP-server entries added.

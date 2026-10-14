@@ -1,6 +1,6 @@
 ---
 phase: 24
-status: gaps_found
+status: passed
 verified: 2026-10-14
 ---
 
@@ -35,3 +35,7 @@ Status is not `passed` because `npm run check` fails: 2 tests fail, both caused 
 ## Environment notes
 
 Worktree needed node_modules (hard-linked copy; a symlink broke vite fs access) and a local `db:push` plus `ingest` (db/ is gitignored); without them 49 test files failed for environment reasons.
+
+## Orchestrator follow-up (2026-10-14)
+B-004 resolved: the two golden ingest tests (`scripts/ingest.kinds.test.ts`, `scripts/ingest.allformats.hinted.test.ts`) now expect the three mcp-server entries when the flag is on (flag-off golden untouched). `npm run check`: 271 files passed (1 skipped), 3099 tests passed (1 skipped), tsc clean.
+Release note for Phase 30: with AGENT_KINDS off (release default) the mcp-server entries are not listed in the catalog.
