@@ -1,4 +1,5 @@
 // Contracts for the MCP generator (design: docs/mcp-generator-design.md section 4).
+import type { ProposalProvenance, ProposedBehavior } from './proposals/model.js'
 export type Severity = 'error' | 'warn' | 'info'
 export interface Gap {
   code: string
@@ -118,7 +119,7 @@ export interface DerivedTool {
   entity: string
   source: string
   description: string
-  origin: 'detected' | 'user'
+  origin: 'detected' | 'user' | 'proposed'
 }
 export interface PlannedTool {
   name: string
@@ -128,12 +129,17 @@ export interface PlannedTool {
   derived?: DerivedTool
   params: Param[]
   projection: string[]
+  /** Set only by an applied proposal set (docs/mcp-generator-proposals.md). */
+  proposed?: ProposedBehavior
 }
 export interface ServerPlan {
   model: SourceModel
   tools: PlannedTool[]
   derived: DerivedTool[]
   gaps: Gap[]
+  /** Tools emitted as private functions only: a proposal hid them or a merge, split or composite calls them. Never registered. */
+  internal?: PlannedTool[]
+  proposals?: ProposalProvenance
 }
 export interface GeneratedFile {
   path: string
@@ -145,6 +151,7 @@ export interface GenerationReport {
   gaps: Gap[]
   assumptions: string[]
   envVars: { name: string; purpose: string }[]
+  proposals?: ProposalProvenance
 }
 export interface GenerationResult {
   files: GeneratedFile[]

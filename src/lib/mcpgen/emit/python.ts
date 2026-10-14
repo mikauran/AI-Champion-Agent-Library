@@ -14,6 +14,7 @@ import {
 import { cleanSource, cleanText, joinLines, pyIdent, pyLit, pyNum, pyStr, sqlIdent } from './pyutil.js'
 import { odataGetTool, odataListTool, odataTable, hasOdata, isOdataTool } from './odata.js'
 import { RUNTIME_COMMON, RUNTIME_DATASET, RUNTIME_QUERY, RUNTIME_SQL, RUNTIME_ODATA, runtimeHttp } from './runtime.js'
+import { applyArgEdits, emitWrapper, RUNTIME_PROPOSED } from './proposed.js'
 
 const PYTYPE: Record<string, string> = { string: 'str', integer: 'int', number: 'float', boolean: 'bool', unknown: 'str' }
 const I32_MIN = -2147483648
@@ -415,13 +416,16 @@ export function emitPython(plan: ServerPlan): string {
   if (odata) out.push(RUNTIME_ODATA.replace(/\n+$/, ''))
   if (kind === 'dataset') out.push(RUNTIME_QUERY.replace(/\n+$/, ''), RUNTIME_DATASET.replace(/\n+$/, ''))
   if (kind === 'sql') out.push(RUNTIME_QUERY.replace(/\n+$/, ''), RUNTIME_SQL.replace(/\n+$/, ''))
+  // Hidden tools and tools a proposal merged or split stay as private functions (plan.internal).
+  const all = [...plan.tools, ...(plan.internal ?? [])]
+  if (all.some((t) => t.proposed?.wrapper)) out.push(RUNTIME_PROPOSED.replace(/\n+$/, '').replace(/^\n+/, '\n'))
   out.push('', '')
 
   // Data tables: per-entity allow-list and default projection.
-  const ents = [...new Set(plan.tools.filter((t) => t.entity !== '*').map((t) => t.entity))].sort()
+  const ents = [...new Set(all.filter((t) => t.entity !== '*').map((t) => t.entity))].sort()
   // fromEntries creates own properties, so an entity named __proto__ or constructor stays a plain key.
   const allowed = Object.fromEntries(ents.map((id) => [id, entityFieldNames(entityOf(plan, id))]))
-  const dflt = Object.fromEntries(ents.map((id) => [id, plan.tools.find((t) => t.entity === id)!.projection]))
+  const dflt = Object.fromEntries(ents.map((id) => [id, all.find((t) => t.entity === id)!.projection]))
   out.push(`_ALLOWED = ${pyLit(allowed)}`, '', `_DEFAULT = ${pyLit(dflt)}`, '')
   if (odata) out.push(`_ODATA = ${pyLit(odataTable(plan))}`, '')
   if (kind !== 'http') out.push(`_SCHEMA = ${pyLit(schemaLiteral(plan))}`, '')
@@ -440,13 +444,15 @@ export function emitPython(plan: ServerPlan): string {
 
   // Tools.
   const names: string[] = []
-  for (const [i, tool] of plan.tools.entries()) {
+  for (const [i, tool] of all.entries()) {
     const k = toolKind(plan, tool)
     out.push(...(i === 0 ? [''] : ['', '']))
-    const odataBody = isOdataTool(plan, tool) ? (k === 'list' ? odataListTool(plan, tool) : k === 'get' ? odataGetTool(plan, tool) : undefined) : undefined
-    const body =
+    const odataBody = k !== 'proposed' && isOdataTool(plan, tool) ? (k === 'list' ? odataListTool(plan, tool) : k === 'get' ? odataGetTool(plan, tool) : undefined) : undefined
+    const baseBody =
       odataBody ??
-      (k === 'list' || k === 'search'
+      (k === 'proposed'
+        ? emitWrapper(plan, tool)
+        : k === 'list' || k === 'search'
         ? httpListTool(plan, tool)
         : k === 'get'
           ? httpGetTool(plan, tool)
@@ -455,8 +461,8 @@ export function emitPython(plan: ServerPlan): string {
             : k === 'query'
               ? queryTool(plan, tool)
               : describeTool(tool))
-    out.push(...body)
-    names.push(pyIdent(tool.name))
+    out.push(...(tool.proposed?.args && k !== 'proposed' ? applyArgEdits(baseBody, tool) : baseBody))
+    if (i < plan.tools.length) names.push(pyIdent(tool.name))
   }
   out.push('', '', '# Register every tool with the server (read-only tools only).', 'for _tool in (')
   for (const n of names) out.push(`    ${n},`)

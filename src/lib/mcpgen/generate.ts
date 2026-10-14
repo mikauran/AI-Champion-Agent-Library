@@ -80,6 +80,16 @@ function emitReadme(plan: ServerPlan): string {
     JSON.stringify(snippet, null, 2),
     '```',
     '',
+    ...(plan.proposals
+      ? [
+          '## Provenance',
+          '',
+          `This package was assisted by a proposal file (sha256 ${plan.proposals.sha256}, baseline fingerprint ${plan.proposals.fingerprint}, mode ${plan.proposals.mode}).`,
+          `Applied ops: ${plan.proposals.applied.length}. Rejected ops: ${plan.proposals.rejected.length}. Tool names and descriptions hash: ${plan.proposals.descriptionsSha256}.`,
+          'A person must review the diff against the deterministic baseline before this package is published. See `report.json` for every applied and rejected op.',
+          '',
+        ]
+      : []),
     '## Tests',
     '',
     '`test_server.py` stubs the upstream or data source and checks the server behaviours. Run `pytest test_server.py`.',
@@ -90,7 +100,11 @@ function emitReadme(plan: ServerPlan): string {
 }
 
 export function generate(model: SourceModel, options: GenerateOptions = {}, extraDerived: DerivedTool[] = []): GenerationResult {
-  const plan = buildPlan(model, options, extraDerived)
+  return generateFromPlan(buildPlan(model, options, extraDerived))
+}
+
+/** Render a plan (the baseline plan, or one a proposal set was applied to). Pure and deterministic. */
+export function generateFromPlan(plan: ServerPlan): GenerationResult {
   const report = buildReport(plan)
   if (plan.gaps.some((g) => g.severity === 'error' && g.code === 'no-tools')) {
     return { files: [], report }

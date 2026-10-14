@@ -2,7 +2,9 @@
 // network, no logging. Never throws; every failure becomes gaps. The input text is never kept.
 import { MAX_OUTPUT_BYTES } from './api-contract.js'
 import { gap } from './diagnostics.js'
-import { generate } from './generate.js'
+import { generate, generateFromPlan } from './generate.js'
+import { evaluateProposals, issuesToGaps } from './proposals/index.js'
+import type { ProposalProvenance } from './proposals/model.js'
 import { serverSlug } from './plan.js'
 import { parseInput, prepareInput } from './registry.js'
 import type { GenerateOptions, GeneratedFile, GenerationReport, Gap } from './types.js'
@@ -11,10 +13,12 @@ export interface PipelineOptions {
   adapterId?: string
   options?: GenerateOptions
   filename?: string
+  /** A proposal file (data only). Strict by default; lenient applies the ops that pass every gate. */
+  proposals?: { text: string; lenient?: boolean }
 }
 
 export type PipelineResult =
-  | { ok: true; files: GeneratedFile[]; report: GenerationReport; serverName: string; adapterId: string }
+  | { ok: true; files: GeneratedFile[]; report: GenerationReport; serverName: string; adapterId: string; proposals?: ProposalProvenance }
   | { ok: false; gaps: Gap[] }
 
 export function runPipeline(rawInput: string, opts: PipelineOptions = {}): PipelineResult {
@@ -25,7 +29,14 @@ export function runPipeline(rawInput: string, opts: PipelineOptions = {}): Pipel
       { adapterId, options: opts.options },
     )
     if (!parsed.ok) return { ok: false, gaps: parsed.gaps }
-    const result = generate(parsed.model, opts.options ?? {})
+    let provenance: ProposalProvenance | undefined
+    let result
+    if (opts.proposals) {
+      const ev = evaluateProposals({ model: parsed.model, options: opts.options, text: opts.proposals.text, lenient: opts.proposals.lenient })
+      if (!ev.ok || !ev.plan) return { ok: false, gaps: issuesToGaps(ev) }
+      provenance = ev.plan.proposals
+      result = generateFromPlan(ev.plan)
+    } else result = generate(parsed.model, opts.options ?? {})
     if (result.files.length === 0) {
       const errs = result.report.gaps.filter((g) => g.severity === 'error')
       return {
@@ -46,6 +57,7 @@ export function runPipeline(rawInput: string, opts: PipelineOptions = {}): Pipel
       report: result.report,
       serverName: serverSlug(parsed.model),
       adapterId: parsed.adapterId,
+      ...(provenance ? { proposals: provenance } : {}),
     }
   } catch {
     return { ok: false, gaps: [gap('pipeline-failed', 'Generation failed unexpectedly.', { severity: 'error' })] }

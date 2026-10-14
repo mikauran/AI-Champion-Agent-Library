@@ -13,9 +13,11 @@ import { parseBindingFile } from './core/bindingSchema'
 import { runGeneratorSideChecks, type PipelineFn } from './generatorChecks'
 
 export interface GeneratorSample {
-  id: 'openapi' | 'tabular-catalog' | 'sql-ddl'
+  id: string
   file: string
   filename: string
+  /** Input text supplied by the caller (proposal evaluation): used instead of reading `file`. */
+  text?: string
 }
 
 export const SAMPLES: GeneratorSample[] = [
@@ -54,16 +56,19 @@ function strArr(v: unknown): string[] {
 }
 
 async function readSample(s: GeneratorSample): Promise<string> {
+  if (s.text !== undefined) return s.text
   return readFile(join(FIXTURES, s.file), 'utf8')
 }
 
 export interface GeneratorSubjectDeps {
   runPipelineFn?: PipelineFn
+  /** Samples to build subjects for (default: the three Acme fixtures). */
+  samples?: GeneratorSample[]
 }
 
 export function generatorSubjects(deps: GeneratorSubjectDeps = {}): Subject[] {
   const run: PipelineFn = deps.runPipelineFn ?? runPipeline
-  return SAMPLES.map((sample): Subject => ({
+  return (deps.samples ?? SAMPLES).map((sample): Subject => ({
     id: `generator:${sample.id}`,
     kind: 'generator',
     modality: 'spec',

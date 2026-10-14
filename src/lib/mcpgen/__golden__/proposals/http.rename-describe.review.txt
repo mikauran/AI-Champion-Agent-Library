@@ -1,0 +1,24 @@
+Proposal review (strict mode)
+  proposal file sha256: 4931fea2e4d152c99072ee318c234c5df3d0323ea35ec27976d22b5137537fba
+  baseline fingerprint: 7d8411e7f528d1bd254e266371249de0fba6d32d7dec9f7337025152971f03ff
+  result: ACCEPTED
+
+Applied ops (4):
+  - rename-search [rename_tool]: test
+  - describe-search [describe_tool]: test
+  - rename-q [rename_arg]: test
+  - describe-text [describe_arg]: test
+
+Changes per tool (before -> after):
+  search_part
+    name: search_part -> find_parts
+    description: before: Search parts by free text, one page at a time. Source note: Search and list parts
+                 after:  Finds parts by free text, one page at a time. Read-only.
+    arguments: before: (page=1, page_size=20, q?, fields?)
+               after:  (page=1, page_size=20, text?, q?, fields?)
+    alias kept: q still accepted next to text
+    argument q described: Words to look for in the part name.
+
+Tools offered after applying (3): filter_part_by_features, find_parts, lookup_part_by_id
+
+Human review is required before any proposal-assisted package is published. Nothing was published.

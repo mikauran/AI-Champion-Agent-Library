@@ -6,6 +6,7 @@
 // (lookup_by_id, pagesize_clamp ...). The platform stays free to ignore keys it does not know.
 import type { PlannedTool, ServerPlan } from './types.js'
 import { toolKind, type ToolKind } from './plan.js'
+import { finalSignature } from './proposals/signature.js'
 
 export const BINDING_FILE = 'mcptest-binding.json'
 
@@ -29,6 +30,8 @@ export interface ToolDesc {
 export function describeTools(plan: ServerPlan): ToolDesc[] {
   return plan.tools.map((t: PlannedTool) => {
     const kind = toolKind(plan, t)
+    // A tool a proposal changed or created: the argument names come from its final signature.
+    if (t.proposed) return { name: t.name, kind, params: finalSignature(plan, t).map((a) => a.name) }
     const params = t.params.map((p) => p.name)
     const op = t.operation ? plan.model.operations.find((o) => o.id === t.operation) : undefined
     if (!t.derived && op && (kind === 'list' || kind === 'search')) {
@@ -82,7 +85,7 @@ export function deriveBinding(tools: (string | ToolDesc)[]): Binding {
     })
   const gets = ts.filter((t) => {
     const k = kindOf(t)
-    return k === 'get' || k === 'query' || LOOKUP_NAME.test(t.name)
+    return k !== 'proposed' && (k === 'get' || k === 'query' || LOOKUP_NAME.test(t.name))
   })
   const lookup = gets[0]
   const search = ofKind('search')[0]

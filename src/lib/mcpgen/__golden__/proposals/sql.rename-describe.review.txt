@@ -1,0 +1,22 @@
+Proposal review (strict mode)
+  proposal file sha256: a45b3ed93bf2c2b311204be9e5f05cee382fbe3036dbf196e2ba0165d698c141
+  baseline fingerprint: aca3c031cf55f36ba1d51abf2956c7e0171705eb4782c5d3353ee8805d35ffe4
+  result: ACCEPTED
+
+Applied ops (3):
+  - rename-customer [rename_tool]: test
+  - describe-customer [describe_tool]: test
+  - rename-limit [rename_arg]: test
+
+Changes per tool (before -> after):
+  query_customer
+    name: query_customer -> find_customer
+    description: before: Query customers by one field using equals, contains or startsWith matching. Returns at most 100 rows per call.
+                 after:  Finds customers by one field. Read-only; at most 100 rows per call.
+    arguments: before: (field?, value?, match="equals", fields?, limit=20, offset=0)
+               after:  (field?, value?, match="equals", fields?, row_limit?, limit=20, offset=0)
+    alias kept: limit still accepted next to row_limit
+
+Tools offered after applying (5): describe_acme_schema, find_customer, query_note_log, query_order, query_order_line
+
+Human review is required before any proposal-assisted package is published. Nothing was published.

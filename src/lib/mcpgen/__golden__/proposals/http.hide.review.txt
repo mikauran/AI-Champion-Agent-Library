@@ -1,0 +1,15 @@
+Proposal review (strict mode)
+  proposal file sha256: 98f0888338b4967b697d3b2773f6281cc5141f8e8b3a0f04a6e8929a264122e2
+  baseline fingerprint: 7d8411e7f528d1bd254e266371249de0fba6d32d7dec9f7337025152971f03ff
+  result: ACCEPTED
+
+Applied ops (1):
+  - hide-filter [hide_tool]: test
+
+Changes per tool (before -> after):
+  filter_part_by_features
+    removed: hidden by a proposal and not used by any other tool
+
+Tools offered after applying (2): lookup_part_by_id, search_part
+
+Human review is required before any proposal-assisted package is published. Nothing was published.

@@ -137,6 +137,8 @@ Off by default. Set `AGENT_KINDS=on` and re-run `npm run ingest` to host multi-a
 
 Off by default. Set `MCP_GENERATOR=1` to enable a "Generate MCP" entry in the Customize menu and the `POST /api/mcp-generate` route. The route is rate limited per client and capped on concurrency (`MCP_GENERATOR_RATE_MAX`, `MCP_GENERATOR_RATE_WINDOW_SEC`, `MCP_GENERATOR_MAX_CONCURRENT`; see the environment table). Authors can also run `npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|prisma|odata|auto> <input-file> --out <dir>` (works without the flag). It turns an OpenAPI 3.x spec, a tabular catalog header, `CREATE TABLE` DDL (also pg_dump, SQLite and mysqldump output) a Prisma schema or OData `$metadata` (CSDL JSON or EDMX XML) into a Python FastMCP stdio server package with generated tests; schema or spec only, never credentials or data. Details: `docs/mcp-generator.md`.
 
+The generated server can be improved by a data-only proposal file written by an external agent session or a person (`--proposals <file>`, `--validate-only` for a review summary, `--context-pack <dir>` to hand an agent the spec, samples, docs and the deterministic baseline, `npm run mcp-propose-eval` to compare baseline and proposal-assisted packages). No model is called by the platform, every proposal passes deterministic gates, and a person reviews the result before it is published. Details: `docs/mcp-generator-proposals.md`.
+
 ### MCP test platform (flagged)
 
 Off by default. Set `MCP_TESTER=1` to enable the `/mcp-test` page, the `POST /api/mcp-test/runs` routes and a Customize menu entry. Authors can score a server from the command line without the flag: `npm run mcp-test -- --list`, `npm run mcp-test -- --subject fake:good`. It runs 12 synthetic cases against an offline mock upstream and writes a report (JSON plus a text summary); no real API or credential is ever used. Real FastMCP servers and the container runner image (`MCP_TESTER_RUNTIME=container`, `Containerfile.mcp-test-runner`) have not been run yet and are listed as pending human. Details: `docs/mcp-test-platform.md` (port fidelity: `docs/mcp-test-port-fidelity.md`).
@@ -159,6 +161,7 @@ Off by default. Set `MCP_TESTER=1` to enable the `/mcp-test` page, the `POST /ap
 | `npm run validate-submission -- <path>` | Check an agent submission folder or file against the format adapters (read-only, works without `AGENT_KINDS`) |
 | `npm run generate-mcp -- --adapter <id> <input> --out <dir>` | MCP generator CLI (works without `MCP_GENERATOR`) |
 | `npm run mcp-test -- --list` / `--subject fake:good` | MCP test platform CLI (works without `MCP_TESTER`) |
+| `npm run mcp-propose-eval -- <input> --proposals <file>` | Baseline versus proposal-assisted package through the test runner; exits 1 on a regression (not part of `npm run check`) |
 
 ## Configuration reference
 
