@@ -20,7 +20,7 @@ One adapter per input type. The registry detects the best match, or you force on
 
 ### openapi
 
-OpenAPI 3.x as YAML or JSON. Local `#/` references only. Swagger 2.0 is reported (`swagger-2-unsupported`), external references are reported and never fetched. Only GET operations become tools; every other method is listed in the report as dropped. The `servers` URL, examples and defaults are never read; the server gets a `<NAME>_BASE_URL` variable instead.
+OpenAPI 3.x as YAML or JSON. Local `#/` references only. Swagger 2.0 is reported (`swagger-2-unsupported`), external references are reported and never fetched. Only GET operations become tools; every other method is listed in the report as dropped. The `servers` URL and defaults are never read; the server gets a `<NAME>_BASE_URL` variable instead. Response examples are never copied into the output; they are read only to check them against their own schema (gap `example-schema-mismatch`, below).
 
 ```yaml
 openapi: 3.0.3
@@ -141,6 +141,22 @@ Known limitations of the current core:
 - The sql and dataset planners ignore the model's `operations`: they emit only `describe_*` and one bounded `query_<entity>` per entity (the list/get operations of a DDL model are kept for fidelity but yield no separate lookup tool). Lookup by key or foreign key works through the query filter. The dataset backend emits the first entity only (gap `dataset-multiple-entities`).
 - Derived tool kinds `schemaDiscovery` and `crossFieldSearch` are declared in the type but only `inMemoryFilter` is accepted from callers; derived filters are http-only.
 - (Fixed in 14-07: SQL `ORDER BY` now uses every identifier column, so composite-key tables page deterministically.)
+
+## Gap codes (openapi adapter)
+
+Every gap carries a code, a severity (`error`, `warn`, `info`), a message and, for operation gaps, the operation id in `path`. Messages name locations and type words only, never values copied from the input.
+
+| Code | Severity | Meaning | Tool |
+| --- | --- | --- | --- |
+| `missing-response-schema` | warn | no JSON response schema on a success status | omitted |
+| `path-param-undocumented` | warn | a templated path parameter is not declared | omitted |
+| `pagination-conflict` | warn | both page and offset style parameters | omitted |
+| `ambiguous-response` | warn | several candidate result arrays | omitted |
+| `oneof-merged` | info | a oneOf with a discriminator was merged into one field set | kept |
+| `auth-operation-override` | warn | an operation declares its own security; the document-level scheme is used for every tool | kept |
+| `example-schema-mismatch` | warn | a response example contradicts its own schema (a property the schema does not define, a wrong type, null where not nullable); the message names the property path and the type words, never the example value (D-463) | kept, generated from the schema |
+
+The Phase 15 tester treats a planted defect that produces neither a gap nor an omitted tool as `SILENT_GUESS`; since D-463 the partial-spec case's stale example is reported, so the generator passes `gap_reported` for it.
 
 ## Extension point for synthesized capability
 

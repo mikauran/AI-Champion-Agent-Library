@@ -1,6 +1,7 @@
 // OpenAPI 3.x InputAdapter (design doc section 5, RESEARCH-SYNTHESIS 5.1).
 //
-// Reads schema only. The servers url, examples and defaults from the document are never copied; the
+// Reads schema only. The servers url, examples and defaults from the document are never copied (examples
+// are read only to report a contradiction with their schema, D-463); the
 // model carries env-var NAMES. Only GET operations are modelled, every other method is listed in
 // writeOperationsDropped. $ref resolution is local (#/...) only, cycle-safe, depth limited; an
 // external $ref is reported, never fetched. Ambiguous constructs become gaps and the affected
@@ -302,6 +303,81 @@ function pickResponseSchema(root: Obj, responses: unknown): unknown {
   return undefined
 }
 
+/** Example values declared on the success response (media example, named examples, schema example). Read for validation only. */
+function responseExamples(root: Obj, responses: unknown, schemaNode: Obj): unknown[] {
+  const out: unknown[] = []
+  if (isObj(responses)) {
+    for (const k of Object.keys(responses).filter((s) => /^2\d\d$/.test(s)).sort()) {
+      const { node } = deref(root, responses[k])
+      if (!isObj(node.content)) continue
+      for (const ct of Object.keys(node.content).sort()) {
+        const media = node.content[ct]
+        if (!isObj(media) || !/^application\/(.+\+)?json|^\*\/\*$/i.test(ct)) continue
+        if (media.example !== undefined) out.push(media.example)
+        if (isObj(media.examples)) {
+          for (const n of Object.keys(media.examples).sort().slice(0, 3)) {
+            const ex = media.examples[n]
+            if (isObj(ex) && ex.value !== undefined) out.push(ex.value)
+          }
+        }
+      }
+    }
+  }
+  if (schemaNode.example !== undefined) out.push(schemaNode.example)
+  return out.slice(0, 5)
+}
+
+const MAX_EXAMPLE_ITEMS = 5
+const MAX_EXAMPLE_DEPTH = 6
+
+/**
+ * First place where an example contradicts its schema, as a path made of property names only. Never returns a
+ * value. Conservative: unknown or unresolvable shapes are accepted (no finding).
+ */
+function exampleMismatch(root: Obj, schema: unknown, example: unknown, ctx: SchemaCtx, path = '$', depth = 0): string | null {
+  if (depth > MAX_EXAMPLE_DEPTH) return null
+  const { node } = deref(root, schema)
+  if (example === null) return isNullable(node) || typeOf(node) === 'unknown' ? null : `${path} (null not allowed)`
+  const want = typeOf(node)
+  const got = Array.isArray(example) ? 'array' : typeof example === 'object' ? 'object' : typeof example
+  switch (want) {
+    case 'unknown':
+      return null
+    case 'integer':
+      if (typeof example !== 'number' || !Number.isInteger(example)) return `${path} (expected integer, found ${got})`
+      return null
+    case 'number':
+      return typeof example === 'number' ? null : `${path} (expected number, found ${got})`
+    case 'string':
+      return typeof example === 'string' ? null : `${path} (expected string, found ${got})`
+    case 'boolean':
+      return typeof example === 'boolean' ? null : `${path} (expected boolean, found ${got})`
+    case 'array': {
+      if (!Array.isArray(example)) return `${path} (expected array, found ${got})`
+      if (node.items === undefined) return null
+      for (const [i, el] of example.slice(0, MAX_EXAMPLE_ITEMS).entries()) {
+        const m = exampleMismatch(root, node.items, el, ctx, `${path}[${i}]`, depth + 1)
+        if (m) return m
+      }
+      return null
+    }
+    case 'object': {
+      if (!isObj(example)) return `${path} (expected object, found ${got})`
+      const props = schemaProps(root, node, ctx)
+      const open = node.additionalProperties === true || isObj(node.additionalProperties)
+      for (const k of Object.keys(example).sort()) {
+        if (!hasOwn(props, k)) {
+          if (open) continue
+          return `${path}.${k} (property not in the schema)`
+        }
+        const m = exampleMismatch(root, props[k], example[k], ctx, `${path}.${k}`, depth + 1)
+        if (m) return m
+      }
+      return null
+    }
+  }
+}
+
 function detect(input: RawInput): number {
   try {
     const t = typeof input?.text === 'string' ? input.text.slice(0, 65536) : ''
@@ -452,6 +528,22 @@ function parseDoc(input: RawInput): ParseResult {
         if (responseSchema === undefined) {
           gaps.push(gap('missing-response-schema', `${where}: no JSON response schema for a success status; the operation was omitted.`, { path: id }))
           continue
+        }
+
+        // D-463: an example that contradicts its own schema never changes the tool (the schema wins); it is reported.
+        // The message names the location (property names and type words only), never an example value.
+        try {
+          const exCtx = newCtx()
+          const exSchema = deref(root, responseSchema).node
+          for (const ex of responseExamples(root, opNode.responses, exSchema)) {
+            const m = exampleMismatch(root, exSchema, ex, exCtx)
+            if (m) {
+              gaps.push(gap('example-schema-mismatch', `${where}: a response example contradicts its schema at ${clean(m, 120)}; the tool follows the schema and the example was not used.`, { path: id }))
+              break
+            }
+          }
+        } catch {
+          // an unresolvable shape is already handled by the schema reading below; no finding here
         }
 
         const segs = path.split('/').filter(Boolean)
