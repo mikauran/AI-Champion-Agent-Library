@@ -569,12 +569,14 @@ Phases execute in numeric order, with decimal phases between their integers: 1, 
 ### Phase 24: Agent inventory, catalog entry template, MCP-server entries and DDC license check
 
 **Goal:** Audit which of the 12 consortium agents already exist fully or partly in data/agents (e.g. RFI triage, HVAC, submittal review); define the catalog entry template (purpose, stage, inputs, outputs, data sources, assumptions, gaps; every output is a draft for engineer review); add Ville's own MCP agents (stk-mcp and others from ~/projects/mcp-gen-comparison and -2) as MCP-server kind entries; check the DDC_Skills_for_AI_Agents_in_Construction license and record attribution; start the combined gaps list for Ville and Jussi (docs/consortium-agents-gaps.md). Source slide is TUNI-confidential: names only, own wording, slide never committed. Spend: $0.50 per agent run, $10 total, running log in STATE.md.
-**Requirements**: TBD
+**Requirements**: CONS-INV, CONS-TPL, CONS-MCP, CONS-GAPS, CONS-LIC
 **Depends on:** Phase 23
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 24 to break down)
+- [ ] 24-01-PLAN.md - inventory, entry template, gaps list, DDC notices
+- [ ] 24-02-PLAN.md - template validator (validate-entries)
+- [ ] 24-03-PLAN.md - MCP-server entries (stk-mcp, stk-catalog-mcp, lvi-info-mcp)
 
 ### Phase 25: Design-stage agents (ETIM & classification repair, QTO normalization, clash prioritization, RFI generation)
 
