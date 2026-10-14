@@ -1,18 +1,18 @@
 # SYNTHETIC SAMPLE - invented data for an invented building (Harbour Annex), not from any real project
-clash_id,discipline_a,discipline_b,element_a,element_b,level,grid,penetration_mm,clash_type,status
-CL-001,HVAC,Structural,Supply duct SD-12,Beam B-L2-04,L2,C/3,140,hard,open
-CL-002,HVAC,Structural,Supply duct SD-12,Beam B-L2-05,L2,C/4,90,hard,open
-CL-003,HVAC,Structural,Supply duct SD-12,Beam B-L2-06,L2,C/5,60,hard,open
-CL-004,HVAC,Structural,Supply duct SD-12,Beam B-L2-07,L2,C/6,35,hard,open
-CL-005,Plumbing,Structural,Riser RS-3,Slab S-L1-02,L1,E/2,55,hard,open
-CL-006,Plumbing,Electrical,Riser RS-3,Cable tray CT-7,L1,E/2,40,hard,open
-CL-007,Plumbing,Fire protection,Riser RS-3,Sprinkler branch SP-9,L1,E/2,25,hard,open
-CL-008,HVAC,Electrical,Exhaust duct ED-2,Cable tray CT-4,L2,B/1,70,hard,resolved
-CL-009,Plumbing,Structural,Drain pipe DP-4,Transfer beam TB-1,L0,B/2,210,hard,open
-CL-010,Electrical,HVAC,Cable tray CT-2,Supply duct SD-03,L1,A/1,12,soft,open
-CL-011,Fire protection,Electrical,Sprinkler main SP-1,Cable tray CT-9,L3,F/4,8,soft,open
-CL-012,HVAC,Plumbing,Return duct RD-5,Water pipe WP-6,L3,B/5,15,soft,open
-CL-013,Architectural,HVAC,Ceiling grid CG-L3,Return duct RD-2,L3,F/2,45,hard,open
-CL-014,Electrical,Structural,Conduit bank CB-1,Wall W-L1-09,L1,A/3,,hard,open
-CL-015,HVAC,Architectural,Fan coil FC-7,Partition P-L2-11,L2,D/6,30,hard,resolved
-CL-016,Electrical,Plumbing,Cable tray CT-5,Water pipe WP-2,L0,C/1,22,soft,open
+clash_id,discipline_a,discipline_b,element_a,element_b,level,grid,penetration_mm,clash_type,status,location_key
+CL-001,HVAC,Structural,Supply duct SD-12,Beam B-L2-04,L2,C/3,140,hard,open,SD-12
+CL-002,HVAC,Structural,Supply duct SD-12,Beam B-L2-05,L2,C/4,90,hard,open,SD-12
+CL-003,HVAC,Structural,Supply duct SD-12,Beam B-L2-06,L2,C/5,60,hard,open,SD-12
+CL-004,HVAC,Structural,Supply duct SD-12,Beam B-L2-07,L2,C/6,35,hard,open,SD-12
+CL-005,Plumbing,Structural,Riser RS-3,Slab S-L1-02,L1,E/2,55,hard,open,RS-3
+CL-006,Plumbing,Electrical,Riser RS-3,Cable tray CT-7,L1,E/2,40,hard,open,RS-3
+CL-007,Plumbing,Fire protection,Riser RS-3,Sprinkler branch SP-9,L1,E/2,25,hard,open,RS-3
+CL-008,HVAC,Electrical,Exhaust duct ED-2,Cable tray CT-4,L2,B/1,70,hard,resolved,L2-B/1
+CL-009,Plumbing,Structural,Drain pipe DP-4,Transfer beam TB-1,L0,B/2,210,hard,open,L0-B/2
+CL-010,Electrical,HVAC,Cable tray CT-2,Supply duct SD-03,L1,A/1,12,soft,open,L1-A/1
+CL-011,Fire protection,Electrical,Sprinkler main SP-1,Cable tray CT-9,L3,F/4,8,soft,open,L3-F/4
+CL-012,HVAC,Plumbing,Return duct RD-5,Water pipe WP-6,L3,B/5,15,soft,open,L3-B/5
+CL-013,Architectural,HVAC,Ceiling grid CG-L3,Return duct RD-2,L3,F/2,45,hard,open,L3-F/2
+CL-014,Electrical,Structural,Conduit bank CB-1,Wall W-L1-09,L1,A/3,,hard,open,L1-A/3
+CL-015,HVAC,Architectural,Fan coil FC-7,Partition P-L2-11,L2,D/6,30,hard,resolved,L2-D/6
+CL-016,Electrical,Plumbing,Cable tray CT-5,Water pipe WP-2,L0,C/1,22,soft,open,L0-C/1
