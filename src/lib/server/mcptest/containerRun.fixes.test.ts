@@ -108,7 +108,7 @@ describe('image and command contract (CR-03, CR-04)', () => {
 
   it('the driver executable is reachable: absolute under /node_modules/.bin and on PATH', () => {
     expect(DRIVER_CMD[0]).toBe('/node_modules/.bin/tsx')
-    expect(file).toMatch(/npm install --prefix \//)
+    expect(file).toMatch(/mv \/deps\/node_modules \/node_modules/) // E10 D4 (was: npm install --prefix /)
     expect(file).toMatch(/^ENV PATH=\/node_modules\/\.bin:/m)
     expect(DRIVER_CMD[1]).toBe('/work/src/lib/mcptest/driver.ts')
   })
