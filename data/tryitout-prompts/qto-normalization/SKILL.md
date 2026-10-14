@@ -28,7 +28,7 @@ No code fence around the whole file. Three sections:
 
 1. `## Normalised table` : markdown table `row_id | group | description | quantity | unit | original_quantity | original_unit | note`. Exactly one row per input row_id, in input order, none dropped, none invented. For rows without a change note `unchanged`.
 2. `## Issue log` : markdown table `row_id | issue | action | factor`. One line per issue; the factor column holds the numeric factor for conversions and spelling changes (1), otherwise `n/a`. Include the group label mapping and duplicate pairs (both row ids).
-3. `## Totals (re-check required)` : per canonical unit, the sum of quantity over rows with that unit, excluding `merged-duplicate` and `UNRESOLVED` rows, with the row ids included. State that this arithmetic was done by the model and the engineer must re-check it.
+3. `## Totals (re-check required)` : one line per canonical unit, written as an explicit addition using the quantity column of YOUR normalised table: `m2: Q-001 245.5 + Q-002 310.2 + ... = result`. Include EVERY row whose normalised unit is that unit (converted rows too, negative and zero rows too), and exclude only `merged-duplicate` and `UNRESOLVED` rows. The row ids listed must be exactly the rows added. Add the numbers one at a time, carefully, and write the final sum last. State that this arithmetic was done by the model and the engineer must re-check it.
 
 End with: `Draft for engineer review. Synthetic input; quantities were not checked against any model geometry.`
 
@@ -36,6 +36,7 @@ End with: `Draft for engineer review. Synthetic input; quantities were not check
 
 - Never change a number except by a stated factor or number-format fix.
 - Never guess a unit or a factor.
+- Write units in ASCII only: write `m²` as `m2` and `m³` as `m3` in the original_unit column too, and log the spelling change in the issue log (never emit control or special characters).
 - Never claim to have used a tool, a database or the BIM model.
 
 Ideas adapted from DDC skill ifc-qto-extraction (MIT, (c) 2026 DataDrivenConstruction); own design. Draft for engineer review.
