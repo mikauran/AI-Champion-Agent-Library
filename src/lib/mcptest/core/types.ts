@@ -152,7 +152,8 @@ export interface PrepareResult {
   generationMs?: number
   notes?: string
   artefacts?: Record<string, string>
-  binding?: Record<string, { tool: string; args?: Record<string, unknown> }>
+  /** Explicit tool binding by check id or kind; wins over the suite's regex hints. argMap renames suite argument names. */
+  binding?: Record<string, { tool: string; args?: Record<string, unknown>; argMap?: Record<string, string> }>
   /** Names under which the subject reads the mock URL and key; default ACME_* from the case x-env. */
   envNames?: { baseUrl?: string; apiKey?: string; baseUrlB?: string; dataPath?: string }
   /** Generator-side checks, appended by the runner. */

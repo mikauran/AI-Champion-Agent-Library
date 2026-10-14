@@ -8,6 +8,22 @@ export interface BindResult {
   matches: string[]
 }
 
+/** Renames the top-level keys of the suite's arguments by an argMap; values (and {{templates}}) are kept. */
+export function applyArgMap(args: Record<string, unknown> | undefined, argMap: Record<string, string> | undefined): Record<string, unknown> {
+  if (!args) return {}
+  if (!argMap) return args
+  return Object.fromEntries(Object.entries(args).map(([k, v]) => [Object.prototype.hasOwnProperty.call(argMap, k) ? argMap[k] : k, v]))
+}
+
+/** Arguments for a bound call: explicit args replace the suite's, an argMap renames them, otherwise the suite's. */
+export function boundArgs(
+  override: { args?: Record<string, unknown>; argMap?: Record<string, string> } | undefined,
+  suiteArgs: Record<string, unknown> | undefined
+): Record<string, unknown> {
+  if (override?.args) return override.args
+  return applyArgMap(suiteArgs, override?.argMap)
+}
+
 export function bindTool(
   spec: { tool?: string; tool_hint?: string },
   tools: ToolInfo[],

@@ -3,8 +3,9 @@
 // so stdio launches are allowed here. It never throws and reads no env other than MCPTEST_IN,
 // MCPTEST_OUT and MCPTEST_PKG_ROOT. Relative imports only.
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { loadPackageBinding } from './core/packageBinding'
 import { loadSuite } from './core/suite'
 import { buildReport, MAX_REPORT_BYTES, type Report } from './core/report'
 import { runSuite } from './core/runner'
@@ -31,10 +32,13 @@ function stagedSubject(s: Staged, pkgRoot: string): RunnableSubject {
     status: 'installed',
     transports: ['stdio'],
     async prepare(): Promise<PrepareWithStderr> {
+      // E10 D3: the package's own mcptest-binding.json; a binding in the request wins per key.
+      const fromPkg = await loadPackageBinding(join(cwd, dirname(s.args[0])))
+      const binding = fromPkg || s.binding ? { ...(fromPkg ?? {}), ...(s.binding ?? {}) } : undefined
       return {
         status: 'PASS',
         launch: { kind: 'stdio', command: s.command, args: s.args, cwd },
-        ...(s.binding ? { binding: s.binding } : {}),
+        ...(binding ? { binding } : {}),
         ...(s.envNames ? { envNames: s.envNames } : {})
       }
     }
