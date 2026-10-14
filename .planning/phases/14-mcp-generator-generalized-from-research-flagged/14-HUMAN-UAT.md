@@ -74,3 +74,6 @@ Status: pending human
 - Real MCP over stdio (FastMCP Client): openapi server lists 3 tools and returns a structured upstream error (no raw envelope) when the upstream is unreachable; tabular and sql servers (synthetic CSV / SQLite, 3 invented rows) filter, return an honest empty-result message, clamp limit (9999 -> 50) and page deterministically on the composite-key table. Both versions identical.
 - Observation: the dataset server returns only the first column by default (`default_fields`), so callers must pass `fields` for more; by design but possibly too terse.
 - Browser items (Generate MCP panel, keyboard/screen reader, flag off view) remain pending human.
+
+## Results recorded 2026-10-14 (second batch): new adapters, real FastMCP
+Generated from the synthetic fixtures with the CLI (all exit 0) and ran each package's own pytest in throwaway venvs, fastmcp 3.4.8 and 4.1.0: odata-xml 12, odata-json 12, swagger2 23, oauth2 17, openapi31 17, pgdump 35, mysqldump 19, sqlite-schema 27, prisma 27 tests, all passed on BOTH versions (18 of 18 package runs). Not covered: real MCP stdio calls against a live OData service (none available offline), browser items.
