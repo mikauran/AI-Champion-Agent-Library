@@ -183,3 +183,14 @@ Copied from `09-SECURITY-REVIEW.md` so they are reviewed in one place:
 - Bearer parsing is stricter than RFC (case-sensitive `Bearer `); stricter is safe.
 - Operator note: set `APP_INSTANCE_NAME` in compose deployments, or the hostname fallback changes with every container recreation and leftovers are not swept.
 - From Phase 9 chaos work: while an evicted lease's container is still being removed the engine can briefly hold more than `PI_RUNNER_MAX_CONTAINERS` containers (cap counts leases); a hung `remove` is abandoned after 15 s and left to the orphan sweep.
+
+
+## Compose override used by the live run (2026-10-14)
+`podman-compose -f podman-compose.yml -f override.yml ...` with this `override.yml` (disables auth for a local run; the file is not committed):
+```yaml
+services:
+  aic-agent-library:
+    environment:
+      AUTH_ENABLED: "false"
+```
+The ordered, corrected step list for all of these checks is in `docs/human-verification-guide.md` section 8.

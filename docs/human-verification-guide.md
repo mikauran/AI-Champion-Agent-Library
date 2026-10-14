@@ -66,6 +66,77 @@ Keyboard walk of catalog and detail (skip link, focus order, visible focus ring,
 
 Restart without the six flag variables. Catalog, detail, nav and Customize must look exactly as they did before this work, `/compare`, `/mcp-test` and `/api/mcp-generate` must be 404.
 
+## 8. Live Podman checks (Phase 9 and the Phase 15 container run)
+
+Environment note: this machine has 3.7 GB RAM. Run these strictly one at a time and never alongside heavy agents or test runs (check `free -m`; stop if available memory drops below about 300 MB). Run from the repository root. `localhost/pi-runner:latest` and the `aic-pi-internal` network must exist (`podman images`, `podman network ls`).
+
+Setup once: `systemctl --user enable --now podman.socket`.
+
+1. **Smoke script (about 11 s):** `npx tsx scripts/smoke-pi-runner.ts`. Expect every line `PASS` (`dns` may `SKIP`) and a final `cleanup: 0 smoke containers left`.
+2. **Start the app and warm a container:** `AUTH_ENABLED=false npm run dev -- --host 127.0.0.1`, open http://127.0.0.1:5173/agents/demo-rfi-triage, then `podman ps --filter label=aic.tryitout`.
+3. **Hardening:**
+   ```bash
+   C=$(podman ps --filter label=aic.tryitout --format '{{.Names}}' | head -1)
+   podman inspect "$C" --format 'user={{.Config.User}} ro={{.HostConfig.ReadonlyRootfs}} secopt={{.HostConfig.SecurityOpt}} mem={{.HostConfig.Memory}} swap={{.HostConfig.MemorySwap}} pids={{.HostConfig.PidsLimit}} ports={{.NetworkSettings.Ports}}'
+   podman inspect "$C" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^(AIC_|OPENAI)'
+   podman exec "$C" grep CapEff /proc/1/status
+   ```
+   Expect `user=pi ro=true`, `secopt` with `no-new-privileges`, `mem` = `swap` = 1073741824, `pids=200`, no ports, only `AIC_LLM_TOKEN` in the env, `CapEff: 0000000000000000` (Podman 4.9 prints 11 expanded caps for `capdrop`, so check `CapEff` instead).
+4. **Network guard:** `podman exec "$C" node -e "fetch('https://example.com').then(r=>console.log('REACHED',r.status),e=>console.log('BLOCKED',e.cause?.code||e.message))"` expects `BLOCKED` (ENETUNREACH). The app-reachable check works only when the app runs in compose (step 9). The open-network guard:
+   ```bash
+   podman network create aic-pi-open
+   PI_RUNNER_NETWORK=aic-pi-open PI_RUNNER_ALLOW_OPEN_EGRESS=false npx tsx scripts/smoke-pi-runner.ts   # expect FAIL: "not internal"
+   podman network rm aic-pi-open
+   ```
+5. **Hostile archive:** passed live already and covered by automated tests; skip.
+6. **Orphan sweep owner scoping (two servers):**
+   ```bash
+   APP_INSTANCE_NAME=owner-a AUTH_ENABLED=false npm run dev -- --port 5173 &    # warm via /agents/demo-rfi-triage
+   APP_INSTANCE_NAME=owner-b AUTH_ENABLED=false npm run dev -- --port 5174 &    # warm via the same page on :5174
+   podman ps --filter label=aic.tryitout --format '{{.Names}} {{.Labels}}'
+   ```
+   Stop and restart only the :5174 server and list again. Expect owner-a's container to survive and owner-b's old one to be removed. Stop both servers afterwards.
+7. **Hung engine:**
+   ```bash
+   podman ps >/dev/null; PID=$(systemctl --user show -p MainPID --value podman.service)
+   kill -STOP "$PID"      # start a job in the UI now; wait about 100 s
+   kill -CONT "$PID"
+   podman ps -a --filter label=aic.tryitout --format '{{.Names}} {{.Status}}'
+   ```
+   Expect a bounded failure after about 90 s (never an endless spinner), recovery after `CONT`, and no orphan container.
+8. **Reaper timing:** `PI_RUNNER_IDLE_TTL_MS=15000 AUTH_ENABLED=false npm run dev -- --host 127.0.0.1`, warm one container, then `podman ps --filter label=aic.tryitout --format '{{.Names}}'; sleep 46; podman ps --filter label=aic.tryitout --format '{{.Names}}'`. Expect it gone within about 15 s plus one 30 s reaper tick.
+9. **Compose up and down (re-run needed: check 9 is still unticked).** Create `override.yml`:
+   ```yaml
+   services:
+     aic-agent-library:
+       environment:
+         AUTH_ENABLED: "false"
+   ```
+   ```bash
+   podman-compose -f podman-compose.yml -f override.yml up -d      # no --build; the image is current
+   npx tsx scripts/smoke-pi-runner.ts --proxy-host aic-agent-library
+   podman-compose -f podman-compose.yml -f override.yml down
+   podman ps -a --filter label=aic.tryitout        # expect empty
+   ```
+   `down` leaves the `aic-pi-internal` and `aic-agent-library_default` networks (harmless; the UAT expectation was corrected); volumes stay. POSTs to the compose app need an `Origin` header equal to `ORIGIN`.
+10. **Budget enforcement (needs your OpenAI key, small spend; still pending):** `PI_JOB_TOKEN_BUDGET=3000 PI_JOB_REQUEST_BUDGET=5 npm run dev -- --host 127.0.0.1`, run a long job. Expect `failed` with `job token budget exceeded` and spend no more than the budget plus one capped completion (4096 tokens).
+
+Cleanup: `podman ps -a --filter label=aic.tryitout -q | xargs -r podman rm -f`, and stop background dev servers (`jobs`, `kill %1 %2`).
+
+### Phase 15 container run (the fixes landed 2026-10-14; the platform path passed through the API, the items below remain for you)
+
+1. **Build the runner image** (needs network, about 2.5 min, 607 MB): `podman build -t localhost/aic-mcp-test-runner:dev -f Containerfile.mcp-test-runner .`, then `podman run --rm --network none localhost/aic-mcp-test-runner:dev sh -c 'id -un && command -v tsx && python3 --version'`. Expect user `pi`, a `tsx` path, Python 3.11.
+2. **Run through the platform:**
+   ```bash
+   MCP_TESTER=1 MCP_TESTER_RUNTIME=container MCPTEST_RUNNER_IMAGE=localhost/aic-mcp-test-runner:dev AUTH_ENABLED=false npm run dev -- --host 127.0.0.1
+   ```
+   In the browser open `/mcp-test`, pick `generator:openapi` with cases T1-STD-CATALOG and T2-CATALOG-API, start, watch progress, download `report.json`. Expect the runtime label "container runtime (sandboxed)", T4-PARTIAL-SPEC dropped (documented limit), and one `auth_failure` ERROR cell that is not yet analysed. Through curl: `curl -i -X POST http://127.0.0.1:5173/api/mcp-test/runs -H 'content-type: application/json' -H 'Origin: http://127.0.0.1:5173' -d '{"subject":"generator:openapi","cases":["T1-STD-CATALOG","T2-CATALOG-API"],"reruns":1}'`.
+3. **Cancel and cleanup (never exercised):** start a run, cancel it from the UI, then `podman ps -a` must show no `mcptest-*` container; also after `MCPTEST_JOB_TIMEOUT_MS=4000` timeouts.
+4. **Sweep versus run in flight (never exercised):** restart the app while a container run is active; it must not remove the active container.
+5. **Auth-enabled check:** with `AUTH_ENABLED` unset, `/api/mcp-test/runs` and `/api/mcp-generate` must answer 401 without a session.
+6. **Dump case:** generate a tabular server and run `T2-CATALOG-DUMP` with a data path (see `15-HUMAN-UAT.md` item 6).
+7. After you finish: `podman image rm localhost/aic-mcp-test-runner:dev`.
+
 ## Report back
 
 Send Claude a line per section ("2 fine", "5: focus ring invisible on the Try-it-out toggle in Firefox"). Failures become fix tasks; passes close the `human_needed` verification statuses.
