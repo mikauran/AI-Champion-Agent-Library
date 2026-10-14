@@ -56,7 +56,7 @@ describe('criterion 1: research first, design cites it', () => {
 
 describe('criterion 2: adapters sit behind one interface, core does not know them', () => {
   it('registered adapter ids', () => {
-    expect(ADAPTERS.map((a) => a.id).sort()).toEqual(['openapi', 'sql-ddl', 'tabular-catalog'])
+    expect(ADAPTERS.map((a) => a.id).sort()).toEqual(['openapi', 'prisma', 'sql-ddl', 'tabular-catalog'])
   })
   it('only adapters/ and registry.ts reference adapter modules; registry goes through adapters/index', () => {
     const importRe = /from\s+['"]([^'"]*adapters\/[^'"]*)['"]/g

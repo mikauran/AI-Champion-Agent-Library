@@ -3,5 +3,6 @@ import type { InputAdapter } from '../types.js'
 import { openApiAdapter } from './openapi.js'
 import { tabularCatalogAdapter } from './tabular-catalog.js'
 import { sqlDdlAdapter } from './sql-ddl.js'
+import { prismaAdapter } from './prisma.js'
 
-export const ADAPTERS: InputAdapter[] = [openApiAdapter, tabularCatalogAdapter, sqlDdlAdapter]
+export const ADAPTERS: InputAdapter[] = [openApiAdapter, tabularCatalogAdapter, sqlDdlAdapter, prismaAdapter]

@@ -24,7 +24,7 @@ export interface CliIo {
 }
 
 const USAGE =
-  'Usage: npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|auto> <input-file> --out <dir> [--force] [--server-name N] [--max-page-size N] [--result-ceiling N]'
+  'Usage: npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|prisma|auto> <input-file> --out <dir> [--force] [--server-name N] [--max-page-size N] [--result-ceiling N]'
 
 const MAX_STR = 300
 /** C0 and C1 control characters (the C1 range includes the 8-bit CSI) are never printed (review IN-06). */
