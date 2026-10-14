@@ -255,6 +255,8 @@ describe('no pre-existing test file was modified by Phase 15', () => {
     // E12 (D-546): the prisma adapter is registered, so the adapter id lists in these two tests gain 'prisma'; see .planning/exploration/E12-sql-dialects.md.
     'src/lib/mcpgen/registry.test.ts',
     'src/lib/mcpgen/criteria.test.ts',
+    // Phase 25: each new catalog agent bumps the hard-coded agent count (25-02, 25-03).
+    'src/lib/server/search/accuracy.test.ts',
   ]
   it('git diff --diff-filter=M against the baseline lists no test file', () => {
     let start = ''
