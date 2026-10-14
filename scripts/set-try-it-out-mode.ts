@@ -15,6 +15,7 @@ const UPDATES: Array<{ slug: string; mode: string; url: string | null; taskTempl
   { slug: 'etim-classification-repair', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'qto-normalization', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'clash-prioritization', mode: 'runnable', url: null, taskTemplate: null },
+  { slug: 'rfi-generation-from-findings', mode: 'runnable', url: null, taskTemplate: null },
 ]
 
 export function setTryItOutMode(dbPath: string): Array<{ slug: string; mode: string; changes: number }> {
