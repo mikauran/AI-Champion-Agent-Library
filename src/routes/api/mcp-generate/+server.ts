@@ -9,6 +9,7 @@ import { toZip } from '$lib/mcpgen/bundle.js'
 import { listAdapters } from '$lib/mcpgen/registry.js'
 import { runPipeline } from '$lib/mcpgen/pipeline.js'
 import type { Gap, GenerateOptions } from '$lib/mcpgen/types.js'
+import { generatorGate } from '$lib/mcpgen/limits.js'
 
 const fail = (status: number, code: string, message: string) => {
   const body: GenerateErrorResponse = { ok: false, message, gaps: [{ code, message, severity: 'error' } as Gap] }
@@ -40,9 +41,7 @@ function sanitizeOptions(raw: unknown): GenerateOptions | null {
   return o
 }
 
-export const POST: RequestHandler = async ({ request }) => {
-  if (!mcpGeneratorEnabled()) error(404, 'Not found')
-
+async function generate(request: Request): Promise<Response> {
   const len = Number(request.headers.get('content-length') ?? '0')
   if (Number.isFinite(len) && len > MAX_INPUT_BYTES * 2) {
     return fail(413, 'input-too-large', `Request exceeds the ${MAX_INPUT_BYTES} byte input limit.`)
@@ -91,4 +90,27 @@ export const POST: RequestHandler = async ({ request }) => {
       'x-mcp-gaps': String(result.report.gaps.length),
     },
   })
+}
+
+// D-465: flag-off stays a 404 first; then a global concurrency cap and a per-client rate limit (429 { message },
+// env-configurable, see docs/mcp-generator.md). The in-memory gate keeps no input.
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+  if (!mcpGeneratorEnabled()) error(404, 'Not found')
+
+  let clientKey: string | undefined
+  try {
+    clientKey = getClientAddress?.()
+  } catch {
+    clientKey = undefined
+  }
+  const admission = generatorGate().admit(clientKey)
+  if (!admission.ok) {
+    const message = admission.reason === 'busy' ? 'The generator is busy. Try again in a moment.' : 'Too many generation requests from this client, try again later.'
+    return json({ message }, { status: 429, headers: { 'retry-after': admission.reason === 'busy' ? '5' : '60' } })
+  }
+  try {
+    return await generate(request)
+  } finally {
+    admission.release()
+  }
 }

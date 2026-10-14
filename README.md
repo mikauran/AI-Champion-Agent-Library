@@ -173,6 +173,9 @@ Variables are read from the environment (`.env` for local runs and compose). Def
 | `MCPTEST_ALLOW_OPEN_EGRESS` | n/a | Refused: `true` or `1` makes the MCP test runner config throw (the runner never gets egress) |
 | `TRYOUT_STORAGE_PATH` | `./runtime/try-out-sessions` | Storage directory of the legacy `/api/try-out` route (also `TRYOUT_TEMPLATE_PATH`) |
 | `MCP_GENERATOR` | off | Feature flag: Generate MCP panel and `POST /api/mcp-generate` (Phase 14) |
+| `MCP_GENERATOR_RATE_MAX` | `20` | `POST /api/mcp-generate`: requests per client per window (`0` = unlimited); over the cap answers 429 `{ message }` |
+| `MCP_GENERATOR_RATE_WINDOW_SEC` | `600` | Window of that limit, in seconds |
+| `MCP_GENERATOR_MAX_CONCURRENT` | `2` | `POST /api/mcp-generate`: simultaneous generations (`0` = unlimited); over the cap answers 429 `{ message }` |
 | `MCP_TESTER` | off | Feature flag: `/mcp-test` page and `/api/mcp-test/runs` (Phase 15) |
 | `MCP_TESTER_RUNTIME` | unset | `container` runs the MCP tester in the runner image instead of in-process fakes |
 | `SEARCH_EMBEDDINGS` | on | `off` = keyword-only search, no model |

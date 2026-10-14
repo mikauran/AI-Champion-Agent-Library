@@ -45,6 +45,7 @@ Defaults are read from the code. "unset" means the feature is off or the value c
 | `UI_SPEC_VIEWER` | off | Read-only raw spec viewer on the agent detail page (`/agents/[slug]`). Text is escaped, never rendered as HTML. |
 | `UI_DARK_MODE` | off | Dark/light theme toggle in the header and the dark palette. |
 | `MCP_GENERATOR` | off | "Generate MCP" panel and `POST /api/mcp-generate`. The CLI works without it. |
+| `MCP_GENERATOR_RATE_MAX`, `MCP_GENERATOR_RATE_WINDOW_SEC`, `MCP_GENERATOR_MAX_CONCURRENT` | `20`, `600`, `2` | Abuse limits of `POST /api/mcp-generate` (D-465): requests per client address per window, and simultaneous generations. `0` disables a limit. Over a limit the route answers 429 `{ message }` with `Retry-After`. In-memory, per process. Behind a reverse proxy every client may share one address; size the limits for that. |
 | `MCP_TESTER` | off | `/mcp-test` page and `/api/mcp-test/runs` routes. The CLI works without it. |
 | `MCP_TESTER_RUNTIME` | unset (in-process fakes) | Literal `container` runs the MCP tester in the runner image through the container runtime. Operator-set only. |
 | `SEARCH_EMBEDDINGS` | on | Only the literal `off` disables embeddings (ingest, warm-up, search). |
