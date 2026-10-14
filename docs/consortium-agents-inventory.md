@@ -43,4 +43,12 @@ airo, electrical-panel-scheduler, energy-model-sync, hvac-load-calculator, mep-s
 
 ## MCP servers
 
-Entries for Ville's MCP servers are added in Plan 24-03 (see the section below once that plan is complete).
+Entries for Ville's MCP servers are `kind: mcp-server` catalog manifests in `data/agents/<slug>/catalog.yaml`, ingested only with `AGENT_KINDS=on`. They describe the servers only; no data, keys or paths are included.
+
+| Slug | Source | Tools | Data source | Public? |
+| --- | --- | --- | --- | --- |
+| stk-mcp | mcp-gen-comparison-2, gsd-only arm (FastMCP) | search_products, get_product | local Excel export of the Finnish electrical product database | no |
+| stk-catalog-mcp | mcp-gen-comparison-2, codex arm (plain JSON-RPC) | catalog_overview, search_fields, search_products, get_product, query_products | local Excel export of the same database | no |
+| lvi-info-mcp | mcp-gen-comparison, handauthored arm (FastMCP) | lookup_by_lvi_number, get_product_by_link, get_product_by_gtin, search_products, filter_by_etim_class, list_suppliers, get_changed_products | LVI-INFO Read-API (key required) | API is not open without a key; server code is in the comparison repository |
+
+The other five LVI-INFO arms (gsd, plain, mcpybarra, from_openapi, openapi-mcp-generator) are benchmark variants of the same API and are listed in the lvi-info-mcp entry as `variants`, not catalogued separately.

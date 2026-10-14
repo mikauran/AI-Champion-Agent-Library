@@ -33,6 +33,7 @@ Plan: 02-04 (human checkpoint) not executed, not faked. Phases 21-23 have no PLA
 Status: Verification per phase: `passed` for 1, 2.1, 2.2, 5, 6, 7, 8, 12, 20; `human_needed` for 3, 4, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19 (automated evidence complete; browser, live-container, paid-key and real-service checks pending); Phase 2 has no VERIFICATION file (pending its checkpoint).
 Final verified numbers on main (2026-10-14, after the last merge): `npm run check` (svelte-kit sync, tsc, vitest) twice exit 0: 269 test files passed (1 skipped), 3072 tests passed (1 skipped); `SEARCH_EMBEDDINGS=off npx vite build` exit 0; `npm run smoke` 104/104 (8 flag configurations). Generated packages' own pytest pass on FastMCP 3.4.8 and 4.1.0 (counts in `18-VERIFICATION.md`).
 Last activity: 2026-10-14, phases 16-20 recorded, phases 21-23 planned, `.planning` audited.
+Progress note: Phase 24 plans 24-01..24-03 executed on worktree branch; `npm run check` 2 failing golden ingest tests (B-004), see 24-VERIFICATION.md.
 
 Progress: [##########] 74/75 planned plans (the missing plan is 02-04, pending human); phases 16-20 have no plans by design.
 
