@@ -178,7 +178,7 @@ Variables are read from the environment (`.env` for local runs and compose). Def
 | `SEARCH_EMBEDDINGS` | on | `off` = keyword-only search, no model |
 | `SEARCH_REAL_EMBEDDINGS` | unset | Test only: `1` enables the real-model accuracy test (downloads the model) |
 | `HF_CACHE_DIR` | `./db/models` | Embedding model cache |
-| `APP_INSTANCE_NAME` | container hostname | Owner label for Try It Out containers; makes the orphan sweep safe |
+| `APP_INSTANCE_NAME` | `aic-agent-library` in `podman-compose.yml` (hostname if unset elsewhere) | Owner label for Try It Out containers; makes the orphan sweep safe |
 | `MCPTEST_JOB_TIMEOUT_MS` | 300000 | Job timeout of the MCP test runner container (also `MCPTEST_MEMORY_MB`, `MCPTEST_NETWORK`, `MCPTEST_RUNNER_IMAGE`) |
 | `CATALOG_DB_PATH`, `INGEST_DATA_DIR`, `INGEST_DB_PATH` | `./db/catalog.db`, `./data/agents`, `./db/catalog.db` | Database and source locations |
 | `OPENAI_API_KEY`, `PI_*` | see `.env.example` | Try It Out (direct call and container runner) |

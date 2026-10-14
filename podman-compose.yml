@@ -15,6 +15,9 @@ services:
     environment:
       PORT: "3000"
       ORIGIN: "${ORIGIN:-http://localhost:3000}"
+      # Owner id for the Try It Out orphan sweep (stable across recreates; must be UNIQUE per
+      # deployment if several share one Podman engine, or they would sweep each other).
+      APP_INSTANCE_NAME: "${APP_INSTANCE_NAME:-aic-agent-library}"
       AUTH_DB_PATH: "/app/runtime/auth/auth.db"
       PI_RUNNER_SOCKET: "/run/podman/podman.sock"
       PI_RUNNER_NETWORK: "aic-pi-internal"
