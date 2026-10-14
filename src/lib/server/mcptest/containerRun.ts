@@ -8,6 +8,7 @@ import { join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ReportSchema, MAX_REPORT_BYTES, type Report } from '$lib/mcptest/core/report'
 import { DriverRequestSchema, type DriverRequest } from '$lib/mcptest/driverRequest'
+import { importClosure } from './driverClosure'
 import { parseRunnerConfig, type RunnerConfig } from '../tryitout/runnerConfig'
 import { publicErrorMessage, publicText, redactSecrets } from '../tryitout/redact'
 import {
@@ -92,6 +93,7 @@ export function mcpTestRunnerConfig(env: Record<string, string | undefined> = pr
 const TREE_ROOTS = ['src/lib/mcptest', 'src/lib/mcpgen']
 // .jsonl (golden checks) and .csv (fixtures) were missing before CR-01.
 const TEXT_EXT = new Set(['.ts', '.json', '.jsonl', '.yaml', '.yml', '.md', '.mjs', '.csv'])
+const DRIVER_ENTRY = 'src/lib/mcptest/driver.ts'
 const SUITE_PREFIX = 'src/lib/mcptest/suite/'
 
 function repoRoot(): string {
@@ -128,6 +130,17 @@ export function readDriverTree(root: string = repoRoot()): StagedFile[] {
     }
   }
   for (const r of TREE_ROOTS) walk(join(root, r))
+  // D2: files outside the roots that the driver imports (src/lib/spec/security.ts via core/redact.ts) are staged too.
+  const closure = importClosure(root, [DRIVER_ENTRY])
+  if (closure.unresolved.length > 0) throw new Error(`driver imports unresolved: ${closure.unresolved.map((u) => `${u.from} -> ${u.spec}`).join(', ')}`)
+  const have = new Set(files.map((f) => f.path))
+  for (const rel of closure.files) {
+    if (have.has(rel)) continue
+    const size = statSync(join(root, rel)).size
+    bytes += size
+    if (files.length + 1 > MAX_TREE_FILES || bytes > MAX_TREE_BYTES) throw new Error('driver tree exceeds its caps')
+    files.push({ path: rel, content: readFileSync(join(root, rel), 'utf8') })
+  }
   const missing = missingGoldens(files)
   if (missing.length > 0) throw new Error(`driver tree lacks golden.jsonl for: ${missing.join(', ')}`)
   return files

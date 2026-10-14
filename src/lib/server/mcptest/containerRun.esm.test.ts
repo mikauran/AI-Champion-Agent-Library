@@ -5,7 +5,11 @@ import type { DriverRequest } from '$lib/mcptest/driverRequest'
 import { createFakeRuntime } from '../tryitout/runtimeFake'
 import { runInContainer } from './containerRun'
 
-const fakeReq: DriverRequest = { v: 1, subject: { kind: 'fake', variant: 'good' }, cases: ['T1-STD-CATALOG'] }
+const fakeReq: DriverRequest = {
+  v: 1,
+  subject: { kind: 'fake', variant: 'good' },
+  cases: ['T1-STD-CATALOG']
+}
 
 describe('staged package.json (D1)', () => {
   it('stages /work/package.json = {"type":"module"} before the driver is exec-ed', async () => {
@@ -16,7 +20,9 @@ describe('staged package.json (D1)', () => {
       pkg = f && f !== 'dir' ? new TextDecoder().decode(f) : null
       return 0
     })
-    await runInContainer(rt, fakeReq, [], { driverTree: [{ path: 'src/lib/mcptest/driver.ts', content: '// driver' }] })
+    await runInContainer(rt, fakeReq, [], {
+      driverTree: [{ path: 'src/lib/mcptest/driver.ts', content: '// driver' }]
+    })
     expect(pkg).not.toBeNull()
     expect(JSON.parse(pkg as unknown as string)).toEqual({ type: 'module' })
   })
