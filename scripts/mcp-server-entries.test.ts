@@ -89,6 +89,6 @@ describe('mcp-server entries in data/agents', () => {
     const slugs = q<{ slug: string }>(DB_OFF, 'SELECT slug FROM agents').map((r) => r.slug)
     for (const s of SLUGS) expect(slugs).not.toContain(s)
     expect(slugs).toContain('rfi-triage-assistant')
-    expect(slugs).toHaveLength(10)
+    expect(slugs).toHaveLength(11)
   })
 })

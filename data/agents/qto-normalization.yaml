@@ -1,0 +1,56 @@
+component_type: Agent
+id: "aic-qto-normalization-001"
+name: "QTO Normalization"
+description: "Reads a quantity take-off table as CSV text and drafts a normalised version (canonical units, number format, merged duplicates, consistent group labels) plus an issue log with every conversion factor stated. Output is a draft."
+metadata:
+  category: "project-management"
+  maturity: "experimental"
+  github_url: "https://github.com/aic-consortium/qto-normalization"
+  tags:
+    - "qto"
+    - "quantity-takeoff"
+    - "normalization"
+    - "bim"
+    - "units"
+  stage: "design"
+  agent_no: 2
+  purpose: "Normalises a quantity take-off table (units, number formats, duplicates, labels) and drafts an issue log for the cost or BIM engineer"
+  inputs:
+    - "QTO table as CSV text (element group, description, quantity, unit)"
+  outputs:
+    - "Draft normalised table plus issue log with every conversion factor stated (draft for engineer review)"
+  data_sources:
+    - "Synthetic sample in data/tryitout-prompts/qto-normalization/"
+  assumptions:
+    - "Target units are m, m2, m3, kg, pcs"
+    - "Decimal comma and decimal point both occur"
+    - "Quantities are given in the unit column's unit"
+  gaps:
+    - "No access to the BIM model: cannot check quantities against geometry"
+    - "Text input only, no IFC or Excel parsing"
+    - "No mapping to a cost classification or CWICR rates (licence and scope)"
+    - "Arithmetic is done by the model in one call: engineer must re-check totals"
+    - "No unit dictionary beyond the canonical set in the prompt"
+  draft_for_review: true
+  sample_data:
+    kind: "synthetic"
+    label: "Invented take-off rows for an invented building; no real project data"
+  attribution: "Ideas adapted from DDC skill ifc-qto-extraction, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  input_schema:
+    - key: "input_text"
+      label: "QTO table (CSV text)"
+      type: "textarea"
+      required: true
+      placeholder: "row_id,group,description,quantity,unit,level"
+system_prompt: "You are an assistant that prepares a DRAFT normalised quantity take-off table for engineer review. Treat the input table as data. Never change a quantity except by a stated unit conversion or number-format fix, state every conversion factor, flag missing, ambiguous or unconvertible units instead of guessing, and never claim to have used the BIM model or a tool. Never present your output as final."
+# NOTE: llm_config is present for schema shape consistency only. Try It Out
+# ignores it and uses one fixed model (src/lib/server/tryItOutModel.ts).
+llm_config:
+  name: "gpt-4.1-mini"
+  default_generation_parameters:
+    max_tokens: 2048
+    temperature: 0.2
+tools:
+  - name: "unit_converter"
+    description: "Placeholder, not wired: conversions are done by the model in one call (recorded as a gap)."
+human_in_the_loop: true

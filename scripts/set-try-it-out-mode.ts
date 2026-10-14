@@ -13,6 +13,7 @@ const UPDATES: Array<{ slug: string; mode: string; url: string | null; taskTempl
   { slug: 'demo-rfi-triage', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'hvac-load-calculator', mode: 'none', url: null, taskTemplate: null },
   { slug: 'etim-classification-repair', mode: 'runnable', url: null, taskTemplate: null },
+  { slug: 'qto-normalization', mode: 'runnable', url: null, taskTemplate: null },
 ]
 
 export function setTryItOutMode(dbPath: string): Array<{ slug: string; mode: string; changes: number }> {
