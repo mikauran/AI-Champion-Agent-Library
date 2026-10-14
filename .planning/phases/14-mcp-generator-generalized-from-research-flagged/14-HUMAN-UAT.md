@@ -65,3 +65,12 @@ curl -i -X POST http://localhost:5173/api/mcp-generate -H 'content-type: applica
 ## 14-07 Optional follow-up questions to the study author
 Status: pending human
 - Synthesis section 6 Q6: why did openapi-mcp-generator score 0 of 5 on functional checks (binding or real defect), and was the unfinished `combined` arm ever meant to be benchmarked?
+
+
+## Results recorded 2026-10-14 (run by Claude with Ville present; python3 3.12.3, throwaway venvs in the scratchpad)
+- CLI generation from the three fixtures exit 0; forced wrong adapter exit 2: PASS.
+- FastMCP on PyPI: latest is 4.1.0 (4.0.0 GA 2026-08-31); 3.x is still maintained (3.4.8 on 2026-10-04). The pin `fastmcp>=3.4,<4` is valid but excludes the current major.
+- Generated test suites (openapi 23, tabular 11, sql 35 = 69 tests) all pass on fastmcp 3.4.8 AND 4.1.0. `mcp.tool(fn)` registration works on both.
+- Real MCP over stdio (FastMCP Client): openapi server lists 3 tools and returns a structured upstream error (no raw envelope) when the upstream is unreachable; tabular and sql servers (synthetic CSV / SQLite, 3 invented rows) filter, return an honest empty-result message, clamp limit (9999 -> 50) and page deterministically on the composite-key table. Both versions identical.
+- Observation: the dataset server returns only the first column by default (`default_fields`), so callers must pass `fields` for more; by design but possibly too terse.
+- Browser items (Generate MCP panel, keyboard/screen reader, flag off view) remain pending human.
