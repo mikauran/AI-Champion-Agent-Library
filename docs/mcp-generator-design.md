@@ -44,6 +44,7 @@ v1 adapters, all deterministic (synthesis 5.1):
 | `tabular-catalog` | Header, schema and field-dictionary text (CSV-style header lines, dictionary pairs) | column names, labels, types, identifier columns |
 | `sql-ddl` | `CREATE TABLE` statements; pg_dump, SQLite `.schema`, mysqldump dialects (D-540..D-545) | tables, columns, types, PK/FK (also from `ALTER TABLE ... ADD CONSTRAINT`), enums; read-only SELECT tools (roadmap requirement CUST-02) |
 | `prisma` | Prisma `schema.prisma` (D-546) | models, scalar fields, `@id`/`@@id`, `@relation`, enums; datasource and generator blocks ignored |
+| `odata` | OData `$metadata`: CSDL JSON and EDMX XML, 4.0 and 4.01 (D-561..D-572) | entity sets, keys (also composite), Edm types, enums, typed `$filter`, `$top`/`$skip`, `$select`; GET only; `$expand`, actions, functions and external references reported; XML read by the one dependency `sax` (D-560) |
 
 Tabular input is header, schema or dictionary text only. Data rows are never ingested; only a few synthetic sample rows may appear in tests. This answers synthesis open question 3 (section 6).
 
@@ -99,6 +100,8 @@ export interface GeneratedFile { path: string; content: string }
 export interface GenerationReport { toolsEmitted: string[]; toolsDropped: { id: string; reason: string }[]; gaps: Gap[]; assumptions: string[]; envVars: { name: string; purpose: string }[] }
 export interface GenerationResult { files: GeneratedFile[]; report: GenerationReport }
 ```
+
+OData additions to the contract (D-562): `Param.wireName?` (the name on the wire when it differs from the argument name), `Operation.protocol?: 'rest' | 'odata'` (selects the OData templates; paths are entity set paths), `Field.odata?: { kind, filterable, enumType? }` (literal kind for `$filter`) and the optional `InputAdapter.prepare?()` (async step for a lazily loaded parser). REST output is unchanged.
 
 Invariant: adding an adapter means registering one `InputAdapter` in `src/lib/mcpgen/adapters/index.ts` (the only place adapters are listed). The core, the registry logic and the templates stay unchanged (roadmap success criterion 2).
 

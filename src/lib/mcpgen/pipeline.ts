@@ -4,7 +4,7 @@ import { MAX_OUTPUT_BYTES } from './api-contract.js'
 import { gap } from './diagnostics.js'
 import { generate } from './generate.js'
 import { serverSlug } from './plan.js'
-import { parseInput } from './registry.js'
+import { parseInput, prepareInput } from './registry.js'
 import type { GenerateOptions, GeneratedFile, GenerationReport, Gap } from './types.js'
 
 export interface PipelineOptions {
@@ -50,4 +50,10 @@ export function runPipeline(rawInput: string, opts: PipelineOptions = {}): Pipel
   } catch {
     return { ok: false, gaps: [gap('pipeline-failed', 'Generation failed unexpectedly.', { severity: 'error' })] }
   }
+}
+
+/** runPipeline after the adapter's async preparation (loads the XML reader for EDMX input). Entry points that may see OData XML use this. */
+export async function runPipelineAsync(rawInput: string, opts: PipelineOptions = {}): Promise<PipelineResult> {
+  await prepareInput({ text: typeof rawInput === 'string' ? rawInput : '', filename: opts.filename }, { adapterId: opts.adapterId === 'auto' ? undefined : opts.adapterId })
+  return runPipeline(rawInput, opts)
 }

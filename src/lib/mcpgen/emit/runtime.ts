@@ -128,7 +128,7 @@ def _query_problem(allowed, describe_tool, field, value, match):
 `
 
 /** HTTP runtime. The auth branch is emitted only for the scheme the source declares. */
-export function runtimeHttp(scheme: 'none' | 'apiKeyHeader' | 'apiKeyQuery' | 'bearer'): string {
+export function runtimeHttp(scheme: 'none' | 'apiKeyHeader' | 'apiKeyQuery' | 'bearer', odata = false): string {
   const authLines: Record<string, string[]> = {
     none: [],
     apiKeyHeader: ['    headers[AUTH_NAME] = key'],
@@ -144,6 +144,29 @@ export function runtimeHttp(scheme: 'none' | 'apiKeyHeader' | 'apiKeyQuery' | 'b
           '        raise _Fail("auth", _AUTH_MESSAGE)',
           ...authLines[scheme],
         ].join('\n') + '\n'
+  // OData: the query string is built here with percent-encoding that keeps the `$` of system query options and
+  // writes spaces as %20 (an HTTP client's form encoding writes `+`, which not every OData service reads as a space).
+  const headersLine = odata ? '    headers = {"Accept": "application/json", "OData-MaxVersion": "4.0"}' : '    headers = {"Accept": "application/json"}'
+  const getCall = odata
+    ? [
+        '    pairs = [urllib.parse.quote(str(name), safe="$") + "=" + urllib.parse.quote(str(item), safe="") for name, item in query.items()]',
+        '    url = base.rstrip("/") + path + ("?" + "&".join(pairs) if pairs else "")',
+        '    response = httpx.get(',
+        '        url,',
+        '        headers=headers,',
+        '        timeout=10.0,',
+        '        follow_redirects=False,',
+        '    )',
+      ].join('\n')
+    : [
+        '    response = httpx.get(',
+        '        base.rstrip("/") + path,',
+        '        params=query,',
+        '        headers=headers,',
+        '        timeout=10.0,',
+        '        follow_redirects=False,',
+        '    )',
+      ].join('\n')
   return `
 
 _ENVELOPE_KEYS = ("items", "results", "data", "content", "records", "rows", "entries", "values")
@@ -154,15 +177,9 @@ def _raw_get(path, params):
     base = os.environ.get(BASE_URL_ENV, "")
     if not base:
         raise _Fail("config", "The server is not configured: set " + BASE_URL_ENV + ".")
-    headers = {"Accept": "application/json"}
+${headersLine}
     query = dict(params or {})
-${authBlock}    response = httpx.get(
-        base.rstrip("/") + path,
-        params=query,
-        headers=headers,
-        timeout=10.0,
-        follow_redirects=False,
-    )
+${authBlock}${getCall}
     return response.status_code, response.text
 
 
@@ -335,4 +352,109 @@ def _sql_query(entity, selected, field, match, value, limit, offset):
         raise _Fail("upstream", "The database could not answer the query.")
     finally:
         conn.close()
+`
+
+/** OData helpers (D-563): literal compilation for `$filter` and key predicates. Values are validated against the declared type and only then written. */
+export const RUNTIME_ODATA = `
+
+_ODATA_GUID = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+_ODATA_DATE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
+_ODATA_STAMP = re.compile(
+    r"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9](\\.[0-9]{1,12})?)?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$"
+)
+_ODATA_TIME = re.compile(r"^([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9](\\.[0-9]{1,12})?)?$")
+_ODATA_NUMBER = re.compile(r"^-?[0-9]{1,38}(\\.[0-9]{1,38})?([eE][+-]?[0-9]{1,3})?$")
+
+
+def _odata_bad(message):
+    return _Fail("invalid_argument", message)
+
+
+def _odata_literal(spec, value):
+    """The OData URL literal for a value, checked against the declared type first. Nothing is concatenated unchecked."""
+    kind = spec["kind"]
+    if kind == "string":
+        text = str(value)
+        if len(text) > 256 or any(ord(ch) < 32 or ord(ch) == 127 for ch in text):
+            raise _odata_bad("A text value of at most 256 printable characters is required.")
+        return "'" + text.replace("'", "''") + "'"
+    text = ("true" if value else "false") if isinstance(value, bool) else str(value).strip()
+    if len(text) > 80:
+        raise _odata_bad("The value is too long.")
+    if kind == "enum":
+        if text not in spec["enum"]:
+            raise _odata_bad("Invalid value; allowed values: " + ", ".join(spec["enum"][:20]) + ".")
+        return spec["enumType"] + "'" + text + "'"
+    if kind == "boolean":
+        if text.lower() not in ("true", "false"):
+            raise _odata_bad("A boolean value (true or false) is required.")
+        return text.lower()
+    if kind == "guid":
+        if not _ODATA_GUID.match(text):
+            raise _odata_bad("A GUID such as 01234567-89ab-cdef-0123-456789abcdef is required.")
+        return text
+    if kind == "date":
+        try:
+            datetime.date.fromisoformat(text)
+        except ValueError:
+            raise _odata_bad("A date such as 2026-01-31 is required.")
+        if not _ODATA_DATE.match(text):
+            raise _odata_bad("A date such as 2026-01-31 is required.")
+        return text
+    if kind == "datetimeoffset":
+        if not _ODATA_STAMP.match(text):
+            raise _odata_bad("A date and time with offset such as 2026-01-31T12:00:00Z is required.")
+        return text
+    if kind == "timeofday":
+        if not _ODATA_TIME.match(text):
+            raise _odata_bad("A time of day such as 12:30:00 is required.")
+        return text
+    if kind == "number":
+        if not _ODATA_NUMBER.match(text):
+            raise _odata_bad("A number is required.")
+        return text
+    raise _odata_bad("This field cannot be used in a filter.")
+
+
+def _odata_filter(entity, field, match, value):
+    """The $filter text for one field/value/match triple, or None when no filter was asked for."""
+    if field is None and value is None:
+        return None
+    if field is None or value is None:
+        raise _odata_bad("Give both field and value to filter, or neither.")
+    if match not in _MATCH_MODES:
+        raise _odata_bad("match must be one of: equals, contains, startsWith.")
+    specs = _ODATA[entity]["fields"]
+    if not isinstance(field, str) or field not in specs or not specs[field]["filter"]:
+        raise _odata_bad("Unknown or unfilterable field. Fields that can be filtered: " + ", ".join(sorted(n for n, f in specs.items() if f["filter"]))[:300] + ".")
+    spec = specs[field]
+    literal = _odata_literal(spec, value)
+    if match == "equals":
+        return field + " eq " + literal
+    if spec["kind"] != "string":
+        raise _odata_bad("contains and startsWith only work on text fields.")
+    return ("contains(" if match == "contains" else "startswith(") + field + "," + literal + ")"
+
+
+def _odata_path(entity, values):
+    """Entity set path with the key predicate: Set(value) for one key property, Set(A=value,B=value) for several."""
+    spec = _ODATA[entity]
+    keys = spec["key"]
+    parts = []
+    for name, value in zip(keys, values):
+        parts.append(urllib.parse.quote(_odata_literal(spec["fields"][name], value), safe="'"))
+    if len(keys) == 1:
+        return spec["set"] + "(" + parts[0] + ")"
+    return spec["set"] + "(" + ",".join(name + "=" + part for name, part in zip(keys, parts)) + ")"
+
+
+def _odata_rows(data):
+    """Rows of an entity set response: the value array. Anything else is an honest failure."""
+    if isinstance(data, dict) and isinstance(data.get("value"), list):
+        return _dicts(data["value"])
+    raise _Fail("upstream", "The upstream service returned an unexpected response shape.")
+
+
+def _odata_item(data):
+    return data if isinstance(data, dict) and data else None
 `
