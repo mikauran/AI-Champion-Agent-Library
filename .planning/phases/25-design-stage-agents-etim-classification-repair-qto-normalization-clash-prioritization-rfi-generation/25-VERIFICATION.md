@@ -1,6 +1,6 @@
 ---
 phase: 25
-status: in_progress
+status: human_needed
 ---
 
 # Phase 25 Verification
@@ -149,3 +149,6 @@ Missing information: no suggested owner, no open question
 - Caveat: draft for engineer review; synthetic input only.
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: one 25-05 row in .planning/spend-log.md (0.0182 USD, counted)
+
+## Phase result (aggregated 2026-10-14)
+All four design-stage agents counted (1 ETIM & classification repair, 2 QTO normalization, 3 Clash prioritization (after a redesign, 2 of 5 runs passed), 4 RFI generation from findings). Spend for the phase ~0.20 USD (upper-bound estimate, see .planning/spend-log.md). `npm run check`: 273 files passed (1 skipped), 3118 tests passed. Status human_needed: engineer review of rubric defaults and quality notes is in 25-HUMAN-UAT.md.
