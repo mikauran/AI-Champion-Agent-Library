@@ -46,7 +46,7 @@ Status: pending human
   ```
   podman run --rm --network none localhost/mcp-test-runner:latest sh -c 'id -un && /node_modules/.bin/tsx --version && command -v tsx && python3 --version'
   ```
-  Expected: user `node`, a tsx version, `tsx` on PATH (`/node_modules/.bin/tsx`), a Python 3 version. The platform creates the container as user `node` with no `/home/pi/agent` tmpfs and runs `/node_modules/.bin/tsx /work/src/lib/mcptest/driver.ts`.
+  Expected: user `pi` (uid 1000; D-464 renamed the node image's user, same convention as the Pi runner), a tsx version, `tsx` on PATH (`/node_modules/.bin/tsx`), a Python 3 version. The platform creates the container as user `pi` with no `/home/pi/agent` tmpfs and runs `/node_modules/.bin/tsx /work/src/lib/mcptest/driver.ts`.
 - Expected: Node >= 22.19. The build installs Node and Python dependencies (network needed at build time only).
 - [ ] Decide who owns the image tag and how the pins are updated (Question for Ville).
 
@@ -58,7 +58,7 @@ Status: pending human
   ```
 - [ ] Open `/mcp-test`, run `generator:openapi` with a small case set, watch progress, download `report.json`.
 - Expected: report runtime label is the container label; T4-PARTIAL-SPEC is dropped in container mode (documented limit).
-- Code-side fix applied after the review (CR-03, D-241): the runner config for this image sets `runUser: 'node'` and `mountAgentDir: false`, so `buildCreateOptions` names the user the Containerfile ends with and mounts no `/home/pi/agent` tmpfs (the Pi image is unchanged). Still pending human: confirm the engine accepts the create options with `ReadonlyRootfs` plus the `/work` and `/tmp` tmpfs mounts, that the staged files are writable and readable by uid 1000, and that the driver writes `/work/out/report.json`.
+- Code-side fix applied after the review (CR-03, D-241): the runner config for this image sets `runUser` and `mountAgentDir: false`, so `buildCreateOptions` names the user the Containerfile ends with and mounts no `/home/pi/agent` tmpfs (the Pi image is unchanged). User mismatch RESOLVED (D-464, decided by Ville 2026-10-14): the image now has the `pi` user (the Phase 8 runtime default) instead of `node`, `RUNNER_USER` is `pi`, and `/node_modules`, `/opt/venv` are world-readable/executable and `/work` is owned by pi. The image build itself is still pending human; nothing was built or run. Still pending human: confirm the engine accepts the create options with `ReadonlyRootfs` plus the `/work` and `/tmp` tmpfs mounts, that the staged files are writable and readable by uid 1000, and that the driver writes `/work/out/report.json`.
 - [ ] Confirm no `mcptest-*` container is left behind after a normal run, after a timeout and after a cancel (`podman ps -a --filter label=aic.mcptest=1`). Containers now also carry `aic.tryitout=1` and `aic.owner`, so the Try It Out orphan sweep removes leftovers from a previous process; confirm that sweep does not touch a run in flight.
 - [ ] Open the downloaded report and check that `cases` contains every requested case with real checks (not zero checks): the driver tree now includes `golden.jsonl` and the csv fixtures, and an empty golden is an error.
 

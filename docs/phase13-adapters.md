@@ -11,7 +11,7 @@ AGENT_KINDS=on npm run dev         # or npm run build / start
 
 `npm run db:push` is optional: ingest creates the `agent_kinds` table with `CREATE TABLE IF NOT EXISTS`, so an existing database works unchanged. To turn it off, unset the flag. The `agents` table is never altered; the sidecar table can stay in place unused.
 
-Note: with the flag on, ingest also scans sub-directories of the data directory as submissions (D-039). In `data/agents` that picks up `fixtures/minimal-agent`.
+Note: with the flag on, ingest also scans sub-directories of the data directory as submissions (D-039), except directories named `fixtures` (case-insensitive, at any depth), which are test data and are skipped (D-466, decided by Ville). `data/agents/fixtures/minimal-agent` therefore no longer appears in the catalog. `npm run validate-submission` is unaffected: it validates whatever path it is given.
 
 ## Data model
 

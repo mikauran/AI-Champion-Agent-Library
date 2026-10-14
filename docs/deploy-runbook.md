@@ -45,6 +45,7 @@ Defaults are read from the code. "unset" means the feature is off or the value c
 | `UI_SPEC_VIEWER` | off | Read-only raw spec viewer on the agent detail page (`/agents/[slug]`). Text is escaped, never rendered as HTML. |
 | `UI_DARK_MODE` | off | Dark/light theme toggle in the header and the dark palette. |
 | `MCP_GENERATOR` | off | "Generate MCP" panel and `POST /api/mcp-generate`. The CLI works without it. |
+| `MCP_GENERATOR_RATE_MAX`, `MCP_GENERATOR_RATE_WINDOW_SEC`, `MCP_GENERATOR_MAX_CONCURRENT` | `20`, `600`, `2` | Abuse limits of `POST /api/mcp-generate` (D-465): requests per client address per window, and simultaneous generations. `0` disables a limit. Over a limit the route answers 429 `{ message }` with `Retry-After`. In-memory, per process. Behind a reverse proxy every client may share one address; size the limits for that. |
 | `MCP_TESTER` | off | `/mcp-test` page and `/api/mcp-test/runs` routes. The CLI works without it. |
 | `MCP_TESTER_RUNTIME` | unset (in-process fakes) | Literal `container` runs the MCP tester in the runner image through the container runtime. Operator-set only. |
 | `SEARCH_EMBEDDINGS` | on | Only the literal `off` disables embeddings (ingest, warm-up, search). |
@@ -93,6 +94,10 @@ Defaults are read from the code. "unset" means the feature is off or the value c
 | `TRYOUT_STORAGE_PATH`, `TRYOUT_TEMPLATE_PATH` | `./runtime/try-out-sessions`, `./data/try-out/prompt-template.txt` | Legacy `/api/try-out` route |
 | `XDG_RUNTIME_DIR` | set by the host session | Locates the rootless Podman socket |
 
+### Errors and support references
+
+API error bodies are JSON with a `message` field (D-461). An unexpected server error shows the visitor a fixed message and `Reference: <8 hex chars>` (D-462); the same reference is in the server log line `[ref <id>] METHOD /path failed (status):` followed by the redacted error and stack. Ask the visitor for the reference and grep the log for it. Logs never contain secrets matching the shared token patterns.
+
 ### MCP test runner (only with `MCP_TESTER=1` and `MCP_TESTER_RUNTIME=container`)
 
 | Variable | Default | Notes |
@@ -110,7 +115,7 @@ Defaults are read from the code. "unset" means the feature is off or the value c
 
 ## 4. Containers
 
-Files: `Containerfile` (app, multi-stage), `Containerfile.pi-runner` (generic Pi image, `@earendil-works/pi-coding-agent@1.0.4`), `Containerfile.mcp-test-runner` (definition only), `podman-compose.yml`, `.containerignore`.
+Files: `Containerfile` (app, multi-stage), `Containerfile.pi-runner` (generic Pi image, `@earendil-works/pi-coding-agent@1.0.4`), `Containerfile.mcp-test-runner` (definition only; runs as user `pi`, uid 1000, like the Pi runner, D-464), `podman-compose.yml`, `.containerignore`.
 
 ```bash
 cp .env.example .env            # replace every placeholder; compose reads it at run time (not baked in)
@@ -144,8 +149,8 @@ Notes from the files:
 
 ## 7. Health check
 
-- `GET /health` returns `{"status":"ok"}` and is public even when sign-in is required. The image `HEALTHCHECK` calls it every 30 s.
-- It only proves the process serves HTTP. Also check `/catalog` (needs sign-in unless `AUTH_ENABLED=false`) and, after start, the container log for `Try It Out service failed to start` or `Search warm-up failed` warnings (both non-fatal).
+- `GET /health` returns `{"status":"ok"}` (200) and is public even when sign-in is required. It answers 503 `{"message":"Service unavailable"}` when the database cannot be read or the `agents` table is missing (D-460); no cause is exposed, so check the container log. The image `HEALTHCHECK` calls it every 30 s.
+- It proves the process serves HTTP and the catalog database is readable. Also check `/catalog` (needs sign-in unless `AUTH_ENABLED=false`) and, after start, the container log for `Try It Out service failed to start` or `Search warm-up failed` warnings (both non-fatal).
 - Pre-release runtime check: `npm run smoke` builds the server and probes it across all flag configurations (see `docs/smoke-test.md`).
 
 ## 8. Rollback

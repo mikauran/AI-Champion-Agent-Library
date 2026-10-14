@@ -8,6 +8,8 @@ export interface GenerateRequest {
 }
 export interface GenerateErrorResponse {
   ok: false
+  /** D-461: same `message` field as every other API error body (first gap's message). */
+  message: string
   gaps: Gap[]
 }
 export const MAX_INPUT_BYTES = 262144

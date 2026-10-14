@@ -232,6 +232,9 @@ export function tryItOutResetReason(
  * Top-level files are single submissions; sub-directories are scanned as submissions;
  * unrecognized directories are skipped with an info log (not counted as failures).
  */
+/** Flag-on ingest never treats a directory with one of these names as a submission or part of one (D-466). */
+const INGEST_SKIP_DIR_NAMES: readonly string[] = ['fixtures']
+
 async function ingestKindsInto(
   sqlite: Database.Database,
   db: Db,
@@ -259,8 +262,13 @@ async function ingestKindsInto(
         throw new Error('symlinks are not followed')
       } else if (st.isDirectory()) {
         if (name.startsWith('.') || name === 'node_modules') continue
+        // D-466: with AGENT_KINDS on, directories named `fixtures` (any depth) are test data, never submissions.
+        if (INGEST_SKIP_DIR_NAMES.includes(name.toLowerCase())) {
+          console.log(`[SKIP-INFO] ${name}: fixtures directory is not ingested`)
+          continue
+        }
         isDir = true
-        files = readSubmissionDir(abs).files
+        files = readSubmissionDir(abs, { skipDirNames: INGEST_SKIP_DIR_NAMES }).files
       } else if (isDataFile) {
         // Single files go through the scanner too: size cap, binary check, no symlink.
         files = readSubmissionDir(abs).files

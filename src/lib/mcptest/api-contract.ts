@@ -27,5 +27,6 @@ export interface RunStatusResponse {
 
 export interface ApiError {
   ok: false
-  error: string
+  /** D-461: every API error body carries `message` (same field as the auth 401 and /health 503). */
+  message: string
 }

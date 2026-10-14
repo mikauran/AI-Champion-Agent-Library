@@ -93,7 +93,7 @@ describe('image and command contract (CR-03, CR-04)', () => {
   it('the container user named by buildCreateOptions is the user the Containerfile ends with', () => {
     const user = [...file.matchAll(/^USER\s+(\S+)\s*$/gm)].map((m) => m[1]).pop()
     const opts = buildCreateOptions(mcpTestRunnerConfig({}), spec)
-    expect(user).toBe('node')
+    expect(user).toBe('pi') // D-464: was 'node' before the pi user was added
     expect(opts.User).toBe(user)
     expect(RUNNER_USER).toBe(user)
   })

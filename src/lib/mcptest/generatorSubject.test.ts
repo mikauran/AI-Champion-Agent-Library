@@ -154,23 +154,42 @@ describe('runGeneratorSideChecks', () => {
     expect(r[0].status).toBe('FAIL')
   })
 
-  it('partial spec: asserts what Phase 14 does today (stale example is silently kept)', () => {
+  it('partial spec: every planted defect is now reported (D-463: example-schema-mismatch)', () => {
     const partial = {
       id: 'openapi',
       input: readFileSync(new URL('./suite/T4-PARTIAL-SPEC/fixture/spec/partial-openapi.yaml', import.meta.url), 'utf8'),
       filename: 'partial-openapi.yaml'
     }
-    // Observed: the operation without a response type is omitted with a gap (which also covers the undocumented
-    // header on the same operation), but the stale example on the by-id operation produces no gap.
+    // The operation without a response type is omitted with a gap (which also covers the undocumented header on the
+    // same operation); the stale example on the by-id operation is reported as example-schema-mismatch and the tool
+    // is still generated from the schema.
     const gen = runPipeline(partial.input, { filename: partial.filename })
     expect(gen.ok && gen.report.gaps.some((g) => g.code === 'missing-response-schema')).toBe(true)
+    expect(gen.ok && gen.report.gaps.some((g) => g.code === 'example-schema-mismatch' && g.severity === 'warn' && typeof g.path === 'string' && g.path.length > 0)).toBe(true)
     expect(gen.ok && gen.report.toolsEmitted).toEqual(['lookup_gadget_by_id'])
     const r = runGeneratorSideChecks('T4-PARTIAL-SPEC', { sample: partial })
     const gap = r.find((x) => x.id === 'gap_reported')!
+    expect(gap.status).toBe('PASS')
+    expect(gap.flags ?? []).toEqual([])
+    expect(r.find((x) => x.id === 'reproducible')?.status).toBe('PASS')
+  })
+
+  it('SILENT_GUESS detection is intact: a subject that stays silent about the stale example still fails', () => {
+    const partial = {
+      id: 'openapi',
+      input: readFileSync(new URL('./suite/T4-PARTIAL-SPEC/fixture/spec/partial-openapi.yaml', import.meta.url), 'utf8'),
+      filename: 'partial-openapi.yaml'
+    }
+    // Synthetic subject: the real pipeline minus the example gap (what Phase 14 did before D-463).
+    const silentOnExample = ((raw: string, o?: Parameters<typeof runPipeline>[1]) => {
+      const real = runPipeline(raw, o)
+      if (!real.ok) return real
+      return { ...real, report: { ...real.report, gaps: real.report.gaps.filter((g) => g.code !== 'example-schema-mismatch') } }
+    }) as typeof runPipeline
+    const gap = runGeneratorSideChecks('T4-PARTIAL-SPEC', { sample: partial, runPipelineFn: silentOnExample }).find((x) => x.id === 'gap_reported')!
     expect(gap.status).toBe('FAIL')
     expect(gap.reason).toMatch(/stale example/)
     expect(gap.flags).toEqual([expect.objectContaining({ id: 'SILENT_GUESS', severity: 'warning' })])
-    expect(r.find((x) => x.id === 'reproducible')?.status).toBe('PASS')
   })
 
   it('partial spec: passes when every defect is reported', () => {

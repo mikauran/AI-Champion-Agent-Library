@@ -240,6 +240,13 @@ describe('no pre-existing test file was modified by Phase 15', () => {
     'src/routes/api/tryitout/jobs/jobs.test.ts',
     'src/routes/agents/customize-button.mcp.test.ts',
     'src/routes/agents/customize-button.mcptest.test.ts',
+    // E8 decisions (D-461..D-466, decided by Ville 2026-10-14): each file below pins behaviour Ville changed; see .planning/exploration/E8-decisions-impl.md.
+    'src/hooks.server.test.ts', // D-461: auth 401 body is { message }
+    'src/routes/errorStates.api.test.ts', // D-462: it pinned that hooks define no handleError; now handleError exists and must stay generic
+    'scripts/ingest.kinds.test.ts', // D-466: flag-on ingest skips fixtures directories, so the catalog no longer gains minimal-agent
+    'src/lib/mcptest/containerfile.test.ts', // D-464: the image ends with USER pi (was node)
+    'src/lib/server/mcptest/containerRun.fixes.test.ts', // D-464: RUNNER_USER and the Containerfile user are pi
+    'src/lib/mcptest/generatorSubject.test.ts', // D-463: the stale example is now a reported gap, so the partial-spec case passes gap_reported
   ]
   it('git diff --diff-filter=M against the baseline lists no test file', () => {
     let start = ''

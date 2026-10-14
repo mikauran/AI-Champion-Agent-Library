@@ -8,7 +8,7 @@ What was ported from the study harness, what was re-implemented and what is a kn
 
 - **Fake variants are scorer fixtures.** The in-process fake servers (`fake:good`, `fake:mirror`, ...) exist to prove the scorer discriminates good from flawed behaviour. A fake result is never evidence about a real server.
 - **No real FastMCP server has been run by this platform.** Generated Python is never executed in CI; those cells report `PENDING_HUMAN`. See "Pending human" below.
-- **The headline score formula is an assumption** (unweighted mean of Tier 2 and Tier 3 case pass-rates) pending confirmation by the study author.
+- **The headline score formula** is the unweighted mean of Tier 2 and Tier 3 case pass-rates; confirmed by Ville on 2026-10-14 (D-474).
 - **D3 (documentation quality) is advisory and D5 is not scored.**
 - Legacy HTTP+SSE is not implemented (reported as unsupported). The real partner profile document is not available, so the profile case scores an invented Acme profile only. The generator emits stdio only, so HTTP cases give `NA_TRANSPORT` for generator subjects, and it cannot produce composite tools.
 - The runner image has never been built; container runs are pending human.
@@ -45,7 +45,7 @@ With `MCP_TESTER=1`, open `/mcp-test` (linked from the Customize menu). Choose a
 - `GET /api/mcp-test/runs/{id}` returns status, progress and recent events.
 - `GET /api/mcp-test/runs/{id}/report` returns the report JSON when done.
 
-Starts are limited to 10 per client per 10 minutes. Runs are kept for 30 minutes (at most 50, finished runs evicted first; a queued or running run is never evicted). The routes derive a session key and rely on the application's global hook for authentication (see pending human item 8).
+Starts are limited to 10 per client per 10 minutes. Runs are kept for 30 minutes (at most 50, finished runs evicted first; a queued or running run is never evicted). The routes derive a session key and rely on the application's global hook for authentication: with `AUTH_ENABLED=true` it protects `/api/mcp-test/*` (confirmed by Ville 2026-10-14, D-476; the live check in the UAT list stays as a smoke test). The headline score is the unweighted mean of the Tier 2 and Tier 3 case pass rates (confirmed, D-474). A `PENDING_HUMAN` scoring case still blocks a PASS verdict (D-168, confirmed, D-472).
 
 With the flag off, every method on every tester route (and a POST to the page) answers 404; with it on, an unsupported method answers 405 with an `Allow` header.
 

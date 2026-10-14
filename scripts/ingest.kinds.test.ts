@@ -160,11 +160,12 @@ describe('ingest with AGENT_KINDS on', () => {
     db.close()
     process.env.AGENT_KINDS = 'on'
     await ingest(REAL_DIR, TEST_DB)
-    // Flag on also scans sub-directories as submissions: data/agents/fixtures/ is picked up.
+    // Flag on also scans sub-directories as submissions, except directories named `fixtures` (D-466; D-039 used to
+    // pick up data/agents/fixtures/minimal-agent here). The flag-on catalog is now exactly the flag-off catalog.
     const onAll = q<Record<string, unknown>>(`SELECT ${BASE_COLS} FROM agents ORDER BY slug`)
     const offSlugs = new Set(off.map(r => r.slug))
     expect(onAll.filter(r => offSlugs.has(r.slug))).toEqual(off)
-    expect(onAll.filter(r => !offSlugs.has(r.slug)).map(r => r.slug)).toEqual(['minimal-agent'])
+    expect(onAll.filter(r => !offSlugs.has(r.slug)).map(r => r.slug)).toEqual([])
     const kinds = q<{ kind: string }>('SELECT kind FROM agent_kinds')
     expect(kinds).toHaveLength(onAll.length)
     expect(kinds.every(k => k.kind === 'agent')).toBe(true)

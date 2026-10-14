@@ -37,9 +37,26 @@ describe('Containerfile.mcp-test-runner (static checks, never built here)', () =
     expect(before).toContain('human decides the pin')
   })
   it('runs as non-root in /work', () => {
-    expect(file).toMatch(/^USER node$/m)
+    expect(file).toMatch(/^USER pi$/m)
     expect(file).toMatch(/^WORKDIR \/work$/m)
     expect(code.join('\n')).not.toMatch(/^USER (root|0)\b/m)
+  })
+  it('creates the pi user the Phase 8 runtime starts containers as (D-464), mirroring Containerfile.pi-runner', () => {
+    const run = code.join('\n')
+    const pi = read('../../../Containerfile.pi-runner')
+    // Same uid/gid convention: rename the node image's uid/gid 1000 user and group to pi with home /home/pi.
+    expect(pi).toContain('usermod -l pi -d /home/pi -m node && groupmod -n pi node')
+    expect(run).toContain('usermod -l pi -d /home/pi -m node && groupmod -n pi node')
+    expect(run).toMatch(/^ENV HOME=\/home\/pi$/m)
+    // Writable work dirs and readable dependency trees for pi; still the last USER, never root.
+    expect(run).toMatch(/mkdir -p \/work\/in \/work\/out \/work\/pkg && chown -R pi:pi \/work/)
+    expect(run).toMatch(/chmod -R a\+rX \/node_modules \/opt\/venv/)
+    expect([...run.matchAll(/^USER\s+(\S+)$/gm)].map((m) => m[1])).toEqual(['pi'])
+    expect(run).not.toMatch(/USER node/)
+    // The platform's create options name the same user and uid 1000 file ownership.
+    const rd = read('../server/tryitout/runtimeDockerode.ts')
+    expect(rd).toContain("User: cfg.runUser ?? 'pi'")
+    expect(rd).toMatch(/uid: 1000, gid: 1000/)
   })
   it('bakes in no secrets, exposes nothing and starts no server', () => {
     for (const l of code.filter((x) => /^\s*(ENV|ARG)\b/.test(x))) expect(l).not.toMatch(/KEY|TOKEN|SECRET|PASSWORD/i)

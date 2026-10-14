@@ -130,12 +130,12 @@ Re-running ingest on an existing agent ID updates the record — it never create
 
 ### Multi-agent and multi-format hosting (flagged)
 
-Off by default. Set `AGENT_KINDS=on` and re-run `npm run ingest` to host multi-agent systems, skills, MCP servers and other formats (Oracle AgentSpec systems, `catalog.yaml`, SKILL.md, CrewAI, MCP `server.json`, `langgraph.json`) alongside normal agents. Authors can check a submission with `npm run validate-submission -- <path>`. Details: `docs/phase13-adapters.md`.
+Off by default. Set `AGENT_KINDS=on` and re-run `npm run ingest` to host multi-agent systems, skills, MCP servers and other formats (Oracle AgentSpec systems, `catalog.yaml`, SKILL.md, CrewAI, MCP `server.json`, `langgraph.json`) alongside normal agents. Authors can check a submission with `npm run validate-submission -- <path>`. Directories named `fixtures` are never ingested. Details: `docs/phase13-adapters.md`.
 
 
 ### MCP generator (flagged)
 
-Off by default. Set `MCP_GENERATOR=1` to enable a "Generate MCP" entry in the Customize menu and the `POST /api/mcp-generate` route. Authors can also run `npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|auto> <input-file> --out <dir>` (works without the flag). It turns an OpenAPI 3.x spec, a tabular catalog header or `CREATE TABLE` DDL into a Python FastMCP stdio server package with generated tests; schema or spec only, never credentials or data. Details: `docs/mcp-generator.md`.
+Off by default. Set `MCP_GENERATOR=1` to enable a "Generate MCP" entry in the Customize menu and the `POST /api/mcp-generate` route. The route is rate limited per client and capped on concurrency (`MCP_GENERATOR_RATE_MAX`, `MCP_GENERATOR_RATE_WINDOW_SEC`, `MCP_GENERATOR_MAX_CONCURRENT`; see the environment table). Authors can also run `npm run generate-mcp -- --adapter <openapi|tabular-catalog|sql-ddl|auto> <input-file> --out <dir>` (works without the flag). It turns an OpenAPI 3.x spec, a tabular catalog header or `CREATE TABLE` DDL into a Python FastMCP stdio server package with generated tests; schema or spec only, never credentials or data. Details: `docs/mcp-generator.md`.
 
 ### MCP test platform (flagged)
 
@@ -173,6 +173,9 @@ Variables are read from the environment (`.env` for local runs and compose). Def
 | `MCPTEST_ALLOW_OPEN_EGRESS` | n/a | Refused: `true` or `1` makes the MCP test runner config throw (the runner never gets egress) |
 | `TRYOUT_STORAGE_PATH` | `./runtime/try-out-sessions` | Storage directory of the legacy `/api/try-out` route (also `TRYOUT_TEMPLATE_PATH`) |
 | `MCP_GENERATOR` | off | Feature flag: Generate MCP panel and `POST /api/mcp-generate` (Phase 14) |
+| `MCP_GENERATOR_RATE_MAX` | `20` | `POST /api/mcp-generate`: requests per client per window (`0` = unlimited); over the cap answers 429 `{ message }` |
+| `MCP_GENERATOR_RATE_WINDOW_SEC` | `600` | Window of that limit, in seconds |
+| `MCP_GENERATOR_MAX_CONCURRENT` | `2` | `POST /api/mcp-generate`: simultaneous generations (`0` = unlimited); over the cap answers 429 `{ message }` |
 | `MCP_TESTER` | off | Feature flag: `/mcp-test` page and `/api/mcp-test/runs` (Phase 15) |
 | `MCP_TESTER_RUNTIME` | unset | `container` runs the MCP tester in the runner image instead of in-process fakes |
 | `SEARCH_EMBEDDINGS` | on | `off` = keyword-only search, no model |
@@ -289,7 +292,7 @@ Authenticated sessions last seven days. Only a random session token is stored
 in an HttpOnly, SameSite=Lax cookie; the server database stores its SHA-256
 hash. With `podman-compose`, login state and rate-limit data persist in the
 separate `auth-data` volume. The public `/health` endpoint remains available for
-container health checks.
+container health checks; it answers 503 `{ message }` when the database is unreachable or the schema is missing. API errors use `{ message }`, and an unexpected server error shows a `Reference` id that matches the server log.
 
 Other env vars the container respects: `PORT` (default `3000`),
 `CATALOG_DB_PATH`, `AUTH_DB_PATH`, `TRYITOUT_WORK_DIR`,

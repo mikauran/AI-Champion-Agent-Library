@@ -22,8 +22,8 @@ import {
 } from '../tryitout/runtime'
 
 export const LABEL_MCPTEST = 'aic.mcptest'
-/** User the runner image ends with (Containerfile.mcp-test-runner: USER node); a test keeps the two in step. */
-export const RUNNER_USER = 'node'
+/** User the runner image ends with (Containerfile.mcp-test-runner: USER pi, D-464); a test keeps the two in step. */
+export const RUNNER_USER = 'pi'
 /**
  * `npm install --prefix /` puts the binary in /node_modules/.bin (CR-04). The absolute path does not depend on PATH;
  * the Containerfile also puts that directory on PATH.

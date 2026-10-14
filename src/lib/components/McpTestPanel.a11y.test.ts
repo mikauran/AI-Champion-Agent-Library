@@ -32,7 +32,7 @@ describe('McpTestPanel accessibility', () => {
   })
 
   it('has no axe violations in the error state', async () => {
-    const fn = (async () => jsonRes({ ok: false, error: 'A run is already in progress.' }, 429)) as unknown as typeof fetch
+    const fn = (async () => jsonRes({ ok: false, message: 'A run is already in progress.' }, 429)) as unknown as typeof fetch
     const { container } = mount(fn)
     await fireEvent.click(screen.getByRole('button', { name: 'Run' }))
     await vi.waitFor(() => expect(screen.getByRole('alert').textContent).toContain('already in progress'))

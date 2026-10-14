@@ -34,11 +34,17 @@ RUN python3 -m venv /opt/venv \
 # /node_modules/.bin holds tsx (npm install --prefix / above); the driver command also uses its absolute path.
 ENV PATH=/node_modules/.bin:/opt/venv/bin:$PATH
 
-# Non-root user (uid 1000 exists in the node image as "node"). The platform creates the container with
-# User "node" for this image (containerRun.RUNNER_USER; a test keeps the two in step) and mounts no
-# /home/pi/agent tmpfs; /work is a tmpfs at run time, so everything the driver needs is staged into it.
-RUN mkdir -p /work/in /work/out /work/pkg && chown -R node:node /work
-USER node
+# Non-root user "pi", same convention as Containerfile.pi-runner and the Try It Out runtime (D-464, decided by
+# Ville): the node image ships user node at uid/gid 1000; rename it to pi (home /home/pi). The platform creates
+# the container with User "pi" (containerRun.RUNNER_USER; a test keeps the two in step) and mounts no
+# /home/pi/agent tmpfs. /work is a tmpfs at run time (mode 1777, so uid 1000 can write it), and everything the
+# driver needs is staged into it. The dependency trees are installed as root at build time and made
+# world-readable and executable, so pi can read /node_modules, run /node_modules/.bin/tsx and use /opt/venv.
+RUN usermod -l pi -d /home/pi -m node && groupmod -n pi node \
+    && chmod -R a+rX /node_modules /opt/venv
+RUN mkdir -p /work/in /work/out /work/pkg && chown -R pi:pi /work /home/pi
+ENV HOME=/home/pi
+USER pi
 WORKDIR /work
 
 # The platform creates the container, stages files and execs the driver; no server starts by itself.

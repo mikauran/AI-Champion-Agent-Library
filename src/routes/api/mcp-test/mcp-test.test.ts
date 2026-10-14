@@ -197,7 +197,7 @@ describe('GET /api/mcp-test/runs/:id/report', () => {
     runStore.setStatus(second.id, 'failed', 'boom')
     const failed = await report(second.id)
     expect(failed.status).toBe(404)
-    expect((await failed.json()).error).toMatch(/failed/)
+    expect((await failed.json()).message).toMatch(/failed/)
   })
 
   it('404s on invalid or unknown ids', () => {
