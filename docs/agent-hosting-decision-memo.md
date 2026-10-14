@@ -131,14 +131,14 @@ Security rules for every adapter:
 
 ## 6. Open questions for the human
 
-Addressed to Ville. Each has a recommended default so autonomous work can proceed.
+Addressed to Ville. All questions in this section were answered on 2026-10-14 (decisions D-467..D-478 in `.planning/AUTONOMOUS-DECISIONS.md`); the recommended defaults were accepted.
 
-1. Should system members be separate catalog rows (own slug and detail page) or inline only? Default: inline in v1 with an optional `slug` link.
-2. Is `catalog.yaml` an acceptable AIC convention, or should authors fill a web form? Default: `catalog.yaml` plus reply-with-answers equivalent.
-3. Should Try It Out ever run systems? Default: no; kinds other than `agent` get `none` or `external`.
-4. Which frameworks do AIC authors actually use? The ranking should be re-weighted by a quick survey of the 100+ agents; this research cannot know. Default: keep the ranking in section 4.
-5. Unverified facts that only matter if those adapters are promoted: A2A Agent Card fields and well-known path, Flowise export shape, Dify file extension, LlamaIndex deploy config, AutoGen Studio JSON, MAF workflow official status, AgentSpec YAML shape. Default: do not build adapters that depend on them in Phase 13.
-6. Should `edges` ship in v1? Default: defer.
+1. Should system members be separate catalog rows (own slug and detail page) or inline only? **Answered: inline in v1 with an optional `slug` link** (D-467).
+2. Is `catalog.yaml` an acceptable AIC convention, or should authors fill a web form? **Answered: `catalog.yaml` plus the reply-with-answers equivalent** (D-468).
+3. Should Try It Out ever run systems? **Answered: no; kinds other than `agent` get `none` or `external`** (D-469).
+4. Which frameworks do AIC authors actually use? **Answered: keep the ranking in section 4** (accepted as the default; a survey of the 100+ agents can re-weight it later) (D-478).
+5. Unverified facts that only matter if those adapters are promoted (A2A Agent Card, Flowise, Dify, LlamaIndex, AutoGen Studio, MAF, AgentSpec YAML shape). **Answered: do not build adapters that depend on them in Phase 13** (D-478).
+6. Should `edges` ship in v1? **Answered: no handoff edges in v1** (D-470).
 
 ## 7. Risks and unverified assumptions
 

@@ -87,7 +87,7 @@ Exact versions: `package.json` / `package-lock.json`; audit status: `docs/depend
 │   └── schema.ts                        # SQLite table definition
 ├── data/
 │   └── agents/                          # Agent YAML source files
-│       └── fixtures/                    # Test fixtures (not ingested in prod)
+│       └── fixtures/                    # Test fixtures (never ingested: flag-on ingest skips any `fixtures` directory, D-466)
 ├── db/
 │   └── catalog.db                       # SQLite database (generated at build time)
 ├── docs/
@@ -441,7 +441,7 @@ Related non-flag switches: `MCP_TESTER_RUNTIME=container`, `SEARCH_EMBEDDINGS=of
 
 ## Authentication
 
-`src/hooks.server.ts` gates every route except `/login`, `/health` and `/api/llm/*` (the proxy uses per-lease bearer tokens). Passwordless six-digit codes by Brevo or SMTP, allow-lists `AUTH_ALLOWED_EMAILS` and `AUTH_ALLOWED_EMAIL_DOMAINS`, sessions in the auth database (`AUTH_DB_PATH`), `AUTH_ENABLED=false` disables the gate. Details: README "Passwordless consortium access".
+`src/hooks.server.ts` gates every route except `/login`, `/health` and `/api/llm/*` (the proxy uses per-lease bearer tokens). It also covers `/api/mcp-generate` and `/api/mcp-test/*` when `AUTH_ENABLED=true` (D-476). An unauthenticated API call gets 401 `{ message: 'Authentication required' }`; all API error bodies use `message` (D-461). `handleError` in the same file logs unexpected errors with a redacted detail under a short reference id and returns `{ message: 'Internal Error', ref }`; `+error.svelte` shows `Reference: <ref>` for 5xx (D-462). `/health` is a readiness check: 503 `{ message }` when the database or the `agents` table is unavailable (D-460). Passwordless six-digit codes by Brevo or SMTP, allow-lists `AUTH_ALLOWED_EMAILS` and `AUTH_ALLOWED_EMAIL_DOMAINS`, sessions in the auth database (`AUTH_DB_PATH`), `AUTH_ENABLED=false` disables the gate. Details: README "Passwordless consortium access".
 
 ## Try It Out
 
@@ -502,7 +502,7 @@ No other files need to change.
 
 ## MCP Generator (flagged, Phase 14)
 
-`src/lib/mcpgen/` holds a deterministic generator that turns a schema or specification (OpenAPI 3.x, tabular catalog header text, SQL DDL) into a Python FastMCP stdio package. Input adapters sit behind one `InputAdapter` interface and are listed only in `src/lib/mcpgen/adapters/index.ts`; the core planner and emitters never import an adapter. It is exposed through `npm run generate-mcp`, the `MCP_GENERATOR`-gated `POST /api/mcp-generate` route and a flag-gated Customize menu panel. Full documentation, including the extension point for synthesized tools: `docs/mcp-generator.md` (design: `docs/mcp-generator-design.md`).
+`src/lib/mcpgen/` holds a deterministic generator that turns a schema or specification (OpenAPI 3.x, tabular catalog header text, SQL DDL) into a Python FastMCP stdio package. Input adapters sit behind one `InputAdapter` interface and are listed only in `src/lib/mcpgen/adapters/index.ts`; the core planner and emitters never import an adapter. It is exposed through `npm run generate-mcp`, the `MCP_GENERATOR`-gated `POST /api/mcp-generate` route and a flag-gated Customize menu panel. The route has a per-client rate limit and a concurrency cap (`MCP_GENERATOR_RATE_MAX`, `MCP_GENERATOR_RATE_WINDOW_SEC`, `MCP_GENERATOR_MAX_CONCURRENT`, D-465), and the OpenAPI adapter reports a response example that contradicts its schema as gap `example-schema-mismatch` (D-463). Full documentation, including the extension point for synthesized tools: `docs/mcp-generator.md` (design: `docs/mcp-generator-design.md`).
 
 ## MCP Test Platform (flagged, Phase 15)
 
