@@ -29,7 +29,7 @@ Only the agent names are used here, with our own wording. The source slide is TU
 | 7 | Carbon & EPD enrichment | Sourcing | missing | none | No entry touches EPD or carbon data; `energy-model-sync` covers energy simulation only. | 26 |
 | 8 | Cut-sheet QA | Manufacturing | partial | data/agents/submittal-review-router.yaml | It extracts values from product submittals and compares them with the specification, which is close to checking a product data sheet, but it targets submittal routing, not prefab cut sheets. | 27 |
 | 9 | Spooling & cutting | Manufacturing | missing | none | No entry handles prefab spools or cut lists. | 27 |
-| 10 | D2 code validation | Manufacturing | missing | none | `airo` checks regulations for AI use cases, not code validation of design data. | 27 |
+| 10 | D2 code validation | Site and handover | missing | none | `airo` checks regulations for AI use cases, not code validation of design data. | 28 |
 | 11 | O&M completeness | Site and handover | missing | none | No entry checks handover documentation. | 28 |
 | 12 | BMS digital twin | Site and handover | missing | none | No entry connects building management data to a model. | 28 |
 
