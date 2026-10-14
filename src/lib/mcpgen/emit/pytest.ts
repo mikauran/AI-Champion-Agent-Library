@@ -4,6 +4,7 @@
 import type { Entity, Operation, Param, PlannedTool, ServerPlan } from '../types.js'
 import { effectiveMaxPageSize, resolveEnv, toolKind } from '../plan.js'
 import { joinLines, pyLit, pyNum, pyStr } from './pyutil.js'
+import { emitProposedPytest } from './pytestProposed.js'
 
 function sample(p: Param): unknown {
   if (p.enum && p.enum.length) return p.enum[0]
@@ -472,6 +473,7 @@ function localTests(plan: ServerPlan): string[] {
 }
 
 export function emitPytest(plan: ServerPlan): string {
+  if (plan.proposals) return emitProposedPytest(plan)
   const lines = plan.model.backend.kind === 'http' ? httpTests(plan) : localTests(plan)
   // Trim the extra blank lines left at the end of the last test.
   while (lines.length && lines[lines.length - 1] === '') lines.pop()

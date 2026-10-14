@@ -26,9 +26,27 @@ function opOf(plan: ServerPlan, tool: PlannedTool): Operation | undefined {
   return plan.model.operations.find((o) => o.id === tool.operation)
 }
 
+const STD_DESC: Record<string, string> = {
+  fields: 'Optional list of field names to return (at most 12; unknown names are ignored).',
+  page: 'Page number, starting at 1.',
+  page_size: 'Rows per page; larger values are reduced to the maximum.',
+  limit: 'Rows to return; larger values are reduced to the maximum.',
+  offset: 'Rows to skip, for paging.',
+  field: 'Field to filter on.',
+  value: 'Value to match.',
+  match: 'equals, contains or startsWith.',
+  key: 'Key to look for in the nested entries.',
+  max_pages: 'Candidate pages to scan, 1 to 10.',
+}
+
 /** Baseline signature, in emitted order. Tools a proposal created carry their own `wrapper.params`. */
 export function baselineSignature(plan: ServerPlan, tool: PlannedTool): SigArg[] {
   if (tool.proposed?.wrapper) return tool.proposed.wrapper.params
+  const own = new Set(tool.params.map((p) => p.name))
+  return rawSignature(plan, tool).map((a) => (a.description || own.has(a.name) || !STD_DESC[a.name] ? a : { ...a, description: STD_DESC[a.name] }))
+}
+
+function rawSignature(plan: ServerPlan, tool: PlannedTool): SigArg[] {
   const kind = toolKind(plan, tool)
   const required = tool.params.filter((p) => p.required || p.in === 'path').map(fromParam)
   const optional = tool.params.filter((p) => !(p.required || p.in === 'path')).map(fromParam)

@@ -53,6 +53,7 @@ export function buildReport(plan: ServerPlan): GenerationReport {
     gaps,
     assumptions,
     envVars: envVars.sort((a, b) => cmp(a.name, b.name)),
+    ...(plan.proposals ? { proposals: plan.proposals } : {}),
   }
 }
 
