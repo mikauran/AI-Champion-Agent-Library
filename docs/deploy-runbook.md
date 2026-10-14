@@ -87,6 +87,7 @@ Defaults are read from the code. "unset" means the feature is off or the value c
 | `PI_RUNNER_MEMORY_MB`, `_CPUS`, `_PIDS` | 1024, 0.5, 200 | |
 | `PI_RUNNER_WORK_TMPFS_MB`, `_TMP_TMPFS_MB`, `_AGENT_TMPFS_MB` | 256, 64, 16 | |
 | `PI_JOB_TOKEN_BUDGET`, `PI_JOB_REQUEST_BUDGET` | 100000, 40 | Per job, enforced by the proxy |
+| `TRYITOUT_USAGE_ENDPOINT` | unset (off) | Diagnostic, off by default; `1` enables `/api/tryitout/jobs/:id/usage`, which returns token counts only |
 | `PI_RUNNER_MAX_OUTPUT_BYTES`, `_MAX_OUTPUT_FILES` | 20971520, 200 | Output zip limits |
 | `APP_INSTANCE_NAME` | `aic-agent-library` in `podman-compose.yml` (container hostname if unset elsewhere) | Owner label (`aic.owner`) on every runner container. The start-up orphan sweep removes only same-owner leftovers. Set a stable value such as `aic-prod`; the compose file does not set it yet. |
 | `TRYITOUT_WORK_DIR` | `./.tryitout-work` (image `/app/runtime/tryitout-work`) | Job working files |

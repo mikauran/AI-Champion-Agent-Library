@@ -11,3 +11,5 @@ build/
 .gsd/
 runtime/
 data/fixtures-scale/
+override.tryitout.yml
+.tryitout-runs/
