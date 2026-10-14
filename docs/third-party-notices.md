@@ -53,9 +53,11 @@ SOFTWARE.
 | --- | --- | --- |
 | etim-classification-repair | 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai | 2026-10-15 |
 | qto-normalization | 1_DDC_Toolkit/BIM-Analysis/ifc-qto-extraction | 2026-10-15 |
+| clash-prioritization | 2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer; 1_DDC_Toolkit/BIM-Analysis/bim-clash-detection | 2026-10-15 |
 | (further entries: Phases 25-29) | | |
 
 ### Skills adapted in this repository
 
 - etim-classification-repair: approach adapted from DDC skill 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai (MIT); own design for ETIM-style mapping; no DDC code or data copied
 - qto-normalization: ideas adapted from DDC skill 1_DDC_Toolkit/BIM-Analysis/ifc-qto-extraction (MIT); own design; qto-report (quotes the DDC book) and cwicr-* skills (CWICR data licence) not used
+- clash-prioritization: ideas adapted from DDC skills 2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer and 1_DDC_Toolkit/BIM-Analysis/bim-clash-detection (MIT); own design; no DDC book text copied

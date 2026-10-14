@@ -22,7 +22,7 @@ Only the agent names are used here, with our own wording. The source slide is TU
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | ETIM & classification repair | Design | partial | data/agents/etim-classification-repair.yaml | Counted: entry plus one container run with a synthetic sample (Phase 25, 25-02). Classification lookup and real ETIM data missing. | 25 |
 | 2 | QTO normalization | Design | partial | data/agents/qto-normalization.yaml | Counted: entry plus one container run on a synthetic table (Phase 25, 25-03); no model access, no cost mapping. | 25 |
-| 3 | Clash prioritization | Design | missing | none | No entry reads or ranks clash reports. | 25 |
+| 3 | Clash prioritization | Design | missing | data/agents/clash-prioritization.yaml | Entry exists but attempted-not-counted: three container runs (SKILL v1 + 2 revisions) on a synthetic clash report failed the rubric (a clash lost from the findings table, P1-P3 rule mis-applied); needs a deterministic clustering/ranking tool. | 25 |
 | 4 | RFI generation | Design | partial | data/agents/rfi-triage-assistant.yaml, data/agents/demo-rfi-triage.yaml | The assistant drafts, classifies and routes field RFIs through a conversation; it is not driven by model or clash findings, and the demo entry only triages one uploaded text. | 25 |
 | 5 | Product sourcing E-BOM to M-BOM | Sourcing | missing | none | Nothing maps engineering bills of materials to manufacturing ones; stk-mcp and lvi-info-mcp (Plan 24-03) are catalog data sources, not this agent. | 26 |
 | 6 | Quote comparison | Sourcing | missing | none | No entry compares supplier quotes. | 26 |

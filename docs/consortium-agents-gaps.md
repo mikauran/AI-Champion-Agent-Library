@@ -21,3 +21,9 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-015 | 2 QTO normalization | No mapping to a cost classification or CWICR rates (licence and scope). | data | open | Phase 25 | open |
 | G-016 | 2 QTO normalization | Arithmetic is done by the model in one call; totals were wrong in the first run and must be re-checked by the engineer. | tool | open | Phase 25 | open |
 | G-017 | 2 QTO normalization | No unit dictionary beyond the canonical set in the prompt; ambiguous pcs on length items is not reliably flagged (observed in run af4663e3). | tool | open | Phase 25 | open |
+| G-018 | 3 Clash prioritization | No geometry or model access: ranking uses only the report columns. | data | open | Phase 25 | open |
+| G-019 | 3 Clash prioritization | No project priorities, schedule or cost data: the P1-P3 scale is generic. | data | open | Phase 25 | open |
+| G-020 | 3 Clash prioritization | Text/CSV input only, no Navisworks or BCF parsing. | tool | open | Phase 25 | open |
+| G-021 | 3 Clash prioritization | Suggested owners are proposals, responsibility is decided by the coordinator. | process | open | Phase 25 | open |
+| G-022 | 3 Clash prioritization | Report size limited by the 200 KB upload cap and one model call. | tool | open | Phase 25 | open |
+| G-023 | 3 Clash prioritization | Attempted-not-counted: in three runs (SKILL v1 + 2 revisions, jobs 57e5c2cc, ab20a259, 2141f80e) gpt-4.1-mini lost a clash (CL-012) from the ranked/findings tables or mis-applied the P1-P3 rule; clustering and ranking need a deterministic tool, not one model call. | tool | open | Phase 25 | open |

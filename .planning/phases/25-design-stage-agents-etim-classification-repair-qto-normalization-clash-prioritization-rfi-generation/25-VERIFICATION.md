@@ -91,7 +91,18 @@ COUNTED (SKILL revision 1).
 - Ledger: two 25-03 rows in .planning/spend-log.md (0.0175 not counted, 0.0182 counted)
 
 ### Agent 3: Clash prioritization
-_pending_
+ATTEMPTED-NOT-COUNTED (rubric FAIL after SKILL v1 plus the maximum of 2 revisions).
+
+- Entry: data/agents/clash-prioritization.yaml (validate-submission INGESTIBLE, validate-entries 0 errors). Option A, gpt-4.1-mini, Pi container (usage observed, runs were countable by infrastructure). Input label: synthetic (data/tryitout-prompts/clash-prioritization/sample-clash-report.txt, 16 rows, invented building).
+- Answer key: cluster A CL-001..004 (duct SD-12 across beams, P1); cluster B CL-005..007 (riser RS-3, 3 clashes, P1); resolved CL-008, CL-015 (excluded); CL-009 hard 210 mm Structural (P1); soft CL-010, CL-011, CL-012, CL-016 (P3, separate); CL-013 isolated architectural/HVAC (P2); CL-014 missing penetration, Structural (P1 by the stated rule).
+- Run 1 (SKILL v1), job 57e5c2cc-f130-47b7-96af-755ece27e18c, 10561 tokens, 3 requests, est. 0.0169 USD: CL-012 lost entirely, a phantom "cluster 4" repeated ids CL-005..007 with no priority, summary counts wrong (4 P1). FAIL.
+- Run 2 (revision 1: one-by-one assignment, counts must match, coverage check), job ab20a259-c5c6-40c5-86fd-7406d918a43c, 13244 tokens, 3 requests, est. 0.0212 USD: every id covered exactly once, resolved excluded, findings table with the exact 8-column header. But CL-013 (Architectural/HVAC) rationale falsely said "hard clash with Structural" and was ranked P1, CL-014 (Structural) under-ranked P2, and four unrelated soft clashes across L0-L3 were merged into one cluster with a false "level/grid" reason. FAIL.
+- Run 3 (revision 2: literal Structural test, no unrelated merges), job 2141f80e-2c6b-4b00-b48f-36bc84206bf4, 11678 tokens, 3 requests, est. 0.0187 USD: CL-012 listed in the coverage check under cluster 4 but missing from the ranked table and from the findings table (lost finding), the 3-clash riser cluster ranked P2 (rule says P1), soft CL-016 ranked P2. CL-009, CL-014 correctly P1, resolved ids excluded, coverage check claims 14 + 2 = 16 although only 13 open ids are in ranked rows. FAIL.
+- Reason: gpt-4.1-mini in one call does not reliably apply the P1-P3 rule or keep every id in the ranked and findings tables; losing a clash silently is exactly the failure a coordinator cannot catch. No evidence is claimed. Mitigation idea (not done, cap reached): a deterministic pre-processing step (script tool) for clustering and ranking, with the model only writing rationale and findings.
+- Excerpt of the last output (for the record, wrong rows marked): `2 | CL-005, CL-006, CL-007 | P2 | ... (Rule: cluster of 2)` (should be P1); `CL-012: cluster 4` but no cluster 4 row in the ranked or findings tables.
+- Caveat: draft for engineer review; synthetic input only.
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty, port 3000 free.
+- Ledger: three 25-04 rows in .planning/spend-log.md (0.0169, 0.0212, 0.0187; total 0.0568 USD, all not counted)
 
 ### Agent 4: RFI generation
 _pending_
