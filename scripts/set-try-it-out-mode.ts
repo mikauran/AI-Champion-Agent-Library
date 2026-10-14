@@ -14,6 +14,7 @@ const UPDATES: Array<{ slug: string; mode: string; url: string | null; taskTempl
   { slug: 'hvac-load-calculator', mode: 'none', url: null, taskTemplate: null },
   { slug: 'etim-classification-repair', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'qto-normalization', mode: 'runnable', url: null, taskTemplate: null },
+  { slug: 'clash-prioritization', mode: 'runnable', url: null, taskTemplate: null },
 ]
 
 export function setTryItOutMode(dbPath: string): Array<{ slug: string; mode: string; changes: number }> {

@@ -62,8 +62,8 @@ describe('fixture sanity', () => {
     expect(loadScaleCorpus().docs.map((d) => d.slug)).toEqual(scaleCorpus.docs.map((d) => d.slug))
   })
 
-  it('real corpus has the 11 catalog agents', () => {
-    expect(realCorpus.docs).toHaveLength(11)
+  it('real corpus has the 12 catalog agents', () => {
+    expect(realCorpus.docs).toHaveLength(12)
   })
 
   it('paraphrase queries share no vocabulary with topic keywords or tool names', () => {

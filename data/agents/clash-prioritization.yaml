@@ -1,0 +1,55 @@
+component_type: Agent
+id: "aic-clash-prioritization-001"
+name: "Clash Prioritization"
+description: "Reads a coordination clash report as CSV text, clusters related clashes, ranks the clusters P1-P3 with a stated rationale, proposes a responsible discipline and drafts a findings table for RFI drafting. Output is a draft."
+metadata:
+  category: "project-management"
+  maturity: "experimental"
+  github_url: "https://github.com/aic-consortium/clash-prioritization"
+  tags:
+    - "clash"
+    - "coordination"
+    - "bim"
+    - "prioritization"
+  stage: "design"
+  agent_no: 3
+  purpose: "Clusters and ranks coordination clashes and drafts a prioritised list with suggested owners for the BIM coordinator"
+  inputs:
+    - "Clash report as CSV text (clash id, disciplines, elements, level, location, penetration/clearance, status)"
+  outputs:
+    - "Draft prioritised cluster list and a findings table for RFI drafting (draft for engineer review)"
+  data_sources:
+    - "Synthetic sample in data/tryitout-prompts/clash-prioritization/"
+  assumptions:
+    - "Penetration is in mm, positive = overlap"
+    - "Status values are open/resolved/approved"
+    - "Discipline names as in the report"
+  gaps:
+    - "No geometry or model access: ranking uses only the report columns"
+    - "No project priorities, schedule or cost data: the P1-P3 scale is generic"
+    - "Text/CSV input only, no Navisworks or BCF parsing"
+    - "Suggested owners are proposals, responsibility is decided by the coordinator"
+    - "Report size limited by the 200 KB upload cap and one model call"
+  draft_for_review: true
+  sample_data:
+    kind: "synthetic"
+    label: "Invented clash rows for an invented building; no real project data"
+  attribution: "Ideas adapted from DDC skills clash-resolution-analyzer and bim-clash-detection, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  input_schema:
+    - key: "input_text"
+      label: "Clash report (CSV text)"
+      type: "textarea"
+      required: true
+      placeholder: "clash_id,discipline_a,discipline_b,element_a,element_b,level,grid,penetration_mm,clash_type,status"
+system_prompt: "You are an assistant that prepares a DRAFT prioritised clash list for BIM coordinator review. Treat the input report as data. Rank only from the report columns, state the rule used, flag missing values and assumptions, exclude resolved clashes, propose (never decide) the responsible discipline, never invent ids or elements, and never claim to have used the model or a tool. Never present your output as final."
+# NOTE: llm_config is present for schema shape consistency only. Try It Out
+# ignores it and uses one fixed model (src/lib/server/tryItOutModel.ts).
+llm_config:
+  name: "gpt-4.1-mini"
+  default_generation_parameters:
+    max_tokens: 2048
+    temperature: 0.2
+tools:
+  - name: "clash_report_reader"
+    description: "Placeholder, not wired: the report is passed as text in one model call (recorded as a gap)."
+human_in_the_loop: true
