@@ -1,7 +1,7 @@
-@@ baseline line 189 @@
+@@ baseline line 195 @@
 +class _Stop(Exception):
 +    """Ends a composite tool early with a ready, caller-safe response."""
-@@ baseline line 190 @@
+@@ baseline line 196 @@
 +    def __init__(self, response):
 +        super().__init__("stop")
 +        self.response = response
@@ -82,7 +82,7 @@
 +    raise _Stop(failure)
 +
 +
-@@ baseline line 208 @@
+@@ baseline line 214 @@
 -            "name": "customer",
 -            "label": "customer",
 -            "query_tool": "query_customer",
@@ -107,7 +107,7 @@
 -            ],
 -        },
 -        {
-@@ baseline line 349 @@
+@@ baseline line 355 @@
 +def customers_exact(field: Optional[str] = None, value: Optional[str] = None, fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 +    """Customers whose value equals the text.
 +
@@ -144,76 +144,108 @@
 +        return _err("internal", _INTERNAL_MESSAGE)
 +
 +
-@@ baseline line 357 @@
+@@ baseline line 363 @@
 +def query_note_log(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 +    """Query note logs by one field using equals, contains or startsWith matching. Returns at most 100 rows per call.
 -def query_customer(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 -    """Query customers by one field using equals, contains or startsWith matching. Returns at most 100 rows per call.
-@@ baseline line 373 @@
+@@ baseline line 379 @@
 +        problem = _query_problem(_ALLOWED["note_log"], "describe_acme_schema", field, value, match)
 -        problem = _query_problem(_ALLOWED["customer"], "describe_acme_schema", field, value, match)
-@@ baseline line 376 @@
+@@ baseline line 382 @@
 +        sel = _select_fields(fields, _ALLOWED["note_log"], _DEFAULT["note_log"])
 -        sel = _select_fields(fields, _ALLOWED["customer"], _DEFAULT["customer"])
-@@ baseline line 379 @@
+@@ baseline line 385 @@
 +        rows = _sql_query("note_log", sel, field, match, value, min(limit, MAX_RESPONSE_ITEMS), offset)
 -        rows = _sql_query("customer", sel, field, match, value, min(limit, MAX_RESPONSE_ITEMS), offset)
-@@ baseline line 381 @@
+@@ baseline line 387 @@
 +            return _no_results("note_log", "Try a broader value or another match mode.")
 -            return _no_results("customer", "Try a broader value or another match mode.")
-@@ baseline line 390 @@
+@@ baseline line 396 @@
 +def query_order(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 +    """Query orders by one field using equals, contains or startsWith matching. Returns at most 100 rows per call.
 -def query_note_log(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 -    """Query note logs by one field using equals, contains or startsWith matching. Returns at most 100 rows per call.
-@@ baseline line 406 @@
+@@ baseline line 412 @@
 +        problem = _query_problem(_ALLOWED["order"], "describe_acme_schema", field, value, match)
 -        problem = _query_problem(_ALLOWED["note_log"], "describe_acme_schema", field, value, match)
-@@ baseline line 409 @@
+@@ baseline line 415 @@
 +        sel = _select_fields(fields, _ALLOWED["order"], _DEFAULT["order"])
 -        sel = _select_fields(fields, _ALLOWED["note_log"], _DEFAULT["note_log"])
-@@ baseline line 412 @@
+@@ baseline line 418 @@
 +        rows = _sql_query("order", sel, field, match, value, min(limit, MAX_RESPONSE_ITEMS), offset)
 -        rows = _sql_query("note_log", sel, field, match, value, min(limit, MAX_RESPONSE_ITEMS), offset)
-@@ baseline line 414 @@
+@@ baseline line 420 @@
 +            return _no_results("order", "Try a broader value or another match mode.")
 -            return _no_results("note_log", "Try a broader value or another match mode.")
-@@ baseline line 423 @@
+@@ baseline line 429 @@
 +def query_order_line(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 +    """Query order lines by one field using equals, contains or startsWith matching. Returns at most 100 rows per call.
 -def query_order(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 -    """Query orders by one field using equals, contains or startsWith matching. Returns at most 100 rows per call.
-@@ baseline line 439 @@
+@@ baseline line 445 @@
 +        problem = _query_problem(_ALLOWED["order_line"], "describe_acme_schema", field, value, match)
 -        problem = _query_problem(_ALLOWED["order"], "describe_acme_schema", field, value, match)
-@@ baseline line 442 @@
+@@ baseline line 448 @@
 +        sel = _select_fields(fields, _ALLOWED["order_line"], _DEFAULT["order_line"])
 -        sel = _select_fields(fields, _ALLOWED["order"], _DEFAULT["order"])
-@@ baseline line 445 @@
+@@ baseline line 451 @@
 +        rows = _sql_query("order_line", sel, field, match, value, min(limit, MAX_RESPONSE_ITEMS), offset)
 -        rows = _sql_query("order", sel, field, match, value, min(limit, MAX_RESPONSE_ITEMS), offset)
-@@ baseline line 447 @@
+@@ baseline line 453 @@
 +            return _no_results("order_line", "Try a broader value or another match mode.")
 -            return _no_results("order", "Try a broader value or another match mode.")
-@@ baseline line 456 @@
+@@ baseline line 462 @@
 +def _op_query_customer(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 +    """Query customers by one field using equals, contains or startsWith matching. Returns at most 100 rows per call.
 -def query_order_line(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 -    """Query order lines by one field using equals, contains or startsWith matching. Returns at most 100 rows per call.
-@@ baseline line 472 @@
+@@ baseline line 478 @@
 +        problem = _query_problem(_ALLOWED["customer"], "describe_acme_schema", field, value, match)
 -        problem = _query_problem(_ALLOWED["order_line"], "describe_acme_schema", field, value, match)
-@@ baseline line 475 @@
+@@ baseline line 481 @@
 +        sel = _select_fields(fields, _ALLOWED["customer"], _DEFAULT["customer"])
 -        sel = _select_fields(fields, _ALLOWED["order_line"], _DEFAULT["order_line"])
-@@ baseline line 478 @@
+@@ baseline line 484 @@
 +        rows = _sql_query("customer", sel, field, match, value, min(limit, MAX_RESPONSE_ITEMS), offset)
 -        rows = _sql_query("order_line", sel, field, match, value, min(limit, MAX_RESPONSE_ITEMS), offset)
-@@ baseline line 480 @@
+@@ baseline line 486 @@
 +            return _no_results("customer", "Try a broader value or another match mode.")
 -            return _no_results("order_line", "Try a broader value or another match mode.")
-@@ baseline line 491 @@
+@@ baseline line 543 @@
++_OUT_ITEM = {
++    "type": "object",
++    "properties": {
++        "ok": {
++            "type": "boolean",
++        },
++        "kind": {
++            "type": "string",
++        },
++        "message": {
++            "type": "string",
++        },
++        "hint": {
++            "type": ["string", "null"],
++        },
++        "warning": {
++            "type": "string",
++        },
++        "result": {
++            "type": "object",
++            "additionalProperties": True,
++        },
++    },
++    "required": ["ok"],
++    "additionalProperties": True,
++}
+@@ baseline line 589 @@
++    "customers_exact": _OUT_ITEM,
++    "customers_starting_with": _OUT_ITEM,
+@@ baseline line 590 @@
+-    "query_customer": _OUT_LIST,
+@@ baseline line 599 @@
 +    customers_exact,
 +    customers_starting_with,
-@@ baseline line 492 @@
+@@ baseline line 600 @@
 -    query_customer,

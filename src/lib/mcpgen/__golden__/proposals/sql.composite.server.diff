@@ -1,7 +1,7 @@
-@@ baseline line 189 @@
+@@ baseline line 195 @@
 +class _Stop(Exception):
 +    """Ends a composite tool early with a ready, caller-safe response."""
-@@ baseline line 190 @@
+@@ baseline line 196 @@
 +    def __init__(self, response):
 +        super().__init__("stop")
 +        self.response = response
@@ -82,7 +82,7 @@
 +    raise _Stop(failure)
 +
 +
-@@ baseline line 357 @@
+@@ baseline line 363 @@
 +def orders_of_customer(name: str) -> dict:
 +    """Finds the first customer whose name contains the text and returns their orders. Says clearly when nothing matches.
 +
@@ -105,5 +105,34 @@
 +        return _err("internal", _INTERNAL_MESSAGE)
 +
 +
-@@ baseline line 492 @@
+@@ baseline line 543 @@
++_OUT_ITEM = {
++    "type": "object",
++    "properties": {
++        "ok": {
++            "type": "boolean",
++        },
++        "kind": {
++            "type": "string",
++        },
++        "message": {
++            "type": "string",
++        },
++        "hint": {
++            "type": ["string", "null"],
++        },
++        "warning": {
++            "type": "string",
++        },
++        "result": {
++            "type": "object",
++            "additionalProperties": True,
++        },
++    },
++    "required": ["ok"],
++    "additionalProperties": True,
++}
+@@ baseline line 590 @@
++    "orders_of_customer": _OUT_ITEM,
+@@ baseline line 600 @@
 +    orders_of_customer,

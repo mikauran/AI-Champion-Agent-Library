@@ -19,6 +19,12 @@ mcp = FastMCP("Acme Catalog")
 # Configuration (names only; values come from the environment).
 SERVER_NAME = "Acme Catalog"
 MAX_RESPONSE_ITEMS = 200
+_ANNOTATIONS = {
+    "readOnlyHint": True,
+    "destructiveHint": False,
+    "idempotentHint": True,
+    "openWorldHint": True,
+}
 BASE_URL_ENV = "ACME_BASE_URL"
 AUTH_ENV = "ACME_API_KEY"
 AUTH_NAME = "X-Api-Key"
@@ -432,7 +438,7 @@ def lookup_product_by_id(product_id: str, fields: Optional[list[str]] = None) ->
 
 
 def search_product(q: str, page: int = 1, page_size: int = 20, fields: Optional[list[str]] = None) -> dict:
-    """Search products by free text, one page at a time. Source note: Search products by free text. See [link removed] for details
+    """Search products by free text, one page at a time. Source note: Search products by free text. See for details
 
     page_size is clamped to the range 1 to 50; larger values are reduced, not rejected.
 
@@ -468,6 +474,89 @@ def search_product(q: str, page: int = 1, page_size: int = 20, fields: Optional[
         return _err("internal", _INTERNAL_MESSAGE)
 
 
+# Result schemas: every tool returns a dict that matches one of these (advertised as outputSchema).
+_OUT_LIST = {
+    "type": "object",
+    "properties": {
+        "ok": {
+            "type": "boolean",
+        },
+        "kind": {
+            "type": "string",
+        },
+        "message": {
+            "type": "string",
+        },
+        "hint": {
+            "type": ["string", "null"],
+        },
+        "warning": {
+            "type": "string",
+        },
+        "results": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": True,
+            },
+        },
+        "count": {
+            "type": "integer",
+        },
+        "page": {
+            "type": "integer",
+        },
+        "page_size": {
+            "type": "integer",
+        },
+        "offset": {
+            "type": "integer",
+        },
+        "limit": {
+            "type": "integer",
+        },
+        "total_matches": {
+            "type": "integer",
+        },
+    },
+    "required": ["ok"],
+    "additionalProperties": True,
+}
+_OUT_ITEM = {
+    "type": "object",
+    "properties": {
+        "ok": {
+            "type": "boolean",
+        },
+        "kind": {
+            "type": "string",
+        },
+        "message": {
+            "type": "string",
+        },
+        "hint": {
+            "type": ["string", "null"],
+        },
+        "warning": {
+            "type": "string",
+        },
+        "result": {
+            "type": "object",
+            "additionalProperties": True,
+        },
+    },
+    "required": ["ok"],
+    "additionalProperties": True,
+}
+
+_OUTPUT_SCHEMAS = {
+    "filter_product_by_features": _OUT_LIST,
+    "list_products": _OUT_LIST,
+    "lookup_product_by_id": _OUT_ITEM,
+    "search_product": _OUT_LIST,
+}
+
+
 # Register every tool with the server (read-only tools only).
 for _tool in (
     filter_product_by_features,
@@ -475,7 +564,7 @@ for _tool in (
     lookup_product_by_id,
     search_product,
 ):
-    mcp.tool(_tool)
+    mcp.tool(_tool, annotations=_ANNOTATIONS, output_schema=_OUTPUT_SCHEMAS[_tool.__name__])
 
 
 if __name__ == "__main__":

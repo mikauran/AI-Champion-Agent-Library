@@ -1,7 +1,7 @@
-@@ baseline line 261 @@
+@@ baseline line 267 @@
 +class _Stop(Exception):
 +    """Ends a composite tool early with a ready, caller-safe response."""
-@@ baseline line 262 @@
+@@ baseline line 268 @@
 +    def __init__(self, response):
 +        super().__init__("stop")
 +        self.response = response
@@ -82,7 +82,7 @@
 +    raise _Stop(failure)
 +
 +
-@@ baseline line 359 @@
+@@ baseline line 365 @@
 +def part_finder(operation: str, partId: Optional[str] = None, fields: Optional[list[str]] = None, page: Optional[int] = None, page_size: Optional[int] = None, q: Optional[str] = None) -> dict:
 +    """One entry point for parts: look one up by code, or search by free text. Choose with the operation argument.
 +
@@ -114,10 +114,14 @@
 +
 +def _op_lookup_part_by_id(partId: str, fields: Optional[list[str]] = None) -> dict:
 -def lookup_part_by_id(partId: str, fields: Optional[list[str]] = None) -> dict:
-@@ baseline line 384 @@
+@@ baseline line 390 @@
 +def _op_search_part(page: int = 1, page_size: int = 20, q: Optional[str] = None, fields: Optional[list[str]] = None) -> dict:
 -def search_part(page: int = 1, page_size: int = 20, q: Optional[str] = None, fields: Optional[list[str]] = None) -> dict:
-@@ baseline line 421 @@
+@@ baseline line 501 @@
++    "part_finder": _OUT_ITEM,
+-    "lookup_part_by_id": _OUT_ITEM,
+-    "search_part": _OUT_LIST,
+@@ baseline line 509 @@
 +    part_finder,
 -    lookup_part_by_id,
 -    search_part,

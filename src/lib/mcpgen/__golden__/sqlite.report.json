@@ -14,11 +14,6 @@
   ],
   "gaps": [
     {
-      "code": "sql-dialect-detected",
-      "message": "The input was recognised as SQLite (.schema or .dump) output.",
-      "severity": "info"
-    },
-    {
       "code": "unsupported-statement",
       "message": "CREATE VIEW statement is not supported and was ignored.",
       "severity": "warn"
@@ -31,6 +26,11 @@
     {
       "code": "limit-default",
       "message": "No page size is known from the schema; the default of 100 rows per call was used. Override it with options.limits.maxPageSize.",
+      "severity": "info"
+    },
+    {
+      "code": "sql-dialect-detected",
+      "message": "The input was recognised as SQLite (.schema or .dump) output.",
       "severity": "info"
     }
   ],

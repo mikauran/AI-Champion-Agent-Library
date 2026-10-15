@@ -16,16 +16,6 @@
   ],
   "gaps": [
     {
-      "code": "multi-type-unsupported",
-      "message": "A schema allows several non-null types (type is a list); the field type is reported as unknown.",
-      "severity": "info"
-    },
-    {
-      "code": "webhooks-ignored",
-      "message": "The document declares webhooks; they describe calls made to the consumer and are ignored (only paths are read).",
-      "severity": "info"
-    },
-    {
       "code": "ceiling-unknown",
       "message": "No result ceiling is set (limits.resultCeiling); no ceiling warning is emitted. Supply the upstream ceiling if one exists.",
       "severity": "warn"
@@ -33,6 +23,16 @@
     {
       "code": "auth-none",
       "message": "The source declares no authentication; the server sends no credentials.",
+      "severity": "info"
+    },
+    {
+      "code": "multi-type-unsupported",
+      "message": "A schema allows several non-null types (type is a list); the field type is reported as unknown.",
+      "severity": "info"
+    },
+    {
+      "code": "webhooks-ignored",
+      "message": "The document declares webhooks; they describe calls made to the consumer and are ignored (only paths are read).",
       "severity": "info"
     }
   ],

@@ -1,9 +1,9 @@
-@@ baseline line 359 @@
+@@ baseline line 365 @@
 +def find_parts(page: int = 1, page_size: int = 20, text: Optional[str] = None, q: Optional[str] = None, fields: Optional[list[str]] = None) -> dict:
 +    """Finds parts by free text, one page at a time. Read-only.
 -def lookup_part_by_id(partId: str, fields: Optional[list[str]] = None) -> dict:
 -    """Look up one part by id. Says clearly when it does not exist. Source note: Fetch one part
-@@ baseline line 362 @@
+@@ baseline line 368 @@
 -    Args:
 -        partId: Part code
 -        fields: Optional list of field names to return (at most 12; unknown names are ignored).
@@ -29,14 +29,14 @@
 -def search_part(page: int = 1, page_size: int = 20, q: Optional[str] = None, fields: Optional[list[str]] = None) -> dict:
 -    """Search parts by free text, one page at a time. Source note: Search and list parts
 -
-@@ baseline line 392 @@
+@@ baseline line 398 @@
 +        text: Words to look for in the part name.
 +        q: Alias of text (kept for compatibility).
 -        q: Free text query
-@@ baseline line 396 @@
+@@ baseline line 402 @@
 +        if text is not None:
 +            q = text
-@@ baseline line 418 @@
+@@ baseline line 424 @@
 +def lookup_part_by_id(partId: str, fields: Optional[list[str]] = None) -> dict:
 +    """Look up one part by id. Says clearly when it does not exist. Source note: Fetch one part
 +
@@ -62,7 +62,11 @@
 +        return _err("internal", _INTERNAL_MESSAGE)
 +
 +
-@@ baseline line 421 @@
+@@ baseline line 501 @@
++    "find_parts": _OUT_LIST,
+@@ baseline line 502 @@
+-    "search_part": _OUT_LIST,
+@@ baseline line 509 @@
 +    find_parts,
-@@ baseline line 422 @@
+@@ baseline line 510 @@
 -    search_part,

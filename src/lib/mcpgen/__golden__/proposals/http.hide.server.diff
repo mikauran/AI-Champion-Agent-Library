@@ -1,4 +1,4 @@
-@@ baseline line 297 @@
+@@ baseline line 303 @@
 -def filter_part_by_features(key: str, value: Optional[str] = None, q: Optional[str] = None, max_pages: int = 5, fields: Optional[list[str]] = None) -> dict:
 -    """Find parts whose features contain a matching entry; candidate pages are fetched and filtered in memory and the scan coverage is reported.
 -
@@ -61,5 +61,7 @@
 -        return _err("internal", _INTERNAL_MESSAGE)
 -
 -
-@@ baseline line 420 @@
+@@ baseline line 500 @@
+-    "filter_part_by_features": _OUT_LIST,
+@@ baseline line 508 @@
 -    filter_part_by_features,

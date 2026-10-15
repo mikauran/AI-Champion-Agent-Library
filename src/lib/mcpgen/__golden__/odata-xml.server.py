@@ -21,6 +21,12 @@ mcp = FastMCP("Acme Catalog")
 # Configuration (names only; values come from the environment).
 SERVER_NAME = "Acme Catalog"
 MAX_RESPONSE_ITEMS = 200
+_ANNOTATIONS = {
+    "readOnlyHint": True,
+    "destructiveHint": False,
+    "idempotentHint": True,
+    "openWorldHint": True,
+}
 BASE_URL_ENV = "ACME_CATALOG_BASE_URL"
 AUTH_ENV = "ACME_CATALOG_ACCESS_TOKEN"
 AUTH_NAME = "X-Api-Key"
@@ -650,6 +656,91 @@ def lookup_supplier_by_supplier_code(supplier_code: str, fields: Optional[list[s
         return _err("internal", _INTERNAL_MESSAGE)
 
 
+# Result schemas: every tool returns a dict that matches one of these (advertised as outputSchema).
+_OUT_LIST = {
+    "type": "object",
+    "properties": {
+        "ok": {
+            "type": "boolean",
+        },
+        "kind": {
+            "type": "string",
+        },
+        "message": {
+            "type": "string",
+        },
+        "hint": {
+            "type": ["string", "null"],
+        },
+        "warning": {
+            "type": "string",
+        },
+        "results": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": True,
+            },
+        },
+        "count": {
+            "type": "integer",
+        },
+        "page": {
+            "type": "integer",
+        },
+        "page_size": {
+            "type": "integer",
+        },
+        "offset": {
+            "type": "integer",
+        },
+        "limit": {
+            "type": "integer",
+        },
+        "total_matches": {
+            "type": "integer",
+        },
+    },
+    "required": ["ok"],
+    "additionalProperties": True,
+}
+_OUT_ITEM = {
+    "type": "object",
+    "properties": {
+        "ok": {
+            "type": "boolean",
+        },
+        "kind": {
+            "type": "string",
+        },
+        "message": {
+            "type": "string",
+        },
+        "hint": {
+            "type": ["string", "null"],
+        },
+        "warning": {
+            "type": "string",
+        },
+        "result": {
+            "type": "object",
+            "additionalProperties": True,
+        },
+    },
+    "required": ["ok"],
+    "additionalProperties": True,
+}
+
+_OUTPUT_SCHEMAS = {
+    "list_order_lines": _OUT_LIST,
+    "list_products": _OUT_LIST,
+    "list_suppliers": _OUT_LIST,
+    "lookup_order_line_by_order_id_and_line_number": _OUT_ITEM,
+    "lookup_product_by_id": _OUT_ITEM,
+    "lookup_supplier_by_supplier_code": _OUT_ITEM,
+}
+
+
 # Register every tool with the server (read-only tools only).
 for _tool in (
     list_order_lines,
@@ -659,7 +750,7 @@ for _tool in (
     lookup_product_by_id,
     lookup_supplier_by_supplier_code,
 ):
-    mcp.tool(_tool)
+    mcp.tool(_tool, annotations=_ANNOTATIONS, output_schema=_OUTPUT_SCHEMAS[_tool.__name__])
 
 
 if __name__ == "__main__":

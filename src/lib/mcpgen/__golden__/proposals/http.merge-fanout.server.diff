@@ -1,7 +1,7 @@
-@@ baseline line 261 @@
+@@ baseline line 267 @@
 +class _Stop(Exception):
 +    """Ends a composite tool early with a ready, caller-safe response."""
-@@ baseline line 262 @@
+@@ baseline line 268 @@
 +    def __init__(self, response):
 +        super().__init__("stop")
 +        self.response = response
@@ -82,7 +82,7 @@
 +    raise _Stop(failure)
 +
 +
-@@ baseline line 297 @@
+@@ baseline line 303 @@
 +def lookup_part_by_id(partId: str, fields: Optional[list[str]] = None) -> dict:
 +    """Look up one part by id. Says clearly when it does not exist. Source note: Fetch one part
 +
@@ -137,7 +137,7 @@
 +
 +def _op_filter_part_by_features(key: str, value: Optional[str] = None, q: Optional[str] = None, max_pages: int = 5, fields: Optional[list[str]] = None) -> dict:
 -def filter_part_by_features(key: str, value: Optional[str] = None, q: Optional[str] = None, max_pages: int = 5, fields: Optional[list[str]] = None) -> dict:
-@@ baseline line 359 @@
+@@ baseline line 365 @@
 +def _op_search_part(page: int = 1, page_size: int = 20, q: Optional[str] = None, fields: Optional[list[str]] = None) -> dict:
 -def lookup_part_by_id(partId: str, fields: Optional[list[str]] = None) -> dict:
 -    """Look up one part by id. Says clearly when it does not exist. Source note: Fetch one part
@@ -165,8 +165,61 @@
 -
 -
 -def search_part(page: int = 1, page_size: int = 20, q: Optional[str] = None, fields: Optional[list[str]] = None) -> dict:
-@@ baseline line 420 @@
+@@ baseline line 425 @@
+-_OUT_LIST = {
+-    "type": "object",
+-    "properties": {
+-        "ok": {
+-            "type": "boolean",
+-        },
+-        "kind": {
+-            "type": "string",
+-        },
+-        "message": {
+-            "type": "string",
+-        },
+-        "hint": {
+-            "type": ["string", "null"],
+-        },
+-        "warning": {
+-            "type": "string",
+-        },
+-        "results": {
+-            "type": "array",
+-            "items": {
+-                "type": "object",
+-                "additionalProperties": True,
+-            },
+-        },
+-        "count": {
+-            "type": "integer",
+-        },
+-        "page": {
+-            "type": "integer",
+-        },
+-        "page_size": {
+-            "type": "integer",
+-        },
+-        "offset": {
+-            "type": "integer",
+-        },
+-        "limit": {
+-            "type": "integer",
+-        },
+-        "total_matches": {
+-            "type": "integer",
+-        },
+-    },
+-    "required": ["ok"],
+-    "additionalProperties": True,
+-}
+@@ baseline line 500 @@
+-    "filter_part_by_features": _OUT_LIST,
+@@ baseline line 502 @@
++    "part_everywhere": _OUT_ITEM,
+-    "search_part": _OUT_LIST,
+@@ baseline line 508 @@
 -    filter_part_by_features,
-@@ baseline line 422 @@
+@@ baseline line 510 @@
 +    part_everywhere,
 -    search_part,

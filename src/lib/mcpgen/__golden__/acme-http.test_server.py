@@ -111,6 +111,101 @@ def test_only_read_tools_exist():
     assert not [n for n in public if re.match(r"^(create|update|delete|post|put|patch|remove|write)_", n)]
 
 
+OPEN_WORLD = True
+
+
+def _hint(annotations, key):
+    if isinstance(annotations, dict):
+        return annotations.get(key)
+    snake = re.sub(r"(?<!^)(?=[A-Z])", "_", key).lower()  # fastmcp 4 uses snake_case, fastmcp 3 camelCase
+    value = getattr(annotations, snake, None)
+    return value if value is not None else getattr(annotations, key, None)
+
+
+def test_every_tool_declares_read_only_annotations():
+    import asyncio
+
+    from fastmcp import Client
+
+    async def list_tools():
+        async with Client(server.mcp) as client:
+            return await client.list_tools()
+
+    tools = asyncio.run(list_tools())
+    assert sorted(t.name for t in tools) == sorted(EXPECTED_TOOLS)
+    for tool in tools:
+        assert _hint(tool.annotations, "readOnlyHint") is True, tool.name
+        assert _hint(tool.annotations, "destructiveHint") is False, tool.name
+        assert _hint(tool.annotations, "idempotentHint") is True, tool.name
+        assert _hint(tool.annotations, "openWorldHint") is OPEN_WORLD, tool.name
+
+
+def _output_schema(tool):
+    schema = getattr(tool, "output_schema", None)
+    if schema is None:
+        schema = getattr(tool, "outputSchema", None)
+    return schema
+
+
+def test_every_tool_declares_an_object_output_schema():
+    import asyncio
+
+    from fastmcp import Client
+
+    async def list_tools():
+        async with Client(server.mcp) as client:
+            return await client.list_tools()
+
+    for tool in asyncio.run(list_tools()):
+        schema = _output_schema(tool)
+        assert isinstance(schema, dict), tool.name
+        assert schema.get("type") == "object", tool.name
+        assert "ok" in schema.get("properties", {}), tool.name
+        assert "ok" in schema.get("required", []), tool.name
+
+
+STRUCTURED_CASES = [
+    [
+        "filter_product_by_features",
+        {
+            "key": "KEY-1",
+        },
+    ],
+    ["list_products", {}],
+    [
+        "lookup_product_by_id",
+        {
+            "product_id": "sample",
+        },
+    ],
+    [
+        "search_product",
+        {
+            "q": "sample",
+        },
+    ],
+]
+
+
+@pytest.mark.parametrize("name,kwargs", STRUCTURED_CASES)
+@pytest.mark.usefixtures("upstream")
+def test_structured_content_matches_the_dict_result_and_schema(name, kwargs):
+    import asyncio
+
+    import jsonschema
+    from fastmcp import Client
+
+    async def call_and_list():
+        async with Client(server.mcp) as client:
+            tools = {t.name: t for t in await client.list_tools()}
+            return tools[name], await client.call_tool(name, kwargs)
+
+    tool, result = asyncio.run(call_and_list())
+    expected = getattr(server, name)(**kwargs)
+    assert result.structured_content == expected
+    jsonschema.validate(expected, _output_schema(tool))
+
+
 TOOL_CALLS = [
     ("filter_product_by_features", {"key": "KEY-1"}),
     ("list_products", {}),

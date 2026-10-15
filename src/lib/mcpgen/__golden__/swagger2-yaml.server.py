@@ -19,6 +19,12 @@ mcp = FastMCP("Acme Swagger Parts API")
 # Configuration (names only; values come from the environment).
 SERVER_NAME = "Acme Swagger Parts API"
 MAX_RESPONSE_ITEMS = 200
+_ANNOTATIONS = {
+    "readOnlyHint": True,
+    "destructiveHint": False,
+    "idempotentHint": True,
+    "openWorldHint": True,
+}
 BASE_URL_ENV = "ACME_SWAGGER_PARTS_BASE_URL"
 AUTH_ENV = "ACME_SWAGGER_PARTS_API_KEY"
 AUTH_NAME = "X-Acme-Key"
@@ -389,13 +395,95 @@ def search_part(page: int = 1, page_size: int = 20, q: Optional[str] = None, fie
         return _err("internal", _INTERNAL_MESSAGE)
 
 
+# Result schemas: every tool returns a dict that matches one of these (advertised as outputSchema).
+_OUT_LIST = {
+    "type": "object",
+    "properties": {
+        "ok": {
+            "type": "boolean",
+        },
+        "kind": {
+            "type": "string",
+        },
+        "message": {
+            "type": "string",
+        },
+        "hint": {
+            "type": ["string", "null"],
+        },
+        "warning": {
+            "type": "string",
+        },
+        "results": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": True,
+            },
+        },
+        "count": {
+            "type": "integer",
+        },
+        "page": {
+            "type": "integer",
+        },
+        "page_size": {
+            "type": "integer",
+        },
+        "offset": {
+            "type": "integer",
+        },
+        "limit": {
+            "type": "integer",
+        },
+        "total_matches": {
+            "type": "integer",
+        },
+    },
+    "required": ["ok"],
+    "additionalProperties": True,
+}
+_OUT_ITEM = {
+    "type": "object",
+    "properties": {
+        "ok": {
+            "type": "boolean",
+        },
+        "kind": {
+            "type": "string",
+        },
+        "message": {
+            "type": "string",
+        },
+        "hint": {
+            "type": ["string", "null"],
+        },
+        "warning": {
+            "type": "string",
+        },
+        "result": {
+            "type": "object",
+            "additionalProperties": True,
+        },
+    },
+    "required": ["ok"],
+    "additionalProperties": True,
+}
+
+_OUTPUT_SCHEMAS = {
+    "filter_part_by_features": _OUT_LIST,
+    "lookup_part_by_id": _OUT_ITEM,
+    "search_part": _OUT_LIST,
+}
+
+
 # Register every tool with the server (read-only tools only).
 for _tool in (
     filter_part_by_features,
     lookup_part_by_id,
     search_part,
 ):
-    mcp.tool(_tool)
+    mcp.tool(_tool, annotations=_ANNOTATIONS, output_schema=_OUTPUT_SCHEMAS[_tool.__name__])
 
 
 if __name__ == "__main__":

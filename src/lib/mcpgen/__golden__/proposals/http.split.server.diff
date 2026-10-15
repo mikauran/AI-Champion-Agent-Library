@@ -1,7 +1,7 @@
-@@ baseline line 261 @@
+@@ baseline line 267 @@
 +class _Stop(Exception):
 +    """Ends a composite tool early with a ready, caller-safe response."""
-@@ baseline line 262 @@
+@@ baseline line 268 @@
 +    def __init__(self, response):
 +        super().__init__("stop")
 +        self.response = response
@@ -82,7 +82,7 @@
 +    raise _Stop(failure)
 +
 +
-@@ baseline line 384 @@
+@@ baseline line 390 @@
 +def quick_part_search(page: int = 1, q: Optional[str] = None, fields: Optional[list[str]] = None) -> dict:
 +    """A short preview page of the part search.
 +
@@ -117,7 +117,11 @@
 +
 +def _op_search_part(page: int = 1, page_size: int = 20, q: Optional[str] = None, fields: Optional[list[str]] = None) -> dict:
 -def search_part(page: int = 1, page_size: int = 20, q: Optional[str] = None, fields: Optional[list[str]] = None) -> dict:
-@@ baseline line 422 @@
+@@ baseline line 502 @@
++    "quick_part_search": _OUT_ITEM,
++    "wide_part_search": _OUT_ITEM,
+-    "search_part": _OUT_LIST,
+@@ baseline line 510 @@
 +    quick_part_search,
 +    wide_part_search,
 -    search_part,

@@ -14,14 +14,10 @@
   ],
   "gaps": [
     {
-      "code": "sql-dialect-detected",
-      "message": "The input was recognised as PostgreSQL (pg_dump) output.",
-      "severity": "info"
-    },
-    {
-      "code": "sqlite-backend-only",
-      "message": "The generated sql server reads a read-only SQLite database file. This PostgreSQL (pg_dump) schema only describes the tables: provide a SQLite file with the same tables and columns (same names) for the server to open.",
-      "severity": "info"
+      "code": "no-identifier",
+      "message": "The table has no primary key; only list and query access is generated, no lookup.",
+      "path": "note_log",
+      "severity": "warn"
     },
     {
       "code": "unsupported-statement",
@@ -56,15 +52,19 @@
       "severity": "info"
     },
     {
-      "code": "no-identifier",
-      "message": "The table has no primary key; only list and query access is generated, no lookup.",
-      "path": "note_log",
-      "severity": "warn"
-    },
-    {
       "code": "projection-default",
       "message": "No identifier, name-like or class-like field is marked on note_log; the first fields were used.",
       "path": "note_log",
+      "severity": "info"
+    },
+    {
+      "code": "sql-dialect-detected",
+      "message": "The input was recognised as PostgreSQL (pg_dump) output.",
+      "severity": "info"
+    },
+    {
+      "code": "sqlite-backend-only",
+      "message": "The generated sql server reads a read-only SQLite database file. This PostgreSQL (pg_dump) schema only describes the tables: provide a SQLite file with the same tables and columns (same names) for the server to open.",
       "severity": "info"
     }
   ],

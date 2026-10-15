@@ -21,13 +21,29 @@
   ],
   "gaps": [
     {
-      "code": "odata-version-detected",
-      "message": "OData 4.01 metadata (CSDL JSON) was read; it is never fetched or sent anywhere.",
-      "severity": "info"
+      "code": "ceiling-unknown",
+      "message": "No result ceiling is set (limits.resultCeiling); no ceiling warning is emitted. Supply the upstream ceiling if one exists.",
+      "severity": "warn"
     },
     {
       "code": "external-reference-not-fetched",
       "message": "The document references 1 external schema document(s); they are never fetched, so types defined only there are unknown.",
+      "severity": "warn"
+    },
+    {
+      "code": "oauth2-flow-not-implemented",
+      "message": "The service declares OAuth2 or OpenID Connect; no flow is implemented. The server reads an access token you obtained from ACME_CATALOG_ACCESS_TOKEN and sends it as a bearer token; it never stores or refreshes it.",
+      "severity": "warn"
+    },
+    {
+      "code": "source-text-copied",
+      "message": "Free text from the source document (operation summaries and argument descriptions) is published in the description of 2 tool(s). Summaries are labelled \"Source note\". Review that text before use.",
+      "severity": "warn"
+    },
+    {
+      "code": "unsupported-type",
+      "message": "Product: 1 property(ies) with a binary, stream or geospatial type were left out (Photo).",
+      "path": "Products",
       "severity": "warn"
     },
     {
@@ -36,8 +52,8 @@
       "severity": "info"
     },
     {
-      "code": "odata-nextlink-not-followed",
-      "message": "Server-driven paging links (@odata.nextLink) are never followed; lists are paged with $top and $skip.",
+      "code": "odata-function-unsupported",
+      "message": "1 function(s) are not exposed: a function call is a different request shape (Acme.Catalog.TopProducts).",
       "severity": "info"
     },
     {
@@ -47,10 +63,9 @@
       "severity": "info"
     },
     {
-      "code": "unsupported-type",
-      "message": "Product: 1 property(ies) with a binary, stream or geospatial type were left out (Photo).",
-      "path": "Products",
-      "severity": "warn"
+      "code": "odata-nextlink-not-followed",
+      "message": "Server-driven paging links (@odata.nextLink) are never followed; lists are paged with $top and $skip.",
+      "severity": "info"
     },
     {
       "code": "odata-precision-as-string",
@@ -63,30 +78,15 @@
       "severity": "info"
     },
     {
-      "code": "odata-function-unsupported",
-      "message": "1 function(s) are not exposed: a function call is a different request shape (Acme.Catalog.TopProducts).",
+      "code": "odata-version-detected",
+      "message": "OData 4.01 metadata (CSDL JSON) was read; it is never fetched or sent anywhere.",
       "severity": "info"
-    },
-    {
-      "code": "oauth2-flow-not-implemented",
-      "message": "The service declares OAuth2 or OpenID Connect; no flow is implemented. The server reads an access token you obtained from ACME_CATALOG_ACCESS_TOKEN and sends it as a bearer token; it never stores or refreshes it.",
-      "severity": "warn"
     },
     {
       "code": "write-dropped",
       "message": "Write operation Acme.Catalog.ArchiveProduct was dropped (read-only server).",
       "path": "Acme.Catalog.ArchiveProduct",
       "severity": "info"
-    },
-    {
-      "code": "ceiling-unknown",
-      "message": "No result ceiling is set (limits.resultCeiling); no ceiling warning is emitted. Supply the upstream ceiling if one exists.",
-      "severity": "warn"
-    },
-    {
-      "code": "source-text-copied",
-      "message": "Free text from the source document (operation summaries and argument descriptions) is published in the description of 2 tool(s). Summaries are labelled \"Source note\". Review that text before use.",
-      "severity": "warn"
     }
   ],
   "toolsDropped": [

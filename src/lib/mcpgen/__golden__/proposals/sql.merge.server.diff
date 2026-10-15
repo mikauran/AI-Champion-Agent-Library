@@ -1,7 +1,7 @@
-@@ baseline line 189 @@
+@@ baseline line 195 @@
 +class _Stop(Exception):
 +    """Ends a composite tool early with a ready, caller-safe response."""
-@@ baseline line 190 @@
+@@ baseline line 196 @@
 +    def __init__(self, response):
 +        super().__init__("stop")
 +        self.response = response
@@ -82,7 +82,7 @@
 +    raise _Stop(failure)
 +
 +
-@@ baseline line 247 @@
+@@ baseline line 253 @@
 -        {
 -            "name": "order",
 -            "label": "order",
@@ -135,7 +135,7 @@
 -                },
 -            ],
 -        },
-@@ baseline line 357 @@
+@@ baseline line 363 @@
 +def order_data(operation: str, field: Optional[str] = None, value: Optional[str] = None, match: Optional[str] = None, fields: Optional[list[str]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> dict:
 +    """Orders and their lines from one tool; choose which with the operation argument.
 +
@@ -164,14 +164,46 @@
 +        return _err("internal", _INTERNAL_MESSAGE)
 +
 +
-@@ baseline line 423 @@
+@@ baseline line 429 @@
 +def _op_query_order(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 -def query_order(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
-@@ baseline line 456 @@
+@@ baseline line 462 @@
 +def _op_query_order_line(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 -def query_order_line(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
-@@ baseline line 492 @@
+@@ baseline line 543 @@
++_OUT_ITEM = {
++    "type": "object",
++    "properties": {
++        "ok": {
++            "type": "boolean",
++        },
++        "kind": {
++            "type": "string",
++        },
++        "message": {
++            "type": "string",
++        },
++        "hint": {
++            "type": ["string", "null"],
++        },
++        "warning": {
++            "type": "string",
++        },
++        "result": {
++            "type": "object",
++            "additionalProperties": True,
++        },
++    },
++    "required": ["ok"],
++    "additionalProperties": True,
++}
+@@ baseline line 590 @@
++    "order_data": _OUT_ITEM,
+@@ baseline line 592 @@
+-    "query_order": _OUT_LIST,
+-    "query_order_line": _OUT_LIST,
+@@ baseline line 600 @@
 +    order_data,
-@@ baseline line 494 @@
+@@ baseline line 602 @@
 -    query_order,
 -    query_order_line,

@@ -1,7 +1,7 @@
-@@ baseline line 261 @@
+@@ baseline line 267 @@
 +class _Stop(Exception):
 +    """Ends a composite tool early with a ready, caller-safe response."""
-@@ baseline line 262 @@
+@@ baseline line 268 @@
 +    def __init__(self, response):
 +        super().__init__("stop")
 +        self.response = response
@@ -82,7 +82,7 @@
 +    raise _Stop(failure)
 +
 +
-@@ baseline line 359 @@
+@@ baseline line 365 @@
 +def find_part_records(text: str) -> dict:
 +    """Searches parts by text and returns the full record of each of the first matches.
 +
@@ -110,5 +110,7 @@
 +        return _err("internal", _INTERNAL_MESSAGE)
 +
 +
-@@ baseline line 421 @@
+@@ baseline line 501 @@
++    "find_part_records": _OUT_ITEM,
+@@ baseline line 509 @@
 +    find_part_records,

@@ -1,8 +1,8 @@
-@@ baseline line 192 @@
+@@ baseline line 198 @@
 -    "note_log": ["note_text", "created"],
-@@ baseline line 199 @@
+@@ baseline line 205 @@
 -    "note_log": ["note_text", "created"],
-@@ baseline line 232 @@
+@@ baseline line 238 @@
 -            "name": "note_log",
 -            "label": "note log",
 -            "query_tool": "query_note_log",
@@ -19,7 +19,7 @@
 -            ],
 -        },
 -        {
-@@ baseline line 317 @@
+@@ baseline line 323 @@
 -    "note_log": {
 -        "table": "\"note_log\"",
 -        "columns": {
@@ -28,7 +28,7 @@
 -        },
 -        "order": "rowid",
 -    },
-@@ baseline line 390 @@
+@@ baseline line 396 @@
 -def query_note_log(field: Optional[str] = None, value: Optional[str] = None, match: str = "equals", fields: Optional[list[str]] = None, limit: int = 20, offset: int = 0) -> dict:
 -    """Query note logs by one field using equals, contains or startsWith matching. Returns at most 100 rows per call.
 -
@@ -62,5 +62,7 @@
 -        return _err("internal", _INTERNAL_MESSAGE)
 -
 -
-@@ baseline line 493 @@
+@@ baseline line 591 @@
+-    "query_note_log": _OUT_LIST,
+@@ baseline line 601 @@
 -    query_note_log,

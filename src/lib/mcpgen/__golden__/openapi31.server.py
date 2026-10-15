@@ -18,6 +18,12 @@ mcp = FastMCP("Acme Assets API")
 # Configuration (names only; values come from the environment).
 SERVER_NAME = "Acme Assets API"
 MAX_RESPONSE_ITEMS = 200
+_ANNOTATIONS = {
+    "readOnlyHint": True,
+    "destructiveHint": False,
+    "idempotentHint": True,
+    "openWorldHint": True,
+}
 BASE_URL_ENV = "ACME_ASSETS_BASE_URL"
 AUTH_ENV = None
 AUTH_NAME = "X-Api-Key"
@@ -317,12 +323,93 @@ def lookup_asset_by_id(assetId: str, fields: Optional[list[str]] = None) -> dict
         return _err("internal", _INTERNAL_MESSAGE)
 
 
+# Result schemas: every tool returns a dict that matches one of these (advertised as outputSchema).
+_OUT_LIST = {
+    "type": "object",
+    "properties": {
+        "ok": {
+            "type": "boolean",
+        },
+        "kind": {
+            "type": "string",
+        },
+        "message": {
+            "type": "string",
+        },
+        "hint": {
+            "type": ["string", "null"],
+        },
+        "warning": {
+            "type": "string",
+        },
+        "results": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": True,
+            },
+        },
+        "count": {
+            "type": "integer",
+        },
+        "page": {
+            "type": "integer",
+        },
+        "page_size": {
+            "type": "integer",
+        },
+        "offset": {
+            "type": "integer",
+        },
+        "limit": {
+            "type": "integer",
+        },
+        "total_matches": {
+            "type": "integer",
+        },
+    },
+    "required": ["ok"],
+    "additionalProperties": True,
+}
+_OUT_ITEM = {
+    "type": "object",
+    "properties": {
+        "ok": {
+            "type": "boolean",
+        },
+        "kind": {
+            "type": "string",
+        },
+        "message": {
+            "type": "string",
+        },
+        "hint": {
+            "type": ["string", "null"],
+        },
+        "warning": {
+            "type": "string",
+        },
+        "result": {
+            "type": "object",
+            "additionalProperties": True,
+        },
+    },
+    "required": ["ok"],
+    "additionalProperties": True,
+}
+
+_OUTPUT_SCHEMAS = {
+    "list_assets": _OUT_LIST,
+    "lookup_asset_by_id": _OUT_ITEM,
+}
+
+
 # Register every tool with the server (read-only tools only).
 for _tool in (
     list_assets,
     lookup_asset_by_id,
 ):
-    mcp.tool(_tool)
+    mcp.tool(_tool, annotations=_ANNOTATIONS, output_schema=_OUTPUT_SCHEMAS[_tool.__name__])
 
 
 if __name__ == "__main__":
