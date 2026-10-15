@@ -11,3 +11,4 @@ Items an engineer should confirm. All agent outputs are drafts for engineer revi
 
 - Agent 5 (Product sourcing): attempted-not-counted (jobs e4181f2f, 24e650a3, 02bb5e13, see 26-VERIFICATION.md). Skim the last draft; confirm exact-equality matching is an acceptable default, and decide whether to accept a deterministic matching tool for this agent (BL-09 was lost by the model despite correct per-id tests).
 - Decide whether stk-mcp / lvi-info-mcp should be reachable from Try It Out (links the live catalog access gap).
+- Agent 6 (Quote comparison): counted (job eaee09d8, see 26-VERIFICATION.md). Skim the comparison draft; confirm that "no arithmetic, flag only" is the wanted division of labour and decide whether a deterministic normalising script (units, currency, VAT, totals) should follow.

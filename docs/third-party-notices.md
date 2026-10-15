@@ -56,6 +56,7 @@ SOFTWARE.
 | clash-prioritization | 2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer; 1_DDC_Toolkit/BIM-Analysis/bim-clash-detection | 2026-10-15 |
 | rfi-generation-from-findings | 1_DDC_Toolkit/Document-Control/rfi-management | 2026-10-15 |
 | product-sourcing-mbom | 1_DDC_Toolkit/Procurement/material-procurement-tracker; 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor | 2026-10-15 |
+| quote-comparison | 1_DDC_Toolkit/Procurement/bid-analysis-comparator; 6_OpenConstructionERP/oce-tendering | 2026-10-15 |
 | (further entries: Phases 25-29) | | |
 
 ### Skills adapted in this repository
@@ -65,3 +66,4 @@ SOFTWARE.
 - clash-prioritization: ideas adapted from DDC skills 2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer and 1_DDC_Toolkit/BIM-Analysis/bim-clash-detection (MIT); own design; no DDC book text copied
 - rfi-generation-from-findings: RFI field set adapted from DDC skill 1_DDC_Toolkit/Document-Control/rfi-management (MIT); own design; no DDC code copied
 - product-sourcing-mbom: ideas adapted from DDC skills 1_DDC_Toolkit/Procurement/material-procurement-tracker and 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor (MIT); own design; no DDC code or text copied
+- quote-comparison: ideas adapted from DDC skills 1_DDC_Toolkit/Procurement/bid-analysis-comparator and 6_OpenConstructionERP/oce-tendering (MIT); own design; scoring/recommendation not adopted; no DDC code or text copied

@@ -40,3 +40,10 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-034 | 5 Product sourcing | No price, lead-time or availability reasoning; in_stock is copied only | data | open | Phase 26 | open |
 | G-035 | 5 Product sourcing | Real E-BOMs (IFC or Excel) need a preprocessing step to the CSV shape | tool | open | Phase 26 | open |
 | G-036 | 5 Product sourcing | Three runs (jobs e4181f2f, 24e650a3, 02bb5e13) failed the rubric: gpt-4.1-mini lost matched line BL-09 (cand NONE despite dn_ok=Y, mat_ok=Y) and other per-row slips; attempted-not-counted after two SKILL revisions. A deterministic matching tool with the model writing only the reason is the robust option. | tool | open | Phase 26 | open |
+| G-037 | 6 Quote comparison | No arithmetic by design: totals, VAT adjustment, currency and unit conversion (pack sizes, price per 100) are left to a script or the engineer | tool | open | Phase 26 | open |
+| G-038 | 6 Quote comparison | No exchange rates or Incoterm cost adjustment | data | open | Phase 26 | open |
+| G-039 | 6 Quote comparison | Quotes arrive as PDF or e-mail in practice; only pre-extracted text or CSV is read | tool | open | Phase 26 | open |
+| G-040 | 6 Quote comparison | No supplier scoring, scope-gap weighting or award recommendation (a DDC idea deliberately not adopted) | process | open | Phase 26 | open |
+| G-041 | 6 Quote comparison | Substitution detection is by visible model or size text only; technical equivalence is not assessed | tool | open | Phase 26 | open |
+| G-042 | 6 Quote comparison | Comparison of more than 3 quotes or more than about 40 lines is unproven (one model call, 200 KB upload cap) | tool | open | Phase 26 | open |
+| G-043 | 6 Quote comparison | SKILL v1 run (job c1bb118d) failed the rubric: the model wrote code=22/22 with code_same=N and named a lowest price from a single eligible offer; fixed by an agreement rule and a closing lowest= line per RFQ line (job eaee09d8 passed). Multi-condition steps still need copyable per-row checks. | tool | open | Phase 26 | open |

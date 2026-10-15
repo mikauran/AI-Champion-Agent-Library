@@ -25,7 +25,7 @@ Only the agent names are used here, with our own wording. The source slide is TU
 | 3 | Clash prioritization | Design | partial | data/agents/clash-prioritization.yaml | Counted: entry plus one container run on a synthetic clash report (Phase 25, 25-04, redesigned one-row-per-clash SKILL after three failed runs); no model access, generic priority scale; the report must carry a precomputed location_key (real clash exports need a preprocessing step). | 25 |
 | 4 | RFI generation | Design | partial | data/agents/rfi-triage-assistant.yaml, data/agents/demo-rfi-triage.yaml, data/agents/rfi-generation-from-findings.yaml | Counted: new entry driven by findings plus one container run on synthetic findings (Phase 25, 25-05). The assistant and demo entries stay as they were (conversational drafting/routing, single-RFI triage); no RFI log or numbering, no attachments. | 25 |
 | 5 | Product sourcing E-BOM to M-BOM | Sourcing | missing | data/agents/product-sourcing-mbom.yaml | Entry exists, attempted-not-counted: three container runs on a synthetic E-BOM and catalog excerpt (Phase 26, 26-01) lost a matched line (BL-09) despite two SKILL revisions; no live stk-mcp / lvi-info-mcp access, exact-equality matching only. | 26 |
-| 6 | Quote comparison | Sourcing | missing | none | No entry compares supplier quotes. | 26 |
+| 6 | Quote comparison | Sourcing | partial | data/agents/quote-comparison.yaml | Counted: entry plus one container run on three synthetic quotes (Phase 26, 26-02); flag-only, no arithmetic, no conversions, no supplier recommendation. | 26 |
 | 7 | Carbon & EPD enrichment | Sourcing | missing | none | No entry touches EPD or carbon data; `energy-model-sync` covers energy simulation only. | 26 |
 | 8 | Cut-sheet QA | Manufacturing | partial | data/agents/submittal-review-router.yaml | It extracts values from product submittals and compares them with the specification, which is close to checking a product data sheet, but it targets submittal routing, not prefab cut sheets. | 27 |
 | 9 | Spooling & cutting | Manufacturing | missing | none | No entry handles prefab spools or cut lists. | 27 |
@@ -33,7 +33,7 @@ Only the agent names are used here, with our own wording. The source slide is TU
 | 11 | O&M completeness | Site and handover | missing | none | No entry checks handover documentation. | 28 |
 | 12 | BMS digital twin | Site and handover | missing | none | No entry connects building management data to a model. | 28 |
 
-Summary: 0 full, 5 partial (1, 2, 3, 4, 8), 7 missing.
+Summary: 0 full, 6 partial (1, 2, 3, 4, 6, 8), 6 missing.
 
 Stage names: Design (IFC/BIM), Sourcing (LVI-INFO catalog), Manufacturing (prefab and cut sheets), Site and handover (O&M, BMS).
 

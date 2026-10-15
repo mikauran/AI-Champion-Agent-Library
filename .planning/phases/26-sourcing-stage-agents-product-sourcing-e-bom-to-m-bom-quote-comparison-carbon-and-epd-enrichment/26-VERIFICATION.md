@@ -31,3 +31,24 @@ ATTEMPTED-NOT-COUNTED (rubric not met after the SKILL v1 run and the two allowed
 - Mitigation idea (not done, cap reached): a deterministic matching tool (script) with the model only writing the reason text.
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: three 26-01 rows (0.0195, 0.0231, 0.0268; total 0.0694 USD, none counted).
+
+### Agent 6: Quote comparison
+COUNTED (SKILL revision 1, rubric R1-R7 met).
+
+- Entry: data/agents/quote-comparison.yaml (validate-submission INGESTIBLE, validate-entries 0 errors; stage sourcing, agent_no 6). Input label: synthetic (data/tryitout-prompts/quote-comparison/sample-quotes.txt: 8 RFQ lines, three invented quotes, 23 offered prices). Option A, gpt-4.1-mini, Pi container, 3 requests per run, usage observed (countable).
+- Answer key: basis A first, B same, C differs (currency, vat, delivery_terms); flags: B R-05 NOT-QUOTED, B R-07 UNIT-DIFF, C R-06 ITEM-SUBSTITUTE + BASIS-DIFF, C R-07 UNIT-DIFF + BASIS-DIFF, other C cells BASIS-DIFF, rest OK; lowest_comparable R-01 B, R-02 A, R-03 A, R-04 B, R-05 n/a, R-06 A, R-07 n/a, R-08 A.
+- Run 1 (SKILL v1), job c1bb118d-2f2d-4cc3-87a4-d516f4bda4d7, 14976 tokens, est. 0.0240 USD: quote basis, 8 rows in order, all 23 prices copied right, C never ranked, no arithmetic. But R-05 A and C got ITEM-SUBSTITUTE with `code=22/22 code_same=N` (the model contradicted its own check) and R-07 lowest_comparable was A although only one offer was eligible. FAIL (R4, R5).
+- Run 2 (revision 1: code_same agreement rule with examples, closing line per RFQ line `ok_letters=... lowest=...` so the table cell is a copy), job eaee09d8-0baf-4a01-b5fb-4911b8a0c984, 15555 tokens, est. 0.0249 USD (ledger total for 26-02 0.0489 USD).
+- Verdict run 2: R1 pass (3 rows, copied fields right, basis_vs_first right); R2 pass (R-01..R-08 once each, in order); R3 pass (all 23 prices identical to input, B R-05 `-`/NOT-QUOTED, no conversion); R4 pass (all flags equal the key); R5 pass (all 8 lowest_comparable equal the key, C never named); R6 pass (no totals, conversions or recommendation; required sentence present); R7 pass. Cosmetic: the closing line for R-05 reads `ok_letters=A none lowest=n/a` (malformed list, value n/a correct).
+- Design note: the output has an extra `## Line checks` section (one checklist line per RFQ line and quote) before the contract tables; the decisions are made there as equality tests and the contract tables copy from it.
+- Excerpt of the counted output:
+  ```
+  R-05 | Mineral wool pipe insulation 22 mm | 120 | m | 3.10 | OK | - | NOT-QUOTED | 34.00 | BASIS-DIFF | n/a
+  R-06 | Circulation pump 25-60 | 2 | pcs | 289.00 | OK | 301.00 | OK | 3350.00 | ITEM-SUBSTITUTE, BASIS-DIFF | A
+  R-07 | Pipe clamp 22 | 100 | pcs | 0.85 | OK | 8.20 | UNIT-DIFF | 82.00 | UNIT-DIFF, BASIS-DIFF | n/a
+  Totals and conversions are not computed here: recompute per quote after normalising basis, units and items (script or engineer).
+  Draft for engineer review. Prices are copied from the supplied synthetic quotes; no calculation, conversion or supplier recommendation was made.
+  ```
+- Caveat: draft for engineer review; one sample of 8 lines and 3 quotes, synthetic, single run passing after one revision.
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: two 26-02 rows (0.0240, 0.0249).

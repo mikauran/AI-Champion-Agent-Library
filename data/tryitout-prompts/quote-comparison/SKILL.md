@@ -33,7 +33,7 @@ How to fill each field (each is one lookup or one text equality test; copy the t
 - `quoted`: N when that quote's CSV has no row with this rfq_line. If N, write `quoted=N => NOT-QUOTED` and stop for that line, no other fields.
 - `unit_same`: Y when the two unit texts are identical characters (`m` and `m`; `pcs` and `pack10` is N; `pcs` and `100pcs` is N).
 - `qty_same`: Y when the two qty numbers are identical.
-- `code`: the FIRST word that contains a digit in the text (`Circulation pump 25-60` gives `25-60`; `Pipe clamp 22 pack of 10` gives `22`; `Mineral wool pipe insulation 22 mm` gives `22`; `Ball valve DN22 brass` gives `DN22`, and the offered `Brass ball valve DN22` gives `DN22`). `code_same` is Y when the two codes are identical, else N.
+- `code`: the FIRST word that contains a digit in the text (`Circulation pump 25-60` gives `25-60`; `Pipe clamp 22 pack of 10` gives `22`; `Mineral wool pipe insulation 22 mm` gives `22`; `Ball valve DN22 brass` gives `DN22`, and the offered `Brass ball valve DN22` gives `DN22`). `code_same`: look at the two codes you just wrote left and right of the `/`. If they read the same, code_same=Y (`22/22` is Y, `DN15/DN15` is Y, `25-60/25-60` is Y). Only when they read differently is it N (`25-60/25-80` is N). Words such as `mm`, `shell`, `pipe insulation` or `Brass` are NOT part of the code and never make code_same N. Same rule for unit_same and qty_same: write the flag AFTER the two texts and make it agree with them.
 - `rankable`: copied from that quote's row in the Quote basis table.
 
 Flags after `=>`, built by these independent tests (write every token that applies, comma separated, in this order):
@@ -46,7 +46,9 @@ Flags after `=>`, built by these independent tests (write every token that appli
 
 Example lines (illustration, not from the input): `X-1 A: quoted=Y unit=m/m unit_same=Y qty=10/10 qty_same=Y code=22/22 code_same=Y rankable=Y => OK` and `X-2 C: quoted=Y unit=pcs/100pcs unit_same=N qty=5/1 qty_same=N code=DN15/DN15 code_same=Y rankable=N => UNIT-DIFF, BASIS-DIFF`.
 
-After the quote lines of an RFQ line write `<rfq_line> ok_letters=<letters whose flags are exactly OK, comma separated, or none>`. A quote with BASIS-DIFF can never be in ok_letters.
+After the quote lines of an RFQ line write one closing line. `ok_letters` are the letters whose flags (after `=>`) are exactly `OK`, comma separated, or `none`; a quote with BASIS-DIFF is never in ok_letters. Then:
+- ok_letters is `none` or a single letter (for example `A`): write `<rfq_line> ok_letters=<none or letter> lowest=n/a` (one offer alone is not a comparison).
+- ok_letters has two letters (`A,B`): write `<rfq_line> ok_letters=A,B prices A=<A copied price> B=<B copied price> lowest=<letter of the smaller number>`.
 
 ## Step 3: Per-line comparison table
 
@@ -57,7 +59,7 @@ rfq_line | description | qty | unit | A_price | A_flag | B_price | B_flag | C_pr
 
 Columns exactly as above (for two quotes drop the C columns). One row per RFQ line in RFQ order, each line once. `description`, `qty`, `unit` are copied from the RFQ. `X_price` is the unit_price text of quote X copied UNCHANGED (same digits, no currency symbol, no rounding), or `-` when quoted=N. `X_flag` is copied from the `=>` part of the line check.
 
-`lowest_comparable`: look at the `ok_letters` line of that RFQ line. If it has fewer than two letters write `n/a`. Otherwise write the prices of those letters side by side (for example `A=9.80 B=9.45`) in the working line under the table (not in the cell) and put in the cell the letter whose copied price is the smaller number when read digit by digit. No other calculation. A letter that is not in ok_letters never appears in this column.
+`lowest_comparable`: copy the `lowest=` value from the closing line of that RFQ line in the line checks (`A`, `B` or `n/a`). Do not decide it again here. A letter that is not in ok_letters never appears in this column.
 
 ## Step 4: Notes
 
