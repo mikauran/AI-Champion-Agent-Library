@@ -79,3 +79,25 @@ COUNTED with a noted deviation (SKILL v1, footer wording only). Job a121094f-f82
 - Ledger: one 35-01 row.
 
 Teardown: `podman-compose ... down`, `podman ps -a --filter label=aic.tryitout -q` empty, no containers left. Spend plan 35-01: 0.1033 USD (5 runs); fix-run total 0.6304 USD of 5 USD.
+
+## Agent 17 Procurement lead time (plan 35-02)
+
+Label: built on 1_DDC_Toolkit/Procurement/material-procurement-tracker (spec docs/ddc-alignment/procurement-lead-time-check.md, committed before any agent file; key and rubric R1-R7 written before the run). Helper: src/lib/procurement/leadTime.ts (32 unit tests written first; boundaries day 0 and day 14, leap day, year boundary, typed errors, disjoint flags, explicit as_of), CLI scripts/procurement-lead-time.ts (exit 2 on validation errors; compares a result.md cell by cell). Skill defects fixed in the helper: date.today() in four places, overlapping late and to-order window, no validation, blank lead time unrepresentable, PO status without vendor or PO number accepted (10 items in the spec, section 6). Entry limit: validate-entries agent_no range raised from 16 to 20.
+
+COUNTED (SKILL v1). Job e32b588b-8f96-41ec-8ee1-88e5e0ff1f33, gpt-4.1-mini, 7787 tokens, 2 requests, est. 0.0125 USD, label synthetic, countable true, usage observed, Option A (compose stack, tagged image), no direct-call fallback.
+- Key vs result: P-01 ordered-ok, P-02 order-now (-29 days), P-03 order-soon (4 days), P-04 ordered-ok (pre-po, 94 days), P-05 order-data-incomplete (blank lead time, all `-`), P-06 ordered-ok (delivered, -70 days not late), P-07 order-data-incomplete (no PO number). All 7 rows match the key; `npx tsx scripts/procurement-lead-time.ts <sample> <result>` reports "result table matches the helper on every cell". Attention list P-02, P-03, P-05, P-07 as required. R1 to R7 pass: no recomputed dates, no invented values, no ordering instruction.
+- Excerpt:
+  ```
+  ## Lead time check
+  as_of: 2026-03-02
+  | P-01 | po_issued | ordered | 2026-04-14 | 43 | N | N | Y | Y | ordered-ok |
+  | P-02 | quoted | pre-po | 2026-02-01 | -29 | Y | N | N | N | order-now |
+  | P-03 | rfq_sent | pre-po | 2026-03-06 | 4 | N | Y | N | N | order-soon |
+  | P-05 | quoted | pre-po | - | - | - | - | N | N | order-data-incomplete |
+  | P-07 | in_production | ordered | 2026-05-05 | 64 | N | N | N | Y | order-data-incomplete |
+  ## Items needing attention
+  P-02: order-now / P-03: order-soon / P-05: order-data-incomplete / P-07: order-data-incomplete
+  Draft for engineer review. Synthetic input; dates were calculated by a tool, not by this agent, and no order was placed or approved.
+  ```
+- Caveat: the input already contains the helper's columns (the user must run the helper first); the pre-po comfortably early item gets ordered-ok by the spec rule (status column shows it is not ordered).
+- Ledger: one 35-02 row. Spend plan 35-02: 0.0125 USD (1 run); fix-run total 0.6429 USD of 5 USD. Teardown: `podman-compose ... down`, `podman ps -a --filter label=aic.tryitout -q` empty.
