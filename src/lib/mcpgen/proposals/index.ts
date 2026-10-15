@@ -9,7 +9,7 @@
 // fatal in both modes: nothing can be applied to a baseline the file was not written for.
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
-import { gap } from '../diagnostics.js'
+import { cmp, gap } from '../diagnostics.js'
 import { stableJson } from '../generate.js'
 import { buildPlan } from '../plan.js'
 import type { DerivedTool, Gap, GenerateOptions, ServerPlan, SourceModel } from '../types.js'
@@ -140,8 +140,10 @@ export function evaluateProposals(input: EvaluateInput): Evaluation {
     sha256: fileSha256,
     fingerprint,
     mode,
-    applied: ops.map((o) => ({ id: o.id, op: o.op })),
-    rejected: firstPerOp(rejected).map((x) => ({ id: x.opId, gate: x.gate, code: x.code, message: x.message })),
+    applied: ops.map((o) => ({ id: o.id, op: o.op })).sort((a, b) => cmp(a.id, b.id)),
+    rejected: firstPerOp(rejected)
+      .map((x) => ({ id: x.opId, gate: x.gate, code: x.code, message: x.message }))
+      .sort((a, b) => cmp(a.id, b.id) || cmp(a.code, b.code)),
     descriptionsSha256: descriptionsHash(plan),
   }
   if (plan.tools.length === 0) return result({ fatal: [issue(4, 'last-tool', '-', 'The proposal would leave the server without any tool.')] })

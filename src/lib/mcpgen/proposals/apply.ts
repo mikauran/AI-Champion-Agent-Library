@@ -2,7 +2,8 @@
 // Nothing here reads a file, the clock or the environment. Ops refer to BASELINE tool names, so the
 // result never depends on the order of ops. Derived-filter ops are handled earlier (the plan is
 // rebuilt with the extra derived tools so the existing planner, templates and validation produce them).
-import { gap } from '../diagnostics.js'
+import { cmp, gap } from '../diagnostics.js'
+import { gapOrder } from '../plan.js'
 import type { PlannedTool, ServerPlan } from '../types.js'
 import type { ArgEdit, CompositeStep, ProposedBehavior, SigArg, ValueSpec, WrapperSpec } from './model.js'
 import type { ProposalOp } from './schema.js'
@@ -10,7 +11,7 @@ import { parseSelector } from './selector.js'
 import { baselineSignature } from './signature.js'
 
 const own = (o: object, k: string) => Object.prototype.hasOwnProperty.call(o, k)
-const byName = (a: { name: string }, b: { name: string }) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
+const byName = (a: PlannedTool, b: PlannedTool) => cmp(a.name, b.name) || cmp(a.entity, b.entity)
 
 function path(text: string): (string | number)[] {
   const p = parseSelector(text)
@@ -174,5 +175,6 @@ export function applyOps(plan: ServerPlan, ops: ProposalOp[]): ServerPlan {
   exposed.push(...wrappers)
   exposed.sort(byName)
   internal.sort(byName)
+  gaps.sort(gapOrder)
   return { ...plan, tools: exposed, internal: internal.length > 0 ? internal : undefined, gaps }
 }

@@ -4,7 +4,7 @@
 // source lacks. `detectDerivedTools` finds them structurally (origin 'detected'); authors add their
 // own through the `extraDerived` argument of `buildPlan` (origin 'user'). Both flow through the same
 // validation and the same emitter templates. Invalid user entries are reported, never guessed.
-import { gap } from './diagnostics.js'
+import { cmp, gap } from './diagnostics.js'
 import { cleanSpecTextFlagged } from './hygiene.js'
 import type {
   DerivedTool,
@@ -357,8 +357,32 @@ function ownList(map: Record<string, string[]> | undefined, key: string): string
   return Array.isArray(v) ? v : undefined
 }
 
+const GAP_RANK: Record<string, number> = { error: 0, warn: 1, info: 2 }
+
+/** Total order for gaps: severity, code, path, message (code-unit comparison). */
+export function gapOrder(a: Gap, b: Gap): number {
+  return (GAP_RANK[a.severity] ?? 3) - (GAP_RANK[b.severity] ?? 3) || cmp(a.code, b.code) || cmp(a.path ?? '', b.path ?? '') || cmp(a.message, b.message)
+}
+
+/**
+ * The set-like collections of a model in a stable order, so the plan, its fingerprint and every generated file
+ * do not depend on the order the adapter (or a test) listed them. Field order, parameter order and key order
+ * are declared order (column order, positional arguments, composite keys, default projection) and stay as given.
+ */
+function canonicalModel(m: SourceModel): SourceModel {
+  const opKey = (o: Operation) => `${o.id}\u0000${o.method}\u0000${o.path ?? ''}\u0000${o.entity}`
+  return {
+    ...m,
+    operations: [...m.operations].sort((a, b) => cmp(opKey(a), opKey(b))),
+    entities: [...m.entities].sort((a, b) => cmp(a.id, b.id)).map((e) => ({ ...e, nested: [...e.nested].sort((a, b) => cmp(a.field, b.field)) })),
+    gaps: [...m.gaps].sort(gapOrder),
+    writeOperationsDropped: [...m.writeOperationsDropped].sort(cmp),
+  }
+}
+
 /** buildPlan(model, options, extraDerived?) -> ServerPlan. Deterministic: tools sorted by name. */
-export function buildPlan(model: SourceModel, options: GenerateOptions = {}, extraDerived: DerivedTool[] = []): ServerPlan {
+export function buildPlan(input: SourceModel, options: GenerateOptions = {}, extraDerived: DerivedTool[] = []): ServerPlan {
+  const model = canonicalModel(input)
   const limits = { ...model.limits, ...(options.limits ?? {}) }
   const gaps: Gap[] = [...model.gaps]
   // Limits are written into generated source: integers in range only (review WR-04).
@@ -636,8 +660,9 @@ export function buildPlan(model: SourceModel, options: GenerateOptions = {}, ext
     gaps.push(gap('no-tools', 'No operation could be turned into a tool; nothing can be generated.', { severity: 'error' }))
   }
 
-  tools.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
-  derived.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+  tools.sort((a, b) => cmp(a.name, b.name) || cmp(a.entity, b.entity) || cmp(a.operation ?? '', b.operation ?? ''))
+  derived.sort((a, b) => cmp(a.id, b.id))
+  gaps.sort(gapOrder)
   // The plan carries the filtered entities (dataset/sql) so the emitter never sees dropped ones.
   const finalEntities = m.backend.kind === 'http' ? m.entities : m.entities.map((e) => entityById.get(e.id)!).filter((e, i, arr) => !!e && arr.indexOf(e) === i && tools.some((t) => t.entity === e.id))
   return { model: { ...m, entities: finalEntities }, tools, derived, gaps }
