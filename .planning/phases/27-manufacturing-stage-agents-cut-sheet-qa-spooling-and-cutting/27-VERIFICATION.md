@@ -52,3 +52,6 @@ COUNTED (SKILL v1, first run, rubric R1-R7 met).
 - Caveat: draft for fabricator review; counted for the scoped step only (6 segments, one synthetic sample, single run); no optimisation performed. The model emitted the result inside a code fence preceded by "output/result.md:" in the captured text (file content itself correct).
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: one 27-02 row (0.0101 USD).
+
+## Phase result (aggregated)
+Agents 8 and 9 counted (both on first run, one sample each; limited reliability evidence, see 27-HUMAN-UAT.md). `npm run check` green (273 files, 3118 tests).
