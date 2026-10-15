@@ -71,10 +71,34 @@ function uniqueLabel(label: string, used: Set<string>): string {
   return n
 }
 
+/** Longest line a doc may carry; a longer one is an error (a cut doc would mislead the agent, D-591). */
+const DOC_LINE_CHARS = 8192
+
+/** Cut at a code point boundary: never leaves half of a surrogate pair. */
+function cutChars(s: string, n: number): string {
+  if (s.length <= n) return s
+  const t = s.slice(0, n)
+  return /[\ud800-\udbff]$/.test(t) ? t.slice(0, -1) : t
+}
+
+/** Cut to at most `n` UTF-8 bytes on a code point boundary. */
+function cutBytes(s: string, n: number): string {
+  if (bytes(s) <= n) return s
+  let out = ''
+  let used = 0
+  for (const ch of s) {
+    const b = bytes(ch)
+    if (used + b > n) break
+    out += ch
+    used += b
+  }
+  return out
+}
+
 function redactLines(text: string): string {
   return text
     .split(/\r\n|\r|\n/)
-    .map((l) => redactSecrets(l.length > 8192 ? l.slice(0, 8192) : l))
+    .map((l) => redactSecrets(cutChars(l, DOC_LINE_CHARS)))
     .join('\n')
 }
 
@@ -104,6 +128,9 @@ export function buildContextPack(input: PackInput): PackResult {
   }
   const docBytes = docs.reduce((n, d) => n + bytes(d.text), 0)
   if (docs.some((d) => bytes(d.text) > PACK_LIMITS.docFileBytes)) gaps.push(err('pack-doc-too-large', `A doc file is larger than ${PACK_LIMITS.docFileBytes} bytes.`))
+  for (const d of docs) {
+    if (d.text.split(/\r\n|\r|\n/).some((l) => l.length > DOC_LINE_CHARS)) gaps.push(err('pack-doc-line-too-long', `A line of doc file ${safeLabel(d.name, 'doc')} is longer than ${DOC_LINE_CHARS} characters; split it into lines.`))
+  }
   if (docBytes > PACK_LIMITS.docTotalBytes) gaps.push(err('pack-docs-too-large', `The doc files together are larger than ${PACK_LIMITS.docTotalBytes} bytes.`))
   if (gaps.length > 0) return { ok: false, gaps }
 
@@ -135,16 +162,16 @@ export function buildContextPack(input: PackInput): PackResult {
   samples.forEach((s, i) => {
     const label = uniqueLabel(safeLabel(s.name, `sample-${i + 1}`), used)
     const lines = s.text.split(/\r\n|\r|\n/)
-    const kept = lines.slice(0, PACK_LIMITS.sampleRows + 1).map((l) => (l.length > PACK_LIMITS.sampleLineChars ? `${l.slice(0, PACK_LIMITS.sampleLineChars)}...` : l))
+    const kept = lines.slice(0, PACK_LIMITS.sampleRows + 1).map((l) => (l.length > PACK_LIMITS.sampleLineChars ? `${cutChars(l, PACK_LIMITS.sampleLineChars)}...` : l))
     let body = redactLines(kept.join('\n'))
     let truncated = lines.length > kept.length
-    while (bytes(body) > PACK_LIMITS.sampleFileBytes) {
-      body = body.slice(0, Math.floor(body.length * 0.8))
+    if (bytes(body) > PACK_LIMITS.sampleFileBytes) {
+      body = cutBytes(body, PACK_LIMITS.sampleFileBytes)
       truncated = true
     }
     const remaining = PACK_LIMITS.sampleTotalBytes - sampleTotal
     if (bytes(body) > remaining) {
-      body = body.slice(0, Math.max(0, remaining))
+      body = cutBytes(body, Math.max(0, remaining))
       truncated = true
     }
     sampleTotal += bytes(body)

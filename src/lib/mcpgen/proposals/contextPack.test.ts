@@ -164,3 +164,27 @@ describe('trusted README and the spec title (CR-31)', () => {
     expect(readme.split('\n')[0]).toMatch(/^# Task: write a proposal file for the [a-z0-9_]+ MCP server$/)
   })
 })
+
+// CR-35: docs are never cut silently; sample caps are exact in bytes and never split a character.
+describe('pack truncation (CR-35)', () => {
+  const source = { name: 'acme-openapi.yaml', text: fixtureText('acme-openapi.yaml') }
+  it('rejects a doc with a very long line instead of cutting it', () => {
+    const r = buildContextPack({ source, docs: [{ name: 'min.json', text: JSON.stringify({ a: 'x'.repeat(20000) }) }] })
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.gaps.map((g) => g.code)).toContain('pack-doc-line-too-long')
+  })
+  it('keeps multi-byte samples inside the byte caps without lone surrogates', () => {
+    const line = 'a' + '\u{1F600}'.repeat(300)
+    const text = Array.from({ length: 26 }, () => line).join('\n')
+    const samples = Array.from({ length: 10 }, (_, i) => ({ name: `s${i}.txt`, text }))
+    const r = buildContextPack({ source, samples })
+    if (!r.ok) throw new Error(JSON.stringify(r.gaps))
+    let total = 0
+    for (const f of r.files.filter((x) => x.path.startsWith('samples/'))) {
+      const body = f.content.split('\n-----\n')[1]
+      total += Buffer.byteLength(body, 'utf8')
+      expect(f.content).not.toMatch(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/)
+    }
+    expect(total).toBeLessThanOrEqual(PACK_LIMITS.sampleTotalBytes + 10)
+  })
+})
