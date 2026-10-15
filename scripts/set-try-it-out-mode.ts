@@ -21,6 +21,7 @@ const UPDATES: Array<{ slug: string; mode: string; url: string | null; taskTempl
   { slug: 'carbon-epd-enrichment', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'cut-sheet-qa', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'spooling-and-cutting', mode: 'runnable', url: null, taskTemplate: null },
+  { slug: 'd2-code-validation', mode: 'runnable', url: null, taskTemplate: null },
 ]
 
 export function setTryItOutMode(dbPath: string): Array<{ slug: string; mode: string; changes: number }> {
