@@ -1,22 +1,8 @@
 # SYNTHETIC SAMPLE - invented data for an invented building, not from any real project
 row_id,group,description,quantity,unit,level
-Q-001,Walls,Interior partition wall gypsum,"245,5",m2,Level 1
-Q-002,wall,Exterior wall brick veneer,310.2,m²,Level 1
-Q-003,WALLS,Concrete core wall,128,sqm,Level 1
-Q-004,Walls,Interior partition wall gypsum,"245,5",m2,Level 1
-Q-005,Slabs,Slab on grade concrete C30,42.8,M3,Level 0
-Q-006,Slabs,Suspended slab concrete C30,"1 250",m^2,Level 2
-Q-007,Doors,Single door 900x2100,24,pcs,Level 1
-Q-008,Pipes,Copper pipe DN22,12500,mm,Level 1
-Q-009,Pipes,Copper pipe DN15,"850,5",cm,Level 2
-Q-010,Tanks,Expansion vessel capacity,300,L,Level 0
-Q-011,Paint,Primer paint volume,45,l,Level 1
-Q-012,Rebar,Reinforcement steel B500,2,t,Level 2
-Q-013,Rebar,Reinforcement steel B500,1850,kg,Level 1
-Q-014,Insulation,Mineral wool insulation 100 mm,86.4,m2,Level 1
-Q-015,Windows,Window 1200x1500,18,,Level 1
-Q-016,Mortar,Masonry mortar,40,bag,Level 1
-Q-017,Cable tray,Cable tray 200 mm,35,pcs,Level 2
-Q-018,Ducts,Rectangular duct 400x200,0,m,Level 1
-Q-019,Ducts,Circular duct DN160,-12.5,m,Level 2
-Q-020,Doors,Single door 900x2100,24,pcs,Level 1
+Q-01,Putkisto,Copper pipe DN22,48.5,m,Level 1
+Q-02,ilmanvaihto,Circular duct DN160,"36,4",m,Level 1
+Q-03,Putkisto,Copper pipe DN15,2400,mm,Level 2
+Q-04,Sähkö,Cable drum 5x2.5,3,roll,Level 1
+Q-05,PUTKISTO,Copper pipe DN22,48.5,m,Level 1
+Q-06,Ilmanvaihto,Supply air diffuser,,pcs,Level 2

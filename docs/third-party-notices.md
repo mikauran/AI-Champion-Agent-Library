@@ -54,7 +54,7 @@ Paths are relative to the DDC repository root. "Built on the skill" means the sk
 | Entry slug | DDC skill path | Relation |
 | --- | --- | --- |
 | etim-classification-repair | 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai | inspired by (weak match) |
-| qto-normalization | 2_DDC_Book/3.2-QTO-Auto-Estimates/qto-report (and bim-qto in the same folder) | adapted, method only |
+| qto-normalization | 2_DDC_Book/3.2-QTO-Auto-Estimates/bim-qto (primary; qto-report in the same folder as secondary) | adapted (method only; grouping and unit defects fixed in an own tested helper, no skill code copied) |
 | clash-prioritization | 2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer | adapted |
 | rfi-generation-from-findings | 1_DDC_Toolkit/Document-Control/rfi-management | adapted |
 | product-sourcing-mbom | 1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement | inspired by (method only; no CWICR data) |
@@ -72,7 +72,7 @@ Paths are relative to the DDC repository root. "Built on the skill" means the sk
 
 Notes:
 
-- qto-normalization uses `qto-report` as the primary skill, but that skill quotes the DDC book. Only the method is used and no book text is copied. The earlier audit preferred `bim-qto` / `ifc-qto-extraction` for this reason; `ifc-qto-extraction` is no longer the primary path.
+- qto-normalization uses `bim-qto` as the primary skill (Phase 33). `qto-report` quotes the DDC book, so only its method ideas are used and no book text is copied; `ifc-qto-extraction` is not used.
 - product-sourcing-mbom is inspired by a `cwicr-*` skill as a method only. No CWICR data (CC BY-NC 4.0 plus commercial licence) is used; the catalog sample is invented.
 - spooling-and-cutting and d2-code-validation have no DDC counterpart and keep the library repository as their `github_url`.
 - The nine older entries (airo, demo-rfi-triage and seven seed entries) are not adapted from DDC skills.
