@@ -24,6 +24,7 @@ const UPDATES: Array<{ slug: string; mode: string; url: string | null; taskTempl
   { slug: 'd2-code-validation', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'om-completeness', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'bms-digital-twin', mode: 'runnable', url: null, taskTemplate: null },
+  { slug: 'daily-report-cross-check', mode: 'runnable', url: null, taskTemplate: null },
 ]
 
 export function setTryItOutMode(dbPath: string): Array<{ slug: string; mode: string; changes: number }> {

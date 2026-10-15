@@ -36,8 +36,8 @@ function checkConsortium(meta: Record<string, unknown>): string[] {
   const errs: string[] = []
   if (typeof meta.stage !== 'string' || !STAGES.includes(meta.stage))
     errs.push(`metadata.stage must be one of ${STAGES.join(', ')}`)
-  if (meta.agent_no !== undefined && !(Number.isInteger(meta.agent_no) && (meta.agent_no as number) >= 1 && (meta.agent_no as number) <= 12))
-    errs.push('metadata.agent_no must be an integer from 1 to 12')
+  if (meta.agent_no !== undefined && !(Number.isInteger(meta.agent_no) && (meta.agent_no as number) >= 1 && (meta.agent_no as number) <= 16))
+    errs.push('metadata.agent_no must be an integer from 1 to 16')
   if (typeof meta.purpose !== 'string' || meta.purpose.trim() === '') errs.push('metadata.purpose must be a non-empty string')
   for (const k of ['inputs', 'outputs']) {
     if (!isStringList(meta[k]) || (meta[k] as string[]).length === 0) errs.push(`metadata.${k} must be a non-empty list of strings`)

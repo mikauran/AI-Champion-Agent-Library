@@ -55,7 +55,7 @@ describe('validateEntryFile', () => {
     const cases: Array<[string, (d: any) => void]> = [
       ['draft_for_review', (d) => (d.metadata.draft_for_review = false)],
       ['stage', (d) => (d.metadata.stage = 'foo')],
-      ['agent_no', (d) => (d.metadata.agent_no = 13)],
+      ['agent_no', (d) => (d.metadata.agent_no = 17)],
       ['inputs', (d) => (d.metadata.inputs = [])],
     ]
     for (const [key, mutate] of cases) {

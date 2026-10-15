@@ -54,6 +54,7 @@ describe('setTryItOutMode edge cases', () => {
       { slug: 'd2-code-validation', mode: 'link', url: 'https://d2', tpl: 'D' },
       { slug: 'om-completeness', mode: 'link', url: 'https://om', tpl: 'O' },
       { slug: 'bms-digital-twin', mode: 'link', url: 'https://bms', tpl: 'B' },
+      { slug: 'daily-report-cross-check', mode: 'link', url: 'https://drc', tpl: 'R' },
     ])
     setTryItOutMode(p)
     const rows = read(p)
@@ -63,6 +64,7 @@ describe('setTryItOutMode edge cases', () => {
       ['clash-prioritization', 'runnable', null, null],
       ['cut-sheet-qa', 'runnable', null, null],
       ['d2-code-validation', 'runnable', null, null],
+      ['daily-report-cross-check', 'runnable', null, null],
       ['demo-rfi-triage', 'runnable', null, null],
       ['etim-classification-repair', 'runnable', null, null],
       ['hvac-load-calculator', 'none', null, null],
@@ -92,6 +94,7 @@ describe('setTryItOutMode edge cases', () => {
       { slug: 'd2-code-validation' },
       { slug: 'om-completeness' },
       { slug: 'bms-digital-twin' },
+      { slug: 'daily-report-cross-check' },
       { slug: 'other-agent', mode: 'link', url: 'https://keep', tpl: 'keep' },
       { slug: 'demo-rfi-triage-2', mode: 'runnable' },
     ])
@@ -105,7 +108,7 @@ describe('setTryItOutMode edge cases', () => {
 
   it('returns results in the declared order with one changed row each', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'rfi-generation-from-findings' }, { slug: 'product-sourcing-mbom' }, { slug: 'quote-comparison' }, { slug: 'carbon-epd-enrichment' }, { slug: 'cut-sheet-qa' }, { slug: 'spooling-and-cutting' }, { slug: 'd2-code-validation' }, { slug: 'om-completeness' }, { slug: 'bms-digital-twin' }, { slug: 'clash-prioritization' }, { slug: 'qto-normalization' }, { slug: 'etim-classification-repair' }, { slug: 'hvac-load-calculator' }, { slug: 'demo-rfi-triage' }])
+    seed(p, [{ slug: 'rfi-generation-from-findings' }, { slug: 'product-sourcing-mbom' }, { slug: 'quote-comparison' }, { slug: 'carbon-epd-enrichment' }, { slug: 'cut-sheet-qa' }, { slug: 'spooling-and-cutting' }, { slug: 'd2-code-validation' }, { slug: 'om-completeness' }, { slug: 'bms-digital-twin' }, { slug: 'daily-report-cross-check' }, { slug: 'clash-prioritization' }, { slug: 'qto-normalization' }, { slug: 'etim-classification-repair' }, { slug: 'hvac-load-calculator' }, { slug: 'demo-rfi-triage' }])
     expect(setTryItOutMode(p)).toEqual([
       { slug: 'demo-rfi-triage', mode: 'runnable', changes: 1 },
       { slug: 'hvac-load-calculator', mode: 'none', changes: 1 },
@@ -121,13 +124,14 @@ describe('setTryItOutMode edge cases', () => {
       { slug: 'd2-code-validation', mode: 'runnable', changes: 1 },
       { slug: 'om-completeness', mode: 'runnable', changes: 1 },
       { slug: 'bms-digital-twin', mode: 'runnable', changes: 1 },
+      { slug: 'daily-report-cross-check', mode: 'runnable', changes: 1 },
     ])
   })
 
   it('an already-correct row still counts as one change (SQLite counts matched rows)', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'demo-rfi-triage', mode: 'runnable' }, { slug: 'hvac-load-calculator', mode: 'none' }, { slug: 'etim-classification-repair', mode: 'runnable' }, { slug: 'qto-normalization', mode: 'runnable' }, { slug: 'clash-prioritization', mode: 'runnable' }, { slug: 'rfi-generation-from-findings', mode: 'runnable' }, { slug: 'product-sourcing-mbom', mode: 'runnable' }, { slug: 'quote-comparison', mode: 'runnable' }, { slug: 'carbon-epd-enrichment', mode: 'runnable' }, { slug: 'cut-sheet-qa', mode: 'runnable' }, { slug: 'spooling-and-cutting', mode: 'runnable' }, { slug: 'd2-code-validation', mode: 'runnable' }, { slug: 'om-completeness', mode: 'runnable' }, { slug: 'bms-digital-twin', mode: 'runnable' }])
-    expect(setTryItOutMode(p).map((r) => r.changes)).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    seed(p, [{ slug: 'demo-rfi-triage', mode: 'runnable' }, { slug: 'hvac-load-calculator', mode: 'none' }, { slug: 'etim-classification-repair', mode: 'runnable' }, { slug: 'qto-normalization', mode: 'runnable' }, { slug: 'clash-prioritization', mode: 'runnable' }, { slug: 'rfi-generation-from-findings', mode: 'runnable' }, { slug: 'product-sourcing-mbom', mode: 'runnable' }, { slug: 'quote-comparison', mode: 'runnable' }, { slug: 'carbon-epd-enrichment', mode: 'runnable' }, { slug: 'cut-sheet-qa', mode: 'runnable' }, { slug: 'spooling-and-cutting', mode: 'runnable' }, { slug: 'd2-code-validation', mode: 'runnable' }, { slug: 'om-completeness', mode: 'runnable' }, { slug: 'bms-digital-twin', mode: 'runnable' }, { slug: 'daily-report-cross-check', mode: 'runnable' }])
+    expect(setTryItOutMode(p).map((r) => r.changes)).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
   })
 
   it('a missing hvac row throws naming that slug', () => {
@@ -166,7 +170,7 @@ describe('setTryItOutMode edge cases', () => {
 
   it('a case-differing slug does not match (slugs are exact)', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'Demo-RFI-Triage' }, { slug: 'hvac-load-calculator' }, { slug: 'etim-classification-repair' }, { slug: 'qto-normalization' }, { slug: 'clash-prioritization' }, { slug: 'rfi-generation-from-findings' }, { slug: 'product-sourcing-mbom' }, { slug: 'quote-comparison' }, { slug: 'carbon-epd-enrichment' }, { slug: 'cut-sheet-qa' }, { slug: 'spooling-and-cutting' }, { slug: 'd2-code-validation' }, { slug: 'om-completeness' }, { slug: 'bms-digital-twin' }])
+    seed(p, [{ slug: 'Demo-RFI-Triage' }, { slug: 'hvac-load-calculator' }, { slug: 'etim-classification-repair' }, { slug: 'qto-normalization' }, { slug: 'clash-prioritization' }, { slug: 'rfi-generation-from-findings' }, { slug: 'product-sourcing-mbom' }, { slug: 'quote-comparison' }, { slug: 'carbon-epd-enrichment' }, { slug: 'cut-sheet-qa' }, { slug: 'spooling-and-cutting' }, { slug: 'd2-code-validation' }, { slug: 'om-completeness' }, { slug: 'bms-digital-twin' }, { slug: 'daily-report-cross-check' }])
     expect(() => setTryItOutMode(p)).toThrow(/demo-rfi-triage/)
   })
 })
