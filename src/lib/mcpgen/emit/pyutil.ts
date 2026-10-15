@@ -72,7 +72,7 @@ export function cleanText(s: unknown, max = 200): string {
 
 /** cleanText for text that originates in the source document and is published in descriptions. */
 export function cleanSource(s: unknown, max = 200): string {
-  return cleanText(cleanSpecText(s, 8192), max)
+  return cleanText(cleanSpecText(s, Math.min(8192, max * 4)), max)
 }
 
 /** Flatten string and string[] parts into text with a trailing newline. */

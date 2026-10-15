@@ -88,6 +88,21 @@ describe('cleanSpecText', () => {
     for (const h of hostile) expect(() => cleanSpecText(h)).not.toThrow()
   })
 
+  it('CR-38: long link-shaped tokens are linear, not quadratic', () => {
+    for (const unit of ['a.', 'a+', 'a-', 'www.', 'ab.cd/', 'a:']) {
+      const raw = unit.repeat(Math.ceil(8192 / unit.length)).slice(0, 8192)
+      const t0 = performance.now()
+      cleanSpecText(raw, 8192)
+      expect(performance.now() - t0, `unit ${unit}`).toBeLessThan(150)
+    }
+  })
+
+  it('CR-38: link words are still dropped whole', () => {
+    expect(cleanSpecText('a see x.y.example.com/p?q=1 b')).toBe('a see b')
+    expect(cleanSpecText('a xhttps://q.z/ b')).toBe('a b')
+    expect(cleanSpecText('a wwwx.www.foo b')).toBe('a b')
+  })
+
   it('is idempotent', () => {
     for (const raw of [
       'Returns a list of invoices.',

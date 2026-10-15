@@ -38,13 +38,26 @@ export const URL_LIKE: RegExp[] = [
 ]
 export const MARKUP = /[<>`]|\$\{|\{\{|<%|%>/
 
-// Replacement patterns: a whole whitespace-free word that carries a link.
-const URL_WORD: RegExp[] = [
-  /\S*\b[a-z][a-z0-9+.-]{1,31}:\/\/\S*/gi,
-  /\S*\bwww\.\S*/gi,
-  /\S*\bmailto:\S*/gi,
-  /\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|org|net|io|dev|ai|app|edu|gov|example|local|internal|test)\b\S*/gi,
-]
+// Replacement of link-carrying words. Works word by word with bounded, unanchored tests; a pattern with a
+// leading unbounded `\S*` is quadratic on a long token (review CR-38).
+const SCHEME_AT = /[a-z][a-z0-9+.-]{1,31}:\/\//i
+const WWW_AT = /(?:^|[^a-z0-9_])www\./i
+const TLDS = 'com|org|net|io|dev|ai|app|edu|gov|example|local|internal|test'
+const DOMAIN_AT = new RegExp(`[a-z0-9-]\\.(?:${TLDS})(?![a-z0-9_])`, 'i')
+const isLabelChar = (c: string): boolean => /[a-z0-9.-]/i.test(c)
+
+/** The word without its link, or '' when it is dropped whole. */
+function dropLink(w: string): string {
+  if (SCHEME_AT.test(w) || WWW_AT.test(w) || /mailto:/i.test(w)) return ''
+  const m = DOMAIN_AT.exec(w)
+  if (!m) return w
+  let a = m.index
+  while (a > 0 && isLabelChar(w[a - 1])) a--
+  return w.slice(0, a)
+}
+function removeLinkWords(t: string): string {
+  return t.replace(/\S+/g, (w) => (w.length <= 2 ? w : dropLink(w) || ' '))
+}
 const TEMPLATE_SPAN: RegExp[] = [/\$\{[^}]{0,200}\}/g, /\{\{[^}]{0,200}\}\}/g, /<%[^%]{0,200}%>/g]
 const LEFTOVER_MARKUP = /[<>`]|\$\{|\{\{|\}\}|<%|%>/g
 // Markdown link -> its label (before link removal, which would otherwise leave a dangling "](").
@@ -62,10 +75,10 @@ export function cleanSpecTextFlagged(s: unknown, max = 200): CleanSpecResult {
   try {
     const raw = typeof s === 'string' ? s : s === undefined || s === null ? '' : String(s)
     // Redact secrets and links, drop model-directed phrases, flatten markdown links and tags.
-    const r = sanitizeSourceText(stripControl(raw.slice(0, MAX_INPUT)).replace(MD_LINK, '$1'))
+    const r = sanitizeSourceText(stripControl(raw.slice(0, Math.min(MAX_INPUT, Math.max(1, max) * 4))).replace(MD_LINK, '$1'))
     let t = r.text
     for (const m of REMOVAL_MARKERS) t = t.split(m).join(' ')
-    for (const re of URL_WORD) t = t.replace(re, ' ')
+    t = removeLinkWords(t)
     for (const re of TEMPLATE_SPAN) t = t.replace(re, ' ')
     t = t.replace(LEFTOVER_MARKUP, ' ')
     t = redactSecrets(t).replace(/\s+/g, ' ').trim()
