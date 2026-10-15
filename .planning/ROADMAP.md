@@ -546,7 +546,13 @@ Plans:
   3. Security audit of the sax reader, the proposal and context-pack file inputs, and the binding file loader concludes SECURED or lists open threats
   4. `npm run check`, `vite build` and `npm run smoke` still pass
 
-**Plans:** 0 plans (not started)
+**Plans:** 4 plans
+
+Plans:
+- [ ] 23-01-PLAN.md - file-set inventory and five gsd-code-reviewer passes (A adapters, B SQL/Prisma, C OData/sax, D proposals/context pack/binding, E Phase 21-22 emit/container/CLI) -> 23-REVIEW.md
+- [ ] 23-02-PLAN.md - fixes for critical and warning findings with tests -> 23-REVIEW-FIX.md, decisions for accepted
+- [ ] 23-03-PLAN.md - security audit (sax, proposal/context-pack inputs, binding loader, emitted-Python injection, container path) -> 23-SECURITY.md
+- [ ] 23-04-PLAN.md - final gates (check, vite build, smoke, sequential), 23-VERIFICATION.md, ROADMAP/STATE
 
 ## Progress
 
