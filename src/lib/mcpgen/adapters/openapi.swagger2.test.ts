@@ -174,3 +174,18 @@ describe('swagger 2.0 hostile input', () => {
     expect(out.gaps.map((g) => g.code)).toContain('input-too-large')
   })
 })
+
+// CR-03: produces: ["*/*"] must not drop every operation (OpenAPI 3 accepts */*).
+describe('swagger 2.0 produces */* (CR-03)', () => {
+  const doc = (produces: string) =>
+    `swagger: "2.0"\ninfo: {title: Wild, version: "1"}\nproduces: ${produces}\npaths:\n  /items:\n    get:\n      responses:\n        "200":\n          description: ok\n          schema: {type: array, items: {type: object, properties: {id: {type: integer}}}}\n`
+  it('keeps the operation for */*', () => {
+    const r = parseInput({ text: doc('["*/*"]') })
+    expect(r.ok, JSON.stringify(r.ok ? [] : r.gaps)).toBe(true)
+  })
+  it('prefers JSON when both are present and still drops XML-only', () => {
+    expect(parseInput({ text: doc('["application/xml", "*/*"]') }).ok).toBe(true)
+    expect(parseInput({ text: doc('["application/json", "*/*"]') }).ok).toBe(true)
+    expect(parseInput({ text: doc('["application/xml"]') }).ok).toBe(false)
+  })
+})

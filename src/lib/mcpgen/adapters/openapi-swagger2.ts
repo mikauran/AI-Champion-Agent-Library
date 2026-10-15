@@ -26,7 +26,8 @@ export function isSwagger2(doc: Obj): boolean {
 function jsonMediaType(opProduces: unknown, rootProduces: unknown): string | undefined {
   const list = Array.isArray(opProduces) ? opProduces : Array.isArray(rootProduces) ? rootProduces : undefined
   if (list === undefined) return 'application/json'
-  return list.find((p): p is string => typeof p === 'string' && JSON_TYPE.test(p))
+  // JSON first; `*/*` (common in generated Swagger 2 documents) is accepted like in OpenAPI 3 (CR-03).
+  return list.find((p): p is string => typeof p === 'string' && JSON_TYPE.test(p)) ?? list.find((p) => p === '*/*')
 }
 
 function tryDeref(deref: Deref, root: Obj, node: unknown): Obj | undefined {
