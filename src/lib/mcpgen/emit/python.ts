@@ -345,6 +345,29 @@ function describeTool(tool: PlannedTool): string[] {
   ]
 }
 
+const STR_OR_NULL = { type: ['string', 'null'] }
+const INT = { type: 'integer' }
+const COMMON_PROPS = { ok: { type: 'boolean' }, kind: { type: 'string' }, message: { type: 'string' }, hint: STR_OR_NULL, warning: { type: 'string' } }
+
+/**
+ * JSON Schemas of the result dicts, by tool shape. Derived from the tool kind only (never from spec text).
+ * Every shape is an object with a required boolean ok; the error result (ok false, kind, message, hint)
+ * validates against all of them. additionalProperties stays open so a runtime addition never breaks a client.
+ */
+export function outputSchemas(): Record<'list' | 'item' | 'describe', unknown> {
+  const obj = (required: string[], props: Record<string, unknown>) => ({ type: 'object', properties: { ...COMMON_PROPS, ...props }, required, additionalProperties: true })
+  return {
+    list: obj(['ok'], { results: { type: 'array', items: { type: 'object', additionalProperties: true } }, count: INT, page: INT, page_size: INT, offset: INT, limit: INT, total_matches: INT }),
+    item: obj(['ok'], { result: { type: 'object', additionalProperties: true } }),
+    describe: obj(['ok'], { server: { type: 'string' }, entities: { type: 'array', items: { type: 'object', additionalProperties: true } }, match_modes: { type: 'array', items: { type: 'string' } }, max_limit: INT, max_rows_per_call: INT }),
+  }
+}
+
+export function outputShape(plan: ServerPlan, tool: PlannedTool): 'list' | 'item' | 'describe' {
+  const k = toolKind(plan, tool)
+  return k === 'describe' ? 'describe' : k === 'get' || k === 'proposed' ? 'item' : 'list'
+}
+
 function schemaLiteral(plan: ServerPlan): unknown {
   const m = plan.model
   const max = effectiveMaxPageSize(m)
@@ -446,6 +469,7 @@ export function emitPython(plan: ServerPlan): string {
 
   // Tools.
   const names: string[] = []
+  const shapes: Record<string, string> = {}
   for (const [i, tool] of all.entries()) {
     const k = toolKind(plan, tool)
     out.push(...(i === 0 ? [''] : ['', '']))
@@ -464,10 +488,18 @@ export function emitPython(plan: ServerPlan): string {
               ? queryTool(plan, tool)
               : describeTool(tool))
     out.push(...(tool.proposed?.args && k !== 'proposed' ? applyArgEdits(baseBody, tool) : baseBody))
-    if (i < plan.tools.length) names.push(pyIdent(tool.name))
+    if (i < plan.tools.length) {
+      names.push(pyIdent(tool.name))
+      shapes[pyIdent(tool.name)] = outputShape(plan, tool)
+    }
   }
+  const schemas = outputSchemas()
+  const used = (['list', 'item', 'describe'] as const).filter((s) => Object.values(shapes).includes(s))
+  out.push('', '', '# Result schemas: every tool returns a dict that matches one of these (advertised as outputSchema).')
+  for (const u of used) out.push(`_OUT_${u.toUpperCase()} = ${pyLit(schemas[u])}`)
+  out.push('', '_OUTPUT_SCHEMAS = {', ...names.map((n) => `    ${pyStr(n)}: _OUT_${shapes[n].toUpperCase()},`), '}')
   out.push('', '', '# Register every tool with the server (read-only tools only).', 'for _tool in (')
   for (const n of names) out.push(`    ${n},`)
-  out.push('):', '    mcp.tool(_tool, annotations=_ANNOTATIONS)', '', '', 'if __name__ == "__main__":', '    mcp.run()')
+  out.push('):', '    mcp.tool(_tool, annotations=_ANNOTATIONS, output_schema=_OUTPUT_SCHEMAS[_tool.__name__])', '', '', 'if __name__ == "__main__":', '    mcp.run()')
   return joinLines(out)
 }

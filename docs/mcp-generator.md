@@ -191,6 +191,10 @@ Every generated server guarantees (RESEARCH-SYNTHESIS section 3.2; the generated
 
 Plus bounded retries on 429/5xx, response size caps and parameterised read-only SQL with allow-listed identifiers.
 
+### Output schemas
+
+Every tool is registered with an explicit `output_schema` (a JSON schema literal, `_OUTPUT_SCHEMAS`, chosen per tool shape: list, item or describe) and returns the same dict as before; FastMCP sends it as `structuredContent` and validates it against the schema. Each schema is an object with a required boolean `ok` and optional `kind`, `message`, `hint`, `warning`, so the structured error result still validates. The schemas derive from the tool kind only, never from spec text. Verified on FastMCP 3.4.8 and 4.1.0 with identical server code: a plain `-> dict` annotation only advertises a generic object schema, and an explicit `output_schema=` is advertised as given on both. The only version difference is on the client side: 4.1.0 renames `Tool.outputSchema` to `output_schema` (and the annotation fields to snake_case), so the generated tests read both spellings. No version-conditional server code is needed.
+
 ## Safety
 
 - Schema or spec only. Credential-looking input (keys, bearer tokens, `?apiKey=` literals, `.env` content) is rejected rather than redacted; the finding records rule, line and kind, never the matched text (D-142).

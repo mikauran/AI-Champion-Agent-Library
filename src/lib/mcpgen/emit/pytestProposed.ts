@@ -13,6 +13,66 @@ import { joinLines, pyLit, pyStr } from './pyutil.js'
  * Client (same on 3.4.x and 4.x); annotations are read as an attribute or a dict key so a model
  * class or a plain mapping both work. Needs EXPECTED_TOOLS in the module.
  */
+/**
+ * Output schema checks. Reads the schema as output_schema (fastmcp 4) or outputSchema (fastmcp 3),
+ * then, for the given calls, checks that structured_content equals the tool's dict result and validates
+ * against the schema. `cases` is [tool name, kwargs] pairs; `fixture` provides the stubbed data source.
+ */
+export function outputSchemaTests(cases: [string, Record<string, unknown>][], fixture: string | undefined): string[] {
+  const out = [
+    'def _output_schema(tool):',
+    '    schema = getattr(tool, "output_schema", None)',
+    '    if schema is None:',
+    '        schema = getattr(tool, "outputSchema", None)',
+    '    return schema',
+    '',
+    '',
+    'def test_every_tool_declares_an_object_output_schema():',
+    '    import asyncio',
+    '',
+    '    from fastmcp import Client',
+    '',
+    '    async def list_tools():',
+    '        async with Client(server.mcp) as client:',
+    '            return await client.list_tools()',
+    '',
+    '    for tool in asyncio.run(list_tools()):',
+    '        schema = _output_schema(tool)',
+    '        assert isinstance(schema, dict), tool.name',
+    '        assert schema.get("type") == "object", tool.name',
+    '        assert "ok" in schema.get("properties", {}), tool.name',
+    '        assert "ok" in schema.get("required", []), tool.name',
+    '',
+    '',
+  ]
+  if (cases.length === 0) return out
+  out.push(
+    `STRUCTURED_CASES = ${pyLit(cases)}`,
+    '',
+    '',
+    '@pytest.mark.parametrize("name,kwargs", STRUCTURED_CASES)',
+    ...(fixture ? [`@pytest.mark.usefixtures(${pyStr(fixture)})`] : []),
+    'def test_structured_content_matches_the_dict_result_and_schema(name, kwargs):',
+    '    import asyncio',
+    '',
+    '    import jsonschema',
+    '    from fastmcp import Client',
+    '',
+    '    async def call_and_list():',
+    '        async with Client(server.mcp) as client:',
+    '            tools = {t.name: t for t in await client.list_tools()}',
+    '            return tools[name], await client.call_tool(name, kwargs)',
+    '',
+    '    tool, result = asyncio.run(call_and_list())',
+    '    expected = getattr(server, name)(**kwargs)',
+    '    assert result.structured_content == expected',
+    '    jsonschema.validate(expected, _output_schema(tool))',
+    '',
+    '',
+  )
+  return out
+}
+
 export function annotationTests(openWorld: boolean): string[] {
   return [
     `OPEN_WORLD = ${openWorld ? 'True' : 'False'}`,
@@ -21,7 +81,9 @@ export function annotationTests(openWorld: boolean): string[] {
     'def _hint(annotations, key):',
     '    if isinstance(annotations, dict):',
     '        return annotations.get(key)',
-    '    return getattr(annotations, key, None)',
+    '    snake = re.sub(r"(?<!^)(?=[A-Z])", "_", key).lower()  # fastmcp 4 uses snake_case, fastmcp 3 camelCase',
+    '    value = getattr(annotations, snake, None)',
+    '    return value if value is not None else getattr(annotations, key, None)',
     '',
     '',
     'def test_every_tool_declares_read_only_annotations():',
@@ -97,6 +159,7 @@ export function emitProposedPytest(plan: ServerPlan): string {
     '',
     '',
     ...annotationTests(plan.model.backend.kind === 'http'),
+    ...outputSchemaTests([], undefined),
     `# Proposal provenance: ${pyStr(plan.proposals?.sha256 ?? '')}`,
   ]
   return joinLines(out)

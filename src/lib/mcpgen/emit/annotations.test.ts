@@ -22,7 +22,7 @@ function checkServer(server: string, openWorld: boolean) {
   expect(a).toContain('"idempotentHint": True')
   expect(a).toContain(`"openWorldHint": ${openWorld ? 'True' : 'False'}`)
   expect(server.match(/^_ANNOTATIONS = /gm)).toHaveLength(1)
-  expect(server).toContain('    mcp.tool(_tool, annotations=_ANNOTATIONS)')
+  expect(server).toMatch(/^ {4}mcp\.tool\(_tool, annotations=_ANNOTATIONS(?:, output_schema=_OUTPUT_SCHEMAS\[_tool\.__name__\])?\)$/m)
   expect(server).not.toMatch(/mcp\.tool\(_tool\)/)
   expect(server).not.toMatch(/readOnlyHint"?\s*[:=]\s*False/)
   expect(server).not.toMatch(/destructiveHint"?\s*[:=]\s*True/)
