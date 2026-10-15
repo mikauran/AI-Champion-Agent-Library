@@ -50,7 +50,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 31: Decouple DDC Agents from MCP Work** - see details (fix run 2026-10-15, order 31-38)
 - [x] **Phase 32: Align Strong-match Agents** - see details (fix run 2026-10-15, order 31-38)
 - [x] **Phase 33: Align Moderate-match Agents** - see details (fix run 2026-10-15, order 31-38)
-- [ ] **Phase 34: Own-design Agents Relabelled** - see details (fix run 2026-10-15, order 31-38)
+- [x] **Phase 34: Own-design Agents Relabelled** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 35: DDC Extras Verified and Extended** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 36: LVI-INFO MCP Agent (flagged)** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 37: DDC Mapping for Alok** - see details (fix run 2026-10-15, order 31-38)
@@ -747,9 +747,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 34-01-PLAN.md — Labels for agents 1, 5, 8, 9, 10 in entries, third-party notices and inventory; label test, D2 assumption visible
-- [ ] 34-02-PLAN.md — Live reruns for agents 1 ETIM, 5 E-BOM to M-BOM, 8 Cut-sheet QA (sequential, evidence)
-- [ ] 34-03-PLAN.md — Live reruns for agents 9, 10; aggregation, npm run check, 34-VERIFICATION, STATE and ROADMAP close
+- [x] 34-01-PLAN.md — Labels for agents 1, 5, 8, 9, 10 in entries, third-party notices and inventory; label test, D2 assumption visible
+- [x] 34-02-PLAN.md — Live reruns for agents 1 ETIM, 5 E-BOM to M-BOM, 8 Cut-sheet QA (sequential, evidence)
+- [x] 34-03-PLAN.md — Live reruns for agents 9, 10; aggregation, npm run check, 34-VERIFICATION, STATE and ROADMAP close
 
 ### Phase 35: Phase 29 extras verified against real skills and further self-contained DDC skill agents
 

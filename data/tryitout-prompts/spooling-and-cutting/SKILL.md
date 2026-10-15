@@ -68,4 +68,4 @@ No counts.
 
 End with: `Draft for fabricator review. Grouping and lengths are copied from the supplied synthetic segment list; cutting quantities and nesting were not computed.`
 
-Ideas adapted from DDC skill prefab-optimization (MIT, (c) 2026 DataDrivenConstruction); own design, its optimisation algorithms are not adopted. Draft for fabricator review.
+No DDC basis (own design); the DDC prefab-optimization skill is not a pipe-spool or cut-list skill and is not adopted. Draft for fabricator review.

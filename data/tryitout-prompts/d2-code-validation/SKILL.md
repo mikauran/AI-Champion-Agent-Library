@@ -59,4 +59,4 @@ One row per requirement row in input order, every cell copied from its check lin
 
 End with: `Draft for engineer review. Verdicts come only from the supplied extract and requirement rows (placeholders in the sample); no regulation text was looked up.`
 
-Ideas adapted from DDC skills ids-checker and standards-compliance-checker (MIT, (c) 2026 DataDrivenConstruction); own design.
+No DDC basis (own design); D2 is assumed to be the Finnish building code part D2 (unconfirmed).
