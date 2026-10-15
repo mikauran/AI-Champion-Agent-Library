@@ -5,7 +5,7 @@
 //          --file path/to/input.txt --label synthetic [--base-url http://127.0.0.1:3000]
 // Exit codes: 0 ok, 1 job failed, 2 usage error, 3 budget refusal, 4 timeout, 5 HTTP/transport error.
 
-import { readFileSync, writeFileSync, renameSync, mkdirSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, renameSync, mkdirSync, existsSync, openSync, closeSync, unlinkSync, statSync } from 'node:fs'
 import { dirname, join, basename } from 'node:path'
 import { unzipSync, strFromU8 } from 'fflate'
 import { isMainModule } from './is-main.js'
@@ -16,6 +16,8 @@ import { isMainModule } from './is-main.js'
 export const PRICE_OUTPUT_PER_MTOK = 1.6
 export const RESERVE_USD = 0.5
 export const CAP_USD = 10
+const MAX_ARTIFACT_FILE_BYTES = 10_000_000
+const MAX_ARTIFACT_BYTES = 20_000_000
 
 export interface Opts {
   agent: string
@@ -139,8 +141,48 @@ function formatRow(r: LedgerRow): string {
   )
 }
 
-/** Insert or replace (matched on run_id) a ledger row; atomic write via temp + rename. */
+/**
+ * Runs `fn` while holding `<ledger>.lock` (created with O_EXCL), so two harness runs cannot interleave their
+ * read-modify-write of the ledger (CR-52c). A lock older than 30 s is taken over (a crashed run). Synchronous.
+ */
+export function withLedgerLock<T>(path: string, fn: () => T): T {
+  const lock = `${path}.lock`
+  mkdirSync(dirname(path), { recursive: true })
+  const wait = new Int32Array(new SharedArrayBuffer(4))
+  const until = Date.now() + 10_000
+  for (;;) {
+    try {
+      closeSync(openSync(lock, 'wx'))
+      break
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e
+      try {
+        if (Date.now() - statSync(lock).mtimeMs > 30_000) unlinkSync(lock)
+      } catch {
+        /* released meanwhile */
+      }
+      if (Date.now() > until) throw new Error('ledger is locked by another run')
+      Atomics.wait(wait, 0, 0, 25)
+    }
+  }
+  try {
+    return fn()
+  } finally {
+    try {
+      unlinkSync(lock)
+    } catch {
+      /* already gone */
+    }
+  }
+}
+
+/** Insert or replace (matched on run_id) a ledger row under the ledger lock. */
 export function writeLedgerRow(path: string, row: LedgerRow): void {
+  withLedgerLock(path, () => writeLedgerRowUnlocked(path, row))
+}
+
+/** Atomic write via temp + rename; the caller holds the lock. */
+function writeLedgerRowUnlocked(path: string, row: LedgerRow): void {
   let text = existsSync(path) ? readFileSync(path, 'utf8') : HEADER
   const lines = text.split('\n')
   const out: string[] = []
@@ -184,16 +226,28 @@ export interface RunDeps {
   out?: (s: string) => void
 }
 
+/** True when the failure happened before any request could have reached a server. */
+function neverSent(err: unknown): boolean {
+  const cause = (err as { cause?: { code?: string; message?: string } })?.cause
+  if (cause?.code === 'ECONNREFUSED' || cause?.code === 'ENOTFOUND' || cause?.code === 'EAI_AGAIN' || cause?.message === 'bad port') return true
+  return err instanceof TypeError && /invalid url|failed to parse url/i.test(err.message)
+}
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export async function runJob(opts: Opts, deps: RunDeps = {}): Promise<number> {
   const log = deps.log ?? ((s: string) => process.stderr.write(s + '\n'))
   const out = deps.out ?? ((s: string) => process.stdout.write(s + '\n'))
 
-  const total = readLedgerTotal(opts.ledger)
-  if (!guardBudget(total)) {
-    log(`REFUSED: ledger total ${total.toFixed(2)} + ${RESERVE_USD.toFixed(2)} would exceed ${CAP_USD.toFixed(2)} USD`)
-    return 3
+  // CR-52b: read the input before anything is reserved; a bad --file cannot have spent anything.
+  let fileBytes: Buffer | undefined
+  if (opts.file) {
+    try {
+      fileBytes = readFileSync(opts.file)
+    } catch {
+      log(`cannot read --file ${basename(opts.file)}; nothing was reserved`)
+      return 2
+    }
   }
 
   const start = Date.now()
@@ -203,12 +257,25 @@ export async function runJob(opts: Opts, deps: RunDeps = {}): Promise<number> {
     runId, date, plan: opts.plan, agent: opts.agent, jobId: '', model: 'unknown',
     totalTokens: 'unknown', requests: 'unknown', costUsd: RESERVE_USD, status: 'reserved', note: `label=${opts.label}`,
   }
-  writeLedgerRow(opts.ledger, row)
+  // Budget check and reservation are one step under the ledger lock (CR-52c).
+  const refused = withLedgerLock(opts.ledger, () => {
+    const total = readLedgerTotal(opts.ledger)
+    if (!guardBudget(total)) return total
+    writeLedgerRowUnlocked(opts.ledger, row)
+    return null
+  })
+  if (refused !== null) {
+    log(`REFUSED: ledger total ${refused.toFixed(2)} + ${RESERVE_USD.toFixed(2)} would exceed ${CAP_USD.toFixed(2)} USD`)
+    return 3
+  }
 
   const ev: Evidence = {
     jobId: null, status: 'unknown', model: 'unknown', totalTokens: 'unknown', requests: 'unknown',
     estCostUsd: RESERVE_USD, countable: false, inputLabel: opts.label, outputFiles: [], firstOutputLines: [], durationS: 0,
   }
+  const deadline = start + opts.timeoutS * 1000
+  // CR-52a: every request is bounded by the time left (at least 1 s, at most 60 s), so one stalled response cannot hang the run.
+  const tfetch = (url: string, init: RequestInit = {}) => fetch(url, { ...init, signal: AbortSignal.timeout(Math.min(60_000, Math.max(1000, deadline - Date.now()))) })
   const finish = (code: number, status: string, note: string): number => {
     ev.durationS = Math.round((Date.now() - start) / 100) / 10
     ev.status = status
@@ -233,8 +300,8 @@ export async function runJob(opts: Opts, deps: RunDeps = {}): Promise<number> {
     const form = new FormData()
     form.set('agentId', opts.agent)
     form.set('task', opts.task)
-    if (opts.file) form.set('file', new Blob([readFileSync(opts.file)]), basename(opts.file))
-    const post = await fetch(`${opts.baseUrl}/api/tryitout/jobs`, { method: 'POST', body: form, headers: headers() })
+    if (opts.file && fileBytes) form.set('file', new Blob([new Uint8Array(fileBytes)]), basename(opts.file))
+    const post = await tfetch(`${opts.baseUrl}/api/tryitout/jobs`, { method: 'POST', body: form, headers: headers() })
     const sc = post.headers.getSetCookie?.() ?? []
     if (sc.length) cookie = sc.map((c) => c.split(';')[0]).join('; ')
     if (!post.ok) {
@@ -243,15 +310,20 @@ export async function runJob(opts: Opts, deps: RunDeps = {}): Promise<number> {
       return finish(5, 'http-error', ev.error)
     }
     const { jobId } = (await post.json()) as { jobId: string }
+    // CR-53: the id becomes a URL segment and a directory name; accept only a plain token.
+    if (typeof jobId !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(jobId)) {
+      ev.error = 'server returned an invalid job id'
+      log(ev.error)
+      return finish(5, 'http-error', 'invalid job id')
+    }
     ev.jobId = jobId
     log(`job ${jobId} queued`)
 
-    const deadline = start + opts.timeoutS * 1000
     let status = 'queued'
     let jobError: string | null = null
     let lastEvents = 0
     for (;;) {
-      const r = await fetch(`${opts.baseUrl}/api/tryitout/jobs/${jobId}`, { headers: headers() })
+      const r = await tfetch(`${opts.baseUrl}/api/tryitout/jobs/${jobId}`, { headers: headers() })
       if (!r.ok) {
         ev.error = `GET job -> HTTP ${r.status}`
         return finish(5, 'http-error', ev.error)
@@ -270,7 +342,7 @@ export async function runJob(opts: Opts, deps: RunDeps = {}): Promise<number> {
     // usage (works for failed jobs too)
     let observed = false
     try {
-      const u = await fetch(`${opts.baseUrl}/api/tryitout/jobs/${jobId}/usage`, { headers: headers() })
+      const u = await tfetch(`${opts.baseUrl}/api/tryitout/jobs/${jobId}/usage`, { headers: headers() })
       if (u.ok) {
         const uj = (await u.json()) as { model: string; totalTokens: number; requests: number }
         ev.model = uj.model
@@ -289,12 +361,25 @@ export async function runJob(opts: Opts, deps: RunDeps = {}): Promise<number> {
       return finish(1, 'failed', observed ? `error: ${jobError}` : `usage-unknown; error: ${jobError}`)
     }
 
-    const art = await fetch(`${opts.baseUrl}/api/tryitout/jobs/${jobId}/artifact`, { headers: headers() })
+    const art = await tfetch(`${opts.baseUrl}/api/tryitout/jobs/${jobId}/artifact`, { headers: headers() })
     if (!art.ok) {
       ev.error = `GET artifact -> HTTP ${art.status}`
       return finish(5, 'http-error', ev.error)
     }
-    const files = unzipSync(new Uint8Array(await art.arrayBuffer()))
+    // CR-53: a hostile server must not be able to expand a small zip into gigabytes.
+    let declared = 0
+    let tooBig = false
+    const files = unzipSync(new Uint8Array(await art.arrayBuffer()), {
+      filter: (f) => {
+        declared += f.originalSize
+        if (f.originalSize > MAX_ARTIFACT_FILE_BYTES || declared > MAX_ARTIFACT_BYTES) tooBig = true
+        return !tooBig
+      },
+    })
+    if (tooBig) {
+      ev.error = 'artifact is larger than the harness accepts'
+      return finish(5, 'http-error', 'artifact too large')
+    }
     const dest = join(opts.outDir, jobId)
     const names = Object.keys(files).filter((n) => !n.endsWith('/')).sort()
     for (const n of names) {
@@ -316,6 +401,11 @@ export async function runJob(opts: Opts, deps: RunDeps = {}): Promise<number> {
   } catch (err) {
     ev.error = err instanceof Error ? err.message : String(err)
     log(`transport error: ${ev.error}`)
+    // CR-52b: a refused connection or an unresolvable host never delivered a request, so nothing can have been spent.
+    if (ev.jobId === null && neverSent(err)) {
+      ev.estCostUsd = 0
+      return finish(5, 'transport-error', 'transport-error; no request reached the server, no reserve kept')
+    }
     return finish(5, 'transport-error', 'transport-error; reserve kept')
   }
 }

@@ -161,9 +161,10 @@ describe('runJob', () => {
     expect(readFileSync(ledger, 'utf8')).toContain('usage-unknown')
   })
 
-  it('transport error returns 5 and keeps the reserve row', async () => {
+  // CR-52: a connection that never reached a server spent nothing, so no reserve is kept (it used to keep 0.50 USD).
+  it('transport error returns 5 and keeps no reserve when no request was sent', async () => {
     expect(await runJob(opts({ baseUrl: 'http://127.0.0.1:1' }), quiet)).toBe(5)
-    expect(readLedgerTotal(ledger)).toBe(0.5)
+    expect(readLedgerTotal(ledger)).toBe(0)
     expect(existsSync(join(dir, 'runs')) ? readdirSync(join(dir, 'runs')) : []).toEqual([])
   })
 })
