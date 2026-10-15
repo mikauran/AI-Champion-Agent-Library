@@ -169,3 +169,20 @@ describe('identifier case in keys (CR-11)', () => {
     expect(m.entities[0].identifierFields).toEqual(['Id'])
   })
 })
+
+// CR-12: MySQL hash comments.
+describe('MySQL comments (CR-12)', () => {
+  it('an apostrophe in a # comment does not swallow the script', () => {
+    const sql = "# it's mine\nCREATE TABLE t (id INT PRIMARY KEY, name TEXT);\n# don't\nCREATE TABLE u (id INT PRIMARY KEY) ENGINE=InnoDB;\n"
+    const m = ok(adapter.parse({ text: sql }))
+    expect(m.entities.map((e) => e.id)).toEqual(['t', 'u'])
+  })
+  it('a # inside a quoted string is not a comment', () => {
+    const m = ok(adapter.parse({ text: "CREATE TABLE t (id INT PRIMARY KEY, tag ENUM('#a','b') NOT NULL) ENGINE=InnoDB;" }))
+    expect(m.entities[0].fields.find((f) => f.name === 'tag')!.enum).toEqual(['#a', 'b'])
+  })
+  it('--1 without a space is not a comment in MySQL', () => {
+    const m = ok(adapter.parse({ text: "CREATE TABLE t (id INT PRIMARY KEY, n INT DEFAULT 5--1, name TEXT) ENGINE=InnoDB;" }))
+    expect(m.entities[0].fields.map((f) => f.name)).toEqual(['id', 'n', 'name'])
+  })
+})

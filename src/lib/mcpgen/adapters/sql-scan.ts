@@ -8,6 +8,8 @@ export interface ScanOpts {
   brackets: boolean
   /** Backslash escapes inside '...' and "..." (MySQL). PostgreSQL E'...' strings are detected separately. */
   backslash: boolean
+  /** MySQL comment rules: `#` starts a line comment, and `--` only when followed by whitespace (CR-12). */
+  mysqlComments?: boolean
 }
 
 export const GENERIC_SCAN: ScanOpts = { brackets: true, backslash: false }
@@ -64,7 +66,7 @@ export function stripComments(sql: string, o: ScanOpts = GENERIC_SCAN): string {
     const end = skipSpecial(sql, i, o)
     if (end >= 0) {
       i = end
-    } else if (ch === '-' && sql[i + 1] === '-') {
+    } else if ((ch === '-' && sql[i + 1] === '-' && (!o.mysqlComments || i + 2 >= sql.length || /[\s\x00-\x1f]/.test(sql[i + 2]))) || (ch === '#' && o.mysqlComments)) {
       out.push(sql.slice(from, i))
       while (i < sql.length && sql[i] !== '\n') i++
       from = i

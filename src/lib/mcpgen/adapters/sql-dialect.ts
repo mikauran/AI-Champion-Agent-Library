@@ -39,7 +39,7 @@ export function detectDialect(text: string, opts: { hasCopy?: boolean } = {}): {
 
 export function scanOptsFor(d: Dialect): ScanOpts {
   if (d === 'postgres') return { brackets: false, backslash: false }
-  if (d === 'mysql') return { brackets: false, backslash: true }
+  if (d === 'mysql') return { brackets: false, backslash: true, mysqlComments: true }
   return { brackets: true, backslash: false }
 }
 
