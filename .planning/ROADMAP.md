@@ -769,12 +769,16 @@ Plans:
 ### Phase 36: LVI-INFO MCP agent (flagged off, local only) and MCP-server entries behind the flag
 
 **Goal:** One agent making a real MCP call to Ville's LVI-INFO server, local only: choose a proxy or a sidecar on the internal network, whichever changes the network guard less. The agent and the three MCP-server entries (stk-mcp, stk-catalog-mcp, lvi-info-mcp) stay behind a flag, off by default, never in the release branch. No real LVI-INFO data or API key in any commit that could reach the release; evidence from real-data runs redacted.
-**Requirements**: TBD
+**Requirements**: LMCP-01, LMCP-02, LMCP-03, LMCP-04, LMCP-05
 **Depends on:** Phase 35
-**Plans:** 0 plans
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 36 to break down)
+- [ ] 36-01-PLAN.md - LOCAL_MCP_AGENTS flag, decisions D-635..D-637, relocation of the 3 MCP-server entries to data/agents-local, ingest second pass, flag-off golden proof, docs skeleton
+- [ ] 36-02-PLAN.md - app-side MCP proxy (route, per-lease token, per-job budget, allow-list, size caps, 404 when off, hook, upstream clients, tests with fakes)
+- [ ] 36-03-PLAN.md - per-agent Pi extension staged at warm time (flag-gated runner change, fake-runtime tests)
+- [ ] 36-04-PLAN.md - LVI-INFO agent, synthetic mock LVI API, helper tests, one live Try It Out run through the proxy, VERIFICATION and UAT
+- [ ] 36-05-PLAN.md - npm run check, build and smoke flag off (no change) and on, security notes, ROADMAP and STATE close
 
 ### Phase 37: DDC mapping document for Alok
 
