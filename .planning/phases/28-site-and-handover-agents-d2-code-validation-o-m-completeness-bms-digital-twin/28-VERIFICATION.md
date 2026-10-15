@@ -75,3 +75,6 @@ COUNTED (SKILL revision 1, second run, rubric R1-R7 met).
 - Caveat: draft for engineer review; counted for the scoped step only (6 points, one synthetic sample, second run after one revision). No live BMS, BACnet or twin connection; tags come from a supplied hint table and are not validated against any real ontology.
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: two 28-03 rows (0.0172 and 0.0181 USD).
+
+## Phase result (aggregated)
+Agents 10, 11, 12 counted (10 after 1 revision, 11 first run, 12 after 1 revision). A-01 (D2 = Finnish building code part D2) is an assumption for Ville/Jussi to confirm. `npm run check` green (273 files, 3118 tests).

@@ -44,7 +44,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 25: Design-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 26: Sourcing-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 27: Manufacturing-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
-- [ ] **Phase 28: Site and Handover Agents** - see details (not started; execution order 24-30 first, then 21-23)
+- [x] **Phase 28: Site and Handover Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [ ] **Phase 29: Further DDC-skill Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [ ] **Phase 30: Release Preparation** - see details (not started; execution order 24-30 first, then 21-23)
 
