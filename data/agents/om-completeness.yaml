@@ -16,16 +16,16 @@ metadata:
   agent_no: 11
   purpose: "Compares a handover document index against a required-documents checklist per equipment and drafts complete, incomplete or missing statuses with the quoted index line for the handover engineer"
   inputs:
-    - "Required-documents checklist as CSV text (requirement id, equipment id, equipment, document type)"
+    - "Required-documents checklist as CSV text (requirement id, equipment id as asset tag, equipment as asset name, system, location, document type)"
     - "Delivered handover document index as CSV text (equipment id, document type, reference, status)"
   outputs:
-    - "Draft per-document table (one row per required document, status, quoted index line) and an open-items list (draft for engineer review)"
+    - "Draft per-document table (one row per required document: asset columns, skill document type, quoted index line, status complete/incomplete/missing, closeout word) and an open-items list (draft for engineer review)"
   data_sources:
     - "Synthetic sample in data/tryitout-prompts/om-completeness/ with a placeholder checklist"
     - "Intended in a connected setup: the project handover requirements and the document management system export; not accessible from the Try It Out container"
   assumptions:
-    - "Equipment id and document type match by exact text equality"
-    - "Index status `final` is taken at face value; content is not read"
+    - "Equipment id and document type match by exact text equality; index lines with status superseded are skipped"
+    - "Index status `final` is taken at face value and gives complete; any other status (draft, reviewed, approved, as_built) gives incomplete (the skill counts only final); content is not read"
     - "The required-documents checklist is supplied per equipment by the user"
   gaps:
     - "Sample is synthetic: real handover indexes and document sets are confidential and were not used; behaviour on real indexes unproven"
@@ -34,11 +34,12 @@ metadata:
     - "Exact-text id and document type matching; no synonyms, multilingual or revision-aware matching"
     - "No document management system or COBie-style export connection"
     - "Scoped to about 6 required rows per run; larger checklists must be batched"
+    - "Asset registry fields (tag, name, system, location) are copied input columns only; no registry, warranty report, maintenance schedule, training or overall handover status is derived, and nothing is counted or given as a percentage"
   draft_for_review: true
   sample_data:
     kind: "synthetic"
     label: "Invented checklist and delivered index; no real project data"
-  attribution: "Adapted from DDC skills 5_DDC_Innovative/as-built-documentation and 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist (MIT, (c) 2026 DataDrivenConstruction); handover document set; no DDC code copied"
+  attribution: "Adapted from DDC skills 5_DDC_Innovative/as-built-documentation and 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist (MIT, (c) 2026 DataDrivenConstruction); handover document types, asset registry fields and completeness statuses, method and data model only, no book text or code copied; spec docs/ddc-alignment/om-completeness.md"
   input_schema:
     - key: "input_text"
       label: "Required documents and delivered index (text)"

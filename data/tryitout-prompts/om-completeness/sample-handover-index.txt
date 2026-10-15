@@ -1,18 +1,18 @@
-# SYNTHETIC SAMPLE - invented data. The required-documents checklist is a placeholder, not a contract or regulation requirement. Equipment ids are invented.
+# SYNTHETIC SAMPLE - invented data. The required-documents checklist is a placeholder, not a contract or regulation requirement. Equipment ids, locations and references are invented.
 ## REQUIRED DOCUMENTS
-req_id,eq_id,equipment,doc_type
-H-01,AHU-01,Air handling unit 1,operating-manual
-H-02,AHU-01,Air handling unit 1,maintenance-plan
-H-03,AHU-01,Air handling unit 1,commissioning-report
-H-04,PMP-02,Pump 2,operating-manual
-H-05,PMP-02,Pump 2,warranty-certificate
-H-06,FAN-03,Fan 3,as-built-drawing
+req_id,eq_id,equipment,system,location,doc_type
+H-01,AHU-01,Air handling unit 1,ilmanvaihto,Plant room 1,operating-manual
+H-02,AHU-01,Air handling unit 1,ilmanvaihto,Plant room 1,maintenance-plan
+H-03,PMP-02,Heating pump 2,lämmitys,Plant room 1,warranty-certificate
+H-04,FAN-03,Exhaust fan 3,ilmanvaihto,Roof,as-built-drawing
+H-05,PMP-02,Heating pump 2,lämmitys,Plant room 1,operating-manual
+H-06,AHU-01,Air handling unit 1,ilmanvaihto,Plant room 1,commissioning-report
 ## DELIVERED INDEX
 eq_id,doc_type,doc_ref,status
 AHU-01,operating-manual,SYN-DOC-101,final
-AHU-01,maintenance-plan,SYN-DOC-102,draft
+AHU-01,maintenance-plan,SYN-DOC-102,reviewed
 AHU-01,spare-parts-list,SYN-DOC-103,final
 AHU-02,commissioning-report,SYN-DOC-201,final
-PMP-02,operating-manual,SYN-DOC-301,final
-PMP-02,warranty-certificate,SYN-DOC-302,unsigned
-FAN-03,operating-manual,SYN-DOC-401,final
+PMP-02,operating-manual,SYN-DOC-301,superseded
+PMP-02,operating-manual,SYN-DOC-302,final
+PMP-02,spare-parts-list,SYN-DOC-303,final
