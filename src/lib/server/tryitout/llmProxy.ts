@@ -97,6 +97,11 @@ export function endJob(leaseId: string): JobUsage | null {
   return job.usage
 }
 
+/** Job id of the lease's running job, or null (used by the local MCP proxy, Phase 36). */
+export function getActiveJobId(leaseId: string): string | null {
+  return activeJobs.get(leaseId)?.jobId ?? null
+}
+
 export function getJobUsage(jobId: string): JobUsage | null {
   for (const job of activeJobs.values()) {
     if (job.jobId === jobId) return job.usage

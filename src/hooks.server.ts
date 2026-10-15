@@ -5,10 +5,12 @@ import { AUTH_COOKIE_NAME, authCookieOptions, getAuthService } from '$lib/server
 import { isAuthenticationEnabled } from '$lib/server/auth-config'
 import { resolveWithTheme } from '$lib/theme'
 import { startTryItOutService } from '$lib/server/tryitout/service'
+import { localMcpAgentsEnabled } from '$lib/flags'
 
 const PUBLIC_ROUTES = new Set(['/login', '/health'])
 // The LLM proxy authenticates with per-lease bearer tokens (D-17); containers carry no user cookie.
-const PUBLIC_PREFIXES = ['/api/llm/']
+// The local MCP proxy (Phase 36, LOCAL_MCP_AGENTS) authenticates the same way; its prefix is public only while the flag is on.
+const publicPrefixes = (): string[] => ['/api/llm/', ...(localMcpAgentsEnabled() ? ['/api/local-mcp/'] : [])]
 
 // Runs once at server start (not at import): orphan sweep + idle reaper.
 export const init: ServerInit = async () => {
@@ -59,7 +61,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   const pathname = event.url.pathname
   const isPublic =
     PUBLIC_ROUTES.has(pathname) ||
-    PUBLIC_PREFIXES.some((p) => pathname.startsWith(p)) ||
+    publicPrefixes().some((p) => pathname.startsWith(p)) ||
     event.route.id === null
   if (!event.locals.user && !isPublic) {
     if (event.url.pathname.startsWith('/api/')) {

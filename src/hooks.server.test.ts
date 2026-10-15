@@ -59,6 +59,27 @@ describe('hooks.server auth handling', () => {
     expect(resolve).not.toHaveBeenCalled()
   })
 
+  it('local MCP prefix: public only when LOCAL_MCP_AGENTS is on', async () => {
+    authEnabled.mockReturnValue(true)
+    const prev = process.env.LOCAL_MCP_AGENTS
+    try {
+      delete process.env.LOCAL_MCP_AGENTS
+      const off = await run('/api/local-mcp/v1/tools/x')
+      expect(off.res?.status).toBe(401)
+      expect(await off.res?.json()).toEqual({ message: 'Authentication required' })
+      expect(off.resolve).not.toHaveBeenCalled()
+      process.env.LOCAL_MCP_AGENTS = 'on'
+      const on = await run('/api/local-mcp/v1/tools/x')
+      expect(on.resolve).toHaveBeenCalled()
+      expect(on.res?.status).toBe(200)
+      // the LLM prefix is unchanged in both states
+      expect((await run('/api/llm/v1/chat/completions')).res?.status).toBe(200)
+    } finally {
+      if (prev === undefined) delete process.env.LOCAL_MCP_AGENTS
+      else process.env.LOCAL_MCP_AGENTS = prev
+    }
+  })
+
   it('401s /api/llmx/foo', async () => {
     authEnabled.mockReturnValue(true)
     const { res } = await run('/api/llmx/foo')
