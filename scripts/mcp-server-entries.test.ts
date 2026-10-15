@@ -90,7 +90,7 @@ describe('mcp-server entries in data/agents-local', () => {
     expect(res.failed).toBe(0)
     const slugs = q<{ slug: string }>(DB_OFF, 'SELECT slug FROM agents').map((r) => r.slug)
     for (const s of SLUGS) expect(slugs).not.toContain(s)
-    expect(slugs).toContain('rfi-triage-assistant')
+    expect(slugs).toContain('airo')
     // Derived from data/agents so adding a catalog agent needs no edit here: top-level agent YAMLs (the mcp-server entries live in data/agents-local, so nothing in data/agents is a subdirectory entry).
     const agentYamls = readdirSync(REAL_DIR).filter((f) => f.endsWith('.yaml')).length
     expect(slugs).toHaveLength(agentYamls)

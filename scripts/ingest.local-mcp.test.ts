@@ -85,7 +85,7 @@ describe('ingestAll local-MCP second pass', () => {
   })
 
   it('flag off after a flag-on ingest: local slugs are purged, others untouched', async () => {
-    copyFileSync('./data/agents/rfi-triage-assistant.yaml', `${MAIN}/keep.yaml`)
+    copyFileSync('./data/agents/airo.yaml', `${MAIN}/keep.yaml`)
     process.env.AGENT_KINDS = 'on'
     process.env.LOCAL_MCP_AGENTS = 'on'
     await ingestAll(MAIN, DB, opts())
@@ -116,14 +116,14 @@ describe('ingestAll local-MCP second pass', () => {
   })
 
   it('flag off, fresh DB: purge is a no-op without error even when agent_kinds is missing', async () => {
-    copyFileSync('./data/agents/rfi-triage-assistant.yaml', `${MAIN}/keep.yaml`)
+    copyFileSync('./data/agents/airo.yaml', `${MAIN}/keep.yaml`)
     const res = await ingestAll(MAIN, DB, opts())
     expect(res.failed).toBe(0)
     expect(q<{ slug: string }>('SELECT slug FROM agents')).toHaveLength(1)
   })
 
   it('flag off result equals plain ingest (same row count)', async () => {
-    copyFileSync('./data/agents/rfi-triage-assistant.yaml', `${MAIN}/keep.yaml`)
+    copyFileSync('./data/agents/airo.yaml', `${MAIN}/keep.yaml`)
     const a = await ingestAll(MAIN, DB, opts())
     rmSync(DB)
     freshDb()

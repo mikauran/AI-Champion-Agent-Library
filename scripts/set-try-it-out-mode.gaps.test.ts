@@ -40,8 +40,6 @@ describe('setTryItOutMode edge cases', () => {
   it('sets ABSOLUTE values: stale url and task template on the targeted rows are cleared', () => {
     const p = tmpDb()
     seed(p, [
-      { slug: 'demo-rfi-triage', mode: 'link', url: 'https://x', tpl: 'T' },
-      { slug: 'hvac-load-calculator', mode: 'runnable', url: 'https://y', tpl: 'U' },
       { slug: 'etim-classification-repair', mode: 'link', url: 'https://z', tpl: 'V' },
       { slug: 'qto-normalization', mode: 'link', url: 'https://q', tpl: 'W' },
       { slug: 'clash-prioritization', mode: 'link', url: 'https://c', tpl: 'X' },
@@ -73,9 +71,7 @@ describe('setTryItOutMode edge cases', () => {
       ['cut-sheet-qa', 'runnable', null, null],
       ['d2-code-validation', 'runnable', null, null],
       ['daily-report-cross-check', 'runnable', null, null],
-      ['demo-rfi-triage', 'runnable', null, null],
       ['etim-classification-repair', 'runnable', null, null],
-      ['hvac-load-calculator', 'none', null, null],
       ['material-delivery-check', 'runnable', null, null],
       ['om-completeness', 'runnable', null, null],
       ['procurement-lead-time-check', 'runnable', null, null],
@@ -94,8 +90,6 @@ describe('setTryItOutMode edge cases', () => {
   it('never touches rows other than the targeted targeted slugs', () => {
     const p = tmpDb()
     seed(p, [
-      { slug: 'demo-rfi-triage' },
-      { slug: 'hvac-load-calculator' },
       { slug: 'etim-classification-repair' },
       { slug: 'qto-normalization' },
       { slug: 'clash-prioritization' },
@@ -129,10 +123,8 @@ describe('setTryItOutMode edge cases', () => {
 
   it('returns results in the declared order with one changed row each', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'rfi-generation-from-findings' }, { slug: 'product-sourcing-mbom' }, { slug: 'quote-comparison' }, { slug: 'carbon-epd-enrichment' }, { slug: 'cut-sheet-qa' }, { slug: 'spooling-and-cutting' }, { slug: 'd2-code-validation' }, { slug: 'om-completeness' }, { slug: 'bms-digital-twin' }, { slug: 'daily-report-cross-check' }, { slug: 'punch-list-closure-check' }, { slug: 'change-order-consistency-check' }, { slug: 'safety-observation-classification' }, { slug: 'procurement-lead-time-check' }, { slug: 'material-delivery-check' }, { slug: 'qc-inspection-record-check' }, { slug: 'warranty-register-check' }, { slug: 'clash-prioritization' }, { slug: 'qto-normalization' }, { slug: 'etim-classification-repair' }, { slug: 'hvac-load-calculator' }, { slug: 'demo-rfi-triage' }])
+    seed(p, [{ slug: 'rfi-generation-from-findings' }, { slug: 'product-sourcing-mbom' }, { slug: 'quote-comparison' }, { slug: 'carbon-epd-enrichment' }, { slug: 'cut-sheet-qa' }, { slug: 'spooling-and-cutting' }, { slug: 'd2-code-validation' }, { slug: 'om-completeness' }, { slug: 'bms-digital-twin' }, { slug: 'daily-report-cross-check' }, { slug: 'punch-list-closure-check' }, { slug: 'change-order-consistency-check' }, { slug: 'safety-observation-classification' }, { slug: 'procurement-lead-time-check' }, { slug: 'material-delivery-check' }, { slug: 'qc-inspection-record-check' }, { slug: 'warranty-register-check' }, { slug: 'clash-prioritization' }, { slug: 'qto-normalization' }, { slug: 'etim-classification-repair' }])
     expect(setTryItOutMode(p)).toEqual([
-      { slug: 'demo-rfi-triage', mode: 'runnable', changes: 1 },
-      { slug: 'hvac-load-calculator', mode: 'none', changes: 1 },
       { slug: 'etim-classification-repair', mode: 'runnable', changes: 1 },
       { slug: 'qto-normalization', mode: 'runnable', changes: 1 },
       { slug: 'clash-prioritization', mode: 'runnable', changes: 1 },
@@ -158,19 +150,19 @@ describe('setTryItOutMode edge cases', () => {
 
   it('an already-correct row still counts as one change (SQLite counts matched rows)', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'demo-rfi-triage', mode: 'runnable' }, { slug: 'hvac-load-calculator', mode: 'none' }, { slug: 'etim-classification-repair', mode: 'runnable' }, { slug: 'qto-normalization', mode: 'runnable' }, { slug: 'clash-prioritization', mode: 'runnable' }, { slug: 'rfi-generation-from-findings', mode: 'runnable' }, { slug: 'product-sourcing-mbom', mode: 'runnable' }, { slug: 'quote-comparison', mode: 'runnable' }, { slug: 'carbon-epd-enrichment', mode: 'runnable' }, { slug: 'cut-sheet-qa', mode: 'runnable' }, { slug: 'spooling-and-cutting', mode: 'runnable' }, { slug: 'd2-code-validation', mode: 'runnable' }, { slug: 'om-completeness', mode: 'runnable' }, { slug: 'bms-digital-twin', mode: 'runnable' }, { slug: 'daily-report-cross-check', mode: 'runnable' }, { slug: 'punch-list-closure-check', mode: 'runnable' }, { slug: 'change-order-consistency-check', mode: 'runnable' }, { slug: 'safety-observation-classification', mode: 'runnable' }, { slug: 'procurement-lead-time-check', mode: 'runnable' }, { slug: 'material-delivery-check', mode: 'runnable' }, { slug: 'qc-inspection-record-check', mode: 'runnable' }, { slug: 'warranty-register-check', mode: 'runnable' }])
-    expect(setTryItOutMode(p).map((r) => r.changes)).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    seed(p, [{ slug: 'etim-classification-repair', mode: 'runnable' }, { slug: 'qto-normalization', mode: 'runnable' }, { slug: 'clash-prioritization', mode: 'runnable' }, { slug: 'rfi-generation-from-findings', mode: 'runnable' }, { slug: 'product-sourcing-mbom', mode: 'runnable' }, { slug: 'quote-comparison', mode: 'runnable' }, { slug: 'carbon-epd-enrichment', mode: 'runnable' }, { slug: 'cut-sheet-qa', mode: 'runnable' }, { slug: 'spooling-and-cutting', mode: 'runnable' }, { slug: 'd2-code-validation', mode: 'runnable' }, { slug: 'om-completeness', mode: 'runnable' }, { slug: 'bms-digital-twin', mode: 'runnable' }, { slug: 'daily-report-cross-check', mode: 'runnable' }, { slug: 'punch-list-closure-check', mode: 'runnable' }, { slug: 'change-order-consistency-check', mode: 'runnable' }, { slug: 'safety-observation-classification', mode: 'runnable' }, { slug: 'procurement-lead-time-check', mode: 'runnable' }, { slug: 'material-delivery-check', mode: 'runnable' }, { slug: 'qc-inspection-record-check', mode: 'runnable' }, { slug: 'warranty-register-check', mode: 'runnable' }])
+    expect(setTryItOutMode(p).map((r) => r.changes)).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
   })
 
-  it('a missing hvac row throws naming that slug', () => {
+  it('a missing row throws naming that slug', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'demo-rfi-triage' }])
-    expect(() => setTryItOutMode(p)).toThrow(/no row matched slug 'hvac-load-calculator'.*ingest/)
+    seed(p, [{ slug: 'etim-classification-repair' }])
+    expect(() => setTryItOutMode(p)).toThrow(/no row matched slug 'qto-normalization'.*ingest/)
   })
 
   it('OBSERVATION: the update is not transactional, so a missing second slug leaves the first row already updated', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'demo-rfi-triage', mode: 'link', url: 'https://x' }])
+    seed(p, [{ slug: 'etim-classification-repair', mode: 'link', url: 'https://x' }])
     expect(() => setTryItOutMode(p)).toThrow()
     const row = read(p)[0]
     expect(row.m).toBe('runnable') // partial application; harmless because values are absolute and re-run converges
@@ -198,7 +190,7 @@ describe('setTryItOutMode edge cases', () => {
 
   it('a case-differing slug does not match (slugs are exact)', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'Demo-RFI-Triage' }, { slug: 'hvac-load-calculator' }, { slug: 'etim-classification-repair' }, { slug: 'qto-normalization' }, { slug: 'clash-prioritization' }, { slug: 'rfi-generation-from-findings' }, { slug: 'product-sourcing-mbom' }, { slug: 'quote-comparison' }, { slug: 'carbon-epd-enrichment' }, { slug: 'cut-sheet-qa' }, { slug: 'spooling-and-cutting' }, { slug: 'd2-code-validation' }, { slug: 'om-completeness' }, { slug: 'bms-digital-twin' }, { slug: 'daily-report-cross-check' }, { slug: 'punch-list-closure-check' }])
-    expect(() => setTryItOutMode(p)).toThrow(/demo-rfi-triage/)
+    seed(p, [{ slug: 'Etim-Classification-Repair' }, { slug: 'qto-normalization' }, { slug: 'clash-prioritization' }, { slug: 'rfi-generation-from-findings' }, { slug: 'product-sourcing-mbom' }, { slug: 'quote-comparison' }, { slug: 'carbon-epd-enrichment' }, { slug: 'cut-sheet-qa' }, { slug: 'spooling-and-cutting' }, { slug: 'd2-code-validation' }, { slug: 'om-completeness' }, { slug: 'bms-digital-twin' }, { slug: 'daily-report-cross-check' }, { slug: 'punch-list-closure-check' }])
+    expect(() => setTryItOutMode(p)).toThrow(/etim-classification-repair/)
   })
 })

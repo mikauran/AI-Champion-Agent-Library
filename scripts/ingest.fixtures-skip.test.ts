@@ -36,12 +36,12 @@ beforeEach(() => {
   db.close()
   root = mkdtempSync(join(tmpdir(), 'ingest-fixtures-'))
   // One real agent at the top level, the same agent copied into fixtures/ (top level and nested in a sub-folder).
-  const src = join(REAL_DIR, 'hvac-load-calculator.yaml')
-  cpSync(src, join(root, 'hvac-load-calculator.yaml'))
+  const src = join(REAL_DIR, 'airo.yaml')
+  cpSync(src, join(root, 'airo.yaml'))
   mkdirSync(join(root, 'fixtures'))
-  writeFileSync(join(root, 'fixtures', 'only-in-fixtures.yaml'), readFileSync(src, 'utf8').replace(/hvac-load-calculator/g, 'only-in-fixtures'))
+  writeFileSync(join(root, 'fixtures', 'only-in-fixtures.yaml'), readFileSync(src, 'utf8').replace(/airo/g, 'only-in-fixtures'))
   mkdirSync(join(root, 'Fixtures'))
-  writeFileSync(join(root, 'Fixtures', 'upper.yaml'), readFileSync(src, 'utf8').replace(/hvac-load-calculator/g, 'upper-case-fixtures'))
+  writeFileSync(join(root, 'Fixtures', 'upper.yaml'), readFileSync(src, 'utf8').replace(/airo/g, 'upper-case-fixtures'))
 })
 
 afterEach(() => {
@@ -58,13 +58,13 @@ describe('flag-on ingest skips fixtures directories (D-466)', () => {
     process.env.AGENT_KINDS = 'on'
     await ingest(REAL_DIR, TEST_DB)
     expect(slugs()).not.toContain('minimal-agent')
-    expect(slugs()).toContain('hvac-load-calculator')
+    expect(slugs()).toContain('airo')
   })
 
   it('skips fixtures at the top level (case-insensitive) without counting a failure', async () => {
     process.env.AGENT_KINDS = 'on'
     const r = await ingest(root, TEST_DB)
-    expect(slugs()).toEqual(['hvac-load-calculator'])
+    expect(slugs()).toEqual(['airo'])
     expect(r.failed).toBe(0)
   })
 
@@ -72,7 +72,7 @@ describe('flag-on ingest skips fixtures directories (D-466)', () => {
     process.env.AGENT_KINDS = 'on'
     const sub = join(root, 'my-agent')
     mkdirSync(join(sub, 'tests', 'fixtures'), { recursive: true })
-    cpSync(join(REAL_DIR, 'hvac-load-calculator.yaml'), join(sub, 'agent.yaml'))
+    cpSync(join(REAL_DIR, 'airo.yaml'), join(sub, 'agent.yaml'))
     writeFileSync(join(sub, 'tests', 'fixtures', 'noise.yaml'), 'name: noise\n')
     const withSkip = readSubmissionDir(sub, { skipDirNames: ['fixtures'] })
     expect(withSkip.files.map((f) => f.path)).toEqual(['agent.yaml'])
@@ -83,7 +83,7 @@ describe('flag-on ingest skips fixtures directories (D-466)', () => {
 
   it('flag off is unchanged: only top-level data files are ingested (no directory scanning at all)', async () => {
     await ingest(root, TEST_DB)
-    expect(slugs()).toEqual(['hvac-load-calculator'])
+    expect(slugs()).toEqual(['airo'])
   })
 
   it('validate-submission validates a fixtures folder it is given', () => {

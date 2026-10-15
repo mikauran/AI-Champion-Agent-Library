@@ -12,8 +12,8 @@
 This repository delivers the **AI-Champion (AIC) Agent Library**, an enterprise-grade catalog and evaluation platform for construction and MEP (Mechanical, Electrical, Plumbing) AI agents.
 
 Over the recent development sprints:
-1. **Catalog Expansion:** 20 new construction/MEP agents have been added, bringing the catalog total to **29 agents** (22 with runnable "Try It Out" workflows).
-2. **Methodological Alignment & Decoupling:** The 12 consortium agents and additional construction skills were thoroughly audited against the Data-Driven Construction (DDC) repository. All proprietary MCP/consortium catalog references (LVI-INFO, STK, Prysmian, Rakennustieto) were cleanly decoupled from the DDC agent specifications and replaced with generic/synthetic schemas.
+1. **Catalog Expansion:** 20 verified construction/MEP agents have been added alongside the AIRO compliance agent, bringing the production catalog to **21 verified agents** (20 with runnable "Try It Out" workflows, and all 8 legacy placeholder cards removed).
+2. **Methodological Alignment & Decoupling:** The 12 consortium agents and additional construction skills were thoroughly audited against the Data-Driven Construction (DDC) repository. All proprietary MCP/consortium catalog references (LVI-INFO, vendor electrical-catalogs, Prysmian, Rakennustieto) were cleanly decoupled from the DDC agent specifications and replaced with generic/synthetic schemas.
 3. **Local MCP Segregation:** MCP-server entries have been segregated into `data/agents-local/` behind a dedicated `LOCAL_MCP_AGENTS` feature flag, keeping the public release catalog clean and self-contained.
 4. **Generator Roadmap & Hardening:** Completed generator Stage 0, data proposal layer, and code review (59 issues addressed and security verified `SECURED`).
 5. **Rock-solid Test Suite:** 3,957 automated tests across 328 test files and 104 smoke checks across 8 feature-flag configurations pass cleanly.
@@ -52,18 +52,10 @@ The library currently catalogs **29 agents**, categorized across the constructio
 19. **QC Inspection Record Check** (`qc-inspection-record-check`) — Audits quality control inspection forms for mandatory verification steps.
 20. **Warranty Register Check** (`warranty-register-check`) — Monitors warranty commencement dates, coverage periods, and expiration alerts.
 
-### E. Baseline & Core Agents
-21. **AIRO** (`airo`) — Architectural and structural AI review orchestrator.
-22. **Demo RFI Triage** (`demo-rfi-triage`) — Interactive Try It Out demo assistant.
-23. **Electrical Panel Scheduler** (`electrical-panel-scheduler`) — Automated load balancing and panelboard scheduling.
-24. **Energy Model Data Sync** (`energy-model-sync`) — Energy simulation and BIM parameter synchronization.
-25. **HVAC Load Calculator** (`hvac-load-calculator`) — Thermal load calculations for HVAC sizing.
-26. **MEP Scope Planner** (`mep-scope-planner`) — Work breakdown and trade boundary planning.
-27. **MEP Submittal Review Router** (`submittal-review-router`) — Automated routing of contractor submittals to engineering leads.
-28. **Plumbing Fixture Unit Counter** (`plumbing-fixture-unit-counter`) — Water supply and drainage fixture unit calculations.
-29. **RFI Triage Assistant** (`rfi-triage-assistant`) — Semantic classification and assignment of incoming RFIs.
+### E. Compliance & Regulation
+21. **AIRO** (`airo`) — AI Regulatory Observer: identifies EU and Finnish regulations for AI-enabled systems and built environment applications.
 
-*(Note: The 3 MCP servers `lvi-info-mcp`, `stk-mcp`, and `stk-catalog-mcp` have been relocated to `data/agents-local/` behind `LOCAL_MCP_AGENTS=on` so they are excluded from public catalog browsing).*
+*(Note: 8 early placeholder/demo agents such as `demo-rfi-triage`, `hvac-load-calculator`, etc., were removed from the catalog. The 3 MCP servers `lvi-info-mcp`, `stk-mcp`, and `stk-catalog-mcp` are segregated in `data/agents-local/` behind `LOCAL_MCP_AGENTS=on`).*
 
 ---
 
@@ -78,7 +70,7 @@ All verification checks pass locally on the working branch:
 * **Production Smoke Matrix (`npm run smoke`):**
   - **104 / 104 checks passed** across 8 distinct flag permutations (`all-off`, `AGENT_KINDS`, `AGENT_COMPARE`, `UI_SPEC_VIEWER`, `UI_DARK_MODE`, `MCP_GENERATOR`, `MCP_TESTER`, `all-on`).
 * **Decoupling Gate (`scripts/check-ddc-decoupling.sh`):**
-  - Verified clean: 0 instances of unapproved vendor names (LVI-INFO, STK, Prysmian, Rakennustieto) in the DDC agent specifications.
+  - Verified clean: 0 instances of unapproved vendor names (LVI-INFO, vendor electrical-catalogs, Prysmian, Rakennustieto) in the DDC agent specifications.
 
 ---
 

@@ -165,7 +165,7 @@ async function listAllFiles(dir: string): Promise<string[]> {
   return out
 }
 
-const AGENT_ID = 'demo-rfi-triage'
+const AGENT_ID = 'etim-classification-repair'
 
 describe('POST /api/tryitout/jobs', () => {
   it('valid agentId + task + file resolves to { jobId, status: queued } immediately, and writes the file before returning', async () => {

@@ -109,7 +109,7 @@ describe('loaders reject bad ids before any lookup', () => {
 })
 
 describe('loadPiSkill validation of a real agent with custom skill files', () => {
-  const SLUG = 'demo-rfi-triage'
+  const SLUG = 'etim-classification-repair'
 
   it('rejects a missing description', async () => {
     await skill(SLUG, `---\nname: ${SLUG}\n---\nbody`)
@@ -127,8 +127,8 @@ describe('loadPiSkill validation of a real agent with custom skill files', () =>
 
   it('rejects a file without frontmatter, and a name that differs in case', async () => {
     await skill(SLUG, 'no frontmatter at all')
-    await expect(mod.loadPiSkill(SLUG)).rejects.toThrow(/frontmatter name must be demo-rfi-triage/)
-    await skill(SLUG, `---\nname: Demo-Rfi-Triage\ndescription: d\n---\nb`)
+    await expect(mod.loadPiSkill(SLUG)).rejects.toThrow(new RegExp(`frontmatter name must be ${SLUG}`))
+    await skill(SLUG, `---\nname: Etim-Classification-Repair\ndescription: d\n---\nb`)
     await expect(mod.loadPiSkill(SLUG)).rejects.toThrow(/frontmatter name/)
   })
 

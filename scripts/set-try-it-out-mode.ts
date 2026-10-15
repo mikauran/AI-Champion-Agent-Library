@@ -8,11 +8,7 @@ const DB_PATH = process.env.CATALOG_DB_PATH ?? './db/catalog.db'
 // re-running it any number of times converges on the same end state —
 // no locking needed even if two runs overlap.
 //
-// - demo-rfi-triage    -> 'runnable' (this phase's one demo-only agent)
-// - hvac-load-calculator -> 'none'   (D-03: reverting Phase 6's temporary flag)
 const UPDATES: Array<{ slug: string; mode: string; url: string | null; taskTemplate: string | null }> = [
-  { slug: 'demo-rfi-triage', mode: 'runnable', url: null, taskTemplate: null },
-  { slug: 'hvac-load-calculator', mode: 'none', url: null, taskTemplate: null },
   { slug: 'etim-classification-repair', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'qto-normalization', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'clash-prioritization', mode: 'runnable', url: null, taskTemplate: null },

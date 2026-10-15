@@ -11,7 +11,7 @@ import { isMainModule } from './is-main.js'
 const ROOT = resolve(import.meta.dirname, '..')
 const FLAGS = ['AGENT_KINDS', 'AGENT_COMPARE', 'UI_SPEC_VIEWER', 'UI_DARK_MODE', 'MCP_GENERATOR', 'MCP_TESTER'] as const
 type Flag = (typeof FLAGS)[number]
-const REAL_SLUG = 'hvac-load-calculator'
+const REAL_SLUG = 'airo'
 
 export interface Config { name: string; on: Flag[] }
 export const CONFIGS: Config[] = [
@@ -46,7 +46,7 @@ export const PROBES: Probe[] = [
   { label: 'catalog q=sql', path: '/catalog?q=sql', status: () => 200, type: () => html },
   { label: 'catalog page=999', path: '/catalog?page=999', status: () => 200, type: () => html },
   { label: 'catalog kind=bogus', path: '/catalog?kind=bogus', status: () => 200, type: () => html },
-  { label: 'agent detail', path: `/agents/${REAL_SLUG}`, status: () => 200, type: () => html, markers: () => ['HVAC'] },
+  { label: 'agent detail', path: `/agents/${REAL_SLUG}`, status: () => 200, type: () => html, markers: () => ['AIRO'] },
   { label: 'agent 404', path: '/agents/does-not-exist', status: () => 404, type: () => html },
   { label: 'compare', path: '/compare', status: (on) => (on.has('AGENT_COMPARE') ? 200 : 404), type: () => html },
   { label: 'mcp-test page', path: '/mcp-test', status: (on) => (on.has('MCP_TESTER') ? 200 : 404), type: () => html },

@@ -2,7 +2,7 @@
   "ingest": {
     "top": {
       "result": {
-        "succeeded": 29,
+        "succeeded": 21,
         "failed": 0
       },
       "rows": [
@@ -207,81 +207,6 @@
           "try_it_out_task_template": null
         },
         {
-          "slug": "demo-rfi-triage",
-          "title": "Demo RFI Triage",
-          "summary": "DEMO ONLY — not a production AIC/WP5 catalog agent. This agent exists solely to demonstrate the Try It Out flow with a single LLM call: it reads one uploaded RFI (Request for Information) text file and writes back a plain-text triage result. It does not run tools, query BIM models, or access any project system.",
-          "system_prompt": "You are an RFI triage assistant. You receive the plain text of a single Request for Information (RFI). Classify it and produce a short, plain-text triage result — no markdown code fences, no preamble, no closing pleasantries, and nothing else. Never claim to have run a tool, queried a system, or accessed a document you were not given; work only from the RFI text provided.",
-          "llm_name": "gpt-4.1-mini",
-          "llm_temperature": 0.2,
-          "llm_max_tokens": 512,
-          "llm_top_p": 0.95,
-          "tool_names": "[]",
-          "input_schema": "[]",
-          "requires_human_approval": 0,
-          "category": "project-management",
-          "github_url": null,
-          "customizable_fields": null,
-          "fixed_fields": "[]",
-          "fixed_note": null,
-          "link_label": null,
-          "maturity_status": "experimental",
-          "tags": "[\"demo\",\"rfi\",\"triage\",\"try-it-out\"]",
-          "spec_id": "aic-demo-rfi-triage-001",
-          "try_it_out_mode": "none",
-          "try_it_out_url": null,
-          "try_it_out_task_template": null
-        },
-        {
-          "slug": "electrical-panel-scheduler",
-          "title": "Electrical Panel Scheduler",
-          "summary": "Generates and keeps electrical panel schedules synchronized with BIM model data — calculates connected loads, applies NEC demand factors, checks panel capacity, and exports schedules to design documents.",
-          "system_prompt": "You are an electrical panel scheduling agent. Extract circuit data from BIM models, apply NEC 2023 demand factors for the load type (lighting, receptacles, HVAC, motors), calculate total connected and demand loads, check against panel ampacity, and flag overloaded panels. Export finalized schedules as structured data and PDF.",
-          "llm_name": "gpt-4o",
-          "llm_temperature": 0.1,
-          "llm_max_tokens": 2048,
-          "llm_top_p": 0.9,
-          "tool_names": "[\"extract_circuits\",\"apply_demand_factors\",\"check_panel_capacity\",\"export_panel_schedule\",\"create_design_issue\"]",
-          "input_schema": "[{\"key\":\"project_name\",\"label\":\"Project name\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":\"e.g. Central Office Renovation\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"bim_model_reference\",\"label\":\"BIM model reference\",\"type\":\"text\",\"required\":true,\"description\":\"Model identifier, server path, or URL containing circuit data\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"panel_identifier\",\"label\":\"Panel identifier\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":\"e.g. LP-2A\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"code_standard\",\"label\":\"Electrical code\",\"type\":\"select\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":\"nec-2023\",\"options\":[{\"value\":\"nec-2023\",\"label\":\"NEC 2023\"},{\"value\":\"nec-2020\",\"label\":\"NEC 2020\"},{\"value\":\"iec-60364\",\"label\":\"IEC 60364\"}],\"min\":null,\"max\":null},{\"key\":\"system_voltage\",\"label\":\"System voltage\",\"type\":\"select\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[{\"value\":\"120-208v-3ph\",\"label\":\"120/208 V, 3-phase\"},{\"value\":\"277-480v-3ph\",\"label\":\"277/480 V, 3-phase\"},{\"value\":\"230-400v-3ph\",\"label\":\"230/400 V, 3-phase\"}],\"min\":null,\"max\":null},{\"key\":\"design_notes\",\"label\":\"Design notes\",\"type\":\"textarea\",\"required\":false,\"description\":\"Known demand factors, spare capacity requirements, or exceptions\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null}]",
-          "requires_human_approval": 1,
-          "category": "electrical",
-          "github_url": "https://github.com/mikauran/AI-Champion-Agent-Library",
-          "customizable_fields": null,
-          "fixed_fields": "[]",
-          "fixed_note": null,
-          "link_label": null,
-          "maturity_status": "production",
-          "tags": "[\"electrical\",\"panel-schedule\",\"nec\",\"load-calculation\",\"bim\"]",
-          "spec_id": "aic-mep-panel-sched-001",
-          "try_it_out_mode": "none",
-          "try_it_out_url": null,
-          "try_it_out_task_template": null
-        },
-        {
-          "slug": "energy-model-data-sync",
-          "title": "Energy Model Data Sync",
-          "summary": "Keeps EnergyPlus and eQUEST energy models synchronized with the live BIM model — detects envelope, occupancy, and mechanical system changes and propagates them to the energy simulation inputs.",
-          "system_prompt": "You are an energy model synchronization agent. Monitor the BIM model for changes to envelope assemblies, window-to-wall ratios, occupancy schedules, and HVAC system assignments. When changes are detected, update the corresponding EnergyPlus IDF or eQUEST INP input files, re-run the simulation, and report EUI delta against the baseline.",
-          "llm_name": "gpt-4o",
-          "llm_temperature": 0.1,
-          "llm_max_tokens": 3000,
-          "llm_top_p": 0.9,
-          "tool_names": "[\"diff_bim_snapshot\",\"update_idf_inputs\",\"run_energy_simulation\",\"compute_eui_delta\",\"post_simulation_report\"]",
-          "input_schema": "[{\"key\":\"bim_snapshot_reference\",\"label\":\"Current BIM snapshot\",\"type\":\"text\",\"required\":true,\"description\":\"Model identifier, server path, or URL for the current BIM snapshot\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"baseline_model_reference\",\"label\":\"Baseline energy model\",\"type\":\"text\",\"required\":true,\"description\":\"Path or URL to the approved IDF or INP baseline\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"simulation_engine\",\"label\":\"Simulation engine\",\"type\":\"select\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":\"energyplus\",\"options\":[{\"value\":\"energyplus\",\"label\":\"EnergyPlus\"},{\"value\":\"equest\",\"label\":\"eQUEST\"}],\"min\":null,\"max\":null},{\"key\":\"project_location\",\"label\":\"Project location\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":\"City, country\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"baseline_eui\",\"label\":\"Baseline EUI\",\"type\":\"number\",\"required\":false,\"description\":null,\"placeholder\":null,\"unit\":\"kWh/m²/year\",\"defaultValue\":null,\"options\":[],\"min\":0,\"max\":null},{\"key\":\"change_scope\",\"label\":\"Changes to synchronize\",\"type\":\"textarea\",\"required\":true,\"description\":\"Describe envelope, occupancy, or HVAC changes since the baseline\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null}]",
-          "requires_human_approval": 0,
-          "category": "mechanical",
-          "github_url": "https://github.com/mikauran/AI-Champion-Agent-Library",
-          "customizable_fields": null,
-          "fixed_fields": "[]",
-          "fixed_note": null,
-          "link_label": null,
-          "maturity_status": "experimental",
-          "tags": "[\"energy-modeling\",\"energyplus\",\"bim\",\"sustainability\",\"mechanical\"]",
-          "spec_id": "aic-mep-energy-sync-001",
-          "try_it_out_mode": "none",
-          "try_it_out_url": null,
-          "try_it_out_task_template": null
-        },
-        {
           "slug": "etim-classification-repair",
           "title": "ETIM & Classification Repair",
           "summary": "Reads a text extract of IFC element properties plus a small ETIM-style class excerpt and drafts one classification repair proposal per element (missing, wrong, unknown or ambiguous class), flagging every uncertain element for engineer review. Own design, inspired by 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai (own design for ETIM-style mapping). Output is a draft.",
@@ -302,31 +227,6 @@
           "maturity_status": "experimental",
           "tags": "[\"etim\",\"classification\",\"ifc\",\"bim\",\"data-quality\"]",
           "spec_id": "aic-etim-classification-repair-001",
-          "try_it_out_mode": "none",
-          "try_it_out_url": null,
-          "try_it_out_task_template": null
-        },
-        {
-          "slug": "hvac-load-calculator",
-          "title": "HVAC Load Calculator",
-          "summary": "Automates ASHRAE 62.1 and Manual J load calculations by extracting zone geometry and occupancy data from BIM models, running calculations, and writing results back to the project data environment.",
-          "system_prompt": "You are an HVAC load calculation agent. Extract zone geometry, envelope properties, and occupancy schedules from BIM data. Run ASHRAE 62.1 ventilation and Manual J heating/cooling load calculations. Flag zones that exceed design tolerances and write results to the project data environment.",
-          "llm_name": "claude-sonnet-4-6",
-          "llm_temperature": 0.1,
-          "llm_max_tokens": 4096,
-          "llm_top_p": 0.95,
-          "tool_names": "[\"extract_bim_zones\",\"fetch_occupancy_schedule\",\"run_load_calculation\",\"write_load_report\",\"flag_tolerance_breach\"]",
-          "input_schema": "[{\"key\":\"bim_model_reference\",\"label\":\"BIM model reference\",\"type\":\"text\",\"required\":true,\"description\":\"Model identifier, server path, or URL containing zone geometry\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"calculation_method\",\"label\":\"Calculation method\",\"type\":\"select\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":\"both\",\"options\":[{\"value\":\"ashrae-62-1\",\"label\":\"ASHRAE 62.1 ventilation\"},{\"value\":\"manual-j\",\"label\":\"Manual J heating and cooling\"},{\"value\":\"both\",\"label\":\"Both methods\"}],\"min\":null,\"max\":null},{\"key\":\"project_location\",\"label\":\"Project location\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":\"City, country\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"conditioned_floor_area\",\"label\":\"Conditioned floor area\",\"type\":\"number\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":\"m²\",\"defaultValue\":null,\"options\":[],\"min\":1,\"max\":null},{\"key\":\"occupancy_schedule\",\"label\":\"Occupancy schedule\",\"type\":\"textarea\",\"required\":true,\"description\":null,\"placeholder\":\"Typical occupancy by zone and operating hours\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"design_conditions\",\"label\":\"Design conditions and tolerances\",\"type\":\"textarea\",\"required\":false,\"description\":\"Indoor setpoints, outdoor design conditions, and project-specific tolerances\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null}]",
-          "requires_human_approval": 1,
-          "category": "mechanical",
-          "github_url": "https://github.com/mikauran/AI-Champion-Agent-Library",
-          "customizable_fields": null,
-          "fixed_fields": "[]",
-          "fixed_note": null,
-          "link_label": null,
-          "maturity_status": "production",
-          "tags": "[\"hvac\",\"load-calculation\",\"ashrae\",\"bim\",\"mechanical\"]",
-          "spec_id": "aic-mep-hvac-load-001",
           "try_it_out_mode": "none",
           "try_it_out_url": null,
           "try_it_out_task_template": null
@@ -357,56 +257,6 @@
           "try_it_out_task_template": null
         },
         {
-          "slug": "mep-scope-planner",
-          "title": "MEP Scope Planner",
-          "summary": "Conversational agent that helps project engineers define MEP scope at project kickoff — asks structured questions about building type, occupancy, climate zone, and owner requirements, then produces a draft scope narrative and fee basis.",
-          "system_prompt": "You are an MEP scope planning assistant. Guide the engineer through a structured kickoff conversation to capture building type, gross square footage, occupancy classification, climate zone, applicable codes, owner sustainability goals, and any special systems (labs, data centers, cleanrooms). Ask one topic at a time, confirm understanding, and at the end produce a structured scope narrative covering mechanical, electrical, and plumbing systems, plus a list of deliverables and a preliminary fee basis table.",
-          "llm_name": "claude-sonnet-4-6",
-          "llm_temperature": 0.5,
-          "llm_max_tokens": 4096,
-          "llm_top_p": 0.95,
-          "tool_names": "[\"fetch_climate_data\",\"lookup_code_requirements\",\"generate_scope_narrative\",\"estimate_fee_basis\"]",
-          "input_schema": "[{\"key\":\"project_name\",\"label\":\"Project name\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"building_type\",\"label\":\"Building type\",\"type\":\"select\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[{\"value\":\"office\",\"label\":\"Office\"},{\"value\":\"residential\",\"label\":\"Residential\"},{\"value\":\"education\",\"label\":\"Education\"},{\"value\":\"healthcare\",\"label\":\"Healthcare\"},{\"value\":\"industrial\",\"label\":\"Industrial\"},{\"value\":\"other\",\"label\":\"Other\"}],\"min\":null,\"max\":null},{\"key\":\"gross_floor_area\",\"label\":\"Gross floor area\",\"type\":\"number\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":\"m²\",\"defaultValue\":null,\"options\":[],\"min\":1,\"max\":null},{\"key\":\"project_location\",\"label\":\"Project location\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":\"City, country\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"occupancy_classification\",\"label\":\"Occupancy classification\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"sustainability_goals\",\"label\":\"Owner sustainability goals\",\"type\":\"textarea\",\"required\":false,\"description\":null,\"placeholder\":\"Certifications, energy targets, carbon goals...\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"special_systems\",\"label\":\"Special systems\",\"type\":\"textarea\",\"required\":false,\"description\":null,\"placeholder\":\"Labs, data centers, cleanrooms, process systems...\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null}]",
-          "requires_human_approval": 1,
-          "category": "project-management",
-          "github_url": "https://github.com/mikauran/AI-Champion-Agent-Library",
-          "customizable_fields": null,
-          "fixed_fields": "[]",
-          "fixed_note": null,
-          "link_label": null,
-          "maturity_status": "beta",
-          "tags": "[\"planning\",\"scope\",\"chat\",\"project-kickoff\",\"mep\"]",
-          "spec_id": "aic-mep-scope-planner-001",
-          "try_it_out_mode": "none",
-          "try_it_out_url": null,
-          "try_it_out_task_template": null
-        },
-        {
-          "slug": "mep-submittal-review-router",
-          "title": "MEP Submittal Review Router",
-          "summary": "Receives product submittal packages, extracts performance data from spec sheets, compares values against design specifications, and routes to the responsible engineer with a pre-populated review checklist.",
-          "system_prompt": "You are a submittal review routing agent for MEP projects. Parse incoming product submittal PDFs to extract key performance parameters (CFM, BTU, voltage, GPM, etc.). Compare extracted values against the project specification section for that product type. Identify compliant, non-compliant, and unverifiable parameters. Assign to the responsible discipline engineer with a pre-populated checklist and highlighted discrepancies.",
-          "llm_name": "claude-sonnet-4-6",
-          "llm_temperature": 0.2,
-          "llm_max_tokens": 4096,
-          "llm_top_p": 0.95,
-          "tool_names": "[\"parse_submittal_pdf\",\"fetch_spec_section\",\"compare_to_spec\",\"assign_review_task\",\"update_submittal_log\"]",
-          "input_schema": "[{\"key\":\"project_name\",\"label\":\"Project name\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"submittal_reference\",\"label\":\"Submittal reference\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":\"e.g. SUB-23-041\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"product_type\",\"label\":\"Product or equipment type\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":\"e.g. air handling unit\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"discipline\",\"label\":\"Responsible discipline\",\"type\":\"select\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[{\"value\":\"mechanical\",\"label\":\"Mechanical\"},{\"value\":\"electrical\",\"label\":\"Electrical\"},{\"value\":\"plumbing\",\"label\":\"Plumbing\"},{\"value\":\"fire-protection\",\"label\":\"Fire protection\"}],\"min\":null,\"max\":null},{\"key\":\"specification_section\",\"label\":\"Specification section\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":\"e.g. 23 73 13\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"submittal_document_reference\",\"label\":\"Submittal document reference\",\"type\":\"text\",\"required\":true,\"description\":\"Document identifier, server path, or URL to the PDF package\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"review_notes\",\"label\":\"Review instructions\",\"type\":\"textarea\",\"required\":false,\"description\":\"Known substitutions, critical parameters, or routing notes\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null}]",
-          "requires_human_approval": 1,
-          "category": "project-management",
-          "github_url": "https://github.com/mikauran/AI-Champion-Agent-Library",
-          "customizable_fields": null,
-          "fixed_fields": "[]",
-          "fixed_note": null,
-          "link_label": null,
-          "maturity_status": "beta",
-          "tags": "[\"submittal\",\"document-management\",\"workflow\",\"mep\",\"review\"]",
-          "spec_id": "aic-mep-submittal-001",
-          "try_it_out_mode": "none",
-          "try_it_out_url": null,
-          "try_it_out_task_template": null
-        },
-        {
           "slug": "om-completeness",
           "title": "OM Completeness",
           "summary": "Compares a delivered handover document index against a required-documents checklist per equipment and drafts complete, incomplete or missing statuses with the quoted index line, for O&M (operation and maintenance) documentation completeness at handover. Document content is never checked. Output is a draft for the handover engineer.",
@@ -427,31 +277,6 @@
           "maturity_status": "experimental",
           "tags": "[\"site-handover\",\"handover\",\"om-manual\",\"completeness\",\"documentation\"]",
           "spec_id": "aic-om-completeness-001",
-          "try_it_out_mode": "none",
-          "try_it_out_url": null,
-          "try_it_out_task_template": null
-        },
-        {
-          "slug": "plumbing-fixture-unit-counter",
-          "title": "Plumbing Fixture Unit Counter",
-          "summary": "Scans BIM models for plumbing fixtures, tallies fixture units per IPC/UPC standards, sizes supply and drain stacks, and validates that riser diagrams match the model.",
-          "system_prompt": "You are a plumbing sizing agent. Extract fixture data from BIM models, assign fixture unit (FU) values per IPC Table 709.1, aggregate FU counts per riser and branch, apply Hunter's curve to determine flow rates, and size supply and drain pipes. Flag undersized pipes and discrepancies between model and riser diagram.",
-          "llm_name": "claude-sonnet-4-6",
-          "llm_temperature": 0.1,
-          "llm_max_tokens": 2048,
-          "llm_top_p": 0.95,
-          "tool_names": "[\"extract_fixtures\",\"assign_fixture_units\",\"aggregate_riser_loads\",\"size_pipes\",\"validate_riser_diagram\"]",
-          "input_schema": "[{\"key\":\"bim_model_reference\",\"label\":\"BIM model reference\",\"type\":\"text\",\"required\":true,\"description\":\"Model identifier, server path, or URL containing plumbing fixtures\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"plumbing_code\",\"label\":\"Plumbing code\",\"type\":\"select\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":\"ipc-2024\",\"options\":[{\"value\":\"ipc-2024\",\"label\":\"IPC 2024\"},{\"value\":\"ipc-2021\",\"label\":\"IPC 2021\"},{\"value\":\"upc-2024\",\"label\":\"UPC 2024\"}],\"min\":null,\"max\":null},{\"key\":\"building_type\",\"label\":\"Building type\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":\"e.g. office, hospital, residential\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"floor_count\",\"label\":\"Number of floors\",\"type\":\"number\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":1,\"max\":200},{\"key\":\"riser_diagram_reference\",\"label\":\"Riser diagram reference\",\"type\":\"text\",\"required\":false,\"description\":\"Document identifier, server path, or URL for comparison\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"sizing_notes\",\"label\":\"Sizing assumptions\",\"type\":\"textarea\",\"required\":false,\"description\":\"Known diversity factors, pressure constraints, or local amendments\",\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null}]",
-          "requires_human_approval": 0,
-          "category": "plumbing",
-          "github_url": "https://github.com/mikauran/AI-Champion-Agent-Library",
-          "customizable_fields": null,
-          "fixed_fields": "[]",
-          "fixed_note": null,
-          "link_label": null,
-          "maturity_status": "beta",
-          "tags": "[\"plumbing\",\"fixture-units\",\"ipc\",\"pipe-sizing\",\"bim\"]",
-          "spec_id": "aic-mep-fixture-unit-001",
           "try_it_out_mode": "none",
           "try_it_out_url": null,
           "try_it_out_task_template": null
@@ -627,31 +452,6 @@
           "maturity_status": "experimental",
           "tags": "[\"rfi\",\"clash\",\"coordination\",\"bim\",\"drafting\"]",
           "spec_id": "aic-rfi-generation-from-findings-001",
-          "try_it_out_mode": "none",
-          "try_it_out_url": null,
-          "try_it_out_task_template": null
-        },
-        {
-          "slug": "rfi-triage-assistant",
-          "title": "RFI Triage Assistant",
-          "summary": "Conversational agent that helps field coordinators draft, classify, and route MEP Requests for Information — asks clarifying questions, suggests likely responsible parties, and checks for related prior RFIs before submission.",
-          "system_prompt": "You are an MEP RFI triage assistant. When a field coordinator describes an issue, ask targeted clarifying questions to determine the affected discipline (mechanical, electrical, plumbing, or fire protection), the relevant drawing and detail, the impact on schedule and adjacent trades, and the urgency. Search prior RFIs for duplicates or related issues. Suggest the most likely responsible design party based on the issue type. Help draft a concise, technically precise RFI description and route it to the correct reviewer.",
-          "llm_name": "claude-sonnet-4-6",
-          "llm_temperature": 0.4,
-          "llm_max_tokens": 2048,
-          "llm_top_p": 0.95,
-          "tool_names": "[\"search_prior_rfis\",\"fetch_drawing_metadata\",\"classify_rfi\",\"submit_rfi\"]",
-          "input_schema": "[{\"key\":\"project_name\",\"label\":\"Project name\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"issue_description\",\"label\":\"Issue description\",\"type\":\"textarea\",\"required\":true,\"description\":null,\"placeholder\":\"Describe the field condition and the clarification needed\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"discipline\",\"label\":\"Affected discipline\",\"type\":\"select\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[{\"value\":\"mechanical\",\"label\":\"Mechanical\"},{\"value\":\"electrical\",\"label\":\"Electrical\"},{\"value\":\"plumbing\",\"label\":\"Plumbing\"},{\"value\":\"fire-protection\",\"label\":\"Fire protection\"},{\"value\":\"multidiscipline\",\"label\":\"Multidiscipline\"}],\"min\":null,\"max\":null},{\"key\":\"drawing_reference\",\"label\":\"Drawing or detail reference\",\"type\":\"text\",\"required\":false,\"description\":null,\"placeholder\":\"e.g. M-201, detail 4\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"site_location\",\"label\":\"Site location\",\"type\":\"text\",\"required\":true,\"description\":null,\"placeholder\":\"Building, floor, room, grid line...\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"schedule_impact\",\"label\":\"Schedule or trade impact\",\"type\":\"textarea\",\"required\":false,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null},{\"key\":\"urgency\",\"label\":\"Urgency\",\"type\":\"select\",\"required\":true,\"description\":null,\"placeholder\":null,\"unit\":null,\"defaultValue\":\"normal\",\"options\":[{\"value\":\"low\",\"label\":\"Low\"},{\"value\":\"normal\",\"label\":\"Normal\"},{\"value\":\"high\",\"label\":\"High\"},{\"value\":\"work-stopped\",\"label\":\"Work stopped\"}],\"min\":null,\"max\":null}]",
-          "requires_human_approval": 1,
-          "category": "project-management",
-          "github_url": "https://github.com/mikauran/AI-Champion-Agent-Library",
-          "customizable_fields": null,
-          "fixed_fields": "[]",
-          "fixed_note": null,
-          "link_label": null,
-          "maturity_status": "production",
-          "tags": "[\"rfi\",\"coordination\",\"chat\",\"field-workflow\",\"mep\"]",
-          "spec_id": "aic-mep-rfi-triage-001",
           "try_it_out_mode": "none",
           "try_it_out_url": null,
           "try_it_out_task_template": null
@@ -970,41 +770,17 @@
       "text": "Daily Report Cross Check. Reconciles daily site report lines (trade, workers, hours, delay hours and reason) with a timesheet extract and drafts a consistent, mismatch, delay-unexplained or not-in-timesheet verdict per report line with the quoted timesheet line for site manager review. Numbers are compared as identical text, never calculated. Own design, loosely related to 1_DDC_Toolkit/Field-Operations/daily-report-generator (+ 3_DDC_Insights/Automation-Workflows/n8n-daily-report). Output is a draft.. project-management. site-handover daily-report field-operations cross-check. timesheet reader",
       "hash": "b992079ab96e7d6a5303a021c8043c09984ad03dae09e3a6ba837bf7ebef6e14"
     },
-    "demo-rfi-triage": {
-      "text": "Demo RFI Triage. DEMO ONLY — not a production AIC/WP5 catalog agent. This agent exists solely to demonstrate the Try It Out flow with a single LLM call: it reads one uploaded RFI (Request for Information) text file and writes back a plain-text triage result. It does not run tools, query BIM models, or access any project system.. project-management. demo rfi triage try-it-out",
-      "hash": "8d99e49ff2a5490f99c2b73616a3d5728414e191dcf50734dd952147f22a6d1c"
-    },
-    "electrical-panel-scheduler": {
-      "text": "Electrical Panel Scheduler. Generates and keeps electrical panel schedules synchronized with BIM model data — calculates connected loads, applies NEC demand factors, checks panel capacity, and exports schedules to design documents.. electrical. electrical panel-schedule nec load-calculation bim. extract circuits apply demand factors check panel capacity export panel schedule create design issue",
-      "hash": "0e1c6045fdcd64f089249f06f9b0d469859e65e50dde80efa149cb9c61ef1420"
-    },
-    "energy-model-data-sync": {
-      "text": "Energy Model Data Sync. Keeps EnergyPlus and eQUEST energy models synchronized with the live BIM model — detects envelope, occupancy, and mechanical system changes and propagates them to the energy simulation inputs.. mechanical. energy-modeling energyplus bim sustainability mechanical. diff bim snapshot update idf inputs run energy simulation compute eui delta post simulation report",
-      "hash": "4d16ff801139ed3eb0fc82c25f5c63417304818090b40d227a07508f9dd85e1e"
-    },
     "etim-classification-repair": {
       "text": "ETIM & Classification Repair. Reads a text extract of IFC element properties plus a small ETIM-style class excerpt and drafts one classification repair proposal per element (missing, wrong, unknown or ambiguous class), flagging every uncertain element for engineer review. Own design, inspired by 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai (own design for ETIM-style mapping). Output is a draft.. compliance. etim classification ifc bim data-quality. classification lookup",
       "hash": "88e7e041a3157b6a49d24e2e47e0b9d19d246f0e9fdc7e95fcb2bdd7dbbb814a"
-    },
-    "hvac-load-calculator": {
-      "text": "HVAC Load Calculator. Automates ASHRAE 62.1 and Manual J load calculations by extracting zone geometry and occupancy data from BIM models, running calculations, and writing results back to the project data environment.. mechanical. hvac load-calculation ashrae bim mechanical. extract bim zones fetch occupancy schedule run load calculation write load report flag tolerance breach",
-      "hash": "8c36feb2e70a7e81e28d578d061033cb4780e82a3151cbdf32b25652bc3cce1c"
     },
     "material-delivery-check": {
       "text": "Material Delivery Check. Reads delivery note lines for MEP materials (ordered and received quantity, scheduled and actual date, status, delay reason) whose quantity balance and lateness were precomputed by a tested tool, copies those columns, ticks whether a delay reason is on record and drafts one verdict per line by lookup: received-complete, partial, late, late-no-reason, not-yet-due or data-incomplete. Built on the DDC skill 1_DDC_Toolkit/Cost-Management/material-delivery-tracker. The model does no arithmetic. Output is a draft.. project-management. site-logistics delivery material-receiving delay. delivery check",
       "hash": "ee67bfff8ee075e7bf99fc4bf85aa0b43e7dffd535445869dd53fc1ebbe9302b"
     },
-    "mep-scope-planner": {
-      "text": "MEP Scope Planner. Conversational agent that helps project engineers define MEP scope at project kickoff — asks structured questions about building type, occupancy, climate zone, and owner requirements, then produces a draft scope narrative and fee basis.. project-management. planning scope chat project-kickoff mep. fetch climate data lookup code requirements generate scope narrative estimate fee basis",
-      "hash": "cfb2b7af1b25af3a171b2e7fbdac50507d7a9916ad8fe619fab7a26072ad9665"
-    },
     "om-completeness": {
       "text": "OM Completeness. Compares a delivered handover document index against a required-documents checklist per equipment and drafts complete, incomplete or missing statuses with the quoted index line, for O&M (operation and maintenance) documentation completeness at handover. Document content is never checked. Output is a draft for the handover engineer.. project-management. site-handover handover om-manual completeness documentation. handover index reader",
       "hash": "f53c6b5be79a04047cbf36be75396c85a530df5519e11d75259c7c97fc11d98e"
-    },
-    "plumbing-fixture-unit-counter": {
-      "text": "Plumbing Fixture Unit Counter. Scans BIM models for plumbing fixtures, tallies fixture units per IPC/UPC standards, sizes supply and drain stacks, and validates that riser diagrams match the model.. plumbing. plumbing fixture-units ipc pipe-sizing bim. extract fixtures assign fixture units aggregate riser loads size pipes validate riser diagram",
-      "hash": "babd51b18185f5ad9a2624da5d8bffc584b661999d101f0c06399fce9eed76dd"
     },
     "procurement-lead-time-check": {
       "text": "Procurement Lead Time Check. Reads a procurement list (long-lead MEP equipment with required date, lead time, status, vendor and PO number) whose order dates were precomputed by a tested tool, copies the date columns and flags, ticks PO and vendor present and drafts one verdict per item by lookup: ordered-ok, order-now, order-soon or order-data-incomplete. Built on the DDC skill 1_DDC_Toolkit/Procurement/material-procurement-tracker. The model does no date arithmetic. Output is a draft.. project-management. sourcing procurement lead-time long-lead-items. procurement lead time",
@@ -1034,10 +810,6 @@
       "text": "RFI Generation from Findings. Takes the findings table of clash prioritization (CRITICAL/HIGH/MEDIUM/LOW) or a model check and drafts one RFI per finding in the submission template of the DDC rfi-management skill (RFI fields, priority, status DRAFT, impact assessment, routing, response deadline placeholders) for the BIM coordinator to review and send. Driven by findings, unlike the conversational rfi-triage-assistant. Output is a draft.. project-management. rfi clash coordination bim drafting. rfi log",
       "hash": "e18ce61c301d184a831508d18181e35ac61e9129ad0df4eda43bbcc8ffcc8373"
     },
-    "rfi-triage-assistant": {
-      "text": "RFI Triage Assistant. Conversational agent that helps field coordinators draft, classify, and route MEP Requests for Information — asks clarifying questions, suggests likely responsible parties, and checks for related prior RFIs before submission.. project-management. rfi coordination chat field-workflow mep. search prior rfis fetch drawing metadata classify rfi submit rfi",
-      "hash": "30cb6af81d1f0be40040fc9cdc7d377e5077201b5fc7f8781d5e55ca7a5135e2"
-    },
     "safety-observation-classification": {
       "text": "Safety Observation Classification. Labels site safety observations with a category and severity hint taken from a supplied keyword table and flags unmatched or ambiguous ones for safety officer review. Lookup only, no safety advice or incident determination. Own design, loosely related to 1_DDC_Toolkit/Field-Operations/safety-inspection (+ 3_DDC_Insights/Safety-Quality/safety-inspection-checklist). Output is a draft.. project-management. site-handover safety observation classification. observation reader",
       "hash": "6614344ba50db5b9915ef790e5b116a232d56fd2225f3aa64dedd20766d89152"
@@ -1045,10 +817,6 @@
     "spooling-and-cutting": {
       "text": "Spooling and Cutting. Groups prefab pipe segments into spools and cut groups and drafts a cut list for the fabricator, copying lengths and flagging everything that needs calculation as to compute (tool). Own design, no DDC basis. Output is a draft.. project-management. manufacturing prefab spool cut-list piping. segment parser",
       "hash": "1d53733d7f52605aec9396429c80f12301e3b15c98d74bb4fbb616c35e56126a"
-    },
-    "mep-submittal-review-router": {
-      "text": "MEP Submittal Review Router. Receives product submittal packages, extracts performance data from spec sheets, compares values against design specifications, and routes to the responsible engineer with a pre-populated review checklist.. project-management. submittal document-management workflow mep review. parse submittal pdf fetch spec section compare to spec assign review task update submittal log",
-      "hash": "171d1affed17768a813584dbd880c8fd369104763dc65c160805b176416dea94"
     },
     "warranty-register-check": {
       "text": "Warranty Register Check. Reads a handover warranty register for MEP systems (item, system, warranty type, start and end date, duration, documents, contact, coverage text) whose end-date consistency, days remaining, status class and presence checks were precomputed by a tested tool, copies those columns and drafts one register verdict per warranty by lookup: register-ok, expiring-soon, expired, documents-missing, contact-missing, dates-inconsistent or data-incomplete. Built on the DDC skill 1_DDC_Toolkit/Closeout/warranty-tracker. The model does no arithmetic and makes no legal reading of coverage. Output is a draft.. project-management. warranty handover closeout register. warranty status",

@@ -35,21 +35,21 @@ describe('AgentIdSchema', () => {
 })
 
 describe('loadPromptFor', () => {
-  it('loads both the DB base prompt and the SKILL.md file for demo-rfi-triage', async () => {
-    const row = db.select().from(agents).where(eq(agents.slug, 'demo-rfi-triage')).get()
+  it('loads both the DB base prompt and the SKILL.md file for etim-classification-repair', async () => {
+    const row = db.select().from(agents).where(eq(agents.slug, 'etim-classification-repair')).get()
     if (!row) {
       throw new Error(
-        "demo-rfi-triage row not found in the dev DB — run 'npm run ingest' before running this test suite"
+        "etim-classification-repair row not found in the dev DB — run 'npm run ingest' before running this test suite"
       )
     }
 
-    const result = await loadPromptFor('demo-rfi-triage')
+    const result = await loadPromptFor('etim-classification-repair')
     expect(result.basePrompt).toBe(row.systemPrompt)
     expect(result.basePrompt.length).toBeGreaterThan(0)
     expect(result.skill.length).toBeGreaterThan(0)
     expect(result.skill).not.toMatch(/^---/)
-    expect(result.skill).not.toContain('name: demo-rfi-triage')
-    expect(result.skill).toContain('Output format')
+    expect(result.skill).not.toContain('name: etim-classification-repair')
+    expect(result.skill).toContain('Inputs and outputs')
   })
 
   it('rejects a traversal agentId with no filesystem read', async () => {
@@ -58,13 +58,13 @@ describe('loadPromptFor', () => {
   })
 
   it('rejects a real slug with no prompts directory, naming the missing skill path (not an unhandled ENOENT)', async () => {
-    const row = db.select().from(agents).where(eq(agents.slug, 'rfi-triage-assistant')).get()
+    const row = db.select().from(agents).where(eq(agents.slug, 'airo')).get()
     if (!row) {
       throw new Error(
-        "rfi-triage-assistant row not found in the dev DB — run 'npm run ingest' before running this test suite"
+        "airo row not found in the dev DB — run 'npm run ingest' before running this test suite"
       )
     }
-    await expect(loadPromptFor('rfi-triage-assistant')).rejects.toThrow(/missing skill file.*SKILL\.md/)
+    await expect(loadPromptFor('airo')).rejects.toThrow(/missing skill file.*SKILL\.md/)
   })
 
   it('rejects an unknown agent, naming it', async () => {
@@ -86,24 +86,24 @@ describe('parseSkillFrontmatter', () => {
 })
 
 describe('loadPiSkill', () => {
-  it('returns raw SKILL.md with valid frontmatter for demo-rfi-triage', async () => {
-    const row = db.select().from(agents).where(eq(agents.slug, 'demo-rfi-triage')).get()
-    const r = await loadPiSkill('demo-rfi-triage')
+  it('returns raw SKILL.md with valid frontmatter for etim-classification-repair', async () => {
+    const row = db.select().from(agents).where(eq(agents.slug, 'etim-classification-repair')).get()
+    const r = await loadPiSkill('etim-classification-repair')
     expect(r.basePrompt).toBe(row!.systemPrompt)
     expect(r.skillMarkdown.startsWith('---')).toBe(true)
     const fm = parseSkillFrontmatter(r.skillMarkdown)
-    expect(fm.name).toBe('demo-rfi-triage')
+    expect(fm.name).toBe('etim-classification-repair')
     expect(fm.description!.length).toBeGreaterThan(0)
     expect(fm.description!.length).toBeLessThanOrEqual(1024)
     expect(() => AgentIdSchema.parse(fm.name)).not.toThrow()
   })
   it('rejects a name mismatch, naming the file', async () => {
     mockedReadFile.mockResolvedValueOnce('---\nname: other\ndescription: d\n---\nbody' as never)
-    await expect(loadPiSkill('demo-rfi-triage')).rejects.toThrow(/SKILL\.md/)
+    await expect(loadPiSkill('etim-classification-repair')).rejects.toThrow(/SKILL\.md/)
   })
   it('rejects an empty description, naming the file', async () => {
-    mockedReadFile.mockResolvedValueOnce('---\nname: demo-rfi-triage\ndescription: ""\n---\nbody' as never)
-    await expect(loadPiSkill('demo-rfi-triage')).rejects.toThrow(/SKILL\.md/)
+    mockedReadFile.mockResolvedValueOnce('---\nname: etim-classification-repair\ndescription: ""\n---\nbody' as never)
+    await expect(loadPiSkill('etim-classification-repair')).rejects.toThrow(/SKILL\.md/)
   })
   it('rejects a traversal id with no filesystem read', async () => {
     await expect(loadPiSkill('../etc')).rejects.toThrow()
@@ -137,7 +137,7 @@ describe('composePrompt', () => {
   })
 
   it('SC-03 direct proof: the real demo agent composed prompt contains a distinctive substring from both the DB system_prompt and skill.md, plus the input text', async () => {
-    const { basePrompt, skill } = await loadPromptFor('demo-rfi-triage')
+    const { basePrompt, skill } = await loadPromptFor('etim-classification-repair')
     const composed = composePrompt({ basePrompt, skill, inputText: 'SC03_INPUT_MARKER' })
 
     // distinctive substrings: first 20 non-whitespace chars of each source
