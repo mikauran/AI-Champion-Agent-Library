@@ -163,7 +163,7 @@ export function buildExamples(
   candidates.push({
     op: 'derived_filter',
     ops: derivedCand ? [{ op: 'derived_filter', ...base('derived-1'), entity: derivedCand.entity, source: derivedCand.source, description: 'Find items whose nested entries match a key; candidate pages are scanned in memory and the coverage is reported.' }] : null,
-    why: 'every nested collection already has a derived filter, or the backend does not support them',
+    why: 'every nested collection already has a derived filter, or the backend has none to filter (OData models no nested collections and filters server-side with $filter: final limitation)',
   })
 
   const examples: Example[] = []

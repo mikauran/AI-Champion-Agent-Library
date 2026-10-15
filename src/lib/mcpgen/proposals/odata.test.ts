@@ -10,6 +10,7 @@ import { generateFromPlan } from '../generate.js'
 import { buildPlan } from '../plan.js'
 import { parseInput, prepareInput } from '../registry.js'
 import type { SourceModel } from '../types.js'
+import { buildExamples } from './examples.js'
 import { evaluateProposals, fingerprintOf } from './index.js'
 import { fixtureText, op } from './testkit.js'
 
@@ -79,6 +80,19 @@ for (const name of ['acme-odata.json', 'acme-odata.xml']) {
       const ev = evaluateProposals({ model, options: {}, text })
       expect(ev.ok).toBe(false)
       expect([...ev.fatal, ...ev.rejected].map((i) => i.code)).toContain('odata-unsupported-op')
+      // The message says the limit is final and why, and the model has no nested collection to filter.
+      const msg = [...ev.fatal, ...ev.rejected].find((i) => i.code === 'odata-unsupported-op')!.message
+      expect(msg).toMatch(/final/)
+      expect(msg).toMatch(/\$filter/)
+      expect(model.entities.every((e) => e.nested.length === 0)).toBe(true)
+    })
+
+    it('the context pack example builder skips derived_filter on OData with the final reason', async () => {
+      const model = await load(name)
+      const plan = buildPlan(model, {})
+      const ex = buildExamples(model, {}, [], plan, fingerprintOf(plan))
+      expect(ex.examples.some((e) => e.op === 'derived_filter')).toBe(false)
+      expect(ex.skipped.find((s) => s.op === 'derived_filter')?.reason).toMatch(/OData.*final/)
     })
   })
 }

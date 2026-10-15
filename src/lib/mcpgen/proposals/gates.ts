@@ -294,7 +294,7 @@ export function checkOps(ops: ProposalOp[], ctx: GateCtx): Issue[] {
       case 'derived_filter': {
         // The derived-filter template walks REST list results; an OData service filters server-side with $filter.
         if (ctx.plan.model.backend.kind === 'http' && ctx.plan.model.operations.some((o) => o.protocol === 'odata')) {
-          push(4, 'odata-unsupported-op', op, 'A derived filter is not supported on an OData model (the generated tools already filter with $filter).')
+          push(4, 'odata-unsupported-op', op, 'A derived filter is not available on an OData model, and this is final: OData tools already filter on the server with $filter, and the OData adapter models no nested collections (navigation properties are never expanded).')
           newToolCount++
           break
         }

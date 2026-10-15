@@ -45,7 +45,7 @@ Properties that do not change:
 | `merge_tools` | name, description, mode, sources, dispatchArg? | 2 to 8 tools become one with a `dispatch` enum argument (default name `operation`). Mode `fanout` calls up to 4 sources together and labels each result by source. The sources leave the server (private functions). |
 | `split_tool` | tool, tools, keepOriginal? | One tool becomes up to 8 tools, each fixing argument values (named presets). |
 | `composite_tool` | name, description, args, steps, output? | Up to 4 read-only steps in a fixed order; see below. |
-| `derived_filter` | entity, source, description | The existing derived-filter template (origin `proposed`) for a nested collection that has none yet; http backends only, and rejected with `odata-unsupported-op` on OData models. |
+| `derived_filter` | entity, source, description | The existing derived-filter template (origin `proposed`) for a nested collection that has none yet; REST http backends only. Always rejected with `odata-unsupported-op` on OData models; this is a final limitation (D-610): the OData adapter models no nested collections (navigation properties are reported, never expanded) and OData tools already filter on the server with `$filter`. |
 
 ### Composite tools
 
@@ -119,6 +119,7 @@ Exit codes: 0 no regression; 1 regression; 2 usage error or the proposal was rej
 - No model call, key, network access or code execution anywhere in this layer.
 - Write operations are never proposed or enabled; `allowWrite` stays a human option.
 - Composite and merged tools never call each other (only baseline tools can be referenced), so there are no cycles by construction; the gates still check.
+- `derived_filter` is not available on OData models, by decision and not for lack of time (D-610): there is no nested collection to walk, and nested filtering in OData is a server-side lambda (`any`/`all`), not an in-memory scan.
 - Descriptions are checked by rules, not understood; a reviewer is the last gate.
 - The selector grammar cannot filter, sort or compute; richer shaping needs a new op type and a decision.
 - A source with a different adapter, option or generator version has a different fingerprint; proposals are re-written, not migrated.

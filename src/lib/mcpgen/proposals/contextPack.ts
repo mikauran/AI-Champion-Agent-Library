@@ -210,7 +210,7 @@ const opTable = [
   ['merge_tools', 'name, description, mode, sources, dispatchArg?', `Merge 2 to ${LIMITS.mergeDispatch} tools into one with a dispatch argument (or, mode fanout, up to ${LIMITS.mergeFanout} tools called together and labelled by source).`],
   ['split_tool', 'tool, tools, keepOriginal?', `One tool becomes up to ${LIMITS.splitTools} tools, each fixing argument values (named presets).`],
   ['composite_tool', 'name, description, args, steps, output?', `Up to ${LIMITS.compositeSteps} read-only steps; data flows only through selectors such as input.x or step1.results[0].id; forEach fans out over a list (at most ${LIMITS.compositeFanout} items); at most ${LIMITS.compositeTotalCalls} calls in total.`],
-  ['derived_filter', 'entity, source, description', 'Adds an in-memory filter over a nested collection (http backends).'],
+  ['derived_filter', 'entity, source, description', 'Adds an in-memory filter over a nested collection (REST http backends only; never available for OData, a final limitation).'],
 ]
 
 function readmeForAgent(c: { sourceLabel: string; adapterId: string; fingerprint: string; hasDocs: boolean; hasSamples: boolean; serverName: string }): string {
