@@ -728,12 +728,16 @@ Plans:
 ### Phase 33: Align moderate-match agents with their DDC skills (QTO 2, carbon and EPD 7, O and M 11, BMS twin 12)
 
 **Goal:** Align agents 2 QTO (2_DDC_Book/3.2-QTO-Auto-Estimates/qto-report + bim-qto), 7 Carbon & EPD (2_DDC_Book/3.3-4D-BIM-CO2-Simulation/lifecycle-carbon-calculator), 11 O&M (5_DDC_Innovative/as-built-documentation + 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist), 12 BMS twin (5_DDC_Innovative/digital-twin-sync) with their skill's method, data model, rules and outputs. Where the audit differs, note it and use the closer match. Same done bar.
-**Requirements**: TBD
+**Requirements**: DDC-33-QTO, DDC-33-CARBON, DDC-33-OM, DDC-33-BMS, DDC-33-VERIFY
 **Depends on:** Phase 32
-**Plans:** 0 plans
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 33 to break down)
+- [ ] 33-01-PLAN.md — Agent 2 QTO: alignment spec (bim-qto/qto-report, book-text exclusion), tested grouping helper, aligned entry/SKILL/sample/key/rubric, one live run
+- [ ] 33-02-PLAN.md — Agent 7 Carbon and EPD: spec, corrected tested lifecycle-carbon helper, synthetic EPD excerpt, aligned entry, one live run
+- [ ] 33-03-PLAN.md — Agent 11 O and M: spec (as-built-documentation + project-closeout-checklist), handover document set and statuses, aligned entry, one live run
+- [ ] 33-04-PLAN.md — Agent 12 BMS twin: spec (digital-twin-sync), binding model and threshold/status helper, aligned entry, one live run
+- [ ] 33-05-PLAN.md — Aggregation, npm run check, 33-VERIFICATION, STATE and ROADMAP close
 
 ### Phase 34: Own-design agents relabelled and cleaned (ETIM 1, sourcing 5, cut-sheet 8, spooling 9, D2 10)
 
