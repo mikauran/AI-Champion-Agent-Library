@@ -451,6 +451,20 @@ function reject(gaps: Gap[]): ParseResult {
   return { rejected: gaps.map((g) => ({ ...g, severity: 'error' as const })) }
 }
 
+/** The non-root path of servers[0].url or basePath, or undefined when there is none (variables and relative URLs included). */
+function declaredBasePath(root: Obj, swagger2: boolean): string | undefined {
+  let p: string | undefined
+  if (swagger2) p = typeof root.basePath === 'string' ? root.basePath : undefined
+  else if (Array.isArray(root.servers) && isObj(root.servers[0]) && typeof root.servers[0].url === 'string') {
+    const u = root.servers[0].url.trim()
+    const m = /^(?:[^/?#]*:)?\/\/[^/?#]*(\/[^?#]*)?/.exec(u)
+    p = m ? m[1] : u.startsWith('/') ? u.split(/[?#]/)[0] : undefined
+  }
+  if (p === undefined) return undefined
+  p = p.replace(/\/+$/, '')
+  return p === '' || p === '/' ? undefined : p.slice(0, 200)
+}
+
 function parseDoc(input: RawInput): ParseResult {
   const text = input.text
   if (Buffer.byteLength(text, 'utf8') > MAX_INPUT_BYTES) {
@@ -497,6 +511,15 @@ function parseDoc(input: RawInput): ParseResult {
     gaps.push(gap('no-title', 'info.title is missing; a generic server name was used.', { severity: 'info' }))
   }
   const prefix = envPrefix(name)
+  // Paths are relative to servers[0].url (3.x) or basePath (2.0); neither is copied. When it carries a path,
+  // the operator has to include it in <PREFIX>_BASE_URL, so say so (CR-04).
+  {
+    const pathPart = declaredBasePath(root, swagger2)
+    if (pathPart !== undefined) {
+      const shown = /^\/[A-Za-z0-9._~/-]{1,60}$/.test(pathPart) ? ` (${pathPart})` : ''
+      gaps.push(gap('base-path-in-env', `The document declares a base path${shown}; operation paths are relative to it, but it is not copied. Include it in ${prefix}_BASE_URL.`, { severity: 'info' }))
+    }
+  }
 
   // Authentication: names only. Supported schemes referenced by global security win.
   let auth: SourceModel['auth'] = { scheme: 'none' }

@@ -236,3 +236,29 @@ describe('openapi adapter: detect in large key-sorted documents (CR-01)', () => 
     if (!r.ok) expect(r.gaps[0].message).toMatch(/--adapter/)
   })
 })
+
+// CR-04: a path in servers[0].url or basePath is not copied, and the operator is told to put it in BASE_URL.
+describe('openapi adapter: base path gap (CR-04)', () => {
+  const doc = (servers: string) =>
+    `openapi: 3.0.3\ninfo: {title: Pathy, version: '1'}\n${servers}\npaths:\n  /items:\n    get:\n      responses:\n        '200':\n          description: ok\n          content:\n            application/json:\n              schema: {type: array, items: {type: object, properties: {id: {type: integer}}}}\n`
+  const gapCodes = (text: string) => {
+    const r = parse(text)
+    return 'rejected' in r ? [] : r.gaps.filter((g) => g.code === 'base-path-in-env')
+  }
+  it('reports a path in the first server url', () => {
+    for (const s of ['servers:\n  - url: https://api.example.com/v2', 'servers:\n  - url: /v2/', 'servers:\n  - url: "{scheme}://h/api/{ver}"']) {
+      const g = gapCodes(doc(s))
+      expect(g, s).toHaveLength(1)
+      expect(g[0].message).toContain('PATHY_BASE_URL')
+    }
+  })
+  it('is silent for a root or host-only server and for no servers', () => {
+    for (const s of ['servers:\n  - url: https://api.example.com', 'servers:\n  - url: https://api.example.com/', 'servers:\n  - url: /', '']) expect(gapCodes(doc(s)), s).toHaveLength(0)
+  })
+  it('reports a Swagger 2 basePath', () => {
+    const t = 'swagger: "2.0"\ninfo: {title: Pathy, version: "1"}\nbasePath: /v2\npaths:\n  /items:\n    get:\n      responses:\n        "200":\n          description: ok\n          schema: {type: array, items: {type: object, properties: {id: {type: integer}}}}\n'
+    const g = gapCodes(t)
+    expect(g).toHaveLength(1)
+    expect(g[0].message).toContain('/v2')
+  })
+})
