@@ -621,12 +621,15 @@ Plans:
 ### Phase 28: Site and handover agents (D2 code validation, O&M completeness, BMS digital twin)
 
 **Goal:** Build or complete agents 10 D2 code validation, 11 O&M completeness, 12 BMS digital twin (O&M, BMS stage). Same done bar, data labelling and gap recording as Phase 25.
-**Requirements**: TBD
+**Requirements**: CONS-A10, CONS-A11, CONS-A12, CONS-VER
 **Depends on:** Phase 27
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 28 to break down)
+- [ ] 28-01-PLAN.md - Agent 10 D2 code validation, wave 1
+- [ ] 28-02-PLAN.md - Agent 11 O&M completeness, wave 1 (run after 28-01)
+- [ ] 28-03-PLAN.md - Agent 12 BMS digital twin, wave 1 (run after 28-02)
+- [ ] 28-04-PLAN.md - Verification aggregation, npm run check, STATE.md, wave 2
 
 ### Phase 29: Further DDC-skill one-step agents (same done bar)
 
