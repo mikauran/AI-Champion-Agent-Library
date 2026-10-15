@@ -524,7 +524,14 @@ Plans:
   3. Hygiene false positives (D-585) are tuned from real proposals
   4. `derived_filter` on OData (currently `odata-unsupported-op`, skipped in examples) is supported or its limitation is documented as final
 
-**Plans:** 0 plans (not started)
+**Plans:** 5 plans
+
+Plans:
+- [ ] 22-01-PLAN.md — First real proposal from this agent session on the Acme OpenAPI fixture via the context pack; gates, findings log, review by Ville pending in 22-HUMAN-UAT.md (wave 1)
+- [ ] 22-02-PLAN.md — Baseline vs proposal-assisted through mcp-propose-eval and mcp-test --allow-local-exec, Phase 15 scorer, no platform model calls, spend cap $0.50 (wave 2)
+- [ ] 22-03-PLAN.md — Hygiene false-positive tuning from the real proposal, tests in both directions, security checks untouched (wave 2)
+- [ ] 22-04-PLAN.md — derived_filter on OData: spike, decide support vs final limitation, implement or document with tests (wave 3)
+- [ ] 22-05-PLAN.md — npm run check alone, VERIFICATION, ROADMAP/STATE, decisions with revert steps (wave 4)
 
 ### Phase 23: Code Review of New Generator Code
 
