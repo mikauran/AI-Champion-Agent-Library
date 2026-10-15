@@ -58,4 +58,4 @@ Do not wrap the whole file in a code fence.
 - Never invent element ids; the row count must equal the number of CSV rows.
 - When unsure, flag (low confidence, review YES) instead of guessing.
 
-Approach adapted from DDC skill bim-classification-ai (MIT). Draft for engineer review.
+Own design, inspired by DDC skill bim-classification-ai (MIT; weak match). Draft for engineer review.

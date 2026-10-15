@@ -56,4 +56,4 @@ One row per requirement in input order, every cell copied from its check line. `
 
 End with: `Draft for engineer review. Verdicts come only from the supplied synthetic cut sheet and specification excerpt; no manufacturer data was looked up.`
 
-Ideas adapted from DDC skills submittal-tracker and specification-extractor (MIT, (c) 2026 DataDrivenConstruction); own design.
+Own design, inspired by DDC skills submittal-tracker and specification-extractor (MIT, (c) 2026 DataDrivenConstruction).

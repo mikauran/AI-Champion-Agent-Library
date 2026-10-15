@@ -87,4 +87,4 @@ Section `## Open items for the engineer`: one line per per-line row with review=
 
 End with: `Draft for engineer review. Candidates come only from the supplied synthetic catalog excerpt; no catalog lookup was made.`
 
-Ideas adapted from DDC skills material-procurement-tracker and specification-extractor (MIT, (c) 2026 DataDrivenConstruction); own design. Draft for engineer review.
+Own design, inspired by DDC skill cwicr-material-procurement (method only; no CWICR data). Draft for engineer review.
