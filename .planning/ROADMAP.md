@@ -609,12 +609,14 @@ Plans:
 ### Phase 27: Manufacturing-stage agents (cut-sheet QA, spooling and cutting)
 
 **Goal:** Build or complete agents 8 Cut-sheet QA and 9 Spooling & cutting (prefab and cut sheets). Same done bar, data labelling and gap recording as Phase 25.
-**Requirements**: TBD
+**Requirements**: CONS-A8, CONS-A9, CONS-VER
 **Depends on:** Phase 26
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 27 to break down)
+- [ ] 27-01-PLAN.md - Agent 8 Cut-sheet QA, wave 1
+- [ ] 27-02-PLAN.md - Agent 9 Spooling & cutting, wave 1 (run after 27-01)
+- [ ] 27-03-PLAN.md - Verification aggregation, npm run check, STATE.md, wave 2
 
 ### Phase 28: Site and handover agents (D2 code validation, O&M completeness, BMS digital twin)
 
