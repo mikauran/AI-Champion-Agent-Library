@@ -248,3 +248,4 @@ Order: 24 -> 30, then 21 -> 23. Cap: $0.50 per agent run, $10 total.
 - Phase 27 / Agent 8 Cut-sheet QA: COUNTED (job fb46b86d…, first run).
 - Phase 27 COMPLETE: agents 8, 9 counted (first run each). Next: Phase 28 (agents 10-12).
 - Phase 28 / Agent 10 D2 code validation: COUNTED (job 2231091f…, rev 1).
+- Phase 28 / Agent 11 O&M completeness: COUNTED (job 20b66bce…, first run).
