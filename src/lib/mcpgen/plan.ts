@@ -148,15 +148,15 @@ export function entityFieldNames(entity: Entity): string[] {
 
 export function projectionFor(entity: Entity, override: string[] | undefined, gaps: Gap[]): string[] {
   const known = new Set(entityFieldNames(entity))
-  let list: string[]
+  let list: string[] = []
+  // An override with no surviving field falls back to the default projection (CR-41); the gaps above stay.
   if (override) {
-    list = []
     for (const f of override) {
       if (!known.has(f)) gaps.push(gap('projection-unknown-field', `Projection override for ${entity.id} names an unknown field and it was ignored.`, { path: `${entity.id}.${f}` }))
       else if (!list.includes(f)) list.push(f)
     }
-  } else {
-    list = []
+  }
+  if (list.length === 0) {
     const add = (f: string) => {
       if (known.has(f) && !list.includes(f)) list.push(f)
     }
