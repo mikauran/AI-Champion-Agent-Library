@@ -16,10 +16,10 @@ metadata:
   agent_no: 5
   purpose: "Proposes candidate catalog products for each engineering BOM line and drafts a manufacturing BOM for sourcing review"
   inputs:
-    - "Engineering BOM as CSV text (line id, description, ETIM-style class, dimension, material, quantity, unit)"
-    - "Catalog excerpt as CSV text (product id, supplier, class, attributes, sales unit)"
+    - "Engineering BOM as CSV text (line id, description, ETIM-style class, dimension, material, quantity, unit), up to about 6 lines per run"
+    - "Catalog excerpt as CSV text (product id, supplier, class, attributes, sales unit), up to about 6 rows per run"
   outputs:
-    - "Draft per-line match table (one row per BOM line), an M-BOM draft of matched lines and an open-items list (draft for engineer review)"
+    - "Draft per-line match table (one row per BOM line), an M-BOM draft of matched lines and an open-items list, written as one result file for an excerpt of up to about 6 lines x 6 catalog rows (draft for engineer review)"
   data_sources:
     - "Synthetic sample in data/tryitout-prompts/product-sourcing-mbom/"
     - "Intended in a connected setup: stk-mcp and lvi-info-mcp (catalogued in this repository); not callable from the Try It Out container"
@@ -27,6 +27,7 @@ metadata:
     - "Matching is exact text equality on class, dimension and material"
     - "An empty requirement attribute means any value"
     - "Units are never converted"
+    - "The step handles an excerpt of up to about 6 E-BOM lines x 6 catalog rows per run; larger BOMs must be batched"
   gaps:
     - "No live catalog access: the Pi container reaches only the LLM proxy, so stk-mcp and lvi-info-mcp cannot be called; the catalog excerpt is pasted as text"
     - "Excerpt is synthetic: real LVI-INFO/STK data is confidential or keyed and was not used; behaviour on a real export unproven"
@@ -34,6 +35,7 @@ metadata:
     - "Unit mismatches are flagged, never converted (pack sizes, coils)"
     - "No price, lead-time or availability reasoning; in_stock is copied only"
     - "Real E-BOMs (IFC or Excel) need a preprocessing step to the CSV shape"
+    - "Handles only an excerpt of up to about 6 E-BOM lines x 6 catalog rows per run; larger BOMs and catalogs must be batched (the per-row check list is too long for one model output otherwise)"
   draft_for_review: true
   sample_data:
     kind: "synthetic"

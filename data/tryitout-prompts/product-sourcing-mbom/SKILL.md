@@ -27,8 +27,14 @@ How to fill it (copy the texts first, then tick):
 - `req_dn` and `req_mat` are copied from the E-BOM line; write `any` when the field is empty. A catalog dn that is empty is written as `empty`.
 - Each flag is one text equality test of the two texts left and right of the `/`: Y if the two read exactly the same, or if the left text is `any`; otherwise N. `SYN-EC101/SYN-EC101` is Y, `SYN-EC101/SYN-EC102` is N, `22/22` is Y, `22/28` is N, `any/22` is Y, `22/empty` is N, `steel/stainless steel` is N, `brass/brass` is Y. No synonyms, no "similar". Make the flag agree with the two texts you just wrote.
 - After `=>` write `HIT` ONLY if all three flags are Y; otherwise write `-`. For a HIT line add ` sup=<supplier text of that catalog row> su=<sales_unit text of that row> stock=<in_stock text of that row>` (copied from the same catalog row).
-- Every catalog row gets a check line for every E-BOM line (13 rows x 12 lines). The lines are short, so the whole file fits in ONE write. Never replace the check lines by a summary, never say it is too large, never leave the Match checks section out of `output/result.md`.
-- Write `output/result.md` ONCE, with all four sections in this order (Match checks, Per-line rows, M-BOM draft, Open items) and the closing sentence. Do not write partial files and do not overwrite the file afterwards.
+- Every catalog row gets a check line for every E-BOM line. This step handles an excerpt of up to about 6 E-BOM lines x 6 catalog rows (36 short check lines); the whole result fits in ONE write. Never replace the check lines by a summary, never say it is too large, never leave the Match checks section out. If the input has more lines or rows than that, still do the first 6 lines against the first 6 rows and say in Open items that the rest must be batched.
+- Write the WHOLE result to ONE file, `output/result.md`, in a single write, with all four sections in this order (Match checks, Per-line rows, M-BOM draft, Open items) and the closing sentence. Never write result_part files, never split, never overwrite afterwards.
+
+Empty or `any` requirement rule (important): an empty `req_dn` or `req_material` is written `any` and its flag is ALWAYS Y, whatever the catalog text is, including `empty`. Worked example, E-BOM line `BL-06,Circulation pump,SYN-EC104,,cast iron,2,pcs` against catalog row `CP-06,...,SYN-EC104,,cast iron,pcs,...`:
+
+`BL-06 CP-06: cls=SYN-EC104/SYN-EC104 Y dn=any/empty Y mat=cast iron/cast iron Y => HIT sup=SynSupplier B su=pcs stock=Y`
+
+Note `dn=any/empty Y`: the flag is the letter Y, never N. Against a row of another class the same line is `BL-06 CP-01: cls=SYN-EC104/SYN-EC101 N => -`.
 
 Closing line, after the last catalog row of the line:
 
@@ -36,7 +42,7 @@ Closing line, after the last catalog row of the line:
 
 - `hits` is copied from the HIT lines you just wrote (never from memory, never an id without a HIT line).
 - `count` is the number of ids in `hits`.
-- `U` is Y only when req_dn is `any` AND req_mat is `any`; otherwise N.
+- `U` is Y when req_dn is `any` OR req_mat is `any` (underspecified line); otherwise N.
 
 Status lookup (read it off `count`, no other input):
 
@@ -60,7 +66,7 @@ line_id | description | qty | unit | candidates | status | unit_same | near_miss
 - `candidates` = `hits` of the closing line (`-` if none). `status` = the lookup result for `count`.
 - `unit_same`: copied from the unit line for matched rows, `-` for other statuses.
 - `near_miss`: for no-match rows the `same_class` ids copied from the closing line (`-` when same_class is none); `-` for matched and ambiguous rows.
-- `review`: `NO` only when status is matched AND unit_same is Y AND U is N; otherwise `YES`.
+- `review`: `NO` only when status is matched AND unit_same is Y AND U is N (an underspecified or unit-mismatch line is always YES); otherwise `YES`.
 - `note`: short copied facts: `underspecified` when U=Y; `unit E-BOM pcs vs sales_unit pack10` style text for unit_same=N; `stock=N for <id>` for hits with stock=N (copied, not interpreted); otherwise `-`.
 
 ### Step 3: M-BOM draft
