@@ -244,3 +244,30 @@ describe('hostile names and structure', () => {
     for (const text of ['', '<', '\u0000', '{'.repeat(1000)]) await expect(prepareInput({ text })).resolves.toBeUndefined()
   })
 })
+
+// CR-18: names that exist on Object.prototype must not reach a plain-object table.
+describe('entity and property names that collide with Object.prototype (CR-18)', () => {
+  const entity = (name: string, prop = 'Id') =>
+    `<EntityType Name="${name}"><Key><PropertyRef Name="${prop}"/></Key><Property Name="${prop}" Type="Edm.Int32"/><Property Name="Label" Type="Edm.String"/></EntityType><EntityContainer Name="C"><EntitySet Name="Ts" EntityType="Acme.Test.${name}"/></EntityContainer>`
+  const jsonDoc = (name: string) =>
+    `{"$Version":"4.0","$EntityContainer":"Acme.Test.C","Acme.Test":{"${name}":{"$Kind":"EntityType","$Key":["Id"],"Id":{"$Type":"Edm.Int32"},"Label":{}},"C":{"$Kind":"EntityContainer","Ts":{"$Collection":true,"$Type":"Acme.Test.${name}"}}}}`
+
+  it.each(['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'valueOf'])('generates for an entity type named %s without touching Object.prototype', (name) => {
+    for (const text of [EDMX(entity(name)), jsonDoc(name)]) {
+      const r = runPipeline(text)
+      expect(r.ok, `${name}: ${r.ok ? '' : JSON.stringify(r.gaps.map((g) => g.code))}`).toBe(true)
+      if (!r.ok) continue
+      expect(Object.prototype.hasOwnProperty.call(Object.prototype, 'key')).toBe(false)
+      expect(({} as Record<string, unknown>).key).toBeUndefined()
+      const server = r.files.find((f) => f.path === 'server.py')!.content
+      expect(server).toContain('_ODATA')
+    }
+  })
+
+  it('a property named __proto__ stays a property of the entity', () => {
+    const doc = `{"$Version":"4.0","$EntityContainer":"Acme.Test.C","Acme.Test":{"T":{"$Kind":"EntityType","$Key":["Id"],"Id":{"$Type":"Edm.Int32"},"__proto__":{"$Type":"Edm.String"}},"C":{"$Kind":"EntityContainer","Ts":{"$Collection":true,"$Type":"Acme.Test.T"}}}}`
+    const r = runPipeline(doc)
+    expect(Object.getPrototypeOf({})).toBe(Object.prototype)
+    expect(r.ok).toBe(true)
+  })
+})

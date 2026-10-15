@@ -35,12 +35,13 @@ interface OdataFieldSpec {
 
 /** Per entity: the entity set path, the key property names (wire names, in order) and the literal kind of each typed field. */
 export function odataTable(plan: ServerPlan): Record<string, { set: string; key: string[]; fields: Record<string, OdataFieldSpec> }> {
-  const table: Record<string, { set: string; key: string[]; fields: Record<string, OdataFieldSpec> }> = {}
+  // Null-prototype maps: entity and property names come from the source document and may be __proto__ or constructor (CR-18).
+  const table: Record<string, { set: string; key: string[]; fields: Record<string, OdataFieldSpec> }> = Object.create(null)
   for (const tool of plan.tools) {
     const op = opOf(plan, tool)
     if (op?.protocol !== 'odata') continue
     const entity = entityOf(plan, tool.entity)
-    const fields: Record<string, OdataFieldSpec> = {}
+    const fields: Record<string, OdataFieldSpec> = Object.create(null)
     for (const f of entity.fields) {
       if (!f.odata) continue
       const spec: OdataFieldSpec = { kind: f.odata.kind, filter: f.odata.filterable }
