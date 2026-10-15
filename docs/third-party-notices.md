@@ -64,6 +64,7 @@ SOFTWARE.
 | om-completeness | 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist; 1_DDC_Toolkit/Closeout/as-built-tracker; 1_DDC_Toolkit/Closeout/warranty-tracker | 2026-10-15 |
 | bms-digital-twin | 5_DDC_Innovative/digital-twin-sync; 2_DDC_Book/2.2-Open-Data-Standards/ontology-mapper | 2026-10-15 |
 | daily-report-cross-check | 1_DDC_Toolkit/Field-Operations/daily-report-generator; 3_DDC_Insights/Automation-Workflows/n8n-daily-report | 2026-10-15 |
+| punch-list-closure-check | 1_DDC_Toolkit/Field-Operations/punch-list-manager; 1_DDC_Toolkit/Project-Closeout/punch-list-manager | 2026-10-15 |
 | (further entries: Phases 25-29) | | |
 
 ### Skills adapted in this repository
@@ -81,3 +82,4 @@ SOFTWARE.
 - om-completeness: ideas adapted from DDC skills 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist, 1_DDC_Toolkit/Closeout/as-built-tracker and 1_DDC_Toolkit/Closeout/warranty-tracker (MIT); own design; no DDC code or text copied
 - bms-digital-twin: ideas adapted from DDC skills 5_DDC_Innovative/digital-twin-sync and 2_DDC_Book/2.2-Open-Data-Standards/ontology-mapper (MIT); own design; no DDC code or text copied; book content not used
 - daily-report-cross-check: ideas adapted from DDC skills 1_DDC_Toolkit/Field-Operations/daily-report-generator and 3_DDC_Insights/Automation-Workflows/n8n-daily-report (MIT); own design; no DDC code or text copied
+- punch-list-closure-check: ideas adapted from DDC skills 1_DDC_Toolkit/Field-Operations/punch-list-manager and 1_DDC_Toolkit/Project-Closeout/punch-list-manager (MIT); own design; no DDC code or text copied

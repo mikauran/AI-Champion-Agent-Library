@@ -31,3 +31,24 @@ COUNTED (SKILL v1, first run, rubric R1-R7 met).
 - Caveat: draft for site manager review; counted for the scoped step only (6 report lines, one synthetic sample, first run).
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: one 29-01 row (0.0203 USD).
+
+### Agent 14: Punch list closure check
+COUNTED (SKILL revision 1, second run; rubric R1-R7 met).
+
+- Entry: data/agents/punch-list-closure-check.yaml (validate-submission INGESTIBLE, validate-entries 0 errors; stage site-handover, agent_no 14; name "Punch List Closure Check" so the slug is punch-list-closure-check, confirmed by tryout:configure). DDC paths 1_DDC_Toolkit/Field-Operations/punch-list-manager and 1_DDC_Toolkit/Project-Closeout/punch-list-manager both verified present with gh api. Input label: synthetic (data/tryitout-prompts/punch-list-closure-check/sample-punch-list.txt: 6 invented items, as_of=2026-05-01, placeholder closure rules). Option A, gpt-4.1-mini, Pi container, 3 requests per run, usage observed (countable).
+- Run 1: job e9cef5f5-a822-4549-a3b1-912d37d00950, SKILL v1, 11980 tokens, est. 0.0192 USD, 12.5 s. FAIL (R4): all six verdicts right, but the notes for P-02 (`verified_by missing`) and P-06 (`closed_date missing`) and P-05 were `-`; not counted. Fix: explicit per-verdict note rule and three worked rows with notes (revision 1).
+- Run 2 (counted): job 4100e229-7b71-43b5-8803-f7f823ec5f95, SKILL revision 1, 12641 tokens, est. 0.0202 USD. No scope-shrink retry needed.
+- Answer key vs result: P-01 closed-ok, P-02 closed-unverified (verified_by missing), P-03 overdue (due 2026-04-10 before as_of 2026-05-01), P-04 open-ok, P-05 no-responsible, P-06 closed-unverified (closed_date missing): all six match.
+- Verdict: R1 pass (one result.md; 6 check lines and 6 table rows in order, 8 cells each); R2 pass (responsible, due, status copied verbatim; empty responsible shown as `-`); R3 pass; R4 pass (notes as key; review NO only P-01, P-04); R5 pass (open items P-02, P-03, P-05, P-06); R6 pass (no counts, percent complete, readiness or acceptance statement, nothing invented); R7 pass (draft caveat present).
+- Excerpt:
+  ```
+  P-03 status=open resp=Carpenter Oy due=2026-04-10 as_of=2026-05-01 closed_date=EMPTY verified_by=EMPTY | resp_empty=N | closure_missing=- | due_before_asof=Y | verdict=overdue
+  P-02 | Level 1 lobby | Floor Oy | 2026-04-28 | closed | closed-unverified | YES | verified_by missing
+  P-03 | Level 2 office | Carpenter Oy | 2026-04-10 | open | overdue | YES | due 2026-04-10 before as_of 2026-05-01
+  P-05 | Level 3 hall | - | 2026-05-15 | open | no-responsible | YES | responsible missing
+  P-06 | Level 3 stair | Electric Oy | 2026-04-30 | closed | closed-unverified | YES | closed_date missing
+  Draft for engineer review. Verdicts come only from the supplied punch list and as_of date using placeholder closure rules.
+  ```
+- Caveat: draft for engineer review; counted for the scoped step only (6 items, one synthetic sample, placeholder closure rules that are not a contract requirement).
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: two 29-02 rows (0.0192 + 0.0202 USD).

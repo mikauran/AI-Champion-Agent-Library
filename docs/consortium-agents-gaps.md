@@ -105,3 +105,10 @@ Agents 13-16 are chosen from the DDC skills (see docs/ddc-agent-candidates.md); 
 | G-091 | 13 Daily report cross-check | Delay reasons are not assessed or categorised | tool | open | Phase 29 | open |
 | G-092 | 13 Daily report cross-check | Scoped to about 6 report lines per run; larger reports must be batched | tool | open | Phase 29 | open |
 | G-093 | 13 Daily report cross-check | Counted on the first run (job fdf1b5e2, SKILL v1, all six verdicts right, crane line and other-date line not used); still one synthetic sample of 6 lines, real reports unproven | tool | open | Phase 29 | open |
+| G-094 | 14 Punch list closure check | Sample is synthetic: real punch lists are confidential and were not used; behaviour on real lists unproven | data | open | Phase 29 | open |
+| G-095 | 14 Punch list closure check | Closure rules are own placeholders: no real contract or handover requirement set is loaded | data | open | Phase 29 | open |
+| G-096 | 14 Punch list closure check | Only open and closed statuses; no in-progress, rejected, re-inspect or void states | tool | open | Phase 29 | open |
+| G-097 | 14 Punch list closure check | Text only: no photos, no back-charge documentation, no dashboard (DDC skill features not adopted) | tool | open | Phase 29 | open |
+| G-098 | 14 Punch list closure check | Dates compared as ISO text; other date formats are not handled | tool | open | Phase 29 | open |
+| G-099 | 14 Punch list closure check | Scoped to about 6 items per run; real punch lists have hundreds of items and must be batched | tool | open | Phase 29 | open |
+| G-100 | 14 Punch list closure check | Counted on the second run (job 4100e229) after one SKILL revision: SKILL v1 (job e9cef5f5) got all verdicts right but left the notes empty; fixed by an explicit note rule and worked rows; still one synthetic sample of 6 items, real lists unproven | tool | open | Phase 29 | open |
