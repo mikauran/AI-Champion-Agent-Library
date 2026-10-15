@@ -11,7 +11,7 @@ import { gap } from '../diagnostics.js'
 import { MAX_INPUT_BYTES } from '../api-contract.js'
 import { scanForCredentials } from '../credentials.js'
 import { stableJson, generateFromPlan } from '../generate.js'
-import { buildPlan } from '../plan.js'
+import { buildPlan, serverSlug } from '../plan.js'
 import { redactSecrets } from '../redact.js'
 import { parseInput, scrubSource } from '../registry.js'
 import type { Gap, GenerateOptions, GeneratedFile } from '../types.js'
@@ -180,7 +180,7 @@ export function buildContextPack(input: PackInput): PackResult {
       '',
     ].join('\n'),
   )
-  add('README-FOR-AGENT.md', readmeForAgent({ sourceLabel, adapterId: parsed.adapterId, fingerprint, hasDocs: docs.length > 0, hasSamples: samples.length > 0, serverName: plan.model.name }))
+  add('README-FOR-AGENT.md', readmeForAgent({ sourceLabel, adapterId: parsed.adapterId, fingerprint, hasDocs: docs.length > 0, hasSamples: samples.length > 0, serverName: serverSlug(plan.model) }))
 
   // ---- output-side scan: nothing credential-like leaves in any file we generated (not the verbatim source) ----
   for (const f of files) {
