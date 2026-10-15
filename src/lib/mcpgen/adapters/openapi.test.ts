@@ -233,6 +233,6 @@ describe('openapi adapter: detect in large key-sorted documents (CR-01)', () => 
   it('the unrecognized-input message names the adapter override', () => {
     const r = parseInput({ text: 'nothing useful here' })
     expect(r.ok).toBe(false)
-    if (!r.ok) expect(r.gaps[0].message).toMatch(/adapter/i)
+    if (!r.ok) expect(r.gaps[0].message).toMatch(/--adapter/)
   })
 })

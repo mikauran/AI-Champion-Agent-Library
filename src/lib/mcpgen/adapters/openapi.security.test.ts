@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseInput } from '../registry'
 import { generate } from '../generate'
+import { openApiAdapter } from './openapi'
 
 const op = (extra: Record<string, unknown> = {}) => ({
   get: {
@@ -63,5 +64,27 @@ describe('operation-level security', () => {
   it('a different scheme set on the operation is reported', () => {
     const r = model(doc({ security: [{ AcmeKey: [] }] }, { security: [{ Other: [] }] }))
     expect(r.gaps.some((g) => g.code === 'auth-operation-override')).toBe(true)
+  })
+})
+
+// CR-02: a security requirement naming a scheme that is not defined must not silently mean "no auth".
+describe('undefined security scheme (CR-02)', () => {
+  const doc = (extra: string) =>
+    `openapi: 3.0.3\ninfo: {title: T, version: '1'}\n${extra}\npaths:\n  /items:\n    get:\n      responses:\n        '200':\n          description: ok\n          content:\n            application/json:\n              schema: {type: array, items: {type: object, properties: {id: {type: integer}}}}\n`
+  it('reports auth-unsupported when the only referenced scheme is missing', () => {
+    const r = openApiAdapter.parse({ text: doc('security:\n  - nope: []') })
+    expect('rejected' in r).toBe(false)
+    if (!('rejected' in r)) {
+      expect(r.model.auth).toEqual({ scheme: 'none' })
+      expect(r.gaps.map((g) => g.code)).toContain('auth-unsupported')
+    }
+  })
+  it('reports it when the referenced scheme is not an object', () => {
+    const r = openApiAdapter.parse({ text: doc("components:\n  securitySchemes:\n    bad: 5\nsecurity:\n  - bad: []") })
+    if (!('rejected' in r)) expect(r.gaps.map((g) => g.code)).toContain('auth-unsupported')
+  })
+  it('stays quiet when a defined scheme is picked', () => {
+    const r = openApiAdapter.parse({ text: doc('components:\n  securitySchemes:\n    k: {type: apiKey, in: header, name: X-K}\nsecurity:\n  - k: []') })
+    if (!('rejected' in r)) expect(r.gaps.map((g) => g.code)).not.toContain('auth-unsupported')
   })
 })

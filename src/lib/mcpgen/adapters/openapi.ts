@@ -520,6 +520,7 @@ function parseDoc(input: RawInput): ParseResult {
     try {
       s = deref(root, own(schemes, sn)).node
     } catch {
+      unsupported++ // referenced but undefined or unreadable: report it, never read it as "no auth" (CR-02)
       continue
     }
     let candidate: SourceModel['auth'] | undefined
@@ -543,7 +544,7 @@ function parseDoc(input: RawInput): ParseResult {
     }
   }
   if (!picked && unsupported > 0) {
-    gaps.push(gap('auth-unsupported', 'The declared security scheme is not supported (only API key in header or query, bearer, and OAuth2 or OpenID Connect as a supplied access token); the server sends no credentials.'))
+    gaps.push(gap('auth-unsupported', 'A declared security scheme is not supported, or a security requirement names a scheme that is not defined (supported: only API key in header or query, bearer, and OAuth2 or OpenID Connect as a supplied access token); the server sends no credentials.'))
   }
 
   const ctx = newCtx()
