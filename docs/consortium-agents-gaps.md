@@ -128,6 +128,10 @@ Agents 13-16 are chosen from the DDC skills (see docs/ddc-agent-candidates.md); 
 | G-124 | 19 QC inspection record check | Workmanship is never judged: record-ok only means the fields are filled in; contradictions between status and result text, a failed record without a defect and unknown status words are not checked; nothing is approved, rejected or closed | tool | open | Phase 35 | open |
 | G-125 | 19 QC inspection record check | Scheduling, photos, root cause, severity due dates, cost and schedule impact, quality metrics and the report of the source skill are not adopted | tool | open | Phase 35 | open |
 | G-126 | 19 QC inspection record check | Sample is synthetic (invented records, names and defects); real inspection logs are confidential and were not used; behaviour on real data unproven; scoped to about 7 records per run | data | open | Phase 35 | open |
+| G-127 | 20 Warranty register check | Dates are not calculated by the agent: the user or harness must run the tested helper (scripts/warranty-status.ts) first and the output is the agent input; rows without the precomputed columns cannot be checked | tool | open | Phase 35 | open |
+| G-128 | 20 Warranty register check | Claim workflow, claimed and void statuses, exclusions, expiration report, summary counts and spreadsheet export of the source skill are not adopted; coverage text is only tested for presence; no claim or contact advice | tool | open | Phase 35 | open |
+| G-129 | 20 Warranty register check | Warranty periods are copied from the contract, not assumed; whole years only (as in the DDC skill), months must be written as years; calendar days, no working-day calendar | tool | open | Phase 35 | open |
+| G-130 | 20 Warranty register check | Sample is synthetic (invented warranties, contacts and file names); real warranty registers were not used; behaviour on real data unproven; scoped to about 7 rows per run | data | open | Phase 35 | open |
 
 ## Changelog
 
