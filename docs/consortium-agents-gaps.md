@@ -15,9 +15,9 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-016 | 2 QTO normalization | Arithmetic is done by the model in one call; totals were wrong in the first run and must be re-checked by the engineer. | tool | open | Phase 25 | open |
 | G-017 | 2 QTO normalization | No unit dictionary beyond the canonical set in the prompt; ambiguous pcs on length items is not reliably flagged (observed in run af4663e3). | tool | open | Phase 25 | open |
 | G-018 | 3 Clash prioritization | No geometry or model access: ranking uses only the report columns. | data | open | Phase 25 | open |
-| G-019 | 3 Clash prioritization | No project priorities, schedule or cost data: the P1-P3 scale is generic. | data | open | Phase 25 | open |
+| G-019 | 3 Clash prioritization | No project priorities, schedule or cost data: the CRITICAL/HIGH/MEDIUM/LOW scale applies the DDC skill rules generically. | data | open | Phase 25 | open |
 | G-020 | 3 Clash prioritization | Text/CSV input only, no Navisworks or BCF parsing. | tool | open | Phase 25 | open |
-| G-021 | 3 Clash prioritization | Suggested owners are proposals, responsibility is decided by the coordinator. | process | open | Phase 25 | open |
+| G-021 | 3 Clash prioritization | Suggested owners and resolution types are proposals from a fixed pair lookup, the coordinator decides. | process | open | Phase 25 | open |
 | G-022 | 3 Clash prioritization | Report size limited by the 200 KB upload cap and one model call. | tool | open | Phase 25 | open |
 | G-023 | 3 Clash prioritization | Three early runs (jobs 57e5c2cc, ab20a259, 2141f80e) failed: gpt-4.1-mini lost a clash or mis-applied the P1-P3 rule in a multi-section output. Counted after a redesign (one row per clash, fixed A-E checklist, clusters by copying location_key; job 1aa6f1be), but the first redesign run (job 50656bb4) still mis-ranked 5 rows, so reliability on larger or messier reports is unproven and a deterministic tool remains the robust option. | tool | open | Phase 25 | open |
 | G-024 | 4 RFI generation | No model or clash tool access: it cannot verify a finding, it writes only from the table | tool | open | Phase 25 | open |
@@ -25,7 +25,7 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-026 | 4 RFI generation | No RFI numbering or log: the coordinator assigns numbers and dates | process | open | Phase 25 | open |
 | G-027 | 4 RFI generation | No project directory: addressed party is a discipline/role | data | open | Phase 25 | open |
 | G-028 | 4 RFI generation | Chaining from agent 3 is manual (paste its findings table); agent 3 is attempted-not-counted, so findings come from a manual list for now | process | open | Phase 25 | open |
-| G-029 | 3 Clash prioritization | The sample adds a hand-made location_key column (shared element or level/grid) that defines the clusters; real clash exports (Navisworks, BCF) have no such column and need a preprocessing step to compute it. | tool | open | Phase 25 | open |
+| G-029 | 3 Clash prioritization | Pattern groups are keyed from the export (identical element text in element_a or element_b); real exports (Navisworks, BCF) may spell one element differently, so groups can be missed. The hand-made location_key column was removed in Phase 32. | tool | open | Phase 32 | open |
 | G-032 | 5 Product sourcing | Matching is exact equality: no synonyms, no multi-attribute scoring, no ETIM feature validation | tool | open | Phase 26 | open |
 | G-033 | 5 Product sourcing | Unit mismatches are flagged, never converted (pack sizes, coils) | tool | open | Phase 26 | open |
 | G-034 | 5 Product sourcing | No price, lead-time or availability reasoning; in_stock is copied only | data | open | Phase 26 | open |
