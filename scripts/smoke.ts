@@ -4,7 +4,7 @@ import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { cpSync, existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join, relative, resolve } from 'node:path'
 import { writeScaleFixtures } from './fixtures/generate-scale.js'
 import { isMainModule } from './is-main.js'
 
@@ -78,12 +78,15 @@ function freePort(): Promise<number> {
   })
 }
 
+/** cpSync filter: skips a `fixtures` directory below the agents directory, whatever the checkout path is called (CR-57). */
+export const skipFixtures = (base: string) => (src: string) => !/(^|[\\/])fixtures([\\/]|$)/.test(relative(base, src))
+
 async function waitUp(base: string, child: ChildProcess, log: () => string) {
   const end = Date.now() + 30_000
   while (Date.now() < end) {
     if (child.exitCode !== null) throw new Error(`server exited early (${child.exitCode})\n${log()}`)
     try {
-      const r = await fetch(`${base}/health`)
+      const r = await fetch(`${base}/health`, { signal: AbortSignal.timeout(2000) })
       if (r.status === 200) return
     } catch { /* not yet */ }
     await new Promise((r) => setTimeout(r, 200))
@@ -120,6 +123,7 @@ async function probeConfig(cfg: Config, tmp: string, dbPath: string): Promise<Ro
           headers: p.body ? { 'content-type': 'application/json', origin: base } : {},
           body: p.body,
           redirect: 'manual',
+          signal: AbortSignal.timeout(15_000),
         })
         status = r.status
         const ct = r.headers.get('content-type') ?? ''
@@ -155,7 +159,7 @@ async function main() {
     const dataDir = join(tmp, 'agents')
     const dbPath = join(tmp, 'catalog.db')
     // Shipped agents are copied (data/agents stays read-only); the 150 synthetic fixtures go beside them.
-    cpSync(join(ROOT, 'data/agents'), dataDir, { recursive: true, filter: (s) => !/fixtures/.test(s) })
+    cpSync(join(ROOT, 'data/agents'), dataDir, { recursive: true, filter: skipFixtures(join(ROOT, 'data/agents')) })
     writeScaleFixtures(join(tmp, 'scale'), 150)
     for (const f of readdirSync(join(tmp, 'scale'))) cpSync(join(tmp, 'scale', f), join(dataDir, f))
     const env = { ...process.env, SEARCH_EMBEDDINGS: 'off', CATALOG_DB_PATH: dbPath, INGEST_DB_PATH: dbPath, INGEST_DATA_DIR: dataDir }
