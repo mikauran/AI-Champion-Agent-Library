@@ -41,7 +41,9 @@ Worked lines (invented values, not from the input):
 point_id | point_name | asset_id | tag | unit | status | review | note
 ```
 
-One row per point in input order, cells copied from the check lines: `asset_id` = the copied asset id or `UNMAPPED`; `tag` = the copied hint tag or `UNTAGGED`; `unit` = the point's unit text or `-`. `review`: NO only when status=mapped, YES otherwise. `note`: `asset <prefix> not in asset list`, `no tag hint matches description`, `unit differs <a> vs <b>, not converted`, or `-` (combine with `; ` when several).
+One row per point in input order, cells copied from the check lines: `asset_id` = the copied asset id or `UNMAPPED`; `tag` = the copied hint tag or `UNTAGGED`; `unit` = the point's unit text or `-`. `review`: NO only when status=mapped, YES otherwise. Every row has exactly 8 cells separated by 7 ` | ` separators; never drop the review cell (a needs-review row always has `YES` in the review cell, even when the note is the only text after it). Write `%` as a single character (never `%%`). `note`: `asset <prefix> not in asset list`, `no tag hint matches description`, `unit differs <a> vs <b>, not converted`, or `-` (combine with `; ` when several).
+
+Worked rows (invented values): `X-2 | EQ-Z.T | UNMAPPED | SYN-Zone_Temp | C | needs-review | YES | asset EQ-Z not in asset list` and `X-3 | EQ-A.R | EQ-A | UNTAGGED | C | needs-review | YES | no tag hint matches description` and `X-4 | EQ-A.S | EQ-A | SYN-Damper_Position | % | needs-review | YES | unit differs % vs C, not converted`.
 
 ## Step 3: Open items for the engineer
 

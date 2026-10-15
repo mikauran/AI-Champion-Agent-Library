@@ -31,9 +31,9 @@ Only the agent names are used here, with our own wording. The source slide is TU
 | 9 | Spooling & cutting | Manufacturing | partial | data/agents/spooling-and-cutting.yaml | Counted: entry plus one container run on a synthetic segment list (Phase 27, 27-02); copy and group only, cutting arithmetic and nesting left to a tool (to compute); no isometric/IFC parsing. | 27 |
 | 10 | D2 code validation | Site and handover | partial | data/agents/d2-code-validation.yaml | Counted: entry plus one container run on a synthetic ventilation extract with placeholder requirement rows (Phase 28, 28-01); D2 read as Finnish code part D2 (assumption); real regulation values not loaded; text only, about 6 rows per run, no unit conversion. | 28 |
 | 11 | O&M completeness | Site and handover | partial | data/agents/om-completeness.yaml | Counted: entry plus one container run on a synthetic handover index and placeholder checklist (Phase 28, 28-02); index only, content not checked, about 6 rows per run. | 28 |
-| 12 | BMS digital twin | Site and handover | missing | none | No entry connects building management data to a model. | 28 |
+| 12 | BMS digital twin | Site and handover | partial | data/agents/bms-digital-twin.yaml | Counted: entry plus one container run on a synthetic point list, asset list and tag hints (Phase 28, 28-03); text only, no live BMS, tags from a supplied hint table, about 6 points per run. | 28 |
 
-Summary: 0 full, 11 partial (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), 1 missing (12).
+Summary: 0 full, 12 partial (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), 0 missing.
 
 Stage names: Design (IFC/BIM), Sourcing (LVI-INFO catalog), Manufacturing (prefab and cut sheets), Site and handover (O&M, BMS).
 

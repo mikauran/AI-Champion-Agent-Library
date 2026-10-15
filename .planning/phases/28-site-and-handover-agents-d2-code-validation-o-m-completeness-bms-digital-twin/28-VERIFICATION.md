@@ -52,3 +52,26 @@ COUNTED (SKILL v1, first run, rubric R1-R7 met).
 - Caveat: draft for engineer review; counted for the scoped step only (6 required rows, one synthetic sample, first run). The checklist is an invented placeholder; `final` in the index is taken at face value, content not checked.
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: one 28-02 row (0.0174 USD).
+
+### Agent 12: BMS digital twin
+COUNTED (SKILL revision 1, second run, rubric R1-R7 met).
+
+- Entry: data/agents/bms-digital-twin.yaml (validate-submission INGESTIBLE, validate-entries 0 errors; stage site-handover, agent_no 12; name "BMS Digital Twin" so the slug is bms-digital-twin). Input label: synthetic (data/tryitout-prompts/bms-digital-twin/sample-bms-points.txt: 6 invented points, 3 assets, 4 tag hints; tag names are invented proposals, not a real ontology). Option A, gpt-4.1-mini, Pi container, 3 requests per run, usage observed (countable).
+- Runs:
+  - Job 013b53ce-189e-4210-9a47-fd5bdfe3c1d0, SKILL v1, 10737 tokens, est. 0.0172 USD: FAIL. Checks and tags all correct, but the P-03 table row dropped its review cell (7 cells, no YES) and the P-04 note contained `%%`. Not counted; led to revision 1.
+  - Job 187e5446-e9f7-4978-a4e5-89f56cf19ad8, SKILL revision 1 (explicit 8-cell row rule, single `%`, three worked rows), 11323 tokens, est. 0.0181 USD: PASS, counted.
+- Answer key vs result: P-01 AHU-01 / SYN-Supply_Air_Temperature_Sensor mapped; P-02 AHU-01 / SYN-Fan_Status mapped; P-03 AHU-01 / UNTAGGED needs-review; P-04 FAN-03 / SYN-Fan_Speed_Command needs-review (unit differs rpm vs %, not converted); P-05 UNMAPPED / SYN-Supply_Air_Temperature_Sensor needs-review; P-06 RM-201 / SYN-CO2_Sensor mapped: all six match.
+- Verdict: R1 pass (one result.md; 6 check lines and 6 table rows P-01..P-06 in order); R2 pass (asset_line and hint_line verbatim); R3 pass; R4 pass (P-04 note unit differs rpm vs %, no conversion; review NO only P-01, P-02, P-06); R5 pass (no invented tags or assets; open items P-03, P-04, P-05); R6 pass (no counts, totals, validity claim, no claim a BMS was contacted); R7 pass (draft caveat).
+- Excerpt of the counted output:
+  ```
+  P-03 name=AHU-01.RAT prefix=AHU-01 | asset_line="AHU-01,Air handling unit 1,equipment" | desc="return air temp" hint_line=NONE | unit_ok=- | status=needs-review
+  P-05 name=AHU-09.SAT prefix=AHU-09 | asset_line=NONE | desc="supply air temperature" hint_line="supply air temperature,SYN-Supply_Air_Temperature_Sensor,C" | unit_ok=Y | status=needs-review
+  P-03 | AHU-01.RAT | AHU-01 | UNTAGGED | C | needs-review | YES | no tag hint matches description
+  P-04 | FAN-03.SPD | FAN-03 | SYN-Fan_Speed_Command | rpm | needs-review | YES | unit differs rpm vs %, not converted
+  P-05 | AHU-09.SAT | UNMAPPED | SYN-Supply_Air_Temperature_Sensor | C | needs-review | YES | asset AHU-09 not in asset list
+  Open items: P-03 no tag hint matches description; P-04 unit differs rpm vs %; P-05 asset AHU-09 not in asset list
+  Draft for engineer review. Mappings and tags are proposals from the supplied hint table; no BMS was contacted and no ontology was validated.
+  ```
+- Caveat: draft for engineer review; counted for the scoped step only (6 points, one synthetic sample, second run after one revision). No live BMS, BACnet or twin connection; tags come from a supplied hint table and are not validated against any real ontology.
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: two 28-03 rows (0.0172 and 0.0181 USD).

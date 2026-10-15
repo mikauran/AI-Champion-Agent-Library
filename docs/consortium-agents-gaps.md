@@ -84,3 +84,10 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-077 | 11 O&M completeness | No document management system or COBie-style export connection | tool | open | Phase 28 | open |
 | G-078 | 11 O&M completeness | Scoped to about 6 required rows per run; larger checklists must be batched | tool | open | Phase 28 | open |
 | G-079 | 11 O&M completeness | Counted on the first run (job 20b66bce, SKILL v1, all six statuses right, cross-equipment line not used); still one synthetic sample of 6 rows, real handover indexes unproven | tool | open | Phase 28 | open |
+| G-080 | 12 BMS digital twin | Sample is synthetic: real BMS point lists and naming schemes are confidential and were not used; behaviour on real point lists unproven | data | open | Phase 28 | open |
+| G-081 | 12 BMS digital twin | No live BMS, BACnet or digital-twin platform connection: text export only, no values, no write-back | tool | open | Phase 28 | open |
+| G-082 | 12 BMS digital twin | Mapping by exact id prefix only: no fuzzy matching, no different naming schemes, no mapping by description or location | tool | open | Phase 28 | open |
+| G-083 | 12 BMS digital twin | Tag hints are a supplied table: no real ontology (Brick or other) is loaded or validated, no relationship modelling (feeds, locates) | data | open | Phase 28 | open |
+| G-084 | 12 BMS digital twin | Units are flagged, never converted | tool | open | Phase 28 | open |
+| G-085 | 12 BMS digital twin | Scoped to about 6 points per run; real point lists have thousands of points and must be batched | tool | open | Phase 28 | open |
+| G-086 | 12 BMS digital twin | Counted on the second run (job 187e5446) after one SKILL revision: SKILL v1 (job 013b53ce) dropped the review cell of one table row and wrote a `%%` typo; fixed by an explicit 8-cell row rule and worked rows; still one synthetic sample of 6 points, real point lists unproven | tool | open | Phase 28 | open |
