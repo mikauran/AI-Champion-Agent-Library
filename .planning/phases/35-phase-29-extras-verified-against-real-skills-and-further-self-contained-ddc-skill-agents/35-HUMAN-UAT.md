@@ -11,3 +11,6 @@ Plan 35-02 (agent 17, new):
 
 Plan 35-03 (agent 18, new):
 - [ ] Agent 18 Material Delivery Check: run `npx tsx scripts/delivery-check.ts` on a raw delivery list of your own (synthetic or anonymised), paste the output into Try It Out, compare verdicts; sample jobs 9902ee53 (table without pipes, not counted) and ad96ec03 (counted, all 7 rows match). Confirm (a) a complete delivery that arrived late reads received-complete (days_late shows it) and over-delivery too, (b) a status that contradicts the quantities (delivered but short) reads data-incomplete rather than a delivery verdict, (c) a short line is judged late at the as-of date even when status is partial, (d) the label "built on material-delivery-tracker", (e) that having to run the helper first is acceptable.
+
+Plan 35-04 (agent 19, new):
+- [ ] Agent 19 QC Inspection Record Check: paste a small inspection record list of your own (synthetic or anonymised, 11 columns, `-` for empty fields) into Try It Out and compare verdicts with the lookup in docs/ddc-alignment/qc-inspection-record-check.md; sample jobs f9f76250 (Q-06 tick wrong, not counted) and 174d6166 (all 7 rows match, counted). Confirm the label "built on quality-control-workflow", that record-ok is understood as fields present only (no workmanship judgement), and that an overdue NCR response is not detected (no date test).

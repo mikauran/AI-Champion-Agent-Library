@@ -22,7 +22,7 @@ Write the result to `output/result.md`. If you cannot write files, give the same
 1. Copy `record_id`, `hold_point`, `status` and `ncr_status` exactly as written.
 2. Tick `sign_off_present`: `Y` if `sign_off_by` is not `-`, otherwise `N`.
 3. Tick `result_present`: `Y` if `result` is not `-`, otherwise `N`.
-4. Tick `defect_complete`: write `-` if `defect_id` is `-`. Otherwise `N` if `severity` is `-` or `corrective_action` is `-`, otherwise `Y`.
+4. Tick `defect_complete`: write `-` if `defect_id` is `-`. Otherwise look at field 8 (`severity`) and field 9 (`corrective_action`) and nothing else: write `N` only if one of those two fields is exactly `-`; if both have text (for example `minor` and `Uusitaan liitos`), write `Y`. The NCR fields never change this tick.
 5. Tick `ncr_response_present`: write `-` if `ncr_status` is `-`. Otherwise `Y` if `ncr_response` is not `-`, otherwise `N`.
 6. Verdict: use the first line of the lookup that fits.
 
@@ -70,6 +70,7 @@ W-6,Painekoe,N,failed,fail,-,DEF-2,minor,-,verified,Korjaus tehty
 W-7,Käyttöönottokoe,Y,failed,fail,-,DEF-3,major,Vaihdetaan venttiili,closed,-
 W-8,Mittaus,N,failed,fail,-,DEF-4,major,Säädetään,issued,-
 W-9,Silmämääräinen tarkastus,N,passed,pass,-,-,-,-,-,-
+W-10,Lämpötilamittaus,Y,failed,fail,-,DEF-5,minor,Vaihdetaan anturi,accepted,-
 ```
 
 Output rows:
@@ -84,9 +85,10 @@ Output rows:
 | W-7 | Y | failed | N | Y | Y | closed | N | ncr-no-response |
 | W-8 | N | failed | N | Y | Y | issued | N | record-ok |
 | W-9 | N | passed | N | Y | - | - | - | record-ok |
+| W-10 | Y | failed | N | Y | Y | accepted | N | ncr-no-response |
 ```
 
-Why: W-1 is a signed passed hold point with a result, nothing else, so record-ok. W-2 is on_hold, so still-open (line 1). W-3 has no result (line 2). W-4 is a passed hold point with no sign-off (line 3). W-5 has a defect with no severity, so defect_complete is N (line 4). W-6 has a defect with no corrective action (line 4 comes before the NCR line, although the NCR has a response). W-7 has a complete defect and a closed NCR without a response (line 5); the missing sign-off on a failed hold point is not flagged. W-8 has an issued NCR; a response is not required yet, so record-ok. W-9 is not a hold point, so no sign-off is needed: record-ok.
+Why: W-1 is a signed passed hold point with a result, nothing else, so record-ok. W-2 is on_hold, so still-open (line 1). W-3 has no result (line 2). W-4 is a passed hold point with no sign-off (line 3). W-5 has a defect with no severity, so defect_complete is N (line 4). W-6 has a defect with no corrective action (line 4 comes before the NCR line, although the NCR has a response). W-7 has a complete defect and a closed NCR without a response (line 5); the missing sign-off on a failed hold point is not flagged. W-8 has an issued NCR; a response is not required yet, so record-ok. W-9 is not a hold point, so no sign-off is needed: record-ok. W-10 has severity `minor` and a corrective action, so defect_complete is Y; the NCR is accepted and its response is `-`, so ncr-no-response (line 5).
 
 ## Hard constraints
 

@@ -126,3 +126,26 @@ COUNTED on run 2 (SKILL revision 1). Option A (compose stack, tagged image), usa
   ```
 - Caveat: the input already contains the helper's columns (the user must run the helper first); a complete delivery that arrived late is received-complete by decision (days_late shows it); over-delivery, cancelled and blank-quantity lines are covered by helper tests and SKILL worked rows, not by the live sample.
 - Ledger: two 35-03 rows. Spend plan 35-03: 0.0420 USD (2 runs); fix-run total 0.6849 USD of 5 USD. Teardown: `podman-compose ... down`, `podman ps -a --filter label=aic.tryitout -q` empty.
+
+## Agent 19 QC inspection records (plan 35-04)
+
+Label: built on 3_DDC_Insights/Safety-Quality/quality-control-workflow (spec docs/ddc-alignment/qc-inspection-record-check.md, committed before any agent file; key and rubric R1-R7 written before the runs; SKILL.md 396 lines and instructions.md 28 lines read in full; path verified with gh api). 11 skill defects recorded in the spec (hold point only a flag and never enforced, sign_off_by never set, pass/fail by exact string comparison, statuses never set, response treated as acceptance, verify_remediation unchecked, silent drops, second-resolution ids, datetime.now() everywhere, unused fields, misleading metrics). Decision: no helper (no date or numeric test adopted; record completeness by text Y/N ticks and a lookup); the consistency test contains a reference implementation of the lookup and checks the key, the sample and the worked rows against it (8 tests). Verdicts are completeness only; nothing judges workmanship.
+
+COUNTED on run 2 (SKILL revision 1). Option A (compose stack, tagged image), usage observed, countable true, no direct-call fallback, synthetic label.
+- Run 1: job f9f76250-5b0d-4ab9-a994-824be9be301d, gpt-4.1-mini, 11989 tokens, 3 requests, est. 0.0192 USD, SKILL v1. 6 of 7 rows matched the key; Q-06 had defect_complete N (severity minor and corrective action present, so Y) and therefore verdict defect-incomplete instead of ncr-no-response. R3 FAIL, not counted.
+- Run 2: job 174d6166-3aee-44b6-9e11-82e2627d51a2, gpt-4.1-mini, 12418 tokens, 3 requests, est. 0.0199 USD, SKILL v2 (revision 1: explicit two-field rule for defect_complete plus worked row W-10). Key vs result: Q-01 record-ok, Q-02 still-open, Q-03 result-missing, Q-04 hold-point-unsigned, Q-05 defect-incomplete, Q-06 ncr-no-response, Q-07 record-ok; copied fields, all four ticks, verdicts and the attention list equal the key cell by cell. R1-R7 met (R7: header and separator row present; the model left out the blank line after the heading, harmless).
+- Excerpt:
+  ```
+  ## QC record check
+  | record_id | hold_point | status | sign_off_present | result_present | defect_complete | ncr_status | ncr_response_present | verdict |
+  |---|---|---|---|---|---|---|---|---|
+  | Q-04 | Y | passed | N | Y | - | - | - | hold-point-unsigned |
+  | Q-05 | N | failed | N | Y | N | - | - | defect-incomplete |
+  | Q-06 | Y | failed | N | Y | Y | accepted | N | ncr-no-response |
+  | Q-07 | N | failed | N | Y | Y | in_remediation | Y | record-ok |
+  ## Records needing attention
+  Q-02: still-open / Q-03: result-missing / Q-04: hold-point-unsigned / Q-05: defect-incomplete / Q-06: ncr-no-response
+  Draft for engineer review. Synthetic input; only the presence of fields was checked, no work was approved, rejected or closed.
+  ```
+- Caveat: the revision added worked row W-10, which has the same shape as sample record Q-06 (minor defect with action, accepted NCR without response); the pass on run 2 therefore shows the model can follow that pattern, not that it generalises. No numeric or date test (overdue NCR response not detected); record-ok does not mean the work is acceptable.
+- Ledger: two 35-04 rows. Spend plan 35-04: 0.0391 USD (2 runs); fix-run total 0.7240 USD of 5 USD. Teardown: `podman-compose ... down`, `podman ps -a --filter label=aic.tryitout -q` empty.
