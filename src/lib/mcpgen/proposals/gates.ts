@@ -481,6 +481,15 @@ function checkComposite(op: Extract<ProposalOp, { op: 'composite_tool' }>, ctx: 
     if (declared.has(a.name)) push(4, 'name-collision', op, `The composite argument ${show(a.name)} is declared twice.`)
     const sa: SigArg = { name: a.name, type: a.type, required: a.required ?? a.default === undefined, ...(a.min !== undefined ? { min: a.min } : {}), ...(a.max !== undefined ? { max: a.max } : {}), ...(a.enum ? { enum: a.enum } : {}) }
     if (a.description) checkText(push, op, ctx, a.description, 'description', LIMITS.argDescription, 'argument description')
+    // CR-29: the shape-only schema has no name patterns, so enum values and bounds are checked here.
+    const seenEnum = new Set<string>()
+    for (const v of a.enum ?? []) {
+      checkName(push, op, 'value', v, 'enum-value')
+      if (seenEnum.has(v)) push(4, 'name-collision', op, `The enum value ${show(v)} of ${show(a.name)} is listed twice.`)
+      seenEnum.add(v)
+    }
+    if (a.min !== undefined && a.max !== undefined && a.min > a.max) push(3, 'value-range', op, `The minimum of ${show(a.name)} is greater than its maximum.`)
+    if (a.type === 'integer' && ((a.min !== undefined && !Number.isInteger(a.min)) || (a.max !== undefined && !Number.isInteger(a.max)))) push(3, 'value-range', op, `The bounds of the integer argument ${show(a.name)} must be whole numbers.`)
     if (a.default !== undefined) constIssues(push, op, ctx, sa, a.default, op.name)
     declared.set(a.name, sa)
   }
