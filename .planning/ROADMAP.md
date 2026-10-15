@@ -48,7 +48,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 29: Further DDC-skill Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 30: Release Preparation** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 31: Decouple DDC Agents from MCP Work** - see details (fix run 2026-10-15, order 31-38)
-- [ ] **Phase 32: Align Strong-match Agents** - see details (fix run 2026-10-15, order 31-38)
+- [x] **Phase 32: Align Strong-match Agents** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 33: Align Moderate-match Agents** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 34: Own-design Agents Relabelled** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 35: DDC Extras Verified and Extended** - see details (fix run 2026-10-15, order 31-38)

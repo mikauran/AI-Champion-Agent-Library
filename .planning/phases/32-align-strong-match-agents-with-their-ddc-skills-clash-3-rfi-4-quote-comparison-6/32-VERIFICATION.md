@@ -85,3 +85,6 @@ COUNTED (4th run, after 2 SKILL revisions and 1 scope-shrink retry). Aligned wit
   ```
 - Caveats: draft for engineer review; synthetic data; counted for 5 RFQ lines x 3 quotes after a scope shrink; reliability on this small model is limited (the first three runs on 6 lines each failed one rubric item, notably lowest_comparable on lines with two ok letters, which had passed in Phase 26 with the shorter SKILL); weights and scores are engineer-supplied and invented in the sample; totals come from the helper outside the model, not from the Try It Out job.
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+
+## Phase result (aggregated)
+Agent 4 RFI: counted (aligned, 1 run). Agent 6 Quote comparison: counted (aligned, 4th run after scope shrink; weighting helper corrected and tested). Agent 3 Clash: aligned entry/spec/helper in the repo, 7 live runs across two designs, NOT counted (last design: 7 of 8 rows right in every run, one wrong cell per run). RETURN LATER with a further reduction. `npm run check` green.
