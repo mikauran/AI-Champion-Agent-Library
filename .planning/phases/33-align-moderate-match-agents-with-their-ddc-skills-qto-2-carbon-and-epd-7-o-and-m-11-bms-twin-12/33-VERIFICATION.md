@@ -56,3 +56,31 @@ Draft for engineer review. All EPD values in this run are synthetic and not auth
 - Caveat: draft for engineer review; all EPD values synthetic and non-authoritative; no register lookup. One passing run on 6 products is evidence that the design is workable, not a reliability claim.
 - Teardown: `podman-compose ... down` done, `podman ps -a --filter label=aic.tryitout -q` empty.
 - Tests: src/lib/carbon/lifecycleCarbon.test.ts (22 tests incl. a regression per fixed skill defect), scripts/ddc-alignment.carbon-epd-enrichment.test.ts (8), validators, scripts/check-ddc-decoupling.sh clean, golden diff limited to this entry.
+
+## Agent 11 O and M (plan 33-03)
+
+Status: COUNTED (first run, SKILL v1, no revision needed).
+
+- Skills: `5_DDC_Innovative/as-built-documentation` (primary) and `1_DDC_Toolkit/Project-Closeout/project-closeout-checklist` (SKILL.md and instructions.md of both read in full). Spec committed before any agent file: docs/ddc-alignment/om-completeness.md (document types, status enums, asset registry fields, Finnish generic term mapping, 13 verified skill defects, key, rubric).
+- Run (Option A, compose stack with override.tryitout.yml, image tag tryitout): job `73ac51f8-4eb4-41cb-8bb6-a67a9b871b8e`, model gpt-4.1-mini, 12009 tokens, 3 requests, est. cost 0.0192 USD, input label synthetic (6 invented required rows with asset columns, 7 invented index lines), countable true (Pi ran, usage observed, no direct-call fallback). Ledger row present. Local artifact `.tryitout-runs/73ac51f8-4eb4-41cb-8bb6-a67a9b871b8e/result.md`.
+- Key vs result: all 6 rows match the spec section 7 key: H-01 complete, H-02 incomplete (reviewed), H-03 missing (same equipment, other types only), H-04 missing (equipment absent), H-05 complete via SYN-DOC-302 with the superseded line SYN-DOC-301 skipped, H-06 missing (only AHU-02 has the type). Rubric R1 met, R2 met, R3 met (index lines copied exactly), R4 met (NONE, not in delivered index), R5 met (no counts, percentages or overall verdict), R6 met (asset columns copied exactly), R7 met. Minor: open-item reasons are terse (`not in delivered index`), less specific than the key's reasons for H-03/H-04/H-06 (accepted).
+- Excerpt of result.md:
+
+```
+## Document rows
+req_id | asset_tag | asset_name | system | location | doc_type | skill_type | index_line | status | closeout | review | note
+H-01 | AHU-01 | Air handling unit 1 | ilmanvaihto | Plant room 1 | operating-manual | manual | AHU-01,operating-manual,SYN-DOC-101,final | complete | complete | NO | -
+H-02 | AHU-01 | Air handling unit 1 | ilmanvaihto | Plant room 1 | maintenance-plan | manual | AHU-01,maintenance-plan,SYN-DOC-102,reviewed | incomplete | in_progress | YES | status reviewed not final
+H-03 | PMP-02 | Heating pump 2 | lämmitys | Plant room 1 | warranty-certificate | warranty | NONE | missing | not_started | YES | not in delivered index
+H-04 | FAN-03 | Exhaust fan 3 | ilmanvaihto | Roof | as-built-drawing | drawing | NONE | missing | not_started | YES | not in delivered index
+H-05 | PMP-02 | Heating pump 2 | lämmitys | Plant room 1 | operating-manual | manual | PMP-02,operating-manual,SYN-DOC-302,final | complete | complete | NO | superseded line skipped
+H-06 | AHU-01 | Air handling unit 1 | ilmanvaihto | Plant room 1 | commissioning-report | commissioning | NONE | missing | not_started | YES | not in delivered index
+## Open items for the handover engineer
+H-02, incomplete, status reviewed not final
+H-03, missing, not in delivered index
+Draft for handover engineer review. Statuses come only from the supplied checklist and index; document content was not checked.
+```
+
+- Caveat: draft for engineer review; synthetic input; the checklist is an invented placeholder; document content not checked. One passing run on 6 rows is evidence that the design is workable, not a reliability claim.
+- Teardown: `podman-compose ... down` done, `podman ps -a --filter label=aic.tryitout -q` empty.
+- Tests: scripts/ddc-alignment.om-completeness.test.ts (6, includes the rule table applied to the sample), validators, scripts/check-ddc-decoupling.sh clean, golden unchanged (no catalog-visible field change).
