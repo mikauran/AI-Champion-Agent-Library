@@ -39,3 +39,5 @@ Cap: 10.00 USD total for the autonomous run; the harness refuses to start when t
 | 2026-10-15T01:58:00.628Z-punch-list-closure-check | 2026-10-15T01:58:00.628Z | 29-02 | punch-list-closure-check | 4100e229-7b71-43b5-8803-f7f823ec5f95 | gpt-4.1-mini | 12641 | 3 | 0.0202 | succeeded | label=synthetic; SKILL revision 1 (explicit note rule plus worked rows), rubric R1-R7 met, counted |
 | 2026-10-15T02:04:43.475Z-change-order-consistency-check | 2026-10-15T02:04:43.475Z | 29-03 | change-order-consistency-check | 8746152c-5930-4df9-afb4-d113e7b41482 | gpt-4.1-mini | 13208 | 3 | 0.0211 | succeeded | label=synthetic; ok |
 | 2026-10-15T02:11:23.430Z-safety-observation-classification | 2026-10-15T02:11:23.430Z | 29-04 | safety-observation-classification | c5bc6732-80ee-424f-aa80-e1b276eb3008 | gpt-4.1-mini | 11149 | 3 | 0.0178 | succeeded | label=synthetic; ok |
+
+<!-- Fix run 2026-10-15 (phases 31-38): separate budget $5 total, $0.50 per run. Rows below belong to this run. -->

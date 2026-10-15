@@ -47,6 +47,14 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 28: Site and Handover Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 29: Further DDC-skill Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 30: Release Preparation** - see details (not started; execution order 24-30 first, then 21-23)
+- [ ] **Phase 31: Decouple DDC Agents from MCP Work** - see details (fix run 2026-10-15, order 31-38)
+- [ ] **Phase 32: Align Strong-match Agents** - see details (fix run 2026-10-15, order 31-38)
+- [ ] **Phase 33: Align Moderate-match Agents** - see details (fix run 2026-10-15, order 31-38)
+- [ ] **Phase 34: Own-design Agents Relabelled** - see details (fix run 2026-10-15, order 31-38)
+- [ ] **Phase 35: DDC Extras Verified and Extended** - see details (fix run 2026-10-15, order 31-38)
+- [ ] **Phase 36: LVI-INFO MCP Agent (flagged)** - see details (fix run 2026-10-15, order 31-38)
+- [ ] **Phase 37: DDC Mapping for Alok** - see details (fix run 2026-10-15, order 31-38)
+- [ ] **Phase 38: Release Branch Rework** - see details (fix run 2026-10-15, order 31-38)
 
 ## Phase Details
 
@@ -691,3 +699,83 @@ Plans:
 ## Execution order (autonomous run 2026-10-14)
 
 Phases 24-30 run first (agents, then release prep), then 21-23 (generator roadmap). Use `/gsd:autonomous --only N`.
+
+### Phase 31: Decouple DDC agents from MCP work (strip MCP/LVI/STK/Prysmian/Rakennustieto framing, real attribution and source URLs, planning and gaps corrections)
+
+**Goal:** Remove all MCP/LVI-INFO/STK/Prysmian/Rakennustieto framing from the DDC agents (audit: agents 1, 5, 7; 5 heaviest; use generic or synthetic catalog data); give every DDC agent its exact skill path (or 'no DDC basis') in the entry and docs/third-party-notices.md; replace the github.com/aic-consortium/ placeholder URLs (DDC skill URL for DDC agents, the library repo for the rest); correct the scope of ROADMAP phases 24 and 26 and the phase 24-26 context files, the gaps list and the decisions log so the DDC/MCP separation is recorded; remove gap entries that existed only because of the mixing. Scope note: no live runs needed except where an entry's sample changes (done in 34).
+**Requirements**: TBD
+**Depends on:** Phase 30
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 31 to break down)
+
+### Phase 32: Align strong-match agents with their DDC skills (clash 3, RFI 4, quote comparison 6)
+
+**Goal:** Align agents 3 Clash (2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer), 4 RFI (1_DDC_Toolkit/Document-Control/rfi-management), 6 Quote comparison (1_DDC_Toolkit/Procurement/bid-analysis-comparator) with their skill's method, data model, rules and outputs, adapted to Finnish MEP; fix the skill's own bugs rather than copying them (e.g. bid-analysis-comparator's weighted score ignores the weights); skill code reused only for calculations. Done bar per agent: complete entry plus one real-model Try It Out container step with evidence.
+**Requirements**: TBD
+**Depends on:** Phase 31
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 32 to break down)
+
+### Phase 33: Align moderate-match agents with their DDC skills (QTO 2, carbon and EPD 7, O and M 11, BMS twin 12)
+
+**Goal:** Align agents 2 QTO (2_DDC_Book/3.2-QTO-Auto-Estimates/qto-report + bim-qto), 7 Carbon & EPD (2_DDC_Book/3.3-4D-BIM-CO2-Simulation/lifecycle-carbon-calculator), 11 O&M (5_DDC_Innovative/as-built-documentation + 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist), 12 BMS twin (5_DDC_Innovative/digital-twin-sync) with their skill's method, data model, rules and outputs. Where the audit differs, note it and use the closer match. Same done bar.
+**Requirements**: TBD
+**Depends on:** Phase 32
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 33 to break down)
+
+### Phase 34: Own-design agents relabelled and cleaned (ETIM 1, sourcing 5, cut-sheet 8, spooling 9, D2 10)
+
+**Goal:** Keep agents 1 ETIM, 5 E-BOM to M-BOM, 8 Cut-sheet QA, 9 Spooling and cutting, 10 D2 code validation as own designs; label each 'inspired by <skill path>' or 'no DDC basis'; agent 5 loses MCP framing and uses generic or synthetic catalog data; agent 10 keeps the D2 assumption visible in the entry. Same done bar for changed entries.
+**Requirements**: TBD
+**Depends on:** Phase 33
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 34 to break down)
+
+### Phase 35: Phase 29 extras verified against real skills and further self-contained DDC skill agents
+
+**Goal:** Verify that each Phase 29 extra follows a real skill and record the exact path; add further agents where a skill has a self-contained method (no Windows converters, no CWICR database, no IoT feeds); list remaining candidates. Same done bar.
+**Requirements**: TBD
+**Depends on:** Phase 34
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 35 to break down)
+
+### Phase 36: LVI-INFO MCP agent (flagged off, local only) and MCP-server entries behind the flag
+
+**Goal:** One agent making a real MCP call to Ville's LVI-INFO server, local only: choose a proxy or a sidecar on the internal network, whichever changes the network guard less. The agent and the three MCP-server entries (stk-mcp, stk-catalog-mcp, lvi-info-mcp) stay behind a flag, off by default, never in the release branch. No real LVI-INFO data or API key in any commit that could reach the release; evidence from real-data runs redacted.
+**Requirements**: TBD
+**Depends on:** Phase 35
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 36 to break down)
+
+### Phase 37: DDC mapping document for Alok
+
+**Goal:** Write .planning/research/ddc-mapping-for-alok.md: the 12-agent table (skill path, match strength, what we took from the skill, what we added) and a 3-line message for Ville to send to Alok.
+**Requirements**: TBD
+**Depends on:** Phase 36
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 37 to break down)
+
+### Phase 38: Release branch rework (remove MCP and LVI-INFO, apply changes, rebuild, smoke, sweep, counts)
+
+**Goal:** Release branch release/agents-2026-10: remove the MCP-server entries and everything LVI-INFO, apply the changes of phases 31-35, update agent counts in the release notes and PR description, re-run build and smoke, run a confidentiality sweep for MCP or consortium material. No push, no PR.
+**Requirements**: TBD
+**Depends on:** Phase 37
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 38 to break down)
