@@ -39,7 +39,7 @@ How to fill each field (each is one lookup or one text equality test; copy the t
 Flags after `=>`, built by these independent tests (write every token that applies, comma separated, in this order):
 
 1. `UNIT-DIFF` if unit_same=N.
-2. `QTY-DIFF` if qty_same=N AND unit_same=Y.
+2. `QTY-DIFF` if qty_same=N AND unit_same=Y. When unit_same=N the flag is UNIT-DIFF alone, never QTY-DIFF (`unit_same=N qty_same=N` gives only UNIT-DIFF).
 3. `ITEM-SUBSTITUTE` if code_same=N.
 4. `BASIS-DIFF` if rankable=N.
 5. `OK` ONLY if none of the four applies (then OK is the only token).
@@ -48,7 +48,7 @@ Example lines (illustration, not from the input): `X-1 A: quoted=Y unit=m/m unit
 
 After the quote lines of an RFQ line write one closing line. `ok_letters` are the letters whose flags (after `=>`) are exactly `OK`, comma separated, or `none`; a quote with BASIS-DIFF is never in ok_letters. Then:
 - ok_letters is `none` or a single letter (for example `A`): write `<rfq_line> ok_letters=<none or letter> lowest=n/a` (one offer alone is not a comparison).
-- ok_letters has two letters (`A,B`): write `<rfq_line> ok_letters=A,B prices A=<A copied price> B=<B copied price> lowest=<letter of the smaller number>`.
+- ok_letters has two letters (`A,B`): lowest is NEVER n/a here. Worked closing lines: `X-1 ok_letters=A,B prices A=10.50 B=9.20 lowest=B` and `X-2 ok_letters=A,B prices A=4.00 B=4.60 lowest=A`. Write `<rfq_line> ok_letters=A,B prices A=<A copied price> B=<B copied price> lowest=<letter of the smaller number>`.
 
 ## Step 3: Per-line comparison table
 
@@ -87,8 +87,11 @@ DRAFT recommendation for engineer review. This is not a decision.
 Eligible quotes (rankable=Y): <letters copied from the Quote basis table>
 Excluded as non-comparable (BASIS-DIFF): <letters with rankable=N, or none>
 Leader among eligible quotes: pending tool totals
-Open scope gaps to resolve before any selection: <the gap lines of the eligible quotes only, or none>
+Open scope gaps to resolve before any selection:
+<one line per gap line whose letter is an eligible letter, copied, or: none>
 ```
+
+How to fill the open gaps: go through the `gap:` lines of Step 5 from the first to the last. For each, look at its letter (the letter after the rfq_line). If that letter is in the eligible list, copy the whole line here; if not, skip it. Do not stop after the first; every gap line of an eligible letter is copied, including NOT-QUOTED lines. Example: eligible A, B and gap lines `gap: X-1 B NOT-QUOTED | ...`, `gap: X-2 C UNIT-DIFF, BASIS-DIFF | ...`, `gap: X-3 B UNIT-DIFF | ...` give two copied lines (X-1 B and X-3 B); the C line is skipped.
 
 Never name a supplier as best, cheapest or selected. Never write a number in this section. A letter with rankable=N never appears among the eligible quotes.
 

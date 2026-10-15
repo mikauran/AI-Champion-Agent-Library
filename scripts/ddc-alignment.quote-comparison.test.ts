@@ -38,9 +38,9 @@ describe('quote-comparison alignment', () => {
     expect(weighted[0].id).toBe('B')
   })
 
-  it('the sample is labelled synthetic and has 6 RFQ lines and 3 quotes', () => {
+  it('the sample is labelled synthetic and has 5 RFQ lines and 3 quotes', () => {
     expect(sample.split('\n')[0]).toMatch(/^# SYNTHETIC SAMPLE/)
-    expect((sample.match(/^R-0\d,/gm) ?? []).length).toBe(23) // 6 RFQ + 6 A + 5 B + 6 C
+    expect((sample.match(/^R-0\d,/gm) ?? []).length).toBe(19) // 5 RFQ + 5 A + 4 B + 5 C
     expect((sample.match(/^## QUOTE /gm) ?? []).length).toBe(3)
   })
 

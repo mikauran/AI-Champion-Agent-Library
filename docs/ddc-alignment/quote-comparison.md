@@ -77,11 +77,11 @@ Recommendation text is drafted before the totals exist: conditional, `pending to
 
 ## 8. Answer key (synthetic sample) and rubric
 
-Sample: 6 RFQ lines R-01 Copper pipe 22 mm 120 m, R-02 Ball valve DN22 brass 8 pcs, R-03 Mineral wool pipe insulation 22 mm 120 m, R-04 Circulation pump 25-60 2 pcs, R-05 Pipe clamp 22 100 pcs, R-06 Floor drain DN50 6 pcs; quotes A (EUR, excluded, DAP site, 14 days), B (same basis, 10 days), C (SEK, included 25.5 percent, EXW, 7 days).
+Sample: 5 RFQ lines R-01 Copper pipe 22 mm 120 m, R-02 Ball valve DN22 brass 8 pcs, R-03 Mineral wool pipe insulation 22 mm 120 m, R-04 Circulation pump 25-60 2 pcs, R-05 Pipe clamp 22 100 pcs (an original sixth line R-06 Floor drain DN50 was dropped in the scope-shrink retry after the 32-03 revisions, Revision note in 32-VERIFICATION.md); quotes A (EUR, excluded, DAP site, 14 days), B (same basis, 10 days), C (SEK, included 25.5 percent, EXW, 7 days).
 
 Quote basis: A first, rankable Y; B same, Y; C `differs: currency, vat, delivery_terms`, N.
 
-Flags: A all OK. B: R-03 NOT-QUOTED, R-05 UNIT-DIFF (pack10 vs pcs), rest OK. C: R-04 ITEM-SUBSTITUTE, BASIS-DIFF; R-05 UNIT-DIFF, BASIS-DIFF; all other C cells BASIS-DIFF. ok_letters / lowest: R-01 A,B lowest B; R-02 A,B lowest A; R-03 A only, n/a; R-04 A,B lowest A; R-05 A only, n/a; R-06 A,B lowest A.
+Flags: A all OK. B: R-03 NOT-QUOTED, R-05 UNIT-DIFF (pack10 vs pcs), rest OK. C: R-04 ITEM-SUBSTITUTE, BASIS-DIFF; R-05 UNIT-DIFF, BASIS-DIFF (never QTY-DIFF when the unit differs); all other C cells BASIS-DIFF. ok_letters / lowest: R-01 A,B lowest B; R-02 A,B lowest A; R-03 A only, n/a; R-04 A,B lowest A; R-05 A only, n/a.
 
 Criteria (weights 50, 20, 20, 10; sum 100) and scores 0-10:
 

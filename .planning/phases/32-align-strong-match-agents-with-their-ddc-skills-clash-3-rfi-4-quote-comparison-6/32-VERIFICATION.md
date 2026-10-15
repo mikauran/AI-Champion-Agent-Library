@@ -51,3 +51,25 @@ COUNTED (1 live run, SKILL v1, no revision needed). Aligned with DDC skill 1_DDC
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: one 32-02 row after the fix-run marker. Fix-run spend so far 0.1464 USD (0.1203 + 0.0261).
 - Lesson confirmed: a one-block-per-finding layout of fixed lines (copy, constant placeholder or one lookup, worked examples, no cross-section dependency) passes first time on the small model, unlike the agent 3 output.
+
+## Agent 6 Quote comparison (plan 32-03)
+COUNTED (4th run, after 2 SKILL revisions and 1 scope-shrink retry). Aligned with DDC skill 1_DDC_Toolkit/Procurement/bid-analysis-comparator; spec docs/ddc-alignment/quote-comparison.md written first. Skill weighting claims verified in its code: `total_weighted_score` is an unweighted sum (dead property), `calculate_weighted_scores` uses score*weight*10 (weights applied but hidden x10 scale, no normalisation or validation, missing score silent zero, unknown criterion weight 0, no ties/rank); nine items in spec section 6. Corrected helper src/lib/procurement/weightedScore.ts (sum(score*weight)/sum(weights), typed validation errors, ranking with shared tie ranks) with unit tests and CLI scripts/bid-weighted-score.ts (A-02: helper run by the harness evidence step, Try It Out job stays text in/text out, no app change).
+
+- Option A, Pi container, usage observed (countable), label synthetic, gpt-4.1-mini, 3 requests per run.
+- Runs: 2fe1fc21-bda9-4e4a-9366-78384864aedc 16847 tok 0.0270 FAIL (draft recommendation open gaps omitted B R-03 NOT-QUOTED; R4/R5); ddfc55a5-0116-4fa8-b149-46fd22819072 17366 tok 0.0278 FAIL (SKILL rev 1: gaps fixed, but lowest_comparable n/a on four lines with two ok letters, R-05 C wrongly QTY-DIFF; R2/R5); 0afa91f2-305c-4437-aa3b-aef685865512 17594 tok 0.0282 FAIL (SKILL rev 2: QTY-DIFF fixed, lowest still n/a on four lines; R2/R5); counted: fb302e31-f63a-442b-a9d7-e3b4d2c8cc9f 17192 tok 0.0275 (scope-shrink retry, 5 RFQ lines instead of 6). Total 0.1105 USD, four ledger rows after the fix-run marker. Fix-run spend so far 0.2569 USD.
+- Verdict for fb302e31 against the answer key (spec section 8): R1 basis rows right (A first Y, B same Y, C differs: currency, vat, delivery_terms N); R2 all line checks and flags equal the key (B R-03 NOT-QUOTED, B R-05 UNIT-DIFF, C R-04 ITEM-SUBSTITUTE+BASIS-DIFF, C R-05 UNIT-DIFF+BASIS-DIFF, no QTY-DIFF where the unit differs), lowest R-01 B, R-02 A, R-03 n/a, R-04 A, R-05 n/a; R3 criteria, weights and scores copied exactly (diff equal to input), every total cell `to compute (tool)`, no model sum or product; R4 four gap lines plus the basis line for C; R5 DRAFT label, eligible A,B, C excluded, leader `pending tool totals`, open gaps B R-03 and B R-05 (equal the key), no decision; R6 all 17 prices digit-identical, nothing invented; R7 caveat present. PASS.
+- Helper output (npx tsx scripts/bid-weighted-score.ts on the input and on result.md, identical): weights price=50, delivery_time=20, technical_compliance=20, references=10; B 7.20 rank 1, A 6.60 rank 2, C 6.30 rank 3. The unweighted sums are A 28, C 26, B 24, so the unweighted leader (A) differs from the weighted leader (B): the corrected weighting changes the winner. C is ranked by the helper but excluded from the recommendation (BASIS-DIFF). The draft recommendation reads `Leader among eligible quotes: pending tool totals`, i.e. the engineer reads B from the tool output, as a draft.
+- Excerpt of the counted output:
+  ```
+  R-04 | Circulation pump 25-60 | 2 | pcs | 289.00 | OK | 301.00 | OK | 3350.00 | ITEM-SUBSTITUTE, BASIS-DIFF | A
+  price | 50 | 6 | 9 | 5
+  total | - | to compute (tool) | to compute (tool) | to compute (tool)
+  DRAFT recommendation for engineer review. This is not a decision.
+  Eligible quotes (rankable=Y): A,B
+  Excluded as non-comparable (BASIS-DIFF): C
+  Leader among eligible quotes: pending tool totals
+  gap: R-03 B NOT-QUOTED | not quoted by this supplier
+  gap: R-05 B UNIT-DIFF | unit differs from RFQ
+  ```
+- Caveats: draft for engineer review; synthetic data; counted for 5 RFQ lines x 3 quotes after a scope shrink; reliability on this small model is limited (the first three runs on 6 lines each failed one rubric item, notably lowest_comparable on lines with two ok letters, which had passed in Phase 26 with the shorter SKILL); weights and scores are engineer-supplied and invented in the sample; totals come from the helper outside the model, not from the Try It Out job.
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
