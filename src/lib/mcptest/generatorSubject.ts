@@ -38,13 +38,18 @@ export function resolveSample(id: string): GeneratorSample | null {
 // that emitted file, so the in-process subject and a runner that loads the package file see the same binding.
 export { deriveBinding } from '../mcpgen/binding'
 
-/** Env names the generated server reads, by suffix rule. */
+/**
+ * Env names the generated server reads, by suffix rule: the base URL, the credential (`_API_KEY`, bearer `_TOKEN`,
+ * OAuth2 `_ACCESS_TOKEN`, so the canary key reaches every auth scheme, CR-51) and the data location (`_DATA_PATH`,
+ * `_DATA_FILE`, `_DB_PATH`).
+ */
 export function deriveEnvNames(envVars: { name: string }[]): NonNullable<PrepareResult['envNames']> {
   const out: NonNullable<PrepareResult['envNames']> = {}
   for (const { name } of envVars) {
     if (/_BASE_URL_B$/.test(name)) out.baseUrlB ??= name
     else if (/_BASE_URL$/.test(name)) out.baseUrl ??= name
-    else if (/_API_KEY$/.test(name)) out.apiKey ??= name
+    else if (/_(?:API_KEY|TOKEN)$/.test(name)) out.apiKey ??= name
+    else if (/_(?:DATA_PATH|DATA_FILE|DB_PATH)$/.test(name)) out.dataPath ??= name
   }
   return out
 }

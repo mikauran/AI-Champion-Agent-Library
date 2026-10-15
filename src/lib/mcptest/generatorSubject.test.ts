@@ -121,7 +121,14 @@ describe('deriveBinding / deriveEnvNames', () => {
   it('applies the suffix rule', () => {
     expect(
       deriveEnvNames([{ name: 'A_BASE_URL' }, { name: 'A_API_KEY' }, { name: 'A_BASE_URL_B' }, { name: 'A_DATA_PATH' }])
-    ).toEqual({ baseUrl: 'A_BASE_URL', apiKey: 'A_API_KEY', baseUrlB: 'A_BASE_URL_B' })
+    ).toEqual({ baseUrl: 'A_BASE_URL', apiKey: 'A_API_KEY', baseUrlB: 'A_BASE_URL_B', dataPath: 'A_DATA_PATH' })
+  })
+  // CR-51: bearer and OAuth2 credentials and the data location are mapped too.
+  it('maps bearer and OAuth2 tokens to the key and the data variables to the data path', () => {
+    expect(deriveEnvNames([{ name: 'ACME_BASE_URL' }, { name: 'ACME_TOKEN' }])).toEqual({ baseUrl: 'ACME_BASE_URL', apiKey: 'ACME_TOKEN' })
+    expect(deriveEnvNames([{ name: 'ACME_ACCESS_TOKEN' }])).toEqual({ apiKey: 'ACME_ACCESS_TOKEN' })
+    expect(deriveEnvNames([{ name: 'ACME_WIDGETS_DATA_FILE' }])).toEqual({ dataPath: 'ACME_WIDGETS_DATA_FILE' })
+    expect(deriveEnvNames([{ name: 'ACME_DB_PATH' }])).toEqual({ dataPath: 'ACME_DB_PATH' })
   })
 })
 
