@@ -17,6 +17,7 @@ import { AGENT_DIR, TryItOutRuntimeError, type ContainerRuntime, type StagedFile
 import { createDockerodeRuntime } from './runtimeDockerode'
 import type { RunnerConfig } from './runnerConfig'
 import { createClientLimiter } from './clientLimit'
+import { localMcpAgent } from '../localMcp/agents'
 
 export interface TryItOutService {
   config: RunnerConfig
@@ -72,6 +73,8 @@ export function buildWarmFiles(input: {
   skillMarkdown: string
   proxyUrl: string
   model: string
+  /** Phase 36: extra staged files (flag-gated local MCP extension). Absent keeps the exact old list. */
+  extraFiles?: StagedFile[]
 }): StagedFile[] {
   const slug = AgentIdSchema.parse(input.slug)
   return [
@@ -80,6 +83,7 @@ export function buildWarmFiles(input: {
     { path: 'skills', type: 'dir' },
     { path: `skills/${slug}`, type: 'dir' },
     { path: `skills/${slug}/SKILL.md`, content: input.skillMarkdown },
+    ...(input.extraFiles ?? []),
   ]
 }
 
@@ -96,6 +100,7 @@ export function createTryItOutService(opts: {
 
   const stage = async (lease: Lease, containerId: string): Promise<void> => {
     const { basePrompt, skillMarkdown } = await loadPiSkill(lease.slug)
+    const local = localMcpAgent(lease.slug)
     await runtime.putFiles(
       containerId,
       AGENT_DIR,
@@ -105,6 +110,14 @@ export function createTryItOutService(opts: {
         skillMarkdown,
         proxyUrl: config.proxyUrl,
         model: MODEL,
+        ...(local
+          ? {
+              extraFiles: [
+                { path: 'extensions', type: 'dir' as const },
+                { path: local.extensionFile, content: local.render(config) },
+              ],
+            }
+          : {}),
       }),
     )
     const check = await runtime.exec(containerId, {

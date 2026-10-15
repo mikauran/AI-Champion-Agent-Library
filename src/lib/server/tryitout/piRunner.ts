@@ -17,6 +17,7 @@ import { beginJob, endJob, getJobUsage } from './llmProxy'
 import { createCompletionTracker, createJsonlParser, createPiEventMapper } from './piEvents'
 import { writeArtifactZip } from './artifact'
 import { logDetail, publicErrorMessage } from './redact'
+import { localMcpAgent, type LocalMcpAgent } from '../localMcp/agents'
 
 /** Names only the input files that were actually staged, so Pi never tries to read a missing upload. */
 export function piInstruction(hasUpload: boolean): string {
@@ -44,7 +45,12 @@ function bounded<T>(work: Promise<T>, ms: number): Promise<T> {
   })
 }
 
-export function buildPiArgs(cfg: RunnerConfig, slug: string, hasUpload = true): string[] {
+export function buildPiArgs(
+  cfg: RunnerConfig,
+  slug: string,
+  hasUpload = true,
+  extension: LocalMcpAgent | null = localMcpAgent(slug),
+): string[] {
   return [
     'timeout',
     '--signal=KILL',
@@ -61,6 +67,7 @@ export function buildPiArgs(cfg: RunnerConfig, slug: string, hasUpload = true): 
     '--no-context-files',
     '--no-approve',
     '-ns',
+    ...(extension ? ['-e', extension.extensionPath] : []),
     '--skill',
     `${AGENT_DIR}/skills/${slug}`,
     '--provider',
@@ -68,7 +75,7 @@ export function buildPiArgs(cfg: RunnerConfig, slug: string, hasUpload = true): 
     '--model',
     MODEL,
     '--tools',
-    cfg.tools.join(','),
+    [...cfg.tools, ...(extension ? extension.tools : [])].join(','),
     '--append-system-prompt',
     `${AGENT_DIR}/base-prompt.md`,
     '--',
