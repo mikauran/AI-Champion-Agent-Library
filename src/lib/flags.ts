@@ -40,3 +40,8 @@ export function mcpTesterEnabled(
   const v = env.MCP_TESTER
   return typeof v === 'string' && TRUTHY.has(v.trim().toLowerCase())
 }
+
+/** Phase 36 local-only LVI-INFO MCP agent, MCP-server entries, proxy route and staged tool
+ * (LOCAL_MCP_AGENTS), default off. Implemented in localMcpFlag.ts for the same reason as the
+ * compare and theme flags (D-364, D-380, D-637). */
+export { localMcpAgentsEnabled } from './localMcpFlag.js'
