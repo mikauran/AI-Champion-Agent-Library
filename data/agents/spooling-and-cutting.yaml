@@ -1,7 +1,7 @@
 component_type: Agent
 id: "aic-spooling-and-cutting-001"
 name: "Spooling and Cutting"
-description: "Groups prefab pipe segments into spools and cut groups and drafts a cut list for the fabricator, copying lengths and flagging everything that needs calculation as to compute (tool). Output is a draft."
+description: "Groups prefab pipe segments into spools and cut groups and drafts a cut list for the fabricator, copying lengths and flagging everything that needs calculation as to compute (tool). Own design, no DDC basis. Output is a draft."
 metadata:
   category: "project-management"
   maturity: "experimental"
@@ -23,6 +23,7 @@ metadata:
     - "Synthetic sample in data/tryitout-prompts/spooling-and-cutting/"
     - "Intended in a connected setup: a spool or isometric extract from the prefab model; not accessible from the Try It Out container"
   assumptions:
+    - "Label: no DDC basis (own design); the DDC prefab-optimization skill is not a pipe-spool or cut-list skill"
     - "Groups are exact text equality of spool id, or of diameter and material"
     - "Lengths are copied, never computed"
     - "Segments longer than their stock length are marked to compute (tool)"
@@ -38,7 +39,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented segment list; no real prefab or project data"
-  attribution: "No DDC basis (own design); no DDC skill covers pipe spooling or cut lists"
+  attribution: "no DDC basis (own design); the DDC prefab-optimization skill is not a pipe-spool or cut-list skill"
   input_schema:
     - key: "input_text"
       label: "Segment list (CSV text)"

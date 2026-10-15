@@ -1,7 +1,7 @@
 component_type: Agent
 id: "aic-product-sourcing-mbom-001"
 name: "Product Sourcing MBOM"
-description: "Reads an engineering BOM and a catalog excerpt as CSV text, proposes candidate catalog products for every BOM line in one row per line by exact attribute equality, flags ambiguous, no-match and unit-mismatch lines and copies matched lines into an M-BOM draft. Output is a draft."
+description: "Reads an engineering BOM and a catalog excerpt as CSV text, proposes candidate catalog products for every BOM line in one row per line by exact attribute equality, flags ambiguous, no-match and unit-mismatch lines and copies matched lines into an M-BOM draft. Own design, inspired by 1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement (method only; no CWICR data); the catalog is generic synthetic product data. Output is a draft."
 metadata:
   category: "project-management"
   maturity: "experimental"
@@ -27,6 +27,7 @@ metadata:
     - "Matching is exact text equality on class, dimension and material"
     - "An empty requirement attribute means any value"
     - "Units are never converted"
+    - "Label: inspired by 1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement (method only; no CWICR data); the catalog excerpt is generic synthetic product data"
     - "The step handles an excerpt of up to about 6 E-BOM lines x 6 catalog rows per run; larger BOMs must be batched"
   gaps:
     - "No live catalog access: the Pi container reaches only the LLM proxy, so the catalog excerpt is pasted as text"
@@ -40,7 +41,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented E-BOM and catalog excerpt with SYN- class codes; no real catalog or project data"
-  attribution: "Inspired by DDC skill 1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement (method only; no CWICR data; MIT, (c) 2026 DataDrivenConstruction for the skill text, CWICR data is under a separate licence and is not used)"
+  attribution: "inspired by 1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement (method only; no CWICR data) (MIT, (c) 2026 DataDrivenConstruction for the skill text, CWICR data is under a separate licence and is not used)"
   input_schema:
     - key: "input_text"
       label: "E-BOM and catalog excerpt (CSV text)"

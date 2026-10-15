@@ -53,16 +53,16 @@ Paths are relative to the DDC repository root. "Built on the skill" means the sk
 
 | Entry slug | DDC skill path | Relation |
 | --- | --- | --- |
-| etim-classification-repair | 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai | inspired by (weak match) |
+| etim-classification-repair | 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai | inspired by 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai (own design for ETIM-style mapping); weak match |
 | qto-normalization | 2_DDC_Book/3.2-QTO-Auto-Estimates/bim-qto (primary; qto-report in the same folder as secondary) | adapted (method only; grouping and unit defects fixed in an own tested helper, no skill code copied) |
 | clash-prioritization | 2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer | adapted |
 | rfi-generation-from-findings | 1_DDC_Toolkit/Document-Control/rfi-management | adapted |
-| product-sourcing-mbom | 1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement | inspired by (method only; no CWICR data) |
+| product-sourcing-mbom | 1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement | inspired by 1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement (method only; no CWICR data) |
 | quote-comparison | 1_DDC_Toolkit/Procurement/bid-analysis-comparator | adapted (concepts; weighted-score defects fixed in an own tested helper, no skill code copied) |
 | carbon-epd-enrichment | 2_DDC_Book/3.3-4D-BIM-CO2-Simulation/lifecycle-carbon-calculator | adapted (stage structure, data model and comparison logic; calculation defects fixed in an own tested helper, no factors or skill code copied) |
-| cut-sheet-qa | 1_DDC_Toolkit/Document-Control/submittal-tracker; 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor | inspired by (weak match) |
-| spooling-and-cutting | none | no DDC basis (own design) |
-| d2-code-validation | none | no DDC basis (own design; D2 = Finnish building code part D2, unconfirmed) |
+| cut-sheet-qa | 1_DDC_Toolkit/Document-Control/submittal-tracker; 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor | inspired by 1_DDC_Toolkit/Document-Control/submittal-tracker (+ 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor); weak match |
+| spooling-and-cutting | none | no DDC basis (own design); the DDC prefab-optimization skill is not a pipe-spool or cut-list skill |
+| d2-code-validation | none | no DDC basis (own design); D2 = Finnish National Building Code part D2 (indoor climate and ventilation), unconfirmed; alternatives open (Alok/Jussi to confirm) |
 | om-completeness | 5_DDC_Innovative/as-built-documentation; 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist | adapted |
 | bms-digital-twin | 5_DDC_Innovative/digital-twin-sync | adapted |
 | daily-report-cross-check | 1_DDC_Toolkit/Field-Operations/daily-report-generator; 3_DDC_Insights/Automation-Workflows/n8n-daily-report | adapted |
@@ -74,5 +74,6 @@ Notes:
 
 - qto-normalization uses `bim-qto` as the primary skill (Phase 33). `qto-report` quotes the DDC book, so only its method ideas are used and no book text is copied; `ifc-qto-extraction` is not used.
 - product-sourcing-mbom is inspired by a `cwicr-*` skill as a method only. No CWICR data (CC BY-NC 4.0 plus commercial licence) is used; the catalog sample is invented.
+- Phase 34: labels for agents 1, 5, 8, 9 and 10 are worded identically in each entry, this file and the inventory (own designs; none claims to follow a skill).
 - spooling-and-cutting and d2-code-validation have no DDC counterpart and keep the library repository as their `github_url`.
 - The nine older entries (airo, demo-rfi-triage and seven seed entries) are not adapted from DDC skills.

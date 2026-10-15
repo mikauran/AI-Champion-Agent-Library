@@ -1,7 +1,7 @@
 component_type: Agent
 id: "aic-cut-sheet-qa-001"
 name: "Cut-sheet QA"
-description: "Checks a product cut sheet against a specification excerpt requirement by requirement and drafts compliant, deviation or not-stated verdicts with the quoted source line for engineer review. Units are never converted. Output is a draft."
+description: "Checks a product cut sheet against a specification excerpt requirement by requirement and drafts compliant, deviation or not-stated verdicts with the quoted source line for engineer review. Units are never converted. Own design, inspired by 1_DDC_Toolkit/Document-Control/submittal-tracker (+ 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor). Output is a draft."
 metadata:
   category: "project-management"
   maturity: "experimental"
@@ -24,6 +24,7 @@ metadata:
     - "Synthetic sample in data/tryitout-prompts/cut-sheet-qa/"
     - "Intended in a connected setup: manufacturer data sheets and the project specification; not accessible from the Try It Out container"
   assumptions:
+    - "Label: inspired by 1_DDC_Toolkit/Document-Control/submittal-tracker (+ 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor); weak match, own design"
     - "Keys match by exact text equality"
     - "Only eq and ge tests on numbers written in the lines"
     - "Units are never converted; differing units are flagged for the engineer"
@@ -39,7 +40,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented cut sheet and specification excerpt; no real manufacturer or project data"
-  attribution: "Inspired by DDC skills 1_DDC_Toolkit/Document-Control/submittal-tracker and 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor (MIT, (c) 2026 DataDrivenConstruction); weak match; own design, no DDC code copied"
+  attribution: "inspired by 1_DDC_Toolkit/Document-Control/submittal-tracker (+ 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor) (MIT, (c) 2026 DataDrivenConstruction); weak match; own design, no DDC code copied"
   input_schema:
     - key: "input_text"
       label: "Cut sheet and specification excerpt (text)"

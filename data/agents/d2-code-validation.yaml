@@ -1,7 +1,7 @@
 component_type: Agent
 id: "aic-d2-code-validation-001"
 name: "D2 Code Validation"
-description: "Checks a ventilation design or commissioning data extract against supplied requirement rows room by room and drafts compliant, deviation or not-stated verdicts with the quoted design line for engineer review. D2 is read here as the Finnish National Building Code part D2, indoor climate and ventilation (an assumption). Units are never converted. Output is a draft."
+description: "Checks a ventilation design or commissioning data extract against supplied requirement rows room by room and drafts compliant, deviation or not-stated verdicts with the quoted design line for engineer review. Own design, no DDC basis. Assumption: D2 = Finnish National Building Code part D2 (indoor climate and ventilation); alternatives remain open, to be confirmed by Alok/Jussi. Units are never converted. Output is a draft."
 metadata:
   category: "project-management"
   maturity: "experimental"
@@ -24,7 +24,8 @@ metadata:
     - "Synthetic sample in data/tryitout-prompts/d2-code-validation/ with PLACEHOLDER requirement values"
     - "Intended in a connected setup: the public regulation text (Finnish government / environment ministry / Finlex publications) and the project ventilation design or commissioning data; not accessible from the Try It Out container"
   assumptions:
-    - "D2 is read as the Finnish National Building Code part D2 (indoor climate and ventilation); not defined in the task, to be confirmed"
+    - "Assumption: D2 = Finnish National Building Code part D2 (indoor climate and ventilation); not defined in the task, to be confirmed"
+    - "Open alternatives: another code or standard, or another meaning of D2; to be confirmed by Alok/Jussi. Label: no DDC basis (own design)"
     - "Requirement rows are supplied by the user; the agent never supplies regulation values from memory"
     - "Room id and key match by exact text equality"
     - "Only eq, ge and le tests on numbers written in the lines"
@@ -41,7 +42,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented design extract with placeholder requirement values; not regulation values; no real project data"
-  attribution: "No DDC basis (own design); D2 is read as the Finnish National Building Code part D2 (indoor climate and ventilation), which no DDC skill covers; the reading is unconfirmed"
+  attribution: "no DDC basis (own design); D2 = Finnish National Building Code part D2 (indoor climate and ventilation), which no DDC skill covers; the reading is unconfirmed"
   input_schema:
     - key: "input_text"
       label: "Design extract and requirement rows (text)"

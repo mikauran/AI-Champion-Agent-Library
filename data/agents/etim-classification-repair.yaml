@@ -1,7 +1,7 @@
 component_type: Agent
 id: "aic-etim-classification-repair-001"
 name: "ETIM & Classification Repair"
-description: "Reads a text extract of IFC element properties plus a small ETIM-style class excerpt and drafts one classification repair proposal per element (missing, wrong, unknown or ambiguous class), flagging every uncertain element for engineer review. Output is a draft."
+description: "Reads a text extract of IFC element properties plus a small ETIM-style class excerpt and drafts one classification repair proposal per element (missing, wrong, unknown or ambiguous class), flagging every uncertain element for engineer review. Own design, inspired by 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai (own design for ETIM-style mapping). Output is a draft."
 metadata:
   category: "compliance"
   maturity: "experimental"
@@ -26,6 +26,7 @@ metadata:
     - "The class excerpt in the input is the only source of valid codes"
     - "Property names follow IFC conventions"
     - "Units are metric"
+    - "Label: inspired by 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai (own design for ETIM-style mapping); weak match, own design"
   gaps:
     - "No live ETIM release: ETIM is licensed and not redistributed, the sample uses a small synthetic SYN- class list (SYN- prefix on purpose so codes cannot be mistaken for real ETIM codes)"
     - "No class-register lookup from the container (no network except the LLM proxy): the class excerpt is pasted into the input"
@@ -36,7 +37,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented element rows and invented SYN- class codes; no real project or ETIM data"
-  attribution: "Inspired by DDC skill 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai (MIT, (c) 2026 DataDrivenConstruction); weak match: the skill assigns UniFormat/MasterFormat/OmniClass codes, this agent repairs a pasted class excerpt; own design, no DDC code or data copied"
+  attribution: "inspired by 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai (own design for ETIM-style mapping) (MIT, (c) 2026 DataDrivenConstruction); weak match: the skill assigns UniFormat/MasterFormat/OmniClass codes, this agent repairs a pasted class excerpt; own design, no DDC code or data copied"
   input_schema:
     - key: "input_text"
       label: "IFC property extract and class excerpt"
