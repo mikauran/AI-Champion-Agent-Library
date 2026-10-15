@@ -1,14 +1,12 @@
-# SYNTHETIC SAMPLE - invented data. No real suppliers, prices or terms.
+# SYNTHETIC SAMPLE - invented data. No real suppliers, prices, terms or scores.
 ## RFQ
 rfq_line,description,qty,unit
 R-01,Copper pipe 22 mm,120,m
-R-02,Copper pipe 28 mm,45,m
-R-03,Ball valve DN22 brass,8,pcs
-R-04,Ball valve DN15 brass,14,pcs
-R-05,Mineral wool pipe insulation 22 mm,120,m
-R-06,Circulation pump 25-60,2,pcs
-R-07,Pipe clamp 22,100,pcs
-R-08,Floor drain DN50,6,pcs
+R-02,Ball valve DN22 brass,8,pcs
+R-03,Mineral wool pipe insulation 22 mm,120,m
+R-04,Circulation pump 25-60,2,pcs
+R-05,Pipe clamp 22,100,pcs
+R-06,Floor drain DN50,6,pcs
 ## QUOTE A
 supplier: SynSupplier A
 currency: EUR
@@ -17,13 +15,11 @@ delivery_terms: DAP site
 lead_time_days: 14
 rfq_line,offered_item,qty,unit,unit_price
 R-01,Copper pipe 22,120,m,9.80
-R-02,Copper pipe 28,45,m,14.20
-R-03,Brass ball valve DN22,8,pcs,18.50
-R-04,Brass ball valve DN15,14,pcs,12.40
-R-05,Mineral wool shell 22,120,m,3.10
-R-06,Circulation pump 25-60,2,pcs,289.00
-R-07,Pipe clamp 22,100,pcs,0.85
-R-08,Floor drain DN50,6,pcs,64.00
+R-02,Brass ball valve DN22,8,pcs,18.50
+R-03,Mineral wool shell 22,120,m,3.10
+R-04,Circulation pump 25-60,2,pcs,289.00
+R-05,Pipe clamp 22,100,pcs,0.85
+R-06,Floor drain DN50,6,pcs,64.00
 ## QUOTE B
 supplier: SynSupplier B
 currency: EUR
@@ -32,12 +28,10 @@ delivery_terms: DAP site
 lead_time_days: 10
 rfq_line,offered_item,qty,unit,unit_price
 R-01,Copper pipe 22,120,m,9.45
-R-02,Copper pipe 28,45,m,14.90
-R-03,Brass ball valve DN22,8,pcs,19.20
-R-04,Brass ball valve DN15,14,pcs,11.95
-R-06,Circulation pump 25-60,2,pcs,301.00
-R-07,Pipe clamp 22 pack of 10,10,pack10,8.20
-R-08,Floor drain DN50,6,pcs,66.50
+R-02,Brass ball valve DN22,8,pcs,19.20
+R-04,Circulation pump 25-60,2,pcs,301.00
+R-05,Pipe clamp 22 pack of 10,10,pack10,8.20
+R-06,Floor drain DN50,6,pcs,66.50
 ## QUOTE C
 supplier: SynSupplier C
 currency: SEK
@@ -46,10 +40,20 @@ delivery_terms: EXW
 lead_time_days: 7
 rfq_line,offered_item,qty,unit,unit_price
 R-01,Copper pipe 22,120,m,108.00
-R-02,Copper pipe 28,45,m,159.00
-R-03,Brass ball valve DN22,8,pcs,205.00
-R-04,Brass ball valve DN15,14,pcs,139.00
-R-05,Mineral wool shell 22,120,m,34.00
-R-06,Circulation pump 25-80,2,pcs,3350.00
-R-07,Pipe clamp 22 price per 100,1,100pcs,82.00
-R-08,Floor drain DN50,6,pcs,690.00
+R-02,Brass ball valve DN22,8,pcs,205.00
+R-03,Mineral wool shell 22,120,m,34.00
+R-04,Circulation pump 25-80,2,pcs,3350.00
+R-05,Pipe clamp 22 price per 100,1,100pcs,82.00
+R-06,Floor drain DN50,6,pcs,690.00
+## CRITERIA
+criterion,weight
+price,50
+delivery_time,20
+technical_compliance,20
+references,10
+## SCORES
+criterion,A,B,C
+price,6,9,5
+delivery_time,5,8,9
+technical_compliance,9,4,8
+references,8,3,4
