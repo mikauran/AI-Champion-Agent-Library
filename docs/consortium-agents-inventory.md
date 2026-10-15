@@ -29,11 +29,11 @@ Only the agent names are used here, with our own wording. The source slide is TU
 | 7 | Carbon & EPD enrichment | Sourcing | partial | data/agents/carbon-epd-enrichment.yaml | Counted: entry plus one container run on a synthetic product list and synthetic EPD excerpt (Phase 26, 26-03); map-and-flag only, no calculation, no live EPD register access. | 26 |
 | 8 | Cut-sheet QA | Manufacturing | partial | data/agents/cut-sheet-qa.yaml, data/agents/submittal-review-router.yaml (related) | Counted: entry plus one container run on a synthetic cut sheet and specification excerpt (Phase 27, 27-01); text only, about 6 requirements per run, no unit conversion. The submittal router stays as it was (submittal routing). | 27 |
 | 9 | Spooling & cutting | Manufacturing | partial | data/agents/spooling-and-cutting.yaml | Counted: entry plus one container run on a synthetic segment list (Phase 27, 27-02); copy and group only, cutting arithmetic and nesting left to a tool (to compute); no isometric/IFC parsing. | 27 |
-| 10 | D2 code validation | Site and handover | missing | none | `airo` checks regulations for AI use cases, not code validation of design data. | 28 |
+| 10 | D2 code validation | Site and handover | partial | data/agents/d2-code-validation.yaml | Counted: entry plus one container run on a synthetic ventilation extract with placeholder requirement rows (Phase 28, 28-01); D2 read as Finnish code part D2 (assumption); real regulation values not loaded; text only, about 6 rows per run, no unit conversion. | 28 |
 | 11 | O&M completeness | Site and handover | missing | none | No entry checks handover documentation. | 28 |
 | 12 | BMS digital twin | Site and handover | missing | none | No entry connects building management data to a model. | 28 |
 
-Summary: 0 full, 9 partial (1, 2, 3, 4, 5, 6, 7, 8, 9), 3 missing (10, 11, 12).
+Summary: 0 full, 10 partial (1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 2 missing (11, 12).
 
 Stage names: Design (IFC/BIM), Sourcing (LVI-INFO catalog), Manufacturing (prefab and cut sheets), Site and handover (O&M, BMS).
 

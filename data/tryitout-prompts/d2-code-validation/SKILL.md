@@ -18,7 +18,7 @@ Section `## Requirement checks`: one check line per requirement row in input ord
 `<req_id> room=<room_id> key=<key> test=<eq|ge|le> req=<required> <unit or -> | dx_line="<the design-extract line copied whole, or NONE>" dx_val=<value text or NONE> dx_unit=<unit text or -> | unit_same=<Y|N|-> | flag=<Y|N|-> | verdict=<compliant|deviation|not-stated>`
 
 How to fill (copy first, then tick):
-- `dx_line`: the design-extract line whose room_id equals the requirement's room_id AND whose key equals `key`, both by exact text equality. NONE if no line has both. A line of another room never counts. No synonyms, no similar key.
+- `dx_line`: scan the design extract for the line whose room_id equals the requirement's room_id AND whose key equals `key`, both by exact text equality. NONE only if no line has both. A line of another room never counts. No synonyms, no similar key. The unit and value of the line play NO role in finding it: a line with the right room and key but another unit is still found (copy it, then unit_same=N). Never write NONE when such a line exists.
 - `unit_same`: Y if the unit text of the requirement equals the unit text of the design line (both empty counts as Y), N if they differ, `-` when dx_line is NONE.
 - `flag`: one comparison of the two copied numbers. `eq`: Y if the two texts are identical, else N. `ge`: Y if the design number is greater than or equal to the required number, else N. `le`: Y if the design number is less than or equal to the required number, else N. `-` when dx_line is NONE or unit_same is N. NEVER convert units, NEVER derive values, NEVER round.
 
@@ -34,6 +34,7 @@ Worked lines (invented values, not from the input):
 - ge fail: `X-3 room=A2 key=flow test=ge req=10 l/s | dx_line="A2,flow,6,l/s" dx_val=6 dx_unit=l/s | unit_same=Y | flag=N | verdict=deviation`
 - le fail: `X-4 room=A2 key=power test=le req=3 kW | dx_line="A2,power,5,kW" dx_val=5 dx_unit=kW | unit_same=Y | flag=N | verdict=deviation`
 - unit differs: `X-5 room=A3 key=mass test=le req=2 kg | dx_line="A3,mass,1500,g" dx_val=1500 dx_unit=g | unit_same=N | flag=- | verdict=deviation`
+- same room and key, other unit and a different-looking number (still found, never NONE): `X-8 room=A3 key=level test=le req=500 ppm | dx_line="A3,level,0.05,%" dx_val=0.05 dx_unit=% | unit_same=N | flag=- | verdict=deviation` (note: `unit differs ppm vs %, not converted`)
 - missing key: `X-6 room=A3 key=noise test=le req=40 dB | dx_line=NONE dx_val=NONE dx_unit=- | unit_same=- | flag=- | verdict=not-stated`
 - line exists only for another room (the A4 line is not used for room A5): `X-7 room=A5 key=flow test=ge req=10 l/s | dx_line=NONE dx_val=NONE dx_unit=- | unit_same=- | flag=- | verdict=not-stated`
 

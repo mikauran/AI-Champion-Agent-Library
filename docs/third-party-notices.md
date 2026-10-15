@@ -60,6 +60,7 @@ SOFTWARE.
 | carbon-epd-enrichment | 5_DDC_Innovative/embodied-carbon-esg; 1_DDC_Toolkit/Sustainability/carbon-calculator | 2026-10-15 |
 | cut-sheet-qa | 1_DDC_Toolkit/Document-Control/submittal-tracker; 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor | 2026-10-15 |
 | spooling-and-cutting | 5_DDC_Innovative/prefab-optimization | 2026-10-15 |
+| d2-code-validation | 2_DDC_Book/4.3-BIM-Validation-Pipeline/ids-checker; 2_DDC_Book/2.5-Data-Modeling-Standards/standards-compliance-checker | 2026-10-15 |
 | (further entries: Phases 25-29) | | |
 
 ### Skills adapted in this repository
@@ -73,3 +74,4 @@ SOFTWARE.
 - carbon-epd-enrichment: ideas adapted from DDC skills 5_DDC_Innovative/embodied-carbon-esg and 1_DDC_Toolkit/Sustainability/carbon-calculator (MIT); own design; no DDC code, factors or text copied
 - cut-sheet-qa: ideas adapted from DDC skills 1_DDC_Toolkit/Document-Control/submittal-tracker and 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor (MIT); own design; no DDC code or text copied
 - spooling-and-cutting: ideas adapted from DDC skill 5_DDC_Innovative/prefab-optimization (MIT); own design; its optimisation algorithms not adopted; no DDC code or text copied
+- d2-code-validation: ideas adapted from DDC skills 2_DDC_Book/4.3-BIM-Validation-Pipeline/ids-checker and 2_DDC_Book/2.5-Data-Modeling-Standards/standards-compliance-checker (MIT); own design; no DDC code or text copied
