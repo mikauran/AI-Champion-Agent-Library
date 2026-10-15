@@ -30,8 +30,8 @@ With all flags off, `/mcp-test`, `POST /api/mcp-generate` and `/api/mcp-test/run
 - No real consortium data, no slide material, no real STK or LVI-INFO exports; all samples are synthetic or public. A repository sweep for secrets, personal data and company names found nothing blocking.
 
 ## Tests, build and smoke
-- Build record on the release branch (tip 850dbd8, before two small wording commits): `npm ci` ok; `SEARCH_EMBEDDINGS=off npm run build` exit 0, 20 s, 25 agents ingested, 0 failed; `npm run smoke` exit 0, 104/104 checks over 8 flag configurations (36 s).
-- Full test suite on the working branch at the last verification (Phase 29): 269 test files, 3072 tests (1 skipped). Not re-run in the release tree; 51 flag-related tests and 793 tests in the spec, scripts, data and Try It Out groups pass after the final commits.
+- Build record on the final release tip (f9ef5d0): `npm ci` ok; `SEARCH_EMBEDDINGS=off npm run build` exit 0, 19 s, 25 agents ingested, 0 failed; `npm run smoke` exit 0, 104/104 checks over 8 flag configurations (35 s).
+- Full `npm run check` in the release tree (svelte-kit sync, tsc, vitest): exit 0, 271 test files passed (1 skipped), 3075 tests passed (1 skipped). The two criteria tests that read `.planning/` are not part of the release.
 - Not run: the container image builds (`Containerfile`, `Containerfile.pi-runner`, `Containerfile.mcp-test-runner`), live Podman checks, browser and screen-reader checks (see `docs/human-verification-guide.md`).
 - Known build gotcha: a fresh checkout needs `mkdir -p db` before `npm run build` (the Containerfile does this).
 

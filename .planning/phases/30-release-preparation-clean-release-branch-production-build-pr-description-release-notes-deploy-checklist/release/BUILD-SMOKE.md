@@ -1,4 +1,4 @@
-# Build and smoke on release/agents-2026-10 (tip 850dbd8, worktree /home/ville/projects/aic-release)
+# Build and smoke on release/agents-2026-10 (final tip f9ef5d0, worktree /home/ville/projects/aic-release)
 
 Machine: 3.7 GB RAM, ~1.4 GB free before runs, Podman idle, nothing else running. No OOM, no retry with lower heap needed.
 
@@ -33,3 +33,17 @@ Flag-off proof at runtime: in the all-off configuration `/mcp-test` = 404, `POST
 - Working repo `git status --porcelain`: empty before this plan's artefacts; its db/ and node_modules were not touched (the release worktree's node_modules was reinstalled by `npm ci`, which replaced the hard-linked copy from Plan 01 with a separate tree).
 - Worktree not removed (Plan 04 lists `git worktree remove ../aic-release` as cleanup).
 - Logs: /home/ville/projects/scratch-{ci,build,smoke}.log (outside both trees).
+
+## Re-run on the FINAL tip f9ef5d0 (after the sweep fixes 70ab99b and f9ef5d0), run alone, Podman idle
+The tables above were measured on the earlier tip 850dbd8; these are the numbers for the release tip.
+
+| Step | Command | Exit | Wall | Max RSS |
+|---|---|---|---|---|
+| build | `mkdir -p db`, `SEARCH_EMBEDDINGS=off npm run build` | 0 | 18.9 s | 911 MB |
+| smoke | `npm run smoke` | 0 | 35.4 s | 936 MB |
+| check | `npm run check` (svelte-kit sync, tsc --noEmit, vitest run) | 0 | 4m12s | 808 MB |
+
+- Build: 25 succeeded, 0 failed ingested. Smoke: 104/104 checks, 8 configurations.
+- Check: 271 test files passed (1 skipped of 272), 3075 tests passed (1 skipped of 3076). Svelte a11y warnings only (same class as on the working branch). Working branch at Phase 16/18: 269 files, 3072 tests; the difference is the 2 removed criteria test files and later agent tests.
+- No failure was caused by the release exclusions or wording edits, so no fix commits were needed. The tip stays f9ef5d0.
+- Logs: /home/ville/projects/scratch-{build2,smoke2,check2}.log

@@ -46,7 +46,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 27: Manufacturing-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 28: Site and Handover Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 29: Further DDC-skill Agents** - see details (not started; execution order 24-30 first, then 21-23)
-- [ ] **Phase 30: Release Preparation** - see details (not started; execution order 24-30 first, then 21-23)
+- [x] **Phase 30: Release Preparation** - see details (not started; execution order 24-30 first, then 21-23)
 
 ## Phase Details
 
@@ -653,10 +653,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 30-01-PLAN.md — clean local release branch (snapshot, exclusion list) and flag-off proof for MCP_GENERATOR/MCP_TESTER
-- [ ] 30-02-PLAN.md — production build and smoke on the release branch in a worktree, alone, numbers recorded
-- [ ] 30-03-PLAN.md — confidentiality sweep of the release diff, PR-DESCRIPTION, RELEASE-NOTES, DEPLOY-CHECKLIST
-- [ ] 30-04-PLAN.md — verification, STATE/ROADMAP, pending-human items (AGENT_KINDS, internal docs)
+- [x] 30-01-PLAN.md — clean local release branch (snapshot, exclusion list) and flag-off proof for MCP_GENERATOR/MCP_TESTER
+- [x] 30-02-PLAN.md — production build and smoke on the release branch in a worktree, alone, numbers recorded
+- [x] 30-03-PLAN.md — confidentiality sweep of the release diff, PR-DESCRIPTION, RELEASE-NOTES, DEPLOY-CHECKLIST
+- [x] 30-04-PLAN.md — verification, STATE/ROADMAP, pending-human items (AGENT_KINDS, internal docs)
 
 
 ## Backlog (noted, postponed, not built)
