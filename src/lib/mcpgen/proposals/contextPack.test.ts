@@ -188,3 +188,17 @@ describe('pack truncation (CR-35)', () => {
     expect(total).toBeLessThanOrEqual(PACK_LIMITS.sampleTotalBytes + 10)
   })
 })
+
+// CR-46: documented as ok/gaps, so an internal exception must not escape.
+describe('buildContextPack never throws (CR-46)', () => {
+  it('maps an exception while planning to a pack-failed gap', () => {
+    const options = {
+      get limits(): never {
+        throw new Error('boom')
+      },
+    }
+    const r = buildContextPack({ source: { name: 'acme-openapi.yaml', text: fixtureText('acme-openapi.yaml') }, options: options as never })
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.gaps.map((g) => g.code)).toContain('pack-failed')
+  })
+})

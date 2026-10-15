@@ -14,6 +14,7 @@ import { stableJson } from '../generate.js'
 import { buildPlan } from '../plan.js'
 import type { DerivedTool, Gap, GenerateOptions, ServerPlan, SourceModel } from '../types.js'
 import { applyOps } from './apply.js'
+import { show } from './hygiene.js'
 import { checkOps, makeCtx, type Issue } from './gates.js'
 import type { ProposalProvenance } from './model.js'
 import { MAX_OPS, MAX_PROPOSAL_BYTES, PROPOSAL_VERSION, ProposalSetShapeSchema, type ProposalOp } from './schema.js'
@@ -68,7 +69,7 @@ function zodIssues(err: z.ZodError, opId: (path: PropertyKey[]) => string, gate:
   const seen = new Set<string>()
   const out: Issue[] = []
   for (const i of err.issues) {
-    const path = i.path.map((p) => (typeof p === 'number' ? `[${p}]` : String(p).replace(/[^A-Za-z0-9_]/g, '?').slice(0, 24))).join('.')
+    const path = i.path.map((p) => (typeof p === 'number' ? `[${p}]` : show(String(p)).replace(/[^A-Za-z0-9_]/g, '?').slice(0, 24))).join('.')
     const key = `${path}|${i.code}`
     if (seen.has(key) || out.length >= 12) continue
     seen.add(key)
@@ -93,7 +94,7 @@ export function evaluateProposals(input: EvaluateInput): Evaluation {
   if (Buffer.byteLength(input.text, 'utf8') > MAX_PROPOSAL_BYTES) return result({ fatal: [issue(1, 'file-too-large', '-', `The proposal file is larger than ${MAX_PROPOSAL_BYTES} bytes.`)] })
   let raw: unknown
   try {
-    raw = JSON.parse(input.text)
+    raw = JSON.parse(input.text.charCodeAt(0) === 0xfeff ? input.text.slice(1) : input.text) // a UTF-8 BOM is not part of the JSON (CR-37)
   } catch {
     return result({ fatal: [issue(1, 'bad-json', '-', 'The proposal file is not valid JSON.')] })
   }

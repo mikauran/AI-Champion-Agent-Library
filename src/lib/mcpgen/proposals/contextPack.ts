@@ -108,7 +108,16 @@ function scanFile(kind: 'source' | 'samples' | 'docs', label: string, text: stri
     .map((f) => err(`pack-credential-in-${kind}`, `Credential-like value (${f.kind}) on line ${f.line} of ${kind === 'source' ? 'the source' : `${kind} file ${label}`}. No context pack was written; remove it (use an env-var placeholder) and try again. The value is not shown.`, `${label}:${f.line}`))
 }
 
+/** Never throws: an emitter or planner exception becomes a `pack-failed` gap (CR-46). */
 export function buildContextPack(input: PackInput): PackResult {
+  try {
+    return buildContextPackUnchecked(input)
+  } catch {
+    return { ok: false, gaps: [err('pack-failed', 'The context pack could not be built (an internal error while generating the baseline). No pack was written.')] }
+  }
+}
+
+function buildContextPackUnchecked(input: PackInput): PackResult {
   const options = input.options ?? {}
   const sourceLabel = safeLabel(input.source.name, 'source.txt')
   if (isEnvFileName(String(input.source.name))) return { ok: false, gaps: [err('pack-env-file-refused', 'Environment files are never read.')] }
