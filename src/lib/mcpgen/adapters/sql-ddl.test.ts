@@ -132,3 +132,21 @@ describe('sql-ddl adapter', () => {
     if (r.ok) expect(r.adapterId).toBe('sql-ddl')
   })
 })
+
+// CR-10: a column whose name is a constraint keyword is still a column.
+describe('columns named like constraint keywords (CR-10)', () => {
+  const fieldNames = (sql: string) => ok(adapter.parse({ text: sql })).entities[0].fields.map((f) => f.name)
+  it('keeps period, exclude, key and index columns with parenthesised types', () => {
+    expect(
+      fieldNames("CREATE TABLE t (id integer primary key, period varchar(7), exclude char(1), key enum('a','b'), index set('x'), name text)"),
+    ).toEqual(['id', 'period', 'exclude', 'key', 'index', 'name'])
+    expect(fieldNames('CREATE TABLE t (id integer primary key, period numeric(5,2), name text)')).toEqual(['id', 'period', 'name'])
+    expect(fieldNames('CREATE TABLE t (id int, `key` varchar(20), `index` int(11), check_x int)')).toEqual(['id', 'key', 'index', 'check_x'])
+  })
+  it('still skips real constraints and indexes', () => {
+    const sql = `CREATE TABLE t (id int, name varchar(9), period_start date, period_end date,
+      PERIOD FOR system_time (period_start, period_end), CHECK (id > 0), CONSTRAINT c CHECK(id < 9),
+      EXCLUDE USING gist (name WITH =), EXCLUDE (name WITH =), KEY idx_name (name), KEY (name(10)), INDEX i2 (id, name), FULLTEXT KEY ft (name), UNIQUE KEY u (name))`
+    expect(fieldNames(sql)).toEqual(['id', 'name', 'period_start', 'period_end'])
+  })
+})

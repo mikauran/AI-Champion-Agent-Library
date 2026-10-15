@@ -374,7 +374,16 @@ function parseCreateTable(stmt: string, push: (g: Gap) => void, ctx: { so: ScanO
       if (names) tableUnique.push(names)
       continue
     }
-    if (/^(?:(?:FULLTEXT|SPATIAL)\s+)?(?:KEY|INDEX)\b[^(]*\((?!\s*\d+\s*(?:,\s*\d+\s*)?\))/i.test(s) || /^(?:CHECK|EXCLUDE|PERIOD)\b[^(]*\(/i.test(s)) continue
+    // Constraint-shaped items that are skipped. A column may be NAMED key, index, period or exclude, so the
+    // patterns require the real constraint shape: CHECK (, EXCLUDE [USING m] (, PERIOD FOR, and KEY/INDEX
+    // [name] ( identifiers ) where the list is not a type argument (digits) or enum/set labels (quotes) (CR-10).
+    if (
+      /^(?:(?:FULLTEXT|SPATIAL)\s+)?(?:KEY|INDEX)\b[^(]*\((?!\s*(?:\d+\s*(?:,\s*\d+\s*)?\)|'))/i.test(s) ||
+      /^CHECK\s*\(/i.test(s) ||
+      /^EXCLUDE\s*(?:USING\s+\w+\s*)?\(/i.test(s) ||
+      /^PERIOD\s+FOR\b/i.test(s)
+    )
+      continue
     if (/^LIKE\b/i.test(s)) {
       push(gap('unsupported-syntax', 'A LIKE clause (columns copied from another table) is not supported; those columns are missing.', { path: tname }))
       continue
