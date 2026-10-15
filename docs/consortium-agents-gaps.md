@@ -91,3 +91,17 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-084 | 12 BMS digital twin | Units are flagged, never converted | tool | open | Phase 28 | open |
 | G-085 | 12 BMS digital twin | Scoped to about 6 points per run; real point lists have thousands of points and must be batched | tool | open | Phase 28 | open |
 | G-086 | 12 BMS digital twin | Counted on the second run (job 187e5446) after one SKILL revision: SKILL v1 (job 013b53ce) dropped the review cell of one table row and wrote a `%%` typo; fixed by an explicit 8-cell row rule and worked rows; still one synthetic sample of 6 points, real point lists unproven | tool | open | Phase 28 | open |
+
+## DDC-derived agents (Phase 29)
+
+Agents 13-16 are chosen from the DDC skills (see docs/ddc-agent-candidates.md); they are not among the 12 consortium agents.
+
+| ID | Agent no/name | Gap | Type | Owner | Raised in | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| G-087 | 13 Daily report cross-check | Sample is synthetic: real daily reports and time-recording exports are confidential and were not used; behaviour on real data unproven | data | open | Phase 29 | open |
+| G-088 | 13 Daily report cross-check | Text only: no PDF or spreadsheet parsing, no weather or photo inputs (the DDC skill generates PDFs and pulls weather; not adopted) | tool | open | Phase 29 | open |
+| G-089 | 13 Daily report cross-check | Exact-text trade and date matching; no synonyms, no multilingual trade names, no several timesheet lines per trade (subcontractor split) | tool | open | Phase 29 | open |
+| G-090 | 13 Daily report cross-check | Identical-text comparison of numbers: formats such as 8.0 vs 8 are flagged as differences | tool | open | Phase 29 | open |
+| G-091 | 13 Daily report cross-check | Delay reasons are not assessed or categorised | tool | open | Phase 29 | open |
+| G-092 | 13 Daily report cross-check | Scoped to about 6 report lines per run; larger reports must be batched | tool | open | Phase 29 | open |
+| G-093 | 13 Daily report cross-check | Counted on the first run (job fdf1b5e2, SKILL v1, all six verdicts right, crane line and other-date line not used); still one synthetic sample of 6 lines, real reports unproven | tool | open | Phase 29 | open |

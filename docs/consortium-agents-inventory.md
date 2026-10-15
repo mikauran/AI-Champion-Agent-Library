@@ -41,6 +41,14 @@ Stage names: Design (IFC/BIM), Sourcing (LVI-INFO catalog), Manufacturing (prefa
 
 airo, electrical-panel-scheduler, energy-model-sync, hvac-load-calculator, mep-scope-planner, plumbing-fixture-unit-counter. These stay unchanged.
 
+## DDC-derived agents (Phase 29)
+
+These agents were chosen from the DDC skills; they are not among the 12 consortium agents (see docs/ddc-agent-candidates.md).
+
+| No | Agent | Stage | Status | Evidence | Notes |
+| --- | --- | --- | --- | --- | --- |
+| 13 | Daily Report Cross Check | Site and handover | partial | data/agents/daily-report-cross-check.yaml | Counted: entry plus one container run on a synthetic daily report and timesheet (Phase 29, 29-01); text only, about 6 lines per run. |
+
 ## MCP servers
 
 Entries for Ville's MCP servers are `kind: mcp-server` catalog manifests in `data/agents/<slug>/catalog.yaml`, ingested only with `AGENT_KINDS=on`. They describe the servers only; no data, keys or paths are included.
