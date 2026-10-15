@@ -15,50 +15,44 @@ Discipline labels in the report: `Rakenne` (structural), `Arkkitehti` (architect
 
 Status: `open` = new; `assigned`, `in_progress`, `resolved`, `approved`, `void` are copied. Closed statuses are resolved, approved and void. Open statuses are new, assigned and in_progress.
 
-Pair lookup, keyed on the two copied discipline labels (resolution_type | responsible_discipline). Find the group `disc_a`, then the line `disc_b`; both orders are listed, copy the line as it stands:
+Pair lookup (resolution_type | responsible_discipline). Build the key `disc_a + disc_b` from the two copied cells of the row IN THE SAME ORDER, find that exact line and copy everything after the arrow. The responsible_discipline is whatever the line says, it is not always the first or the second label. Both orders are listed:
 
-- disc_a = Rakenne:
-  - disc_b = Rakenne: ROUTE_AROUND | Rakenne
-  - disc_b = Arkkitehti: ROUTE_AROUND | Arkkitehti
-  - disc_b = Ilmanvaihto: ROUTE_AROUND | Ilmanvaihto
-  - disc_b = Putkisto: ROUTE_AROUND | Putkisto
-  - disc_b = Sähkö: ROUTE_AROUND | Sähkö
-  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
-- disc_a = Arkkitehti:
-  - disc_b = Rakenne: ROUTE_AROUND | Arkkitehti
-  - disc_b = Arkkitehti: ROUTE_AROUND | Arkkitehti
-  - disc_b = Ilmanvaihto: ROUTE_AROUND | Ilmanvaihto
-  - disc_b = Putkisto: ROUTE_AROUND | Putkisto
-  - disc_b = Sähkö: ROUTE_AROUND | Sähkö
-  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
-- disc_a = Ilmanvaihto:
-  - disc_b = Rakenne: ROUTE_AROUND | Ilmanvaihto
-  - disc_b = Arkkitehti: ROUTE_AROUND | Ilmanvaihto
-  - disc_b = Ilmanvaihto: RESIZE | Ilmanvaihto
-  - disc_b = Putkisto: ROUTE_AROUND | Putkisto
-  - disc_b = Sähkö: RAISE_LOWER | Sähkö
-  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
-- disc_a = Putkisto:
-  - disc_b = Rakenne: ROUTE_AROUND | Putkisto
-  - disc_b = Arkkitehti: ROUTE_AROUND | Putkisto
-  - disc_b = Ilmanvaihto: ROUTE_AROUND | Putkisto
-  - disc_b = Putkisto: ROUTE_AROUND | Putkisto
-  - disc_b = Sähkö: ROUTE_AROUND | Sähkö
-  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
-- disc_a = Sähkö:
-  - disc_b = Rakenne: ROUTE_AROUND | Sähkö
-  - disc_b = Arkkitehti: ROUTE_AROUND | Sähkö
-  - disc_b = Ilmanvaihto: RAISE_LOWER | Sähkö
-  - disc_b = Putkisto: ROUTE_AROUND | Sähkö
-  - disc_b = Sähkö: ROUTE_AROUND | Sähkö
-  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
-- disc_a = Sprinkler:
-  - disc_b = Rakenne: ROUTE_AROUND | Sprinkler
-  - disc_b = Arkkitehti: ROUTE_AROUND | Sprinkler
-  - disc_b = Ilmanvaihto: ROUTE_AROUND | Sprinkler
-  - disc_b = Putkisto: ROUTE_AROUND | Sprinkler
-  - disc_b = Sähkö: ROUTE_AROUND | Sprinkler
-  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
+- Rakenne + Rakenne -> ROUTE_AROUND | Rakenne
+- Rakenne + Arkkitehti -> ROUTE_AROUND | Arkkitehti
+- Rakenne + Ilmanvaihto -> ROUTE_AROUND | Ilmanvaihto
+- Rakenne + Putkisto -> ROUTE_AROUND | Putkisto
+- Rakenne + Sähkö -> ROUTE_AROUND | Sähkö
+- Rakenne + Sprinkler -> ROUTE_AROUND | Sprinkler
+- Arkkitehti + Rakenne -> ROUTE_AROUND | Arkkitehti
+- Arkkitehti + Arkkitehti -> ROUTE_AROUND | Arkkitehti
+- Arkkitehti + Ilmanvaihto -> ROUTE_AROUND | Ilmanvaihto
+- Arkkitehti + Putkisto -> ROUTE_AROUND | Putkisto
+- Arkkitehti + Sähkö -> ROUTE_AROUND | Sähkö
+- Arkkitehti + Sprinkler -> ROUTE_AROUND | Sprinkler
+- Ilmanvaihto + Rakenne -> ROUTE_AROUND | Ilmanvaihto
+- Ilmanvaihto + Arkkitehti -> ROUTE_AROUND | Ilmanvaihto
+- Ilmanvaihto + Ilmanvaihto -> RESIZE | Ilmanvaihto
+- Ilmanvaihto + Putkisto -> ROUTE_AROUND | Putkisto
+- Ilmanvaihto + Sähkö -> RAISE_LOWER | Sähkö
+- Ilmanvaihto + Sprinkler -> ROUTE_AROUND | Sprinkler
+- Putkisto + Rakenne -> ROUTE_AROUND | Putkisto
+- Putkisto + Arkkitehti -> ROUTE_AROUND | Putkisto
+- Putkisto + Ilmanvaihto -> ROUTE_AROUND | Putkisto
+- Putkisto + Putkisto -> ROUTE_AROUND | Putkisto
+- Putkisto + Sähkö -> ROUTE_AROUND | Sähkö
+- Putkisto + Sprinkler -> ROUTE_AROUND | Sprinkler
+- Sähkö + Rakenne -> ROUTE_AROUND | Sähkö
+- Sähkö + Arkkitehti -> ROUTE_AROUND | Sähkö
+- Sähkö + Ilmanvaihto -> RAISE_LOWER | Sähkö
+- Sähkö + Putkisto -> ROUTE_AROUND | Sähkö
+- Sähkö + Sähkö -> ROUTE_AROUND | Sähkö
+- Sähkö + Sprinkler -> ROUTE_AROUND | Sprinkler
+- Sprinkler + Rakenne -> ROUTE_AROUND | Sprinkler
+- Sprinkler + Arkkitehti -> ROUTE_AROUND | Sprinkler
+- Sprinkler + Ilmanvaihto -> ROUTE_AROUND | Sprinkler
+- Sprinkler + Putkisto -> ROUTE_AROUND | Sprinkler
+- Sprinkler + Sähkö -> ROUTE_AROUND | Sprinkler
+- Sprinkler + Sprinkler -> ROUTE_AROUND | Sprinkler
 
 - Any label not in the six above (either side): `ROUTE_AROUND | TO BE DECIDED BY COORDINATOR`.
 
@@ -72,7 +66,7 @@ Columns, in this order (14 cells, always):
 clash_id | status | type | pen | disc_a | disc_b | T1 | T2 | T3 | T4 | priority | resolution_type | responsible_discipline | flag
 ```
 
-1. Copy `clash_id`; `status` (open becomes new; the others are copied); `type` (hard or soft, copied from clash_type); `pen` (penetration_mm copied, `unknown` when empty); `disc_a`, `disc_b` (copied).
+1. Copy `clash_id`; `status` (open becomes new; the others are copied); `type` (hard or soft: the clash_type of THIS row, the second-last CSV field, the word just before the status; read it again for every row, never carry it over from the row above, a soft row between hard rows stays soft); `pen` (penetration_mm copied, `unknown` when empty); `disc_a`, `disc_b` (copied).
 2. Closed rows (status resolved, approved or void): write `-` in T1-T4, `not ranked` in priority, `-` in resolution_type and responsible_discipline and `closed` in flag. Stop.
 3. Open rows: answer four tests, each Y or N, from the copied cells of THIS row only:
    - `T1` = Y if type is hard AND (disc_a is Rakenne OR disc_b is Rakenne). Hard with Rakenne is Y whatever pen is (small or unknown too). Soft with Rakenne is N.
@@ -80,7 +74,7 @@ clash_id | status | type | pen | disc_a | disc_b | T1 | T2 | T3 | T4 | priority 
    - `T3` = Y if neither disc_a nor disc_b is Rakenne or Arkkitehti (both sides are MEP trades), else N.
    - `T4` = Y if type is soft, else N.
 4. `priority` is read from the truth table below with the four answers: find the one line that has your T1, T2, T3, T4 and copy its word. It is a pure function of the four cells; nothing else counts. Never write CRITICAL unless T1=Y.
-5. `resolution_type` and `responsible_discipline` are copied from the pair lookup line for (disc_a, disc_b).
+5. `resolution_type` and `responsible_discipline` are copied from the pair lookup line `disc_a + disc_b` (same order as the row cells).
 6. `flag` is `penetration missing` when pen is unknown, else `-`.
 
 Truth table (first Y wins, all N is MEDIUM), all 16 cases:
@@ -110,7 +104,7 @@ EX-2 | assigned | hard | 20 | Rakenne | Sähkö | Y | N | N | N | CRITICAL | ROU
 EX-3 | new | hard | unknown | Putkisto | Rakenne | Y | N | N | N | CRITICAL | ROUTE_AROUND | Putkisto | penetration missing
 EX-4 | new | hard | 150 | Ilmanvaihto | Sprinkler | N | Y | Y | N | HIGH | ROUTE_AROUND | Sprinkler | -
 EX-5 | in_progress | hard | 100 | Ilmanvaihto | Sähkö | N | N | Y | N | MEDIUM | RAISE_LOWER | Sähkö | -
-EX-6 | new | soft | 10 | Sähkö | Sprinkler | N | N | Y | Y | MEDIUM | ROUTE_AROUND | Sprinkler | -
+EX-6 | new | soft | 10 | Sprinkler | Putkisto | N | N | Y | Y | MEDIUM | ROUTE_AROUND | Sprinkler | -
 EX-7 | new | hard | 30 | Arkkitehti | Putkisto | N | N | N | N | MEDIUM | ROUTE_AROUND | Putkisto | -
 EX-8 | assigned | soft | 35 | Ilmanvaihto | Rakenne | N | N | N | Y | LOW | ROUTE_AROUND | Ilmanvaihto | -
 EX-9 | resolved | hard | 70 | Ilmanvaihto | Sähkö | - | - | - | - | not ranked | - | - | closed

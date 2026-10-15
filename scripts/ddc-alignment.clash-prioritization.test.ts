@@ -28,15 +28,9 @@ const header = lines[0]!.split(',')
 const rows: Row[] = lines.slice(1).map((l) => Object.fromEntries(l.split(',').map((v, i) => [header[i]!, v])))
 
 const ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']
-// Pair matrix in SKILL.md: `- disc_a = X:` groups with `  - disc_b = Y: RES | RESP` lines (ordered pairs).
+// Pair matrix in SKILL.md: 36 ordered lines `- X + Y -> RES | RESP`.
 const MATRIX: Record<string, [string, string]> = {}
-let curA = ''
-for (const l of skill.split('\n')) {
-  const a = /^- disc_a = (\S+):$/.exec(l)
-  if (a) curA = a[1]!
-  const b = /^ {2}- disc_b = (\S+): (\w+) \| (\S+)$/.exec(l)
-  if (b) MATRIX[`${curA}+${b[1]}`] = [b[2]!, b[3]!]
-}
+for (const m of skill.matchAll(/^- (\S+) \+ (\S+) -> (\w+) \| (\S+)$/gm)) MATRIX[`${m[1]}+${m[2]}`] = [m[3]!, m[4]!]
 const PAIRS: Record<string, [string, string]> = {}
 for (const [k, v] of Object.entries(MATRIX)) PAIRS[k.split('+').sort().join('+')] = v
 const rank: Record<string, number> = { Rakenne: 1, Arkkitehti: 2, Ilmanvaihto: 3, Putkisto: 4, Sähkö: 5, Sprinkler: 6 }
