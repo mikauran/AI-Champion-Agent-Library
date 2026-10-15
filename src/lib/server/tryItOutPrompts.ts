@@ -18,7 +18,8 @@ import { eq } from 'drizzle-orm'
 import { parse as parseYaml } from 'yaml'
 import { z } from 'zod'
 import { db, agents } from './db'
-import { agentKindsEnabled } from '../flags.js'
+import { agentKindsEnabled, localMcpAgentsEnabled } from '../flags.js'
+import { LOCAL_MCP_SLUGS } from '../localMcp/slugs.js'
 
 /** WR-09: flag-on only. Systems, skills, MCP servers and external agents are never run. */
 async function assertRunnableKind(agentId: string): Promise<void> {
@@ -71,6 +72,16 @@ async function readSkillFile(agentId: string): Promise<{ text: string; path: str
   try {
     return { text: await readFile(skillPath, 'utf-8'), path: skillPath }
   } catch {
+    // Phase 36 (D-637): flag on and a local slug only; otherwise the error below is unchanged.
+    if (localMcpAgentsEnabled() && LOCAL_MCP_SLUGS.includes(agentId)) {
+      const localDir = process.env.TRYITOUT_PROMPTS_LOCAL_DIR ?? join(process.cwd(), 'data', 'tryitout-prompts-local')
+      const localPath = join(localDir, agentId, 'SKILL.md')
+      try {
+        return { text: await readFile(localPath, 'utf-8'), path: localPath }
+      } catch {
+        throw new Error(`missing skill file for agent ${agentId}: ${localPath}`)
+      }
+    }
     // Failed runs must report the REAL cause (CONTEXT.md discretion rule),
     // never an unhandled ENOENT.
     throw new Error(`missing skill file for agent ${agentId}: ${skillPath}`)
