@@ -28,8 +28,8 @@ See: .planning/PROJECT.md (updated 2026-10-14)
 
 ## Current Position
 
-Phase: 21 (Generator Stage 0) is the next phase to plan; Phases 21-23 are planned, not started. Of the 25 roadmap phases, 21 are built (1, 2.1, 2.2, 3-20); Phase 2 is the only earlier phase not closed (human checkpoint 02-04).
-Plan: 02-04 (human checkpoint) not executed, not faked. Phases 21-23 have no PLAN files yet.
+Phase: 21 and 22 are complete (22 verification human_needed); Phase 23 (Code Review) is next, not started. Of the 25 roadmap phases, 21 are built (1, 2.1, 2.2, 3-20); Phase 2 is the only earlier phase not closed (human checkpoint 02-04).
+Plan: 02-04 (human checkpoint) not executed, not faked. Phase 23 has no PLAN files yet.
 Status: Verification per phase: `passed` for 1, 2.1, 2.2, 5, 6, 7, 8, 12, 20; `human_needed` for 3, 4, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19 (automated evidence complete; browser, live-container, paid-key and real-service checks pending); Phase 2 has no VERIFICATION file (pending its checkpoint).
 Final verified numbers on main (2026-10-14, after the last merge): `npm run check` (svelte-kit sync, tsc, vitest) twice exit 0: 269 test files passed (1 skipped), 3072 tests passed (1 skipped); `SEARCH_EMBEDDINGS=off npx vite build` exit 0; `npm run smoke` 104/104 (8 flag configurations). Generated packages' own pytest pass on FastMCP 3.4.8 and 4.1.0 (counts in `18-VERIFICATION.md`).
 Last activity: 2026-10-14, phases 16-20 recorded, phases 21-23 planned, `.planning` audited.
@@ -225,7 +225,7 @@ Environment constraint: this machine has 3.7 GB RAM. Do not run Podman checks al
 - Phase 15 question 9: calibration runs against the study's legacy arms? Question 10: should uploaded servers ever be run (default: no, only fake variants and generator samples)?
 - Phase 14 question 1 (zip download vs platform-hosted output) and the tabular 5-row limit were covered by D-478 (all remaining defaults confirmed).
 
-**Next planned work (needs a go from you):** Phases 21, 22, 23 (ROADMAP.md). Phase 22 starts with a first real proposal from an agent session for you to review.
+**Next planned work (needs a go from you):** Phase 23 (ROADMAP.md). Pending on you from Phase 22: review `src/lib/mcpgen/proposals/real/acme-openapi.proposals.json` and sign off the comparison (`phases/22-proposal-layer-follow-ups/22-HUMAN-UAT.md`).
 
 
 ## Autonomous run 2026-10-14 (phases 24-30, then 21-23)
@@ -254,3 +254,4 @@ Order: 24 -> 30, then 21 -> 23. Cap: $0.50 per agent run, $10 total.
 - Phase 30 COMPLETE (verification human_needed): local branch release/agents-2026-10 tip f9ef5d0 in worktree /home/ville/projects/aic-release (7 commits on origin/main, not pushed, no upstream). Method: tree snapshot onto origin/main (gsd-pr-branch workflow file absent). Exclusions: consortium inventory/gaps docs, two .planning-reading criteria tests, .planning/.claude. Final-tip build exit 0, smoke 104/104, npm run check 271 files / 3075 tests pass. Sweep CLEAN-WITH-NOTES. Pending for Ville: see phases/30-*/release/PENDING-HUMAN.md. Next: Phases 21-23.
 
 - Phase 21 COMPLETE (verification passed): hygiene filter, read-only annotations, outputSchema/structuredContent, deterministic order; goldens regenerated in commit 5188702 (50 files, goldens only); 26 generated packages pass pytest on FastMCP 3.4.8 and 4.1.0; npm run check 277 files / 3319 tests pass (1 skipped). Phase 21-23 changes are NOT on release/agents-2026-10 (later PR, see phases/21-generator-stage-0/PENDING-HUMAN.md). Next: Phase 22, 23.
+- Phase 22 COMPLETE (verification human_needed): first real proposal (9 ops, Acme OpenAPI, review by Ville pending), baseline vs proposal-assisted comparison (no regression; local-exec run disqualified for both, not informative), negation-aware write-claim hygiene (D-609), derived_filter on OData is a final limitation (D-610); npm run check 279 files / 3352 tests pass (1 skipped). Next: Phase 23.

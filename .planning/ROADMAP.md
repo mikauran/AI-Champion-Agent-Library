@@ -38,7 +38,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 19: Generator Input Kinds** - Swagger 2.0, OAuth2, OpenAPI 3.1 audit, SQL dialects, Prisma, OData (outside the GSD flow)
 - [x] **Phase 20: Proposal Layer and Context Pack** - Data-only proposals and context pack, stages 1-2 (outside the GSD flow)
 - [x] **Phase 21: Generator Stage 0** - Description cleanup, tool annotations, outputSchema, deterministic tool order (complete 2026-10-15, verification passed)
-- [ ] **Phase 22: Proposal Layer Follow-ups** - First real proposal reviewed, baseline vs proposal run, hygiene tuning, derived_filter on OData (not started)
+- [x] **Phase 22: Proposal Layer Follow-ups** - First real proposal reviewed, baseline vs proposal run, hygiene tuning, derived_filter on OData (complete 2026-10-15, verification human_needed: Ville's review of the proposal pending)
 - [ ] **Phase 23: Code Review of New Generator Code** - Review, fixes and security audit of everything added since the Phase 14 review (not started)
 - [x] **Phase 24: Agent Inventory and Catalog Template** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 25: Design-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
@@ -524,14 +524,15 @@ Plans:
   3. Hygiene false positives (D-585) are tuned from real proposals
   4. `derived_filter` on OData (currently `odata-unsupported-op`, skipped in examples) is supported or its limitation is documented as final
 
+**Status:** Complete 2026-10-15; verification `human_needed` (criterion 1, review by Ville, pending; criterion 4 resolved as a final limitation, D-610)
 **Plans:** 5 plans
 
 Plans:
-- [ ] 22-01-PLAN.md — First real proposal from this agent session on the Acme OpenAPI fixture via the context pack; gates, findings log, review by Ville pending in 22-HUMAN-UAT.md (wave 1)
-- [ ] 22-02-PLAN.md — Baseline vs proposal-assisted through mcp-propose-eval and mcp-test --allow-local-exec, Phase 15 scorer, no platform model calls, spend cap $0.50 (wave 2)
-- [ ] 22-03-PLAN.md — Hygiene false-positive tuning from the real proposal, tests in both directions, security checks untouched (wave 2)
-- [ ] 22-04-PLAN.md — derived_filter on OData: spike, decide support vs final limitation, implement or document with tests (wave 3)
-- [ ] 22-05-PLAN.md — npm run check alone, VERIFICATION, ROADMAP/STATE, decisions with revert steps (wave 4)
+- [x] 22-01-PLAN.md — First real proposal from this agent session on the Acme OpenAPI fixture via the context pack; gates, findings log, review by Ville pending in 22-HUMAN-UAT.md (wave 1)
+- [x] 22-02-PLAN.md — Baseline vs proposal-assisted through mcp-propose-eval and mcp-test --allow-local-exec, Phase 15 scorer, no platform model calls, spend cap $0.50 (wave 2)
+- [x] 22-03-PLAN.md — Hygiene false-positive tuning from the real proposal, tests in both directions, security checks untouched (wave 2)
+- [x] 22-04-PLAN.md — derived_filter on OData: spike, decide support vs final limitation, implement or document with tests (wave 3)
+- [x] 22-05-PLAN.md — npm run check alone, VERIFICATION, ROADMAP/STATE, decisions with revert steps (wave 4)
 
 ### Phase 23: Code Review of New Generator Code
 
@@ -577,7 +578,7 @@ Phases execute in numeric order, with decimal phases between their integers: 1, 
 | 19. Generator Input Kinds | outside GSD flow | Complete (human_needed) | 2026-10-14 |
 | 20. Proposal Layer and Context Pack | outside GSD flow | Complete (passed) | 2026-10-14 |
 | 21. Generator Stage 0 | 5/5 | Complete (passed) | 2026-10-15 |
-| 22. Proposal Layer Follow-ups | 0/0 | Not started | - |
+| 22. Proposal Layer Follow-ups | 5/5 | Complete (human_needed) | 2026-10-15 |
 | 23. Code Review of New Generator Code | 0/0 | Not started | - |
 
 ### Phase 24: Agent inventory, catalog entry template, MCP-server entries and DDC license check
