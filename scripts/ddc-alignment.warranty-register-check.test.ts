@@ -99,6 +99,15 @@ describe('warranty-register-check alignment', () => {
     })
   })
 
+  it('the worked attention list of SKILL.md names every verdict except register-ok, in order', () => {
+    const outBlock = /Output rows:\s*```\n([\s\S]*?)```/.exec(skill)![1].trim().split('\n')
+    const want = outBlock.map((l) => l.replace(/^\||\|$/g, '').split('|').map((c) => c.trim())).filter((c) => c[7] !== 'register-ok').map((c) => `${c[0]}: ${c[7]}`)
+    const list = /Attention list[^`]*```\n([\s\S]*?)```/.exec(skill)![1].trim().split('\n')
+    expect(list).toEqual(want)
+    expect(list).toContain('V-2: expiring-soon')
+    expect(list).toContain('V-3: expired')
+  })
+
   it('SKILL.md and the entry give no coverage, claim or contact advice', () => {
     const positive = (skill + entry).split('\n').filter((l) => !/never|nothing is said|no claim|not adopted|no contact|says nothing|say nothing/i.test(l)).join('\n')
     expect(positive).not.toMatch(/\b(file|submit|make|start)\b[^.\n]{0,20}\bclaim\b/i)

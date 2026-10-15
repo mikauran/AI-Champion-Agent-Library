@@ -45,7 +45,7 @@ No code fence around the whole file. Exactly this:
 
 The 8 columns are `warranty_id | status_class | days_remaining | dates_consistent | document_present | contact_present | coverage_present | verdict`. Then exactly one row per input warranty, each row written like the output rows in the worked rows below, in input order, none dropped, none invented, all 8 cells filled in every row.
 
-`## Warranties needing attention` then one line per warranty whose verdict is not `register-ok`, in input order: `warranty_id: verdict`. If there is none, write `none`. No other words, no advice.
+`## Warranties needing attention` then one line per warranty whose verdict is ANY word other than `register-ok`, in input order: `warranty_id: verdict`. This includes `expiring-soon` and `expired`: only `register-ok` rows are left out. The number of lines equals the number of table rows whose verdict is not `register-ok`. If there is none, write `none`. No other words, no advice.
 
 End with: `Draft for engineer review. Synthetic input; dates were calculated by a tool, not by this agent, and nothing is said about what a warranty covers or whether a claim is possible.`
 
@@ -79,6 +79,20 @@ Output rows:
 | V-8 | expiring-soon | 79 | N | N | N | Y | dates-inconsistent |
 | V-9 | active | 975 | Y | Y | Y | N | data-incomplete |
 | V-10 | expiring-soon | 39 | Y | N | Y | Y | documents-missing |
+```
+
+Attention list for these rows (every verdict except register-ok, so 9 lines, including V-2 expiring-soon and V-3 expired):
+
+```
+V-2: expiring-soon
+V-3: expired
+V-4: documents-missing
+V-5: contact-missing
+V-6: dates-inconsistent
+V-7: data-incomplete
+V-8: dates-inconsistent
+V-9: data-incomplete
+V-10: documents-missing
 ```
 
 Why: V-1 is active with everything present and consistent, so register-ok. V-2 is expiring-soon and everything else is fine, so expiring-soon. V-3 is expired (negative days), so expired. V-4 has document_present N and nothing earlier fits, so documents-missing. V-5 has contact_present N, so contact-missing. V-6 has dates_consistent N (row 2), so dates-inconsistent although it is also active. V-7 has `-` in status_class and dates_consistent (row 1); the `-` cells are copied, nothing is filled in. V-8 has dates_consistent N, which comes before the missing documents and contact (row 2), so dates-inconsistent. V-9 has coverage_present N (row 1), so data-incomplete. V-10 is expiring-soon but its document_present is N, and row 4 comes before row 6, so documents-missing.

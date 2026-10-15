@@ -149,3 +149,27 @@ COUNTED on run 2 (SKILL revision 1). Option A (compose stack, tagged image), usa
   ```
 - Caveat: the revision added worked row W-10, which has the same shape as sample record Q-06 (minor defect with action, accepted NCR without response); the pass on run 2 therefore shows the model can follow that pattern, not that it generalises. No numeric or date test (overdue NCR response not detected); record-ok does not mean the work is acceptable.
 - Ledger: two 35-04 rows. Spend plan 35-04: 0.0391 USD (2 runs); fix-run total 0.7240 USD of 5 USD. Teardown: `podman-compose ... down`, `podman ps -a --filter label=aic.tryitout -q` empty.
+
+## Agent 20 Warranty register (plan 35-05)
+
+Label: built on 1_DDC_Toolkit/Closeout/warranty-tracker (spec docs/ddc-alignment/warranty-register-check.md, committed before any agent file; key and rubric R1-R7 written before the runs; SKILL.md 446 lines and instructions.md 28 lines read in full; path verified with gh api). 12 skill defects recorded in the spec; the main ones: date.today() in seven places, end date as start plus years*365 days (drifts a day or more across leap days), end_date never checked against start plus duration, get_expiring_warranties filters status ACTIVE (more than 90 days left) and then end <= today+90, so with the default window it is always empty and expiring_soon in the summary is always 0, no check for a missing document or contact, claimed and void statuses unreachable. Helper src/lib/warranty/warrantyStatus.ts (19 tests written first, regression tests for the drift, the 90-day boundaries 0/90/91, the 29 February rule and the dates check) and CLI scripts/warranty-status.ts; the helper also computes the three text-presence checks so the model has no ticks of its own. Verdicts are register-completeness only; nothing reads coverage or claim eligibility.
+
+COUNTED on run 2 (SKILL revision 1). Option A (compose stack, tagged image), usage observed, countable true, no direct-call fallback, synthetic label.
+- Run 1: job 3dcb94e7-a873-4585-91f5-763143c54085, gpt-4.1-mini, 8558 tokens, 2 requests, est. 0.0137 USD, SKILL v1. All 7 table rows matched the key and the helper cell by cell, but the attention list named only 4 of the 6 required warranties (W-02 expiring-soon and W-03 expired were left out). R7 FAIL, not counted.
+- Run 2: job 01156eba-c010-407e-ad8a-e5694bd94506, gpt-4.1-mini, 8863 tokens, 2 requests, est. 0.0142 USD, SKILL v2 (revision 1: attention rule states that every verdict except register-ok is listed, plus a worked attention list). Key vs result: W-01 register-ok, W-02 expiring-soon, W-03 expired, W-04 documents-missing, W-05 contact-missing, W-06 dates-inconsistent, W-07 data-incomplete; the 7 rows and the 6-line attention list equal the key; `npx tsx scripts/warranty-status.ts <sample> <result>` reports "result table matches the helper on every cell". R1-R7 met (R7: header and separator row present; the model left out the blank line after the as_of line, harmless).
+- Excerpt:
+  ```
+  ## Warranty register check
+  as_of: 2026-03-02
+  | warranty_id | status_class | days_remaining | dates_consistent | document_present | contact_present | coverage_present | verdict |
+  |---|---|---|---|---|---|---|---|
+  | W-02 | expiring-soon | 12 | Y | Y | Y | Y | expiring-soon |
+  | W-03 | expired | -20 | Y | Y | Y | Y | expired |
+  | W-06 | active | 761 | N | Y | Y | Y | dates-inconsistent |
+  | W-07 | - | - | - | Y | Y | Y | data-incomplete |
+  ## Warranties needing attention
+  W-02: expiring-soon / W-03: expired / W-04: documents-missing / W-05: contact-missing / W-06: dates-inconsistent / W-07: data-incomplete
+  Draft for engineer review. Synthetic input; dates were calculated by a tool, not by this agent, and nothing is said about what a warranty covers or whether a claim is possible.
+  ```
+- Caveat: the input already contains the helper columns (the user must run the helper first); the sample has no blank-coverage row and no 29 February start (helper tests and SKILL worked rows V-8 to V-10 cover those); the revision added a worked attention list, so the pass shows the model can follow that pattern. Durations in months are not supported (whole years only).
+- Ledger: two 35-05 rows. Spend plan 35-05: 0.0279 USD (2 runs); fix-run total 0.7519 USD of 5 USD. Teardown: `podman-compose ... down`, `podman ps -a --filter label=aic.tryitout -q` empty, no containers left.
