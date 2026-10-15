@@ -634,12 +634,16 @@ Plans:
 ### Phase 29: Further DDC-skill one-step agents (same done bar)
 
 **Goal:** Choose further DDC skills that make useful one-step agents and build them to the same done bar. Quality over count; list remaining candidates instead of rushing them. Attribution per the Phase 24 license check.
-**Requirements**: TBD
+**Requirements**: CONS-D1, CONS-D2, CONS-D3, CONS-D4, CONS-VER
 **Depends on:** Phase 28
-**Plans:** 0 plans
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 29 to break down)
+- [ ] 29-01-PLAN.md - Selection document docs/ddc-agent-candidates.md plus agent 13 Daily Report Cross Check, wave 1
+- [ ] 29-02-PLAN.md - Agent 14 Punch List Closure Check, wave 2 (run after 29-01)
+- [ ] 29-03-PLAN.md - Agent 15 Change Order Consistency Check, wave 3 (run after 29-02)
+- [ ] 29-04-PLAN.md - Agent 16 Safety Observation Classification, wave 4 (run after 29-03)
+- [ ] 29-05-PLAN.md - Verification aggregation, npm run check, STATE.md, wave 5
 
 ### Phase 30: Release preparation (clean release branch, production build, PR description, release notes, deploy checklist)
 
