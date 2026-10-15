@@ -12,3 +12,14 @@ describe('projection override with no valid field (CR-41)', () => {
     expect(p.gaps.map((g) => g.code)).toContain('projection-unknown-field')
   })
 })
+
+describe('unusable API key name (CR-08)', () => {
+  const withName = (paramName: string) => ({ ...acmeHttp, auth: { ...acmeHttp.auth, paramName } })
+  it('reports it and falls back to the default name', () => {
+    const p = buildPlan(withName('x-api-key:v2'), {})
+    expect(p.gaps.map((g) => g.code)).toContain('auth-name-invalid')
+  })
+  it('is silent for a valid name', () => {
+    expect(buildPlan(withName('X-Api-Key'), {}).gaps.map((g) => g.code)).not.toContain('auth-name-invalid')
+  })
+})

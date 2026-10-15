@@ -401,6 +401,10 @@ export function buildPlan(input: SourceModel, options: GenerateOptions = {}, ext
     badLimit('maxPageSize')
     delete limits.maxPageSize
   }
+  // CR-08: a key name the emitter cannot use is replaced by the default; say so (the OData adapter reports it itself).
+  if ((model.auth.scheme === 'apiKeyHeader' || model.auth.scheme === 'apiKeyQuery') && model.auth.paramName !== undefined && !/^[A-Za-z0-9_-]{1,64}$/.test(model.auth.paramName)) {
+    gaps.push(gap('auth-name-invalid', `The API key ${model.auth.scheme === 'apiKeyQuery' ? 'query parameter' : 'header'} name in the source is not usable (letters, digits, underscore and hyphen, at most 64); the default name was used.`, { path: 'auth' }))
+  }
   let backend = model.backend
   if (backend.delimiter !== undefined && ![',', ';', '\t'].includes(backend.delimiter)) {
     gaps.push(gap('delimiter-invalid', 'The data file delimiter is not a comma, semicolon or tab; a comma was assumed.', { path: 'delimiter' }))
