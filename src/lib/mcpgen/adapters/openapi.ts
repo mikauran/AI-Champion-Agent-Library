@@ -240,7 +240,10 @@ function typeOf(node: Obj): FieldType {
 const isNullable = (node: Obj) => node.nullable === true || node['x-nullable'] === true || (Array.isArray(node.type) && node.type.includes('null'))
 
 function enumOf(node: Obj): string[] | undefined {
-  if (!Array.isArray(node.enum)) return undefined
+  if (!Array.isArray(node.enum)) {
+    const c = node.const // 3.1 const: a one-value enum
+    return typeof c === 'string' || typeof c === 'number' || typeof c === 'boolean' ? [String(c)] : undefined
+  }
   const vals = node.enum.filter((v) => typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean').map(String)
   return vals.length > 0 ? vals.slice(0, 50) : undefined
 }
@@ -258,14 +261,42 @@ function fieldFlags(name: string, entityId: string): Pick<Field, 'identifier' | 
   return out
 }
 
+/**
+ * The 3.1 nullable idiom: anyOf or oneOf of exactly one schema plus `{type: "null"}`. Returns the one schema (resolved),
+ * or undefined for any other union (CR-05).
+ */
+function nullableUnion(root: Obj, node: Obj): Obj | undefined {
+  for (const key of ['anyOf', 'oneOf'] as const) {
+    const list = node[key]
+    if (!Array.isArray(list) || list.length !== 2) continue
+    const resolved = list.map((m) => {
+      try {
+        return isObj(m) ? deref(root, m).node : undefined
+      } catch {
+        return undefined
+      }
+    })
+    if (resolved.some((m) => m === undefined)) continue
+    const isNull = (m: Obj | undefined) => m !== undefined && m.type === 'null' && Object.keys(m).every((k) => k === 'type' || k === 'description')
+    const nulls = resolved.filter(isNull).length
+    if (nulls === 1) return resolved.find((m) => !isNull(m))
+  }
+  return undefined
+}
+
 function buildField(root: Obj, ctx: SchemaCtx, name: string, schema: unknown, entityId: string): { field: Field; nested?: NestedCollection } {
-  const { node } = deref(root, schema)
-  noteUnreadKeywords(node)
+  const outer = deref(root, schema).node
+  noteUnreadKeywords(outer)
+  const inner = nullableUnion(root, outer)
+  if (!inner && (Array.isArray(outer.anyOf) || Array.isArray(outer.oneOf))) {
+    note('schema-keyword-unsupported', 'A schema uses anyOf or oneOf with several real alternatives; the field type is reported as unknown.')
+  }
+  const node = inner ?? outer
   const type = typeOf(node)
   const field: Field = { name, type, ...fieldFlags(name, entityId) }
-  const description = clean(node.description)
+  const description = clean(outer.description) || clean(node.description)
   if (description) field.description = description
-  if (isNullable(node)) field.nullable = true
+  if (inner || isNullable(node) || isNullable(outer)) field.nullable = true
   const en = enumOf(node)
   if (en && type !== 'array' && type !== 'object') field.enum = en
   let nested: NestedCollection | undefined

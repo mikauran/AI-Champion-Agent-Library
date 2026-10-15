@@ -168,3 +168,30 @@ describe('audit gaps are stable and carry no document text', () => {
     expect(codes(ok(doc(THING)))).not.toContain('webhooks-ignored')
   })
 })
+
+// CR-05: the 3.1 nullable idiom and const.
+describe('3.1 nullable unions and const (CR-05)', () => {
+  const schema = `type: object
+properties:
+  thing_id: { type: string }
+  nick: { anyOf: [{ type: string }, { type: "null" }] }
+  owner: { oneOf: [{ $ref: "#/components/schemas/Owner" }, { type: "null" }] }
+  kind: { const: a }
+  mixed: { anyOf: [{ type: string }, { type: integer }] }
+`
+  const text = doc(schema).replace('components:\n  schemas:\n', 'components:\n  schemas:\n    Owner:\n      type: object\n      properties:\n        owner_id: { type: string }\n')
+  const r = ok(text)
+  it('anyOf [T, null] is T and nullable', () => {
+    expect(field(r, 'nick')).toMatchObject({ type: 'string', nullable: true })
+  })
+  it('oneOf [$ref, null] is the referenced type and nullable', () => {
+    expect(field(r, 'owner')).toMatchObject({ type: 'object', nullable: true })
+  })
+  it('const becomes a one-value enum', () => {
+    expect(field(r, 'kind').enum).toEqual(['a'])
+  })
+  it('a union of several real types stays unknown and is reported', () => {
+    expect(field(r, 'mixed').type).toBe('unknown')
+    expect(codes(r)).toContain('schema-keyword-unsupported')
+  })
+})
