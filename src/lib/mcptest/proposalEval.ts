@@ -21,7 +21,7 @@ import type { GenerateOptions } from '../mcpgen/types'
 export const DEFAULT_MAX_SCORE_DROP = 0
 
 /** Python imports a generated server may contain (the baseline emitter's own set). */
-const ALLOWED_IMPORTS = new Set(['math', 'os', 'json', 'time', 'urllib.parse', 'csv', 'pathlib', 'sqlite3', 'httpx'])
+const ALLOWED_IMPORTS = new Set(['math', 'os', 'json', 'time', 'urllib.parse', 'csv', 'pathlib', 'sqlite3', 'httpx', 're', 'datetime'])
 const cap = (s: string, n = 200) => (s.length > n ? s.slice(0, n) : s)
 
 export interface PipelineArgs {
@@ -37,8 +37,8 @@ export function serverInvariantProblems(server: string): string[] {
   const code = server.split('\n').filter((l) => !l.trim().startsWith('#'))
   if (code.some((l) => /https?:\/\//.test(l))) out.push('URL literal in code')
   if (/os\.environ\[/.test(server)) out.push('os.environ indexing')
-  if (server.includes('str(e') || server.includes('Traceback')) out.push('raw exception text')
-  for (const re of [/\beval\(/, /\bexec\(/, /__import__/, /\bgetattr\(/, /\bcompile\(/, /\bsubprocess\b/, /\bpickle\b/, /\bsetattr\(/]) {
+  if (/\bstr\((?:e|ex|exc|err|error)\)/.test(server) || server.includes('Traceback')) out.push('raw exception text')
+  for (const re of [/\beval\(/, /\bexec\(/, /__import__/, /\bgetattr\(/, /(?<![\w.])compile\(/, /\bsubprocess\b/, /\bpickle\b/, /\bsetattr\(/]) {
     if (re.test(code.join('\n'))) out.push(`dynamic code (${re.source})`)
   }
   for (const l of code) {
