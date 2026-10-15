@@ -262,3 +262,4 @@ Order: 24 -> 30, then 21 -> 23. Cap: $0.50 per agent run, $10 total.
 
 ### Autonomous run end (2026-10-15)
 All phases 21-30 executed. Spend: ~$1.09 of $10 (upper-bound estimates, 36 ledger rows, .planning/spend-log.md; OpenAI dashboard is ground truth). Config mode was already "yolo"; unchanged. Release branch (release/agents-2026-10, tip f9ef5d0) does NOT include phases 21-23 (D-606). Pending on Ville: see phase PENDING-HUMAN/HUMAN-UAT files (30, 22, 23, 25-29), docs/consortium-agents-gaps.md (G-001..G-114).
+- Fix run / Phase 32 / Agent 3 aligned with clash-resolution-analyzer: ATTEMPTED NOT COUNTED (4 live runs failed; small model cannot copy fired-rule into priority cell nor build patterns). RETURN: scoped retry (priority-per-row step; pattern grouping separate step or deterministic helper). Fix-run spend so far ~$0.12.
