@@ -42,7 +42,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 23: Code Review of New Generator Code** - Review, fixes and security audit of everything added since the Phase 14 review (not started)
 - [x] **Phase 24: Agent Inventory and Catalog Template** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 25: Design-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
-- [ ] **Phase 26: Sourcing-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
+- [x] **Phase 26: Sourcing-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [ ] **Phase 27: Manufacturing-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [ ] **Phase 28: Site and Handover Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [ ] **Phase 29: Further DDC-skill Agents** - see details (not started; execution order 24-30 first, then 21-23)

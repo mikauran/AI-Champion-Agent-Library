@@ -244,3 +244,4 @@ Order: 24 -> 30, then 21 -> 23. Cap: $0.50 per agent run, $10 total.
 - Phase 25 COMPLETE: 4/4 agents counted (agent 3 passed after redesign; run 5 job 1aa6f1be…). Agent 4 RFI generation counted (job a5ef49db…). Spend total ~$0.20 of $10. Next: Phase 26 (agents 5-7).
 - Phase 26 / Agent 5 Product sourcing: COUNTED on third attempt (scoped to 6 lines x 6 rows, job 41f820ae; earlier 12 x 13 attempts failed). Limit recorded as G-037.
 - Phase 26 / Agent 6 Quote comparison: COUNTED (job eaee09d8…, ~$0.025). Spend ~$0.32.
+- Phase 26 COMPLETE: agents 5 (scoped, 1/3 runs passed), 6, 7 counted. Next: Phase 27 (agents 8, 9).

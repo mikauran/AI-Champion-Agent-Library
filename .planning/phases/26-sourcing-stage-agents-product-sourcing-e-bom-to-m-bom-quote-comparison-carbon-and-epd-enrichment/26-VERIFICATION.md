@@ -91,3 +91,6 @@ COUNTED (SKILL v1, first run, rubric R1-R7 met).
 - Caveat: draft for engineer review; one synthetic sample (10 products), a single run.
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: one 26-03 row (0.0233 USD).
+
+## Phase result (aggregated)
+Agents 5, 6, 7 counted. Agent 5 is counted only for a scoped step (6 E-BOM lines x 6 catalog rows) and passed on 1 of 3 runs in that scope plus failed on 12x13 scope: reliability is limited; see 26-HUMAN-UAT.md. `npm run check` green (273 files, 3118 tests).
