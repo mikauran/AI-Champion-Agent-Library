@@ -25,7 +25,7 @@ Rules: units must agree between product and declared unit before any multiplicat
 
 ## 3. Outputs
 
-Skill: material, assembly and project carbon, by stage and category, intensity, benchmark rating, alternatives table, suggestions, report. Agent (one `output/result.md`): `## Product checks` (one line per product), `## Per-product rows` (one row per product, stage values copied), `## Totals and comparison` (all `to compute (tool)`), `## Open items for the engineer`, caveat. The tested helper `scripts/carbon-lifecycle.ts` computes stage values, stage totals, the A-C total and the alternative comparison from the input and can check the model's mapping cells.
+Skill: material, assembly and project carbon, by stage and category, intensity, benchmark rating, alternatives table, suggestions, report. Agent (one `output/result.md`): `## Product checks` (one line per product), `## Per-product rows` (one row per product, 15 cells: product_id, option, qty, unit, epd, declared_unit, the six stage cells, unit_ok, expired, status; stage cells copied for matched rows, `-` otherwise), `## Totals and comparison` (all `to compute (tool)` plus the option lists), `## Open items for the engineer`, caveat. The tested helper `scripts/carbon-lifecycle.ts` computes stage values, stage totals, the A-C total and the alternative comparison from the input and can check the model's mapping cells.
 
 ## 4. Adapted to Finnish MEP
 
@@ -90,7 +90,7 @@ Expected helper numbers (by hand): X-05 A1-A3 60 x 4.2 = 252, A4 60 x 0.3 = 18, 
 
 - R1 Each product appears exactly once, in input order, in `## Product checks` and in `## Per-product rows`.
 - R2 EPD mapping by exact material key only: candidates X-01 EPD-01,EPD-06; X-02 NONE; X-03 EPD-02; X-04 EPD-03; X-05 EPD-04; X-06 EPD-05; no mapping by name or similarity.
-- R3 Status per the lookup: X-01 ambiguous, X-02 no-epd, X-03 unit-mismatch, X-04 expired, X-05 and X-06 matched; review YES for the four problem rows, NO for the two matched.
+- R3 Status per the lookup: X-01 ambiguous, X-02 no-epd, X-03 unit-mismatch, X-04 expired, X-05 and X-06 matched; the open-items list names exactly the four problem rows.
 - R4 Stage values copied exactly for matched rows (X-05 4.2, 0.3, 0.1, ND, 0.2, ND; X-06 3.5 and ND for the rest); `ND` kept for undeclared stages (written `not declared` or `ND`, never 0 or blank); `-` stage cells for non-matched rows.
 - R5 No model arithmetic: no sums, products, conversions, counts or ranking; the totals and comparison lines say `to compute (tool)`.
 - R6 Every value labelled synthetic; no invented EPD ids, numbers or dates.

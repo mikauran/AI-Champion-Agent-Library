@@ -59,7 +59,7 @@ Paths are relative to the DDC repository root. "Built on the skill" means the sk
 | rfi-generation-from-findings | 1_DDC_Toolkit/Document-Control/rfi-management | adapted |
 | product-sourcing-mbom | 1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement | inspired by (method only; no CWICR data) |
 | quote-comparison | 1_DDC_Toolkit/Procurement/bid-analysis-comparator | adapted (concepts; weighted-score defects fixed in an own tested helper, no skill code copied) |
-| carbon-epd-enrichment | 2_DDC_Book/3.3-4D-BIM-CO2-Simulation/lifecycle-carbon-calculator | adapted (calculation not adopted) |
+| carbon-epd-enrichment | 2_DDC_Book/3.3-4D-BIM-CO2-Simulation/lifecycle-carbon-calculator | adapted (stage structure, data model and comparison logic; calculation defects fixed in an own tested helper, no factors or skill code copied) |
 | cut-sheet-qa | 1_DDC_Toolkit/Document-Control/submittal-tracker; 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor | inspired by (weak match) |
 | spooling-and-cutting | none | no DDC basis (own design) |
 | d2-code-validation | none | no DDC basis (own design; D2 = Finnish building code part D2, unconfirmed) |
