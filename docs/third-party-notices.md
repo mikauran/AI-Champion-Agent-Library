@@ -69,11 +69,13 @@ Paths are relative to the DDC repository root. "Built on the skill" means the sk
 | punch-list-closure-check | 1_DDC_Toolkit/Field-Operations/punch-list-manager; 1_DDC_Toolkit/Project-Closeout/punch-list-manager | inspired by 1_DDC_Toolkit/Field-Operations/punch-list-manager (+ 1_DDC_Toolkit/Project-Closeout/punch-list-manager); idea only, closure rules own design |
 | change-order-consistency-check | 1_DDC_Toolkit/Cost-Management/change-order-processor | inspired by 1_DDC_Toolkit/Cost-Management/change-order-processor; idea only, log-versus-form check own design; change-order-manager and change-order-analysis read, not the basis |
 | safety-observation-classification | 1_DDC_Toolkit/Field-Operations/safety-inspection; 3_DDC_Insights/Safety-Quality/safety-inspection-checklist | loosely related to 1_DDC_Toolkit/Field-Operations/safety-inspection (+ 3_DDC_Insights/Safety-Quality/safety-inspection-checklist); weak match, topic only; keyword lookup own design |
+| procurement-lead-time-check | 1_DDC_Toolkit/Procurement/material-procurement-tracker | built on 1_DDC_Toolkit/Procurement/material-procurement-tracker (data model, must-order-by rule, late-to-order rule, 14-day window, status words; dates computed by an own tested helper with the skill's date.today() and window defects fixed; no skill code copied, no book text) |
 
 Notes:
 
 - qto-normalization uses `bim-qto` as the primary skill (Phase 33). `qto-report` quotes the DDC book, so only its method ideas are used and no book text is copied; `ifc-qto-extraction` is not used.
 - product-sourcing-mbom is inspired by a `cwicr-*` skill as a method only. No CWICR data (CC BY-NC 4.0 plus commercial licence) is used; the catalog sample is invented.
+- procurement-lead-time-check (Phase 35) is built on `material-procurement-tracker`: the item data model, the rule must order by = required date minus lead time and the late and 14-day rules are the skill's; its code is not copied.
 - Phase 34: labels for agents 1, 5, 8, 9 and 10 are worded identically in each entry, this file and the inventory (own designs; none claims to follow a skill).
 - spooling-and-cutting and d2-code-validation have no DDC counterpart and keep the library repository as their `github_url`.
 - The nine older entries (airo, demo-rfi-triage and seven seed entries) are not adapted from DDC skills.

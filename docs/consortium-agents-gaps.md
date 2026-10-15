@@ -116,6 +116,10 @@ Agents 13-16 are chosen from the DDC skills (see docs/ddc-agent-candidates.md); 
 | G-112 | 16 Safety observation classification | No photo, location or hazard-ranking inputs; no corrective action tracking (DDC safety-inspection features not adopted) | tool | open | Phase 29 | open |
 | G-113 | 16 Safety observation classification | Scoped to about 6 observations and a table of about 6 lines per run; real logs must be batched | tool | open | Phase 29 | open |
 | G-114 | 16 Safety observation classification | Counted on the first run (job c5bc6732, SKILL v1, all six categories, severity hints, statuses and the multi-match note right, no advice or incident statement); still one synthetic sample of 6 observations with a placeholder table, real logs unproven | tool | open | Phase 29 | open |
+| G-115 | 17 Procurement lead time check | Dates are not calculated by the agent: the user or harness must run the tested helper (scripts/procurement-lead-time.ts) first and the output is the agent input; a list without the precomputed columns cannot be checked | tool | open | Phase 35 | open |
+| G-116 | 17 Procurement lead time check | Lead time in calendar days is an assumption: the DDC skill does not say calendar or working days; no working-day or holiday calendar | tool | open | Phase 35 | open |
+| G-117 | 17 Procurement lead time check | No delivery-date risk check (the skill's expected delivery is unused), no quantities, units, PO amounts, status counts, summary or spreadsheet export from the source skill; priority is copied, not used in a rule | tool | open | Phase 35 | open |
+| G-118 | 17 Procurement lead time check | Sample is synthetic (invented items, vendors and PO numbers); real procurement logs are confidential and were not used; behaviour on real data unproven; scoped to about 7 items per run | data | open | Phase 35 | open |
 
 ## Changelog
 

@@ -31,7 +31,7 @@ Base AgentSpec fields (`component_type`, `id`, `name`, `description`, `system_pr
 | maturity | yes (base) | production, beta or experimental | `experimental` |
 | tags | no | search keywords | `[rfi, bim]` |
 | stage | yes | design, sourcing, manufacturing or site-handover | `design` |
-| agent_no | yes for the 12 consortium agents and the DDC-derived agents | number 1-12 from the inventory; 13-16 for the DDC-derived agents (Phase 29) | `4` |
+| agent_no | yes for the 12 consortium agents and the DDC-derived agents | number 1-12 from the inventory; 13-16 for the DDC-derived agents (Phase 29), 17-20 for the further DDC-derived agents (Phase 35) | `4` |
 | purpose | yes | the one semantic step and who it serves | "Drafts an RFI from a clash finding for the BIM coordinator" |
 | inputs | yes | list of what goes in (non-empty) | `["Clash report excerpt"]` |
 | outputs | yes | list of what comes out (non-empty), always drafts | `["Draft RFI text"]` |

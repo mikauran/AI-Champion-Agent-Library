@@ -29,6 +29,7 @@ const UPDATES: Array<{ slug: string; mode: string; url: string | null; taskTempl
   { slug: 'punch-list-closure-check', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'change-order-consistency-check', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'safety-observation-classification', mode: 'runnable', url: null, taskTemplate: null },
+  { slug: 'procurement-lead-time-check', mode: 'runnable', url: null, taskTemplate: null },
 ]
 
 export function setTryItOutMode(dbPath: string): Array<{ slug: string; mode: string; changes: number }> {
