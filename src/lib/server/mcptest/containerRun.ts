@@ -2,7 +2,7 @@
 // Flow: createAndStart -> putFiles (driver tree, request.json, package) -> exec the driver -> getFiles(/work/out)
 // -> remove (always). The container is the isolation; the web process never runs a generated server.
 // Verified only against createFakeRuntime; a real engine is a pending human check.
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { hostname } from 'node:os'
 import { join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -96,8 +96,20 @@ const TEXT_EXT = new Set(['.ts', '.json', '.jsonl', '.yaml', '.yml', '.md', '.mj
 const DRIVER_ENTRY = 'src/lib/mcptest/driver.ts'
 const SUITE_PREFIX = 'src/lib/mcptest/suite/'
 
+/**
+ * The first candidate directory that holds the driver entry, else the last one. In dev the module sits in the repo,
+ * so the root is four levels above it. In the built server import.meta.url is a bundled chunk (/app/build/...) and that
+ * guess is wrong (CR-47): the runtime image copies the driver sources next to the build, so the working directory
+ * (or MCPTEST_DRIVER_ROOT) finds them.
+ */
+export function resolveDriverRoot(candidates: (string | undefined)[]): string {
+  const list = candidates.filter((c): c is string => typeof c === 'string' && c !== '')
+  for (const c of list) if (existsSync(join(c, DRIVER_ENTRY))) return c
+  return list[list.length - 1] ?? ''
+}
+
 function repoRoot(): string {
-  return fileURLToPath(new URL('../../../../', import.meta.url))
+  return resolveDriverRoot([process.env.MCPTEST_DRIVER_ROOT, fileURLToPath(new URL('../../../../', import.meta.url)), process.cwd()])
 }
 
 /**

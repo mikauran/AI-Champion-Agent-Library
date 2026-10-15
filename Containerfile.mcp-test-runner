@@ -25,7 +25,7 @@ RUN apt-get update \
 # `npm install --prefix /` with cwd / fails on npm 10.9 ("Tracker idealTree already exists", E9 defect D4).
 RUN mkdir /deps && cd /deps \
     && npm install --no-save --no-audit --no-fund --ignore-scripts \
-      yaml@2.9.1 zod@4.6.7 fflate@0.8.3 tsx@4.23.15 \
+      yaml@2.9.1 zod@4.6.7 fflate@0.8.3 sax@1.6.1 tsx@4.23.15 \
     && cd / && mv /deps/node_modules /node_modules && rm -rf /deps \
     && npm cache clean --force
 

@@ -66,6 +66,11 @@ COPY --from=builder /app/build ./build
 COPY --from=builder /app/db ./db
 COPY --from=builder /app/data/tryitout-prompts ./data/tryitout-prompts
 COPY --from=builder /app/package.json ./package.json
+# The MCP test runner stages the driver sources into its container (src/lib/server/mcptest/containerRun.ts reads them
+# from the working directory); without these three the feature fails with "driver sources could not be read".
+COPY --from=builder /app/src/lib/mcptest ./src/lib/mcptest
+COPY --from=builder /app/src/lib/mcpgen ./src/lib/mcpgen
+COPY --from=builder /app/src/lib/spec/security.ts ./src/lib/spec/security.ts
 RUN mkdir -p /app/runtime/tryitout-work /app/runtime/auth \
     && chown -R node:node /app
 
