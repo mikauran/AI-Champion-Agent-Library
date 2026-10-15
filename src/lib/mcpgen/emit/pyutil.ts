@@ -1,6 +1,6 @@
 // Small helpers for writing Python source text. Everything that reaches generated Python as a
 // string goes through pyStr (exact literals) or cleanText (docstrings and messages).
-import { cleanSpecText, isControlCode } from '../hygiene.js'
+import { cleanSpecText, clipText, stripControl } from '../hygiene.js'
 import { redactSecrets } from '../redact.js'
 
 /** A valid Python string literal for any JS string. */
@@ -51,12 +51,6 @@ export function pyLit(v: unknown, indent = 0): string {
   return 'None'
 }
 
-function stripInvisible(s: string): string {
-  let out = ''
-  for (const ch of s) out += isControlCode(ch.codePointAt(0)!) ? ' ' : ch
-  return out
-}
-
 /**
  * Text taken from the source model (descriptions, labels, summaries) is untrusted. This makes it
  * safe inside a triple-quoted docstring or a message literal: no control characters, no quotes,
@@ -65,7 +59,7 @@ function stripInvisible(s: string): string {
  */
 export function cleanText(s: unknown, max = 200): string {
   let t = typeof s === 'string' ? s : s === undefined || s === null ? '' : String(s)
-  t = stripInvisible(t.slice(0, 8192))
+  t = stripControl(clipText(t, 8192))
   t = t
     .replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ')
     .replace(/\\/g, '/')
@@ -73,7 +67,7 @@ export function cleanText(s: unknown, max = 200): string {
     .replace(/\s+/g, ' ')
     .trim()
   t = redactSecrets(t).trim()
-  return t.length > max ? `${t.slice(0, max - 3).trimEnd()}...` : t
+  return t.length > max ? `${clipText(t, max - 3).trimEnd()}...` : t
 }
 
 /** cleanText for text that originates in the source document and is published in descriptions. */

@@ -2,7 +2,7 @@
 // published to the model that uses the server, so URLs, markup, template syntax, credential-shaped text,
 // control characters and instruction-like text must not survive.
 import { describe, expect, it } from 'vitest'
-import { cleanSpecText, cleanSpecTextFlagged, hasControl } from './hygiene'
+import { URL_LIKE, cleanSpecText, cleanSpecTextFlagged, hasControl } from './hygiene'
 import { cleanText } from './emit/pyutil'
 import { generate } from './generate'
 import { acmeHttp } from './testing/sample-models'
@@ -178,5 +178,38 @@ describe('CR-39 invisible characters', () => {
   })
   it('ordinary text, accents and emoji are untouched', () => {
     expect(cleanSpecText('Café résumé 日本語 ok')).toBe('Café résumé 日本語 ok')
+  })
+})
+
+describe('CR-40 truncation never leaves a lone surrogate', () => {
+  const lone = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/
+  it('cleanText cuts an emoji across the limit cleanly', () => {
+    const t = 'a'.repeat(76) + '\u{1F600}tail'
+    const out = cleanText(t, 80)
+    expect(out).not.toMatch(lone)
+    expect(out.endsWith('...')).toBe(true)
+    expect(out.length).toBeLessThanOrEqual(80)
+  })
+  it('cleanSpecText cuts an emoji across the limit cleanly', () => {
+    const out = cleanSpecText('a'.repeat(76) + '\u{1F600}tail', 80)
+    expect(out).not.toMatch(lone)
+  })
+  it('a lone surrogate in the source is replaced', () => {
+    expect(cleanText('x\ud83dy')).not.toMatch(lone)
+    expect(cleanSpecText('x\ud83dy')).not.toMatch(lone)
+  })
+})
+
+describe('CR-42 domain endings', () => {
+  it.each(['See evil.xyz for info', 'See evil.co.uk now', 'See example[.]com now', 'See example(dot)org now', 'Go to a.de today'])(
+    'removes the link from: %s',
+    (raw) => {
+      const out = cleanSpecText(raw)
+      expect(out).not.toMatch(/evil|example|a\.de|\[\.\]|\(dot\)/)
+      expect(URL_LIKE.some((re) => re.test(raw))).toBe(true)
+    },
+  )
+  it('does not touch ordinary dotted names', () => {
+    expect(cleanSpecText('Use order.id or item.sh here')).toBe('Use order.id or item.sh here')
   })
 })

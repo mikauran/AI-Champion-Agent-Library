@@ -26,17 +26,36 @@ export function hasControl(s: string): boolean {
 }
 
 /** Replace every control, zero-width and bidi character with a space. */
-function stripControl(s: string): string {
+export function stripControl(s: string): string {
   let out = ''
-  for (const ch of s) out += isControlCode(ch.codePointAt(0)!) ? ' ' : ch
+  for (const ch of s) {
+    const c = ch.codePointAt(0)!
+    out += isControlCode(c) || (c >= 0xd800 && c <= 0xdfff) ? ' ' : ch // a lone surrogate breaks JSON/UTF-8 consumers
+  }
   return out
 }
+
+/** s.slice(0, n) that never leaves half of a surrogate pair (review CR-40). */
+export function clipText(s: string, n: number): string {
+  if (n <= 0) return ''
+  if (s.length <= n) return s
+  const last = s.charCodeAt(n - 1)
+  return s.slice(0, last >= 0xd800 && last <= 0xdbff ? n - 1 : n)
+}
+
+// Domain endings treated as links. Not a public-suffix list: only endings that are rarely a file extension
+// or a field name (review CR-42; "in", "it", "to", "no", "me", "sh", "cc", "page" are left out on purpose).
+const TLDS =
+  'com|org|net|io|dev|ai|app|edu|gov|example|local|internal|test|xyz|co|uk|de|fr|ru|cn|info|biz|us|eu|fi|se|nl|tk|top|site|online|cloud|tech|ly|tv|shop|store|link|click|club|live|fun|icu|jp|kr|br|au|ca|ch|es|pl|ua'
+// Obfuscated dots: "example[.]com", "example(dot)com".
+const OBFUSCATED_DOT = /\[\.\]|\(dot\)|\[dot\]/i
 
 /** Detection patterns (test only; not global). */
 export const URL_LIKE: RegExp[] = [
   /\b[a-z][a-z0-9+.-]{1,31}:\/\//i,
   /\bwww\./i,
-  /\b[a-z0-9-]+\.(?:com|org|net|io|dev|ai|app|edu|gov|example|local|internal|test)\b/i,
+  new RegExp(`\\b[a-z0-9-]+\\.(?:${TLDS})(?![a-z0-9_])`, 'i'),
+  OBFUSCATED_DOT,
   /\]\(/,
   /\bmailto:/i,
 ]
@@ -46,13 +65,12 @@ export const MARKUP = /[<>`]|\$\{|\{\{|<%|%>/
 // leading unbounded `\S*` is quadratic on a long token (review CR-38).
 const SCHEME_AT = /[a-z][a-z0-9+.-]{1,31}:\/\//i
 const WWW_AT = /(?:^|[^a-z0-9_])www\./i
-const TLDS = 'com|org|net|io|dev|ai|app|edu|gov|example|local|internal|test'
 const DOMAIN_AT = new RegExp(`[a-z0-9-]\\.(?:${TLDS})(?![a-z0-9_])`, 'i')
 const isLabelChar = (c: string): boolean => /[a-z0-9.-]/i.test(c)
 
 /** The word without its link, or '' when it is dropped whole. */
 function dropLink(w: string): string {
-  if (SCHEME_AT.test(w) || WWW_AT.test(w) || /mailto:/i.test(w)) return ''
+  if (SCHEME_AT.test(w) || WWW_AT.test(w) || /mailto:/i.test(w) || OBFUSCATED_DOT.test(w)) return ''
   const m = DOMAIN_AT.exec(w)
   if (!m) return w
   let a = m.index
@@ -88,7 +106,7 @@ export function cleanSpecTextFlagged(s: unknown, max = 200): CleanSpecResult {
     t = redactSecrets(t).replace(/\s+/g, ' ').trim()
     // Tidy the gaps that removal leaves before punctuation.
     t = t.replace(/\s+([.,;:!?])/g, '$1')
-    if (t.length > max) t = `${t.slice(0, Math.max(0, max - 3)).trimEnd()}...`
+    if (t.length > max) t = `${clipText(t, Math.max(0, max - 3)).trimEnd()}...`
     return { text: t, flagged: r.flagged }
   } catch {
     return { text: '', flagged: false }
