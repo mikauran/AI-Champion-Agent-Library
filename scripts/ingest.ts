@@ -1,5 +1,6 @@
 import { readdir, readFile, mkdir, lstat } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
+import { existsSync } from 'node:fs'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { eq, sql } from 'drizzle-orm'
@@ -12,7 +13,8 @@ import { buildSearchText, contentHash, recordToSearchable, recordToSearchableWit
 import type { Searchable } from '../src/lib/server/search/documents.js'
 import { EMBEDDING_DIM, createTransformersEmbedder, vectorToBlob } from '../src/lib/server/search/embedder.js'
 import type { Embedder } from '../src/lib/server/search/embedder.js'
-import { agentKindsEnabled } from '../src/lib/flags.js'
+import { agentKindsEnabled, localMcpAgentsEnabled } from '../src/lib/flags.js'
+import { LOCAL_MCP_SLUGS } from '../src/lib/localMcp/slugs.js'
 import { ensureAgentKindsTable } from '../src/lib/spec/kinds-ddl.js'
 import { clampExtras } from '../src/lib/spec/kinds.js'
 import type { SubmissionFile } from '../src/lib/spec/kinds.js'
@@ -463,9 +465,56 @@ async function ingestInto(sqlite: Database.Database, dataDir: string, opts?: { e
 
 export { ingest }
 
+const LOCAL_DIR = process.env.INGEST_LOCAL_DIR ?? './data/agents-local'
+
+/**
+ * D-637: with LOCAL_MCP_AGENTS off, delete the rows of the local-MCP slugs (an earlier flag-on ingest
+ * may have left them). Never fails the ingest. Deletes nothing when the slugs are absent.
+ */
+function purgeLocalSlugs(dbPath: string): void {
+  let sqlite: Database.Database | null = null
+  try {
+    if (!existsSync(dbPath)) return
+    sqlite = new Database(dbPath)
+    const has = (t: string) =>
+      sqlite!.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?").get(t) !== undefined
+    const slugs = [...LOCAL_MCP_SLUGS]
+    const marks = slugs.map(() => '?').join(',')
+    const tx = sqlite.transaction(() => {
+      for (const t of ['agent_kinds', 'agent_embeddings', 'agents']) {
+        if (has(t)) sqlite!.prepare(`DELETE FROM ${t} WHERE slug IN (${marks})`).run(...slugs)
+      }
+    })
+    tx()
+  } catch (err) {
+    console.error(`[purge] local-mcp purge skipped: ${sanitizeMessage((err as Error).message)}`)
+  } finally {
+    sqlite?.close()
+  }
+}
+
+/** Main ingest plus, when LOCAL_MCP_AGENTS is on, the data/agents-local pass; off purges stale local rows. */
+async function ingestAll(
+  dataDir: string,
+  dbPath: string,
+  opts?: { embedder?: Embedder | null; localDir?: string },
+): Promise<{ succeeded: number; failed: number }> {
+  const { localDir = LOCAL_DIR, ...rest } = opts ?? {}
+  const main = await ingest(dataDir, dbPath, rest)
+  if (!localMcpAgentsEnabled()) {
+    purgeLocalSlugs(dbPath)
+    return main
+  }
+  if (!existsSync(localDir)) return main
+  const local = await ingest(localDir, dbPath, rest)
+  return { succeeded: main.succeeded + local.succeeded, failed: main.failed + local.failed }
+}
+
+export { ingestAll }
+
 const isMain = isMainModule(import.meta.url, process.argv[1])
 if (isMain) {
-  ingest(DATA_DIR, DB_PATH).catch(err => {
+  ingestAll(DATA_DIR, DB_PATH).catch(err => {
     console.error(err)
     process.exit(1)
   })

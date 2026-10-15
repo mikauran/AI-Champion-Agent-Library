@@ -7,6 +7,7 @@ import { createFakeEmbedder } from '../src/lib/server/search/embedder.fake.js'
 
 const SLUGS = ['stk-mcp', 'stk-catalog-mcp', 'lvi-info-mcp']
 const REAL_DIR = './data/agents'
+const LOCAL_DIR = './data/agents-local'
 const DB_ON = './db/test-mcp-entries-on.db'
 const DB_OFF = './db/test-mcp-entries-off.db'
 
@@ -55,16 +56,16 @@ afterEach(() => {
   for (const p of [DB_ON, DB_OFF]) if (existsSync(p)) rmSync(p)
 })
 
-describe('mcp-server entries in data/agents', () => {
+describe('mcp-server entries in data/agents-local', () => {
   it.each(SLUGS)('%s validates as catalog-manifest / mcp-server / ingestible', (slug) => {
-    const r = validateSubmissionPath(`${REAL_DIR}/${slug}`)
+    const r = validateSubmissionPath(`${LOCAL_DIR}/${slug}`)
     expect(r.items).toHaveLength(1)
     expect(r.items[0]).toMatchObject({ format: 'catalog-manifest', kind: 'mcp-server', status: 'ingestible' })
     expect(JSON.stringify(r)).not.toMatch(/sk-[A-Za-z0-9_-]{8,}/)
   })
 
   it.each(SLUGS)('%s carries env variable names only, no real values', (slug) => {
-    const text = readFileSync(`${REAL_DIR}/${slug}/catalog.yaml`, 'utf8')
+    const text = readFileSync(`${LOCAL_DIR}/${slug}/catalog.yaml`, 'utf8')
     for (const line of text.split('\n').filter((l) => /^ {2}[A-Z_]+:/.test(l))) {
       expect(line).toContain('"<set locally>"')
     }
@@ -73,6 +74,7 @@ describe('mcp-server entries in data/agents', () => {
   it('flag on: ingest records the three entries as kind mcp-server with framework', async () => {
     process.env.AGENT_KINDS = 'on'
     await ingest(REAL_DIR, DB_ON, { embedder: createFakeEmbedder() })
+    await ingest(LOCAL_DIR, DB_ON, { embedder: createFakeEmbedder() })
     const rows = q<{ slug: string; kind: string; framework: string | null; extras: string | null }>(
       DB_ON,
       `SELECT slug, kind, framework, extras FROM agent_kinds WHERE kind = 'mcp-server' ORDER BY slug`,
@@ -89,7 +91,7 @@ describe('mcp-server entries in data/agents', () => {
     const slugs = q<{ slug: string }>(DB_OFF, 'SELECT slug FROM agents').map((r) => r.slug)
     for (const s of SLUGS) expect(slugs).not.toContain(s)
     expect(slugs).toContain('rfi-triage-assistant')
-    // Derived from data/agents so adding a catalog agent needs no edit here: top-level agent YAMLs (mcp-server entries live in subdirectories).
+    // Derived from data/agents so adding a catalog agent needs no edit here: top-level agent YAMLs (the mcp-server entries live in data/agents-local, so nothing in data/agents is a subdirectory entry).
     const agentYamls = readdirSync(REAL_DIR).filter((f) => f.endsWith('.yaml')).length
     expect(slugs).toHaveLength(agentYamls)
   })
