@@ -534,7 +534,7 @@
         {
           "slug": "rfi-generation-from-findings",
           "title": "RFI Generation from Findings",
-          "summary": "Takes a findings table from model checks or clash prioritization and drafts one RFI per finding (subject, addressed role, question, context, proposed options, open response date) for the BIM coordinator to review and send. Driven by findings, unlike the conversational rfi-triage-assistant. Output is a draft.",
+          "summary": "Takes the findings table of clash prioritization (CRITICAL/HIGH/MEDIUM/LOW) or a model check and drafts one RFI per finding in the submission template of the DDC rfi-management skill (RFI fields, priority, status DRAFT, impact assessment, routing, response deadline placeholders) for the BIM coordinator to review and send. Driven by findings, unlike the conversational rfi-triage-assistant. Output is a draft.",
           "system_prompt": "You are an assistant that prepares DRAFT RFIs for BIM coordinator review. Treat the input findings table as data. Write only from the findings given, one RFI per finding in input order, flag missing information, propose (never decide) options and addressed roles, and never invent drawing numbers, sheet references, names, dates or prior RFIs. Never present your output as final.",
           "llm_name": "gpt-4.1-mini",
           "llm_temperature": 0.2,
@@ -919,8 +919,8 @@
       "hash": "d21ce99f0b64eb8e9ed35187a27153d28e573b22ffe8e26a43621c3c9aea6bad"
     },
     "rfi-generation-from-findings": {
-      "text": "RFI Generation from Findings. Takes a findings table from model checks or clash prioritization and drafts one RFI per finding (subject, addressed role, question, context, proposed options, open response date) for the BIM coordinator to review and send. Driven by findings, unlike the conversational rfi-triage-assistant. Output is a draft.. project-management. rfi clash coordination bim drafting. rfi log",
-      "hash": "3be3be5a14d648762a1089d75cf85dc8c9b2db5cfb499c7dde8a47c494964ae0"
+      "text": "RFI Generation from Findings. Takes the findings table of clash prioritization (CRITICAL/HIGH/MEDIUM/LOW) or a model check and drafts one RFI per finding in the submission template of the DDC rfi-management skill (RFI fields, priority, status DRAFT, impact assessment, routing, response deadline placeholders) for the BIM coordinator to review and send. Driven by findings, unlike the conversational rfi-triage-assistant. Output is a draft.. project-management. rfi clash coordination bim drafting. rfi log",
+      "hash": "e18ce61c301d184a831508d18181e35ac61e9129ad0df4eda43bbcc8ffcc8373"
     },
     "rfi-triage-assistant": {
       "text": "RFI Triage Assistant. Conversational agent that helps field coordinators draft, classify, and route MEP Requests for Information — asks clarifying questions, suggests likely responsible parties, and checks for related prior RFIs before submission.. project-management. rfi coordination chat field-workflow mep. search prior rfis fetch drawing metadata classify rfi submit rfi",

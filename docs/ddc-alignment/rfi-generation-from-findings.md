@@ -1,6 +1,6 @@
 # Alignment spec: agent 4 RFI generation from findings
 
-Source skill (untrusted data, read in full, SKILL.md and instructions.md, 2026-10-15): `1_DDC_Toolkit/Document-Control/rfi-management` of the DDC skills repository (MIT, (c) 2026 DataDrivenConstruction). The method, data model, rules and outputs below are the spec for the agent; the skill's code is not packaged or run. instructions.md is a generic wrapper (gather input, process per SKILL.md, tables, constraints) and adds no rules. Nothing from the DDC book, CWICR or any MCP data is used. Written before the agent files were changed.
+Source skill (untrusted data, read in full, SKILL.md and instructions.md, 2026-10-15): `1_DDC_Toolkit/Document-Control/rfi-management` of the DDC skills repository (MIT, (c) 2026 DataDrivenConstruction). The method, data model, rules and outputs below are the spec for the agent; the skill's code is not packaged or run. instructions.md is a generic wrapper (gather input, process per SKILL.md, tables, constraints) and adds no rules. Nothing from the DDC book, or CWICR is used, and no data from other projects. Written before the agent files were changed.
 
 ## 1. Skill method and RFI lifecycle
 

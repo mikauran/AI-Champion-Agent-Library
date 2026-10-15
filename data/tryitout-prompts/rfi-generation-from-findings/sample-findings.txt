@@ -1,8 +1,8 @@
 # SYNTHETIC SAMPLE - invented data for an invented building (Harbour Annex), not from any real project
 finding_id | clash_ids | priority | disciplines | location | description | suggested_owner | open_question
-F-01 | CL-001, CL-002, CL-003, CL-004 | P1 | HVAC, Structural | L2, grid C/3 | Supply duct run SD-12 crosses four beams, penetration up to 140 mm | HVAC designer | Can the beams be notched or must the duct be rerouted?
-F-02 | CL-009 | P1 | Plumbing, Structural | L1, grid D/5 | Drain pipe passes through a column footing zone, hard clash 210 mm | Plumbing designer | Is a sleeve through the footing acceptable to the structural engineer?
-F-03 | CL-013 | P2 | Architectural, HVAC | L3, grid B/2 | Ceiling diffuser collides with a bulkhead, hard clash 35 mm | Architect | Which of the two should move?
-F-04 | - | P2 | Architectural, Fire protection | L1, corridor group DG-1 | Door group DG-1 has no fire rating property in the model export | Architect | Which fire rating applies to door group DG-1?
-F-05 | - | P3 | Structural, Plumbing | L2, slab opening group SO-4 | Slab openings SO-4 exist but no discipline is defined as penetration owner | Structural designer | Who owns the penetration definition for SO-4?
-F-06 | CL-016 | P3 | Electrical, HVAC | L0, plant room | Cable tray close to a duct, clearance conflict (soft clash) | unclear | 
+F-01 | CL-001, CL-002, CL-003 | CRITICAL | Ilmanvaihto, Rakenne | L2 grid C/3 | Supply duct SD-12 crosses beams B-14, B-15 and B-16; proposed: ROUTE_AROUND | Ilmanvaihto | Can the beams be notched or must duct SD-12 be rerouted?
+F-02 | CL-004 | HIGH | Ilmanvaihto, Sähkö | L1 grid D/5 | Exhaust duct ED-3 and cable tray CT-8; proposed: RAISE_LOWER | Sähkö | penetration missing for CL-004
+F-03 | CL-005, CL-006 | MEDIUM | Ilmanvaihto | L3 grid B/2 | Duct DU-5 and duct DU-6 share a crossing; proposed: RESIZE | Ilmanvaihto | none
+F-04 | CL-007 | MEDIUM | Arkkitehti, Kylmälaite | L1 grid A/1 | Refrigerant pipe RP-2 passes through wall W-04; proposed: ROUTE_AROUND | TO BE DECIDED BY COORDINATOR | Is a sleeve through wall W-04 acceptable?
+F-05 | CL-008 | LOW | Kylmälaite, Sähkö | L0 plant room | Refrigerant pipe RP-5 close to cable tray CT-2; proposed: ROUTE_AROUND | TO BE DECIDED BY COORDINATOR | none
+F-06 | - | HIGH | Arkkitehti, Sprinkler | L1 corridor group DG-1 | Door group DG-1 has no fire rating property in the model export | Arkkitehti | Which fire rating applies to door group DG-1?
