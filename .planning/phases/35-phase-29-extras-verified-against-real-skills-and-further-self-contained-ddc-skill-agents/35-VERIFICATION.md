@@ -101,3 +101,28 @@ COUNTED (SKILL v1). Job e32b588b-8f96-41ec-8ee1-88e5e0ff1f33, gpt-4.1-mini, 7787
   ```
 - Caveat: the input already contains the helper's columns (the user must run the helper first); the pre-po comfortably early item gets ordered-ok by the spec rule (status column shows it is not ordered).
 - Ledger: one 35-02 row. Spend plan 35-02: 0.0125 USD (1 run); fix-run total 0.6429 USD of 5 USD. Teardown: `podman-compose ... down`, `podman ps -a --filter label=aic.tryitout -q` empty.
+
+## Agent 18 Material delivery (plan 35-03)
+
+Label: built on 1_DDC_Toolkit/Cost-Management/material-delivery-tracker (spec docs/ddc-alignment/material-delivery-check.md, committed before any agent file; key and rubric R1-R7 written before the runs; SKILL.md 399 lines and instructions.md 28 lines read in full). Helper: src/lib/delivery/deliveryCheck.ts (32 unit tests written first: quantity balance and complete/short/over per the skill's received >= ordered, point and comma decimals, days late from an explicit as_of with month, year and leap-day boundaries, never negative, conflict rules K1-K6, typed errors, verdict lookup rows 1-7, key sample), CLI scripts/delivery-check.ts (exit 2 on validation errors; compares a result.md cell by cell). Skill defects fixed in the helper (14 items in spec section 6): date.today() in three places, status never checked against quantities or dates (delivered with received < ordered accepted), late partial deliveries ignored by get_delayed_deliveries, empty delivery counted as delivered, receive_delivery assuming full receipt and overwriting totals, over-delivery invisible, no validation, cancelled lines with goods. Not adopted: storage capacity, tracking, vendor contact, on-time rate, export. No validate-entries range change needed (agent_no 18 <= 20).
+
+COUNTED on run 2 (SKILL revision 1). Option A (compose stack, tagged image), usage observed, countable true, no direct-call fallback, synthetic label.
+- Run 1: job 9902ee53-7e50-4386-88a9-1594dac3d758, gpt-4.1-mini, 12966 tokens, 3 requests, est. 0.0207 USD, SKILL v1. All 7 rows, copied cells, ticks, verdicts and the attention list matched the key, but the table had no leading pipes and no separator row, so it is not a markdown table and the CLI comparison could not parse it: R7 FAIL. Not counted. Revision 1: SKILL.md now shows the header and separator row verbatim.
+- Run 2: job ad96ec03-c272-46c7-a46b-9c0d6875870d, gpt-4.1-mini, 13343 tokens, 3 requests, est. 0.0213 USD, SKILL v2 (revision 1). Key vs result: D-01 received-complete, D-02 partial (120 m, first-receipt date not used), D-03 late (10 days, reason Y), D-04 late-no-reason (3 days), D-05 not-yet-due, D-06 data-incomplete (conflict Y although late), D-07 data-incomplete (days_late and late_flag are `-`). All 7 rows match the key; `npx tsx scripts/delivery-check.ts <sample> <result>` reports "result table matches the helper on every cell". Attention list D-02 to D-07 as required. R1 to R7 pass: no recomputed quantities or dates, no invented values, no accept/reject/chase instruction. Minor: no blank line between the as_of line and the table.
+- Excerpt:
+  ```
+  ## Delivery check
+  as_of: 2026-03-02
+  | line_id | status | balance | balance_flag | days_late | late_flag | conflict | reason_present | verdict |
+  |---|---|---|---|---|---|---|---|---|
+  | D-02 | partial | 120 m | short | 0 | N | N | N | partial |
+  | D-03 | delayed | 2 kpl | short | 10 | Y | N | Y | late |
+  | D-04 | in_transit | 200 m | short | 3 | Y | N | N | late-no-reason |
+  | D-06 | delivered | 2 kpl | short | 4 | Y | Y | N | data-incomplete |
+  | D-07 | in_transit | 80 m | short | - | - | N | N | data-incomplete |
+  ## Lines needing attention
+  D-02: partial / D-03: late / D-04: late-no-reason / D-05: not-yet-due / D-06: data-incomplete / D-07: data-incomplete
+  Draft for engineer review. Synthetic input; quantities and dates were calculated by a tool, not by this agent, and no delivery was accepted, rejected or chased.
+  ```
+- Caveat: the input already contains the helper's columns (the user must run the helper first); a complete delivery that arrived late is received-complete by decision (days_late shows it); over-delivery, cancelled and blank-quantity lines are covered by helper tests and SKILL worked rows, not by the live sample.
+- Ledger: two 35-03 rows. Spend plan 35-03: 0.0420 USD (2 runs); fix-run total 0.6849 USD of 5 USD. Teardown: `podman-compose ... down`, `podman ps -a --filter label=aic.tryitout -q` empty.

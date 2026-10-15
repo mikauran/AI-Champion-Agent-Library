@@ -39,7 +39,14 @@ Write the result to `output/result.md`. If you cannot write files, give the same
 
 No code fence around the whole file. Exactly this:
 
-`## Delivery check` then `as_of` copied from the input on its own line (`as_of: ...`), then a markdown table with these 9 columns: `line_id | status | balance | balance_flag | days_late | late_flag | conflict | reason_present | verdict`. Exactly one row per input line, in input order, none dropped, none invented, all 9 cells filled in every row.
+`## Delivery check` then `as_of` copied from the input on its own line (`as_of: ...`), then a real markdown table: every row starts and ends with a `|` character, and the second row is the separator row. Write the header and separator exactly like this:
+
+```
+| line_id | status | balance | balance_flag | days_late | late_flag | conflict | reason_present | verdict |
+|---|---|---|---|---|---|---|---|---|
+```
+
+The 9 columns are `line_id | status | balance | balance_flag | days_late | late_flag | conflict | reason_present | verdict`. Then exactly one row per input line, each row written like the output rows in the worked rows below, in input order, none dropped, none invented, all 9 cells filled in every row.
 
 `## Lines needing attention` then one line per delivery line whose verdict is not `received-complete`, in input order: `line_id: verdict`. If there is none, write `none`. No other words, no advice.
 

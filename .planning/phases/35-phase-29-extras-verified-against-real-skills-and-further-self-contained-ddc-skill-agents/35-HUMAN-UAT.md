@@ -8,3 +8,6 @@ Plan 35-01 (agents 13-16 verified against the real skills):
 
 Plan 35-02 (agent 17, new):
 - [ ] Agent 17 Procurement Lead Time Check: run `npx tsx scripts/procurement-lead-time.ts` on a raw list of your own (synthetic or anonymised), paste the output into Try It Out, compare verdicts; the sample job is e32b588b (all 7 rows match). Confirm (a) calendar days for lead time, (b) that a pre-order item more than 14 days before its order date should read "ordered-ok" (nothing to order now) rather than a separate word, (c) the label "built on material-procurement-tracker", (d) that having to run the helper first is acceptable.
+
+Plan 35-03 (agent 18, new):
+- [ ] Agent 18 Material Delivery Check: run `npx tsx scripts/delivery-check.ts` on a raw delivery list of your own (synthetic or anonymised), paste the output into Try It Out, compare verdicts; sample jobs 9902ee53 (table without pipes, not counted) and ad96ec03 (counted, all 7 rows match). Confirm (a) a complete delivery that arrived late reads received-complete (days_late shows it) and over-delivery too, (b) a status that contradicts the quantities (delivered but short) reads data-incomplete rather than a delivery verdict, (c) a short line is judged late at the as-of date even when status is partial, (d) the label "built on material-delivery-tracker", (e) that having to run the helper first is acceptable.
