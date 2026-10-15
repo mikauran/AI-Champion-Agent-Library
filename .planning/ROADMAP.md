@@ -715,12 +715,15 @@ Plans:
 ### Phase 32: Align strong-match agents with their DDC skills (clash 3, RFI 4, quote comparison 6)
 
 **Goal:** Align agents 3 Clash (2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer), 4 RFI (1_DDC_Toolkit/Document-Control/rfi-management), 6 Quote comparison (1_DDC_Toolkit/Procurement/bid-analysis-comparator) with their skill's method, data model, rules and outputs, adapted to Finnish MEP; fix the skill's own bugs rather than copying them (e.g. bid-analysis-comparator's weighted score ignores the weights); skill code reused only for calculations. Done bar per agent: complete entry plus one real-model Try It Out container step with evidence.
-**Requirements**: TBD
+**Requirements**: DDC-32-CLASH, DDC-32-RFI, DDC-32-QUOTE, DDC-32-VERIFY
 **Depends on:** Phase 31
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 32 to break down)
+- [ ] 32-01-PLAN.md — Agent 3 clash prioritization: alignment spec, aligned entry/SKILL/sample/answer key/rubric, tests, one live run
+- [ ] 32-02-PLAN.md — Agent 4 RFI generation: skill RFI schema and template, placeholder deadlines, one live run
+- [ ] 32-03-PLAN.md — Agent 6 quote comparison: weighted-score bug verified, tested deterministic helper (A-02), aligned entry, one live run
+- [ ] 32-04-PLAN.md — Aggregation, npm run check, 32-VERIFICATION, STATE and ROADMAP close
 
 ### Phase 33: Align moderate-match agents with their DDC skills (QTO 2, carbon and EPD 7, O and M 11, BMS twin 12)
 
