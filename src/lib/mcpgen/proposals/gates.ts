@@ -195,6 +195,7 @@ export function checkOps(ops: ProposalOp[], ctx: GateCtx): Issue[] {
   const edits = new Map<string, { id: string; kind: string }[]>() // `${tool}\u0000${arg}`
   const toolTouched = new Map<string, { id: string; kind: string }[]>()
   const note = (m: Map<string, { id: string; kind: string }[]>, key: string, id: string, kind: string) => m.set(key, [...(m.get(key) ?? []), { id, kind }])
+  const argRenames = new Map<string, { id: string; arg: string; name: string }[]>() // tool -> rename_arg ops (CR-26)
   const projSeen = new Set<string>()
   const referenced = new Set<string>() // baseline tools referenced by composite steps
   let newToolCount = 0
@@ -217,7 +218,10 @@ export function checkOps(ops: ProposalOp[], ctx: GateCtx): Issue[] {
         checkName(push, op, 'arg', op.name, 'arg')
         if (t) {
           const a = argGround(op, t, op.arg)
-          if (a) note(edits, `${t.name}\u0000${a.name}`, op.id, 'rename')
+          if (a) {
+            note(edits, `${t.name}\u0000${a.name}`, op.id, 'rename')
+            argRenames.set(t.name, [...(argRenames.get(t.name) ?? []), { id: op.id, arg: a.name, name: op.name }])
+          }
           note(toolTouched, t.name, op.id, 'edit')
         }
         break
@@ -401,6 +405,18 @@ export function checkOps(ops: ProposalOp[], ctx: GateCtx): Issue[] {
       if (kinds.some((k) => ['rename', 'hide', 'edit', 'describe'].includes(k))) push(4, 'op-conflict', { id: last.id }, `The tool ${show(tool)} is merged or split and cannot also be edited, renamed or hidden.`)
     }
     if (kinds.includes('hide') && kinds.some((k) => ['rename', 'edit', 'describe'].includes(k))) push(4, 'op-conflict', { id: last.id }, `The tool ${show(tool)} is hidden and also edited.`)
+  }
+  // Rename targets: the emitted signature must not repeat a name (SyntaxError), and the sequential prologue
+  // (`new = old`) cannot implement a swap or a rename onto a name another argument still has, pinned or not (CR-26).
+  for (const [tool, list] of argRenames) {
+    const sig = ctx.sigs.get(tool) ?? []
+    const taken = new Map<string, string>() // new name -> op id
+    for (const r of list) {
+      const clash = sig.some((x) => x.name === r.name && x.name !== r.arg)
+      const twice = taken.get(r.name)
+      if (clash || twice !== undefined) push(4, 'name-collision', { id: r.id }, `The argument name ${show(r.name)} would be used twice in ${show(tool)} (another argument has it, or two arguments are renamed to it).`)
+      taken.set(r.name, r.id)
+    }
   }
   // A tool a composite calls must keep the arguments the composite passes (checked in checkComposite);
   // consumed tools may not be hidden away from a composite (they are internal anyway).

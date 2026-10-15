@@ -262,3 +262,29 @@ describe('gate 5 and policy', () => {
     expect(JSON.stringify(gaps)).not.toContain(secret)
   })
 })
+
+// CR-26: a rename target must not collide with another argument of the same tool (a duplicate argument is a SyntaxError
+// in the emitted server, and a swap is wrong under the sequential prologue).
+describe('gate 4: rename_arg collisions (CR-26)', () => {
+  const ra = (id: string, arg: string, name: string, extra: Record<string, unknown> = {}) => op('rename_arg', id, { tool: 'search_part', arg, name, ...extra })
+  it('rejects a rename onto an existing standard argument', () => {
+    rejects(http, [ra('r', 'q', 'page_size')], 'name-collision', 'r')
+    rejects(http, [ra('r', 'q', 'fields')], 'name-collision', 'r')
+    rejects(http, [ra('r', 'q', 'page', { keepAlias: true })], 'name-collision', 'r')
+  })
+  it('rejects two arguments renamed to the same name', () => {
+    rejects(http, [ra('a', 'q', 'term'), ra('b', 'page_size', 'term')], 'name-collision')
+  })
+  it('rejects a swap', () => {
+    rejects(http, [ra('a', 'q', 'page_size'), ra('b', 'page_size', 'q')], 'name-collision')
+  })
+  it('rejects a rename onto the name of a pinned argument', () => {
+    rejects(http, [op('pin_arg', 'p', { tool: 'search_part', arg: 'page_size', value: 5 }), ra('r', 'q', 'page_size')], 'name-collision')
+  })
+  it('still accepts an ordinary rename, a rename to itself and a rename away from a name another rename takes', () => {
+    for (const ops of [[ra('r', 'q', 'term')], [ra('r', 'q', 'q')], [ra('a', 'q', 'term'), ra('b', 'page_size', 'size')]]) {
+      const ev = run(http, ops)
+      expect(ev.ok, JSON.stringify(codes(ev))).toBe(true)
+    }
+  })
+})
