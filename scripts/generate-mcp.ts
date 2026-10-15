@@ -160,6 +160,23 @@ async function writeFiles(io: CliIo, dir: string, files: { path: string; content
     return false
   }
   await io.mkdir(dir)
+  // --force writes into an existing directory: a subdirectory that is a symbolic link would redirect the writes
+  // (T-23-06). The check is per directory component below `dir`, before anything is written.
+  if (io.lstatKind) {
+    const seen = new Set<string>()
+    for (const f of files) {
+      const parts = f.path.split('/').slice(0, -1)
+      for (let i = 1; i <= parts.length; i++) {
+        const sub = join(dir, ...parts.slice(0, i))
+        if (seen.has(sub)) continue
+        seen.add(sub)
+        if ((await io.lstatKind(sub)) === 'symlink') {
+          io.error(`${tool}: refusing to write through a symbolic link.`)
+          return false
+        }
+      }
+    }
+  }
   for (const f of files) {
     const target = join(dir, f.path)
     const parent = target.slice(0, Math.max(0, target.length - basename(target).length - 1))

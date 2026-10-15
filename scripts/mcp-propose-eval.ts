@@ -6,7 +6,7 @@
 //
 // Exit codes: 0 no regression, 1 regression of the Tier 1 gate, the headline score or the blocker flags
 // (threshold: --max-score-drop, default 0 percentage points), 2 usage error or the proposal was rejected, 64 usage.
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { lstat, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'node:path'
 import { realpathSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -25,6 +25,8 @@ export interface EvalIo {
   fileSize: (p: string) => Promise<number>
   writeFile: (p: string, c: string) => Promise<void>
   mkdir: (p: string) => Promise<void>
+  /** Kind of the entry itself (a symbolic link is reported, not followed); null when it does not exist. */
+  lstatKind?: (p: string) => Promise<'file' | 'dir' | 'symlink' | 'other' | null>
   log: (s: string) => void
   error: (s: string) => void
 }
@@ -35,6 +37,15 @@ export const defaultIo: EvalIo = {
   writeFile: (p, c) => writeFile(p, c, 'utf8'),
   mkdir: async (p) => {
     await mkdir(p, { recursive: true })
+  },
+  lstatKind: async (p) => {
+    try {
+      const st = await lstat(p)
+      return st.isSymbolicLink() ? 'symlink' : st.isDirectory() ? 'dir' : st.isFile() ? 'file' : 'other'
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException)?.code === 'ENOENT') return null
+      throw e
+    }
   },
   log: (s) => console.log(s),
   error: (s) => console.error(s),
@@ -118,6 +129,13 @@ export async function main(argv: string[], io: EvalIo = defaultIo): Promise<numb
         for (const f of out.files) {
           if (!validPath(f.path)) continue
           const target = join(dir, label, f.path)
+          // T-23-06: a directory or file that is a symbolic link would redirect the write.
+          if (io.lstatKind) {
+            const parts = [label, ...f.path.split('/')]
+            for (let i = 1; i <= parts.length; i++) {
+              if ((await io.lstatKind(join(dir, ...parts.slice(0, i)))) === 'symlink') throw new Error('refusing to write through a symbolic link')
+            }
+          }
           await io.mkdir(dirname(target))
           await io.writeFile(target, f.content)
         }
