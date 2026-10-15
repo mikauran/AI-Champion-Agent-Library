@@ -9,7 +9,7 @@ import { toZip } from '$lib/mcpgen/bundle.js'
 import { listAdapters } from '$lib/mcpgen/registry.js'
 import { runPipelineAsync } from '$lib/mcpgen/pipeline.js'
 import type { Gap, GenerateOptions } from '$lib/mcpgen/types.js'
-import { generatorGate } from '$lib/mcpgen/limits.js'
+import { generatorGate, generatorLimitConfig } from '$lib/mcpgen/limits.js'
 
 const fail = (status: number, code: string, message: string) => {
   const body: GenerateErrorResponse = { ok: false, message, gaps: [{ code, message, severity: 'error' } as Gap] }
@@ -119,7 +119,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
     const admission = generatorGate().admit(clientKey)
     if (admission.ok) return () => admission.release()
     const message = admission.reason === 'busy' ? 'The generator is busy. Try again in a moment.' : 'Too many generation requests from this client, try again later.'
-    return json({ message }, { status: 429, headers: { 'retry-after': admission.reason === 'busy' ? '5' : '60' } })
+    return json({ message }, { status: 429, headers: { 'retry-after': admission.reason === 'busy' ? '5' : String(Math.max(1, Math.ceil(generatorLimitConfig().windowMs / 1000))) } })
   }
   return await generate(request, admit)
 }

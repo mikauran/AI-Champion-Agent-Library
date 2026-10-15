@@ -1,7 +1,7 @@
 // CR-50: a concurrency slot is taken only for the pipeline, not while the request body is still being read.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { __setGeneratorGateForTests, createGeneratorGate } from '$lib/mcpgen/limits'
+import { __setGeneratorGateForTests, createGeneratorGate, generatorLimitConfig } from '$lib/mcpgen/limits'
 import { POST } from './+server'
 
 const fx = (n: string) => readFileSync(new URL(`../../../lib/mcpgen/testing/fixtures/${n}`, import.meta.url), 'utf8')
@@ -14,6 +14,19 @@ afterEach(() => {
   __setGeneratorGateForTests(null)
   if (prev === undefined) delete process.env.MCP_GENERATOR
   else process.env.MCP_GENERATOR = prev
+})
+
+describe('retry-after (CR-59)', () => {
+  it('says how long the rate window really is', async () => {
+    const gate = createGeneratorGate({ maxConcurrent: 5, rateMax: 1, windowMs: 600_000 })
+    __setGeneratorGateForTests(gate)
+    const post = () =>
+      POST({ request: new Request('http://x/api/mcp-generate', { method: 'POST', body: JSON.stringify({ input: fx('acme-openapi.yaml') }) }), getClientAddress: () => '10.0.0.5' } as never) as Promise<Response>
+    expect((await post()).status).toBe(200)
+    const limited = await post()
+    expect(limited.status).toBe(429)
+    expect(limited.headers.get('retry-after')).toBe(String(Math.ceil(generatorLimitConfig().windowMs / 1000)))
+  })
 })
 
 describe('POST /api/mcp-generate slot handling (CR-50)', () => {

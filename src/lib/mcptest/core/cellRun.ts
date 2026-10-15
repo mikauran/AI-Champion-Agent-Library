@@ -53,7 +53,6 @@ export interface CellInput {
   canary: string
   timeoutMs: number
   allowStdioExec: boolean
-  /** Case-scoped overrides of the mock spec (used by the discrimination test through the SuiteCase itself). */
 }
 
 export interface CellResult {

@@ -228,13 +228,14 @@ export function tryItOutResetReason(
   return null
 }
 
+/** Flag-on ingest never treats a directory with one of these names as a submission or part of one (D-466). */
+const INGEST_SKIP_DIR_NAMES: readonly string[] = ['fixtures']
+
 /**
  * Flag-on (AGENT_KINDS) ingest, kept separate so the legacy path stays untouched.
  * Top-level files are single submissions; sub-directories are scanned as submissions;
  * unrecognized directories are skipped with an info log (not counted as failures).
  */
-/** Flag-on ingest never treats a directory with one of these names as a submission or part of one (D-466). */
-const INGEST_SKIP_DIR_NAMES: readonly string[] = ['fixtures']
 
 async function ingestKindsInto(
   sqlite: Database.Database,
