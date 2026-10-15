@@ -179,7 +179,7 @@ describe('verdict lookup (spec section 7), every row once', () => {
   })
   it('cancelled is data-incomplete through the "-" columns', () => {
     const e = evaluateLine(line({ status: 'cancelled' }), AS_OF)
-    expect(verdictFromParts(e, 'N')).toBe('data-incomplete')
+    expect(verdictFromParts({ ...e, status: 'cancelled' }, 'N')).toBe('data-incomplete')
   })
 })
 

@@ -7,3 +7,5 @@ Helper: src/lib/delivery/deliveryCheck.ts (explicit as_of, UTC calendar-day math
 Bump list: set-try-it-out-mode (+ gaps test), golden (diff only the new entry and the succeeded count), decoupling gate (slug added, clean), notices, inventory row 18, gaps G-119 to G-122, entry template note. validate-entries range 1-20 already covered 18.
 
 Runs: 9902ee53-7e50-4386-88a9-1594dac3d758 (SKILL v1, 12966 tokens, 0.0207 USD, content right but table without pipes and separator row, R7 FAIL, not counted); ad96ec03-c272-46c7-a46b-9c0d6875870d (SKILL revision 1, 13343 tokens, 0.0213 USD, all 7 rows and attention list match key and helper, COUNTED). Fix-run total 0.6849 USD of 5. Stack down, no containers left.
+
+npm run check (alone, stack down): exit 0, 315 test files passed, 3829 tests (a type error in the helper test found by tsc was fixed first). No pushes.
