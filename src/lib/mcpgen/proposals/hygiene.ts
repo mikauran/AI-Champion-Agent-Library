@@ -21,8 +21,28 @@ const INJECTION: RegExp[] = [
   /\b(?:jailbreak|prompt\s+injection|new\s+instructions?)\b/i,
 ]
 const CREDENTIAL_WORD = /\b(?:password|passwd|passphrase|secret|api[_ -]?key|bearer|credential|private[_ -]?key|access[_ -]?token)s?\b/i
-const WRITE_CLAIM = /\b(?:creates?|updates?|deletes?|modif(?:y|ies)|inserts?|overwrites?|writes?|removes?|drops?|truncates?|mutates?)\b/i
+const WRITE_CLAIM = /\b(?:creates?|updates?|deletes?|modif(?:y|ies)|inserts?|overwrites?|writes?|removes?|drops?|truncates?|mutates?)\b/gi
+// A write verb is not a claim when the same clause negates it ("Does not delete or modify any data"): the
+// negation must be directly before the verb with only write verbs, "or"/"nor" and filler words between, so
+// "Does not delete, but updates rows" and "Does not delete and updates rows" are still claims.
+const WRITE_VERB_WORD = '(?:creat\\w*|updat\\w*|delet\\w*|modif\\w*|insert\\w*|overwrit\\w*|writ\\w*|remov\\w*|drop\\w*|truncat\\w*|mutat\\w*|chang\\w*|alter\\w*|edit\\w*)'
+const NEGATED_BEFORE = new RegExp(`(?:\\b(?:not|never|cannot|without|neither|nor)|n't)\\s+(?:(?:${WRITE_VERB_WORD}|or|nor|ever)\\s+)*$`, 'i')
+// "update" as a noun naming returned data ("the last update time", "update date"), not as an action.
+const UPDATE_NOUN_BEFORE = /\b(?:last|latest|recent|since\s+the)\s+$/i
+const UPDATE_NOUN_AFTER = /^\s+(?:date|time|timestamp|count|history|log)\b/i
 const LIMIT_CLAIM = /\b(?:max(?:imum)?|at\s+most|up\s+to|limit(?:ed)?(?:\s+(?:of|to))?|clamp(?:ed)?(?:\s+(?:to|at))?)\s*(?:of\s+)?(\d[\d,]*)/gi
+
+function hasWriteClaim(text: string): boolean {
+  for (const m of text.matchAll(WRITE_CLAIM)) {
+    const at = m.index ?? 0
+    const before = text.slice(Math.max(0, at - 80), at)
+    if (NEGATED_BEFORE.test(before)) continue
+    const after = text.slice(at + m[0].length, at + m[0].length + 20)
+    if (/^updates?$/i.test(m[0]) && (UPDATE_NOUN_BEFORE.test(before) || UPDATE_NOUN_AFTER.test(after))) continue
+    return true
+  }
+  return false
+}
 
 export interface TextOptions {
   kind: TextKind
@@ -42,7 +62,7 @@ export function textCodes(text: string, opts: TextOptions): string[] {
   if (opts.kind === 'description') {
     if (sanitizeSourceText(text).flagged || INJECTION.some((re) => re.test(text))) out.push('text-injection')
     if (CREDENTIAL_WORD.test(text)) out.push('text-credential-word')
-    if (WRITE_CLAIM.test(text)) out.push('text-write-claim')
+    if (hasWriteClaim(text)) out.push('text-write-claim')
     if (opts.allowedNumbers) {
       for (const m of text.matchAll(LIMIT_CLAIM)) {
         const n = Number(m[1].replace(/,/g, ''))
