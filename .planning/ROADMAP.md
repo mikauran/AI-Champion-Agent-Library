@@ -51,7 +51,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 32: Align Strong-match Agents** - see details (fix run 2026-10-15, order 31-38)
 - [x] **Phase 33: Align Moderate-match Agents** - see details (fix run 2026-10-15, order 31-38)
 - [x] **Phase 34: Own-design Agents Relabelled** - see details (fix run 2026-10-15, order 31-38)
-- [ ] **Phase 35: DDC Extras Verified and Extended** - see details (fix run 2026-10-15, order 31-38)
+- [x] **Phase 35: DDC Extras Verified and Extended** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 36: LVI-INFO MCP Agent (flagged)** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 37: DDC Mapping for Alok** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 38: Release Branch Rework** - see details (fix run 2026-10-15, order 31-38)
@@ -759,12 +759,12 @@ Plans:
 **Plans:** 6 plans
 
 Plans:
-- [ ] 35-01-PLAN.md — verify and relabel Phase 29 agents 13-16 against the real skills (specs, attribution, github_url, label test, decoupling script extended, reruns of changed entries)
-- [ ] 35-02-PLAN.md — new agent 17 procurement-lead-time-check (material-procurement-tracker; lead-time helper)
-- [ ] 35-03-PLAN.md — new agent 18 material-delivery-check (material-delivery-tracker; delivery helper)
-- [ ] 35-04-PLAN.md — new agent 19 qc-inspection-record-check (quality-control-workflow; record-completeness checks)
-- [ ] 35-05-PLAN.md — new agent 20 warranty-register-check (warranty-tracker; warranty status helper)
-- [ ] 35-06-PLAN.md — candidates document, verification and UAT, npm run check, ROADMAP and STATE close
+- [x] 35-01-PLAN.md — verify and relabel Phase 29 agents 13-16 against the real skills (specs, attribution, github_url, label test, decoupling script extended, reruns of changed entries)
+- [x] 35-02-PLAN.md — new agent 17 procurement-lead-time-check (material-procurement-tracker; lead-time helper)
+- [x] 35-03-PLAN.md — new agent 18 material-delivery-check (material-delivery-tracker; delivery helper)
+- [x] 35-04-PLAN.md — new agent 19 qc-inspection-record-check (quality-control-workflow; record-completeness checks)
+- [x] 35-05-PLAN.md — new agent 20 warranty-register-check (warranty-tracker; warranty status helper)
+- [x] 35-06-PLAN.md — candidates document, verification and UAT, npm run check, ROADMAP and STATE close
 
 ### Phase 36: LVI-INFO MCP agent (flagged off, local only) and MCP-server entries behind the flag
 

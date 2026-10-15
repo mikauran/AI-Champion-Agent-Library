@@ -1,18 +1,43 @@
 ---
 phase: 35
-status: in_progress
+status: human_needed
 ---
 
 # Phase 35 Verification
 
 All outputs are drafts for engineer review. Inputs are synthetic only. Harness, procedure and ledger as in Phases 25-34: Option A (compose stack, internal network `aic-pi-internal`, image `localhost/aic-agent-library:tryitout`, catalog and prompts bind-mounted), `scripts/tryout-run.ts`, model gpt-4.1-mini in the Pi container, ledger `.planning/spend-log.md` (rows after the fix-run marker). Specs: docs/ddc-alignment/<slug>.md, written from full reads of the real DDC skills before any entry changed.
 
-| Agent | Label (spec, entry, notices, inventory) | Runs | Result |
-|---|---|---|---|
-| 13 Daily Report Cross Check (plan 35-01) | loosely related to daily-report-generator (+ n8n-daily-report) | 1 | COUNTED |
-| 14 Punch List Closure Check (plan 35-01) | inspired by punch-list-manager Field-Operations (+ Project-Closeout) | 2 | COUNTED after revision 1 |
-| 15 Change Order Consistency Check (plan 35-01) | inspired by change-order-processor | 1 | COUNTED |
-| 16 Safety Observation Classification (plan 35-01) | loosely related to safety-inspection (+ safety-inspection-checklist) | 1 | COUNTED with one noted tick deviation |
+## Summary: agents 13-20
+
+| Agent | Label | Result | Jobs (tokens, est. cost USD) | Revisions |
+|---|---|---|---|---|
+| 13 Daily Report Cross Check (35-01) | loosely related to daily-report-generator (+ n8n-daily-report) | COUNTED (relabel rerun) | 33c64dfb (13506, 0.0216) counted | 0 |
+| 14 Punch List Closure Check (35-01) | inspired by punch-list-manager Field-Operations (+ Project-Closeout) | COUNTED after revision 1 | d9a413e5 (13236, 0.0212) not counted; edc60b32 (12817, 0.0205) counted | 1 |
+| 15 Change Order Consistency Check (35-01) | inspired by change-order-processor | COUNTED (relabel rerun) | bb72743d (13804, 0.0221) counted | 0 |
+| 16 Safety Observation Classification (35-01) | loosely related to safety-inspection (+ safety-inspection-checklist) | COUNTED with one noted tick deviation | a121094f (11217, 0.0179) counted | 0 |
+| 17 Procurement Lead Time Check (35-02, new) | built on material-procurement-tracker | COUNTED | e32b588b (7787, 0.0125) counted | 0 |
+| 18 Material Delivery Check (35-03, new) | built on material-delivery-tracker | COUNTED after revision 1 | 9902ee53 (12966, 0.0207) not counted; ad96ec03 (13343, 0.0213) counted | 1 |
+| 19 QC Inspection Record Check (35-04, new) | built on quality-control-workflow | COUNTED after revision 1 | f9f76250 (11989, 0.0192) not counted; 174d6166 (12418, 0.0199) counted | 1 |
+| 20 Warranty Register Check (35-05, new) | built on warranty-tracker | COUNTED after revision 1 | 3dcb94e7 (8558, 0.0137) not counted; 01156eba (8863, 0.0142) counted | 1 |
+
+Agents 13-16 were not changed beyond label, attribution and notes (relabel reruns on the old samples). No agent is ATTEMPTED-NOT-COUNTED; no scope-shrink retry was needed; no agent used more than 1 of the 2 allowed revisions. 12 runs in total, 8 counted, 4 not counted (each failed one rubric point; the reason is in the per-plan sections).
+
+Spend: phase 35 (ledger rows of plans 35-01 to 35-05) 0.2248 USD; fix-run total after the marker 0.7519 USD of 5 USD (34 rows). No run above 0.50 USD (largest 0.0221). Costs are an upper bound; the OpenAI dashboard is ground truth.
+
+Scope checklist against 35-CONTEXT.md:
+- [x] Each Phase 29 extra (13-16) read against the real skill in full, paths verified with gh api (35-01; change-order-manager and change-order-analysis also read)
+- [x] Labels per entry honest (built on / inspired by / loosely related to) and github_url set, identical in entry, notices, inventory and spec (label test scripts/ddc-labels.extras.test.ts)
+- [x] docs/ddc-alignment/<slug>.md for agents 13-20, specs written before the entries, key and rubric before the runs
+- [x] Live rerun for each changed entry (13-16, all counted)
+- [x] Four new agents chosen after reading the skills, rejected candidates recorded with reasons (docs/ddc-agent-candidates.md), each built to the done bar: spec first, skill defects fixed in tested helpers (17, 18, 20; 19 by decision without helper), complete entry, labelled synthetic sample, key and rubric R1-R7, tests, golden, one counted live run
+- [x] docs/ddc-agent-candidates.md updated: built agents with exact paths, relabel results of 13-16, remaining candidates with reasons
+- [x] scripts/check-ddc-decoupling.sh clean, lists all 20 slugs and scans the alignment docs; no MCP, LVI, STK, Prysmian or Rakennustieto text in the agent files
+- [x] Arithmetic only in helpers (dates and quantities); the model copies and looks up
+- [ ] Human UAT items pending (see 35-HUMAN-UAT.md, one item per agent 13-20)
+
+npm run check (run alone, stack down, no Podman, `free -m` 1.9 GB available), plan 35-06: exit 0, 318 test files passed and 1 skipped, 3867 tests passed and 1 skipped (319 files, 3868 tests), once, no rerun needed. `bash scripts/check-ddc-decoupling.sh`: `ddc-decoupling: clean`.
+
+Status human_needed: the eight UAT items are pending for Ville / engineers.
 
 ## Plan 35-01: Phase 29 extras verified against the real skills
 

@@ -1,5 +1,7 @@
 # Phase 35 Human UAT (pending for Ville / engineers)
 
+Summary: 8 items (agents 13-20), 0 done, 8 pending. Every agent has a counted live run; the items ask a human to repeat one run on the Try It Out page and to confirm the label and the stated decisions.
+
 Plan 35-01 (agents 13-16 verified against the real skills):
 - [ ] Agent 13 Daily Report Cross Check: open the Try It Out page, run the sample, compare to the key (D-03 and D-04 mismatch, D-05 delay-unexplained, D-06 not-in-timesheet); job 33c64dfb. Confirm the label "loosely related to daily-report-generator (+ n8n-daily-report)" (the skills generate reports, none cross-checks them).
 - [ ] Agent 14 Punch List Closure Check: run the sample, compare to the key (P-04 open-ok review NO); jobs d9a413e5 (failed, not counted) and edc60b32 (counted). The model slipped once on the open-ok review cell, so repeat the run once by hand and check P-04. Confirm the label "inspired by punch-list-manager (Field-Operations, + Project-Closeout)".
