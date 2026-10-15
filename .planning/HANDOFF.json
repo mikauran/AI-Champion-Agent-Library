@@ -1,89 +1,26 @@
 {
   "version": "1.0",
-  "timestamp": "2026-10-14T19:32:17.210Z",
-  "phase": "none-active",
-  "phase_name": "Between phases: queue 2.1-20 built; 21-23 planned, not started",
-  "phase_dir": null,
-  "plan": null,
-  "task": null,
-  "total_tasks": null,
+  "timestamp": "2026-10-15T05:20:04Z",
+  "phase": "23",
+  "phase_name": "Code Review of New Generator Code",
+  "phase_dir": ".planning/phases/23-code-review-of-new-generator-code",
   "status": "paused",
   "completed_tasks": [
-    {
-      "id": 1,
-      "name": "Phases 2.1,2.2,3,4,9-15 built (overnight queue)",
-      "status": "done"
-    },
-    {
-      "id": 2,
-      "name": "Phases 16-20 executed outside GSD flow (hardening, flagged UI, live verification, generator inputs, proposal layer)",
-      "status": "done"
-    },
-    {
-      "id": 3,
-      "name": ".planning synced and audited against GSD templates",
-      "status": "done"
-    }
+    {"id": "24-29", "name": "12 consortium agents + 4 DDC agents (all counted, see phase VERIFICATION files)", "status": "done"},
+    {"id": "30", "name": "Release prep: local branch release/agents-2026-10 tip f9ef5d0, build+smoke+check passed", "status": "done"},
+    {"id": "21-23", "name": "Generator Stage 0, proposal follow-ups, code review + security (SECURED)", "status": "done"}
   ],
-  "remaining_tasks": [
-    {
-      "id": 4,
-      "name": "Phase 21 Generator Stage 0 (hygiene, annotations, outputSchema)",
-      "status": "not_started"
-    },
-    {
-      "id": 5,
-      "name": "Phase 22 Proposal layer follow-ups",
-      "status": "not_started"
-    },
-    {
-      "id": 6,
-      "name": "Phase 23 Code review of new generator code",
-      "status": "not_started"
-    }
-  ],
-  "blockers": [
-    {
-      "description": "None technical. B-001/B-002 resolved, B-003 likely fixed (intermittent flake, reopen if it recurs)",
-      "type": "technical",
-      "workaround": ""
-    }
-  ],
+  "remaining_tasks": [],
+  "blockers": [],
   "human_actions_pending": [
-    {
-      "action": "Phase 9 check 7: budget run with a paid OpenAI key",
-      "context": "only item that spends money",
-      "blocking": false
-    },
-    {
-      "action": "Re-run Phase 9 check 9 (podman-compose down)",
-      "context": "corrected expectation not re-run",
-      "blocking": false
-    },
-    {
-      "action": "Phase 15 container run, cancel path, sweep-vs-run, auth-enabled, browser checks",
-      "context": "steps in docs/human-verification-guide.md section 8",
-      "blocking": false
-    },
-    {
-      "action": "Browser checks for phases 3,4,10,11,13,14,15,17",
-      "context": "docs/human-verification-guide.md sections 0-7",
-      "blocking": false
-    },
-    {
-      "action": "Phase 2 checkpoint 02-04",
-      "context": "only item keeping Phase 2 open",
-      "blocking": true
-    }
+    {"action": "Review proposal src/lib/mcpgen/proposals/real/acme-openapi.proposals.json and sign off 22-COMPARISON.md", "blocking": false},
+    {"action": "Decide AGENT_KINDS on/off for release, internal docs exclusion, personal GitHub URL in stk-mcp/lvi-info-mcp entries; push + open PR manually (see .planning/phases/30-*/release/PENDING-HUMAN.md)", "blocking": false},
+    {"action": "Confirm assumptions: D2 = Finnish building code D2; LVI-INFO variants; gaps G-001..G-114 (docs/consortium-agents-gaps.md)", "blocking": false},
+    {"action": "Phases 21-23 changes are NOT on the release branch (D-606): decide a follow-up PR", "blocking": false},
+    {"action": "Build production + runner images and live-check container path (23-HUMAN-UAT.md); compose hardening decision CR-54", "blocking": false}
   ],
-  "decisions": [
-    {
-      "decision": "See .planning/AUTONOMOUS-DECISIONS.md (index at top) and PROJECT.md Key Decisions",
-      "rationale": "all logged with alternatives and revert steps",
-      "phase": "all"
-    }
-  ],
+  "decisions": [{"decision": "Spend ~$1.09 of $10 on real-model runs", "phase": "25-29"}],
   "uncommitted_files": [],
-  "next_action": "Run /gsd:resume-work; read .planning/STATE.md 'Pending on Ville'; then plan Phase 21 (or let Ville do the human checks first).",
-  "context_notes": "Branch autonomous/overnight-improvements, nothing pushed. Verified: npm run check x2 269 files/3072 tests, vite build 0, smoke 104/104, generated packages pass pytest on FastMCP 3.4.8 and 4.1.0."
+  "next_action": "Read .planning/STATE.md 'Autonomous run end'; work through pending-human lists; consider backlog items in ROADMAP.md (agent counter, Pi orchestration, multi-agent, public MCP release).",
+  "context_notes": "All requested phases executed. Worktree /home/ville/projects/aic-release holds the release branch (remove after PR). Nothing pushed."
 }
