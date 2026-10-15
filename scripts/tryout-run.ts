@@ -8,6 +8,7 @@
 import { readFileSync, writeFileSync, renameSync, mkdirSync, existsSync } from 'node:fs'
 import { dirname, join, basename } from 'node:path'
 import { unzipSync, strFromU8 } from 'fflate'
+import { isMainModule } from './is-main.js'
 
 // Price assumption for gpt-4.1-mini: USD 0.40 / 1M input, 1.60 / 1M output tokens. The proxy only
 // reports total tokens, so ALL tokens are priced at the output rate (conservative upper bound).
@@ -330,5 +331,5 @@ async function main(): Promise<void> {
   process.exit(await runJob(opts))
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`
+const isMain = isMainModule(import.meta.url, process.argv[1])
 if (isMain) void main()

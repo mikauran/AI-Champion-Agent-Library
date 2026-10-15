@@ -8,6 +8,7 @@ import { parseSubmission, detectFormats } from '../src/lib/spec/registry.js'
 import { readSubmissionDir } from '../src/lib/spec/scan.js'
 import type { ParseOutcome, SubmissionFile, SubmissionStatus } from '../src/lib/spec/kinds.js'
 import { sanitizeMessage } from '../src/lib/spec/security.js'
+import { isMainModule } from './is-main.js'
 
 export interface ReportItem {
   name: string
@@ -246,7 +247,7 @@ export function main(
   }
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`
+const isMain = isMainModule(import.meta.url, process.argv[1])
 if (isMain) {
   process.exitCode = main(process.argv.slice(2))
 }

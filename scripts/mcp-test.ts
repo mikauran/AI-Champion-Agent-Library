@@ -12,6 +12,7 @@ import { ReportSchema, renderMatrix, renderSummary, type Report } from '../src/l
 import { runSuite } from '../src/lib/mcptest/core/runner'
 import { loadSuite, type SuiteCase } from '../src/lib/mcptest/core/suite'
 import { listSubjects, resolveSubject, type PrepareWithStderr, type RunnableSubject } from '../src/lib/mcptest/core/subjects'
+import { isMainModule } from './is-main.js'
 
 export interface CliIo {
   writeFile: (path: string, content: string) => Promise<void>
@@ -264,21 +265,7 @@ export async function runCli(argv: string[], io: CliIo = defaultIo): Promise<num
   }
 }
 
-/**
- * True when this module is the entry script. Compares real file paths, so paths with spaces, '%' or non-ASCII
- * characters (percent-encoded in a file URL), relative paths and symlinks all work (WR-09). A plain URL string
- * comparison failed for those and the CLI then ran nothing and exited 0, which a CI step reads as a PASS.
- */
-export function isMainModule(metaUrl: string, argv1: string | undefined): boolean {
-  if (!argv1) return false
-  const self = fileURLToPath(metaUrl)
-  const entry = resolve(argv1)
-  try {
-    return realpathSync(self) === realpathSync(entry)
-  } catch {
-    return self === entry
-  }
-}
+export { isMainModule }
 
 const isMain = isMainModule(import.meta.url, process.argv[1])
 if (isMain) {

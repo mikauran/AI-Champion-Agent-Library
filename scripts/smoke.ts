@@ -6,6 +6,7 @@ import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { writeScaleFixtures } from './fixtures/generate-scale.js'
+import { isMainModule } from './is-main.js'
 
 const ROOT = resolve(import.meta.dirname, '..')
 const FLAGS = ['AGENT_KINDS', 'AGENT_COMPARE', 'UI_SPEC_VIEWER', 'UI_DARK_MODE', 'MCP_GENERATOR', 'MCP_TESTER'] as const
@@ -186,4 +187,4 @@ async function main() {
   if (failed || bad.length) process.exit(1)
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) void main()
+if (isMainModule(import.meta.url, process.argv[1])) void main()

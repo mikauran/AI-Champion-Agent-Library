@@ -4,6 +4,7 @@
 // can actually reach, and whether that model accepts a custom `temperature`.
 // Run with: npx tsx --env-file=.env scripts/probe-openai-model.ts
 import OpenAI from 'openai'
+import { isMainModule } from './is-main.js'
 
 // Priority order per the plan's Task 2 spec: cheap/known-good candidates first,
 // falling back to the current flagship gpt-5(.x)-* family (excluding -pro variants).
@@ -99,7 +100,7 @@ async function main() {
   console.log(`TEMPERATURE_SUPPORTED=${temperatureSupported}`)
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`
+const isMain = isMainModule(import.meta.url, process.argv[1])
 if (isMain) {
   main().catch(err => {
     console.error(err)

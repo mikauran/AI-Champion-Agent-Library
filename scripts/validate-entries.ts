@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { parse } from 'yaml'
 import { OracleAgentSpecSchema } from '../src/lib/spec/oracle-agentspec.js'
 import { scanSecrets } from '../src/lib/spec/security.js'
+import { isMainModule } from './is-main.js'
 
 export interface EntryResult {
   path: string
@@ -117,7 +118,7 @@ export function main(
   return bad > 0 ? 1 : 0
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`
+const isMain = isMainModule(import.meta.url, process.argv[1])
 if (isMain) {
   process.exitCode = main(process.argv.slice(2))
 }

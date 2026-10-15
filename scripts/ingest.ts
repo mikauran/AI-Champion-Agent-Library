@@ -19,6 +19,7 @@ import type { SubmissionFile } from '../src/lib/spec/kinds.js'
 import { parseSubmission } from '../src/lib/spec/registry.js'
 import { readSubmissionDir } from '../src/lib/spec/scan.js'
 import { redactSecrets, sanitizeMessage } from '../src/lib/spec/security.js'
+import { isMainModule } from './is-main.js'
 
 const DATA_DIR = process.env.INGEST_DATA_DIR ?? './data/agents'
 const DB_PATH = process.env.INGEST_DB_PATH ?? './db/catalog.db'
@@ -461,7 +462,7 @@ async function ingestInto(sqlite: Database.Database, dataDir: string, opts?: { e
 
 export { ingest }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`
+const isMain = isMainModule(import.meta.url, process.argv[1])
 if (isMain) {
   ingest(DATA_DIR, DB_PATH).catch(err => {
     console.error(err)

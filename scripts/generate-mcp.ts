@@ -17,6 +17,7 @@ import { renderReview } from '../src/lib/mcpgen/proposals/review.js'
 import { stableJson } from '../src/lib/mcpgen/generate.js'
 import { parseInput, prepareInput } from '../src/lib/mcpgen/registry.js'
 import type { GenerateOptions } from '../src/lib/mcpgen/types.js'
+import { isMainModule } from './is-main.js'
 import { collectPackFiles } from './mcp-pack-io.js'
 
 export interface CliIo {
@@ -295,15 +296,7 @@ export async function main(argv: string[], io: CliIo = defaultIo): Promise<numbe
   }
 }
 
-/** True when this module is the program entry. Compares file URLs, so spaces and non-ASCII paths work. */
-export function isMainModule(metaUrl: string, argv1: string | undefined): boolean {
-  if (!argv1) return false
-  try {
-    return metaUrl === pathToFileURL(resolve(argv1)).href
-  } catch {
-    return false
-  }
-}
+export { isMainModule }
 
 if (isMainModule(import.meta.url, process.argv[1])) {
   process.exitCode = await main(process.argv.slice(2))

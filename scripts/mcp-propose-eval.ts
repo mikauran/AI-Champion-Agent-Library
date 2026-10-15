@@ -17,6 +17,7 @@ import { formatGaps } from '../src/lib/mcpgen/diagnostics.js'
 import { runPipeline } from '../src/lib/mcpgen/pipeline.js'
 import { prepareInput } from '../src/lib/mcpgen/registry.js'
 import { MAX_PROPOSAL_BYTES } from '../src/lib/mcpgen/proposals/schema.js'
+import { isMainModule } from './is-main.js'
 import { DEFAULT_MAX_SCORE_DROP, evaluateProposalEffect, renderComparison } from '../src/lib/mcptest/proposalEval.js'
 
 export interface EvalIo {
@@ -130,16 +131,7 @@ export async function main(argv: string[], io: EvalIo = defaultIo): Promise<numb
   }
 }
 
-export function isMainModule(metaUrl: string, argv1: string | undefined): boolean {
-  if (!argv1) return false
-  const self = fileURLToPath(metaUrl)
-  const entry = resolve(argv1)
-  try {
-    return realpathSync(self) === realpathSync(entry)
-  } catch {
-    return self === entry
-  }
-}
+export { isMainModule }
 
 if (isMainModule(import.meta.url, process.argv[1])) {
   process.exitCode = await main(process.argv.slice(2))

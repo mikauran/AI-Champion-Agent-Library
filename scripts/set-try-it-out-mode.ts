@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3'
+import { isMainModule } from './is-main.js'
 
 const DB_PATH = process.env.CATALOG_DB_PATH ?? './db/catalog.db'
 
@@ -55,7 +56,7 @@ export function setTryItOutMode(dbPath: string): Array<{ slug: string; mode: str
   return results
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`
+const isMain = isMainModule(import.meta.url, process.argv[1])
 if (isMain) {
   try {
     const results = setTryItOutMode(DB_PATH)
