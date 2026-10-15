@@ -5,6 +5,7 @@
 // only text extensions are read; size is checked before a file is read. No path is ever echoed
 // unsanitised.
 import { basename, join } from 'node:path'
+import { isEnvFileName } from '../src/lib/mcpgen/credentials.js'
 import { PACK_LIMITS } from '../src/lib/mcpgen/proposals/contextPack.js'
 
 export interface PackIo {
@@ -20,7 +21,7 @@ export const SAMPLE_EXTENSIONS = ['.csv', '.tsv', '.json', '.jsonl', '.ndjson', 
 const MAX_DEPTH = 3
 const MAX_ENTRIES = 200
 
-const isEnvName = (n: string) => /^\.?env/i.test(n)
+const isEnvName = isEnvFileName
 const ext = (n: string) => (n.lastIndexOf('.') >= 0 ? n.slice(n.lastIndexOf('.')).toLowerCase() : '')
 const show = (p: string) => basename(p).replace(/[^A-Za-z0-9._-]+/g, '_').slice(0, 60)
 

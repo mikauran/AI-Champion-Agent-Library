@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url'
 import { lstat, mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { MAX_INPUT_BYTES } from '../src/lib/mcpgen/api-contract.js'
 import { validPath } from '../src/lib/mcpgen/bundle.js'
+import { isEnvFileName } from '../src/lib/mcpgen/credentials.js'
 import { formatGaps } from '../src/lib/mcpgen/diagnostics.js'
 import { runPipelineAsync } from '../src/lib/mcpgen/pipeline.js'
 import { buildContextPack } from '../src/lib/mcpgen/proposals/contextPack.js'
@@ -132,7 +133,7 @@ function parseArgs(argv: string[]): Parsed | null {
   return p.input && p.out ? p : null
 }
 
-const refusesEnv = (path: string) => /^\.?env/i.test(basename(path))
+const refusesEnv = isEnvFileName
 
 /** Write files under dir, refusing a non-empty directory unless --force. Returns false after printing the reason. */
 async function writeFiles(io: CliIo, dir: string, files: { path: string; content: string }[], force: boolean, tool: string): Promise<boolean> {
@@ -235,7 +236,7 @@ export async function main(argv: string[], io: CliIo = defaultIo): Promise<numbe
       return 0
     }
     if (!args.input) return 64
-    if (basename(args.input).toLowerCase().startsWith('.env')) {
+    if (refusesEnv(args.input)) {
       io.error('generate-mcp: refusing to read environment files.')
       return 2
     }

@@ -12,6 +12,7 @@ import { realpathSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { MAX_INPUT_BYTES } from '../src/lib/mcpgen/api-contract.js'
 import { validPath } from '../src/lib/mcpgen/bundle.js'
+import { isEnvFileName } from '../src/lib/mcpgen/credentials.js'
 import { formatGaps } from '../src/lib/mcpgen/diagnostics.js'
 import { runPipeline } from '../src/lib/mcpgen/pipeline.js'
 import { prepareInput } from '../src/lib/mcpgen/registry.js'
@@ -79,7 +80,7 @@ function parse(argv: string[]): Parsed | null {
   return p.input && p.proposals ? (p as Parsed) : null
 }
 
-const refusesEnv = (s: string) => /^\.?env/i.test(basename(s))
+const refusesEnv = isEnvFileName
 const clean = (s: string) => s.replace(/[\u0000-\u001f\u007f-\u009f]+/g, ' ').slice(0, 300)
 
 export async function main(argv: string[], io: EvalIo = defaultIo): Promise<number> {

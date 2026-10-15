@@ -9,7 +9,7 @@
 import { createHash } from 'node:crypto'
 import { gap } from '../diagnostics.js'
 import { MAX_INPUT_BYTES } from '../api-contract.js'
-import { scanForCredentials } from '../credentials.js'
+import { isEnvFileName, scanForCredentials } from '../credentials.js'
 import { stableJson, generateFromPlan } from '../generate.js'
 import { buildPlan, serverSlug } from '../plan.js'
 import { redactSecrets } from '../redact.js'
@@ -87,7 +87,7 @@ function scanFile(kind: 'source' | 'samples' | 'docs', label: string, text: stri
 export function buildContextPack(input: PackInput): PackResult {
   const options = input.options ?? {}
   const sourceLabel = safeLabel(input.source.name, 'source.txt')
-  if (/^\.?env/i.test(String(input.source.name).split(/[\\/]/).pop() ?? '')) return { ok: false, gaps: [err('pack-env-file-refused', 'Environment files are never read.')] }
+  if (isEnvFileName(String(input.source.name))) return { ok: false, gaps: [err('pack-env-file-refused', 'Environment files are never read.')] }
   if (bytes(input.source.text) > MAX_INPUT_BYTES) return { ok: false, gaps: [err('input-too-large', `Input exceeds the ${MAX_INPUT_BYTES} byte limit.`)] }
 
   // ---- inputs: names, caps, credential scan (all before anything is written) ----
@@ -98,7 +98,7 @@ export function buildContextPack(input: PackInput): PackResult {
   const gaps: Gap[] = []
   for (const [kind, list] of [['samples', samples], ['docs', docs]] as const) {
     for (const f of list) {
-      if (/^\.?env/i.test(String(f.name).split(/[\\/]/).pop() ?? '')) return { ok: false, gaps: [err('pack-env-file-refused', 'Environment files are never read.')] }
+      if (isEnvFileName(String(f.name))) return { ok: false, gaps: [err('pack-env-file-refused', 'Environment files are never read.')] }
       gaps.push(...scanFile(kind, safeLabel(f.name, kind), f.text))
     }
   }

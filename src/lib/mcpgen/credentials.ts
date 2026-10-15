@@ -296,3 +296,13 @@ export function toGaps(findings: CredentialFinding[]): Gap[] {
     path: `line ${f.line}`,
   }))
 }
+
+/**
+ * Environment-file names that no mcpgen input path may read (CR-34, CR-55): `.env`, `.env.*`, `.envrc`, `*.env`
+ * and the bare `env.<stage>` spellings. Ordinary documents about environments (`environment.md`) are not matched.
+ * One implementation for the library, the pack collector and both CLIs.
+ */
+export function isEnvFileName(path: string): boolean {
+  const n = (String(path).split(/[\\/]/).pop() ?? '').toLowerCase()
+  return n === 'env' || n.startsWith('.env') || n.endsWith('.env') || /^env\.(?:local|production|prod|development|dev|test|staging|stage)$/.test(n)
+}
