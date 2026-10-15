@@ -58,6 +58,7 @@ SOFTWARE.
 | product-sourcing-mbom | 1_DDC_Toolkit/Procurement/material-procurement-tracker; 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor | 2026-10-15 |
 | quote-comparison | 1_DDC_Toolkit/Procurement/bid-analysis-comparator; 6_OpenConstructionERP/oce-tendering | 2026-10-15 |
 | carbon-epd-enrichment | 5_DDC_Innovative/embodied-carbon-esg; 1_DDC_Toolkit/Sustainability/carbon-calculator | 2026-10-15 |
+| cut-sheet-qa | 1_DDC_Toolkit/Document-Control/submittal-tracker; 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor | 2026-10-15 |
 | (further entries: Phases 25-29) | | |
 
 ### Skills adapted in this repository
@@ -69,3 +70,4 @@ SOFTWARE.
 - product-sourcing-mbom: ideas adapted from DDC skills 1_DDC_Toolkit/Procurement/material-procurement-tracker and 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor (MIT); own design; no DDC code or text copied
 - quote-comparison: ideas adapted from DDC skills 1_DDC_Toolkit/Procurement/bid-analysis-comparator and 6_OpenConstructionERP/oce-tendering (MIT); own design; scoring/recommendation not adopted; no DDC code or text copied
 - carbon-epd-enrichment: ideas adapted from DDC skills 5_DDC_Innovative/embodied-carbon-esg and 1_DDC_Toolkit/Sustainability/carbon-calculator (MIT); own design; no DDC code, factors or text copied
+- cut-sheet-qa: ideas adapted from DDC skills 1_DDC_Toolkit/Document-Control/submittal-tracker and 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor (MIT); own design; no DDC code or text copied

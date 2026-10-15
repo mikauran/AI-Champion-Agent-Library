@@ -55,3 +55,10 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-048 | 7 Carbon & EPD enrichment | Mapping by exact material_key: no fuzzy product-name matching and no product-specific vs average EPD logic | tool | open | Phase 26 | open |
 | G-049 | 7 Carbon & EPD enrichment | No product-to-EPD link from the manufacturer; the product list needs a material_key (from 26-01 or a classification step) | process | open | Phase 26 | open |
 | G-050 | 7 Carbon & EPD enrichment | Counted on the first run (job c61b9914, SKILL v1, all 10 rows correct) with the per-product check line and agreement rules from 26-02; still one synthetic sample of 10 products and 8 EPDs, a larger real excerpt is unproven | tool | open | Phase 26 | open |
+| G-051 | 8 Cut-sheet QA | Text only: PDF or image data sheets need a conversion step (OCR/table extraction) that is not part of the agent | tool | open | Phase 27 | open |
+| G-052 | 8 Cut-sheet QA | Sample is synthetic: real manufacturer data sheets and specifications are confidential or copyrighted and were not used; behaviour on real documents unproven | data | open | Phase 27 | open |
+| G-053 | 8 Cut-sheet QA | Keys match by exact text: no synonym or multilingual key mapping, no tables or footnotes in cut sheets | tool | open | Phase 27 | open |
+| G-054 | 8 Cut-sheet QA | Only eq and ge numeric tests; no le, ranges, tolerances or conditional requirements | tool | open | Phase 27 | open |
+| G-055 | 8 Cut-sheet QA | Units are flagged, never converted (a deterministic unit tool is the proper place) | tool | open | Phase 27 | open |
+| G-056 | 8 Cut-sheet QA | Scoped to about 6 requirements per run; larger specifications must be batched | tool | open | Phase 27 | open |
+| G-057 | 8 Cut-sheet QA | Counted on the first run (job fb46b86d, SKILL v1, all 6 verdicts correct) with the per-requirement check line and Y/N lookup from 26-02; still one synthetic sample of 6 requirements, real data sheets unproven | tool | open | Phase 27 | open |
