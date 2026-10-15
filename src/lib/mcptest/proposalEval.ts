@@ -15,6 +15,7 @@ import type { CheckResult, PrepareResult } from './core/types'
 import { generatorSubjects } from './generatorSubject'
 import { BINDING_FILE } from '../mcpgen/binding'
 import { runPipeline } from '../mcpgen/pipeline'
+import { prepareInput } from '../mcpgen/registry'
 import type { GenerateOptions } from '../mcpgen/types'
 
 export const DEFAULT_MAX_SCORE_DROP = 0
@@ -236,6 +237,8 @@ export interface ProposalEvalInput extends PipelineArgs {
 export type ProposalEvalResult = { kind: 'compared'; comparison: Comparison } | { kind: 'rejected'; gaps: { code: string; message: string }[] } | { kind: 'baseline-failed'; gaps: { code: string; message: string }[] }
 
 export async function evaluateProposalEffect(i: ProposalEvalInput, o: PairOptions = {}): Promise<ProposalEvalResult> {
+  // Load the on-demand parsers (the OData XML reader) before the synchronous pipeline runs (CR-20, CR-32).
+  await prepareInput({ text: i.input, filename: i.filename }, { adapterId: i.adapterId })
   const base = runPipeline(i.input, { filename: i.filename, adapterId: i.adapterId, options: i.options })
   if (!base.ok) return { kind: 'baseline-failed', gaps: base.gaps.map((g) => ({ code: g.code, message: g.message })) }
   const prop = runPipeline(i.input, { filename: i.filename, adapterId: i.adapterId, options: i.options, proposals: { text: i.proposalsText, lenient: i.lenient } })

@@ -14,6 +14,7 @@ import { MAX_INPUT_BYTES } from '../src/lib/mcpgen/api-contract.js'
 import { validPath } from '../src/lib/mcpgen/bundle.js'
 import { formatGaps } from '../src/lib/mcpgen/diagnostics.js'
 import { runPipeline } from '../src/lib/mcpgen/pipeline.js'
+import { prepareInput } from '../src/lib/mcpgen/registry.js'
 import { MAX_PROPOSAL_BYTES } from '../src/lib/mcpgen/proposals/schema.js'
 import { DEFAULT_MAX_SCORE_DROP, evaluateProposalEffect, renderComparison } from '../src/lib/mcptest/proposalEval.js'
 
@@ -108,6 +109,7 @@ export async function main(argv: string[], io: EvalIo = defaultIo): Promise<numb
     io.log(renderComparison(r.comparison, args.format))
     if (args.writePackages) {
       const dir = resolve(args.writePackages)
+      await prepareInput({ text: input, filename: basename(args.input) }, { adapterId })
       for (const [label, proposals] of [['baseline', undefined], ['proposed', { text: proposalsText, lenient: args.lenient }]] as const) {
         const out = runPipeline(input, { filename: basename(args.input), adapterId, ...(proposals ? { proposals } : {}) })
         if (!out.ok) continue

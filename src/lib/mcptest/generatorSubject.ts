@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { BINDING_FILE } from '../mcpgen/binding'
 import { validPath } from '../mcpgen/bundle'
 import { runPipeline } from '../mcpgen/pipeline'
+import { prepareInput } from '../mcpgen/registry'
 import type { Gap } from '../mcpgen/types'
 import type { CaseDef, PrepareResult, Subject } from './core/types'
 import { parseBindingFile } from './core/bindingSchema'
@@ -100,6 +101,7 @@ export function generatorSubjects(deps: GeneratorSubjectDeps = {}): Subject[] {
         return { status: 'ERROR', error: cap(`sample unreadable: ${e instanceof Error ? e.message : String(e)}`) }
       }
 
+      await prepareInput({ text: input, filename }) // on-demand parsers (OData XML) are loaded before the synchronous pipeline (CR-20)
       const extraChecks = runGeneratorSideChecks(c.id, {
         sample: { id: sample.id, input, filename },
         runPipelineFn: run
