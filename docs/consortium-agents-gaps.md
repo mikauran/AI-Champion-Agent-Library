@@ -62,3 +62,10 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-055 | 8 Cut-sheet QA | Units are flagged, never converted (a deterministic unit tool is the proper place) | tool | open | Phase 27 | open |
 | G-056 | 8 Cut-sheet QA | Scoped to about 6 requirements per run; larger specifications must be batched | tool | open | Phase 27 | open |
 | G-057 | 8 Cut-sheet QA | Counted on the first run (job fb46b86d, SKILL v1, all 6 verdicts correct) with the per-requirement check line and Y/N lookup from 26-02; still one synthetic sample of 6 requirements, real data sheets unproven | tool | open | Phase 27 | open |
+| G-058 | 9 Spooling & cutting | No cut optimisation or nesting: stock pieces, waste and remainder reuse are marked to compute (tool); a deterministic cut-optimiser (script) is proposed as the future tool | tool | open | Phase 27 | open |
+| G-059 | 9 Spooling & cutting | No isometric, IFC or drawing parsing: the input is a hand-prepared segment list; a preprocessing step from the prefab model is needed | tool | open | Phase 27 | open |
+| G-060 | 9 Spooling & cutting | Sample is synthetic: real prefab and fabrication data are consortium-confidential and were not used; behaviour on real spools unproven | tool | open | Phase 27 | open |
+| G-061 | 9 Spooling & cutting | Only straight segments: no fittings, bends, joints, cut allowances or kerf | tool | open | Phase 27 | open |
+| G-062 | 9 Spooling & cutting | Pipes only in the sample: duct and cable-tray variants are not tested | tool | open | Phase 27 | open |
+| G-063 | 9 Spooling & cutting | Scoped to about 6 segments per run; larger lists must be batched | tool | open | Phase 27 | open |
+| G-064 | 9 Spooling & cutting | Counted on the first run (job a7f0ad36, SKILL v1, all six cut statuses and groups correct) with the per-segment check line and Y/N lookup; still one synthetic sample of 6 segments, real prefab lists unproven | tool | open | Phase 27 | open |

@@ -28,12 +28,12 @@ Only the agent names are used here, with our own wording. The source slide is TU
 | 6 | Quote comparison | Sourcing | partial | data/agents/quote-comparison.yaml | Counted: entry plus one container run on three synthetic quotes (Phase 26, 26-02); flag-only, no arithmetic, no conversions, no supplier recommendation. | 26 |
 | 7 | Carbon & EPD enrichment | Sourcing | partial | data/agents/carbon-epd-enrichment.yaml | Counted: entry plus one container run on a synthetic product list and synthetic EPD excerpt (Phase 26, 26-03); map-and-flag only, no calculation, no live EPD register access. | 26 |
 | 8 | Cut-sheet QA | Manufacturing | partial | data/agents/cut-sheet-qa.yaml, data/agents/submittal-review-router.yaml (related) | Counted: entry plus one container run on a synthetic cut sheet and specification excerpt (Phase 27, 27-01); text only, about 6 requirements per run, no unit conversion. The submittal router stays as it was (submittal routing). | 27 |
-| 9 | Spooling & cutting | Manufacturing | missing | none | No entry handles prefab spools or cut lists. | 27 |
+| 9 | Spooling & cutting | Manufacturing | partial | data/agents/spooling-and-cutting.yaml | Counted: entry plus one container run on a synthetic segment list (Phase 27, 27-02); copy and group only, cutting arithmetic and nesting left to a tool (to compute); no isometric/IFC parsing. | 27 |
 | 10 | D2 code validation | Site and handover | missing | none | `airo` checks regulations for AI use cases, not code validation of design data. | 28 |
 | 11 | O&M completeness | Site and handover | missing | none | No entry checks handover documentation. | 28 |
 | 12 | BMS digital twin | Site and handover | missing | none | No entry connects building management data to a model. | 28 |
 
-Summary: 0 full, 7 partial (1, 2, 3, 4, 6, 7, 8), 5 missing.
+Summary: 0 full, 9 partial (1, 2, 3, 4, 5, 6, 7, 8, 9), 3 missing (10, 11, 12).
 
 Stage names: Design (IFC/BIM), Sourcing (LVI-INFO catalog), Manufacturing (prefab and cut sheets), Site and handover (O&M, BMS).
 

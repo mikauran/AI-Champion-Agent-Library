@@ -30,3 +30,25 @@ COUNTED (SKILL v1, first run, rubric R1-R7 met).
 - Caveat: draft for engineer review; counted for the scoped step only (6 requirements, one synthetic sample, a single run). Text only.
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: one 27-01 row (0.0169 USD).
+
+### Agent 9: Spooling & cutting
+COUNTED (SKILL v1, first run, rubric R1-R7 met).
+
+- Entry: data/agents/spooling-and-cutting.yaml (validate-submission INGESTIBLE, validate-entries 0 errors; stage manufacturing, agent_no 9; the name is "Spooling and Cutting" so the derived slug is spooling-and-cutting). Input label: synthetic (data/tryitout-prompts/spooling-and-cutting/sample-segments.txt: 6 invented segments). Option A, gpt-4.1-mini, Pi container, 2 requests, usage observed (countable).
+- Job a7f0ad36-a6a5-4d5e-abe1-9a69d589af76, 6296 tokens, est. 0.0101 USD (ledger row 27-02). Single run, no failed runs.
+- Answer key vs result: cut list P-01..P-06 in order, lengths/stock/dn/material/spool copied, P-05 remainder 300 copied; only P-04 `to compute (tool)` (6200 > 5000): match. Spool groups SP-A P-01,P-02,P-03; SP-B P-04,P-05; SP-C P-06: match. Cut groups 22 copper P-01,P-02,P-05 (1850,720,950); 28 copper P-03,P-04 (2400,6200); 50 steel P-06 (3100); stock_pieces `to compute (tool)` in all: match.
+- Verdict: R1 pass (one result.md, 6 check lines and 6 cut-list rows in input order); R2 pass (all copied values equal input); R3 pass; R4 pass; R5 pass; R6 pass (no sums, counts, waste or piece numbers; open items contain P-04, the fixed to-compute line and the P-05 remainder-copied line); R7 pass (draft caveat).
+- Excerpt:
+  ```
+  P-04 spool=SP-B grp=28|copper len=6200 stock=5000 len_le_stock=N rem=none => to compute (tool)
+  P-05 | SP-B | 22 | copper | 950 | 5000 | 300 | cut-list
+  SP-B | P-04,P-05
+  22 | copper | P-01,P-02,P-05 | 1850,720,950 | to compute (tool)
+  28 | copper | P-03,P-04 | 2400,6200 | to compute (tool)
+  P-04: length exceeds stock; needs joint or longer stock; to compute (tool)
+  P-05: remainder 300 copied, not used
+  Draft for fabricator review. Grouping and lengths are copied from the supplied synthetic segment list; cutting quantities and nesting were not computed.
+  ```
+- Caveat: draft for fabricator review; counted for the scoped step only (6 segments, one synthetic sample, single run); no optimisation performed. The model emitted the result inside a code fence preceded by "output/result.md:" in the captured text (file content itself correct).
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: one 27-02 row (0.0101 USD).
