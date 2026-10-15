@@ -42,6 +42,11 @@
       "severity": "warn"
     },
     {
+      "code": "base-path-in-env",
+      "message": "The document declares a base path (servers url or basePath); operation paths are relative to it, but it is not copied. Include it in ACME_SWAGGER_ORDERS_BASE_URL.",
+      "severity": "info"
+    },
+    {
       "code": "offset-pagination",
       "message": "listOrders: pages by offset; the offset argument is passed through unchanged and the result ceiling check does not apply to it.",
       "path": "listOrders",

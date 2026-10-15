@@ -44,6 +44,11 @@
   ],
   "gaps": [
     {
+      "code": "base-path-in-env",
+      "message": "The document declares a base path (servers url or basePath); operation paths are relative to it, but it is not copied. Include it in ACME_SWAGGER_ORDERS_BASE_URL.",
+      "severity": "info"
+    },
+    {
       "code": "missing-response-schema",
       "message": "GET /reports: no JSON response schema for a success status; the operation was omitted.",
       "path": "downloadReport",

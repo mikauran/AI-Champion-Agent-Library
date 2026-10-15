@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "baseline": { "fingerprint": "7d8411e7f528d1bd254e266371249de0fba6d32d7dec9f7337025152971f03ff" },
+  "baseline": { "fingerprint": "dfdfb94042e3adecd3ede978d10d7fca89a48d71dbd23cf732e7a8f14e7c2bb4" },
   "producer": { "kind": "external-agent", "note": "Written by a Claude agent session from the context pack only (README-FOR-AGENT, FINGERPRINT, tool-inventory, examples, schema). Synthetic Acme fixture. Human review pending." },
   "ops": [
     {

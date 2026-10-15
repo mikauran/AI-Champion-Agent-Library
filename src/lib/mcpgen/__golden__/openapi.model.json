@@ -157,7 +157,13 @@
       ]
     }
   ],
-  "gaps": [],
+  "gaps": [
+    {
+      "code": "base-path-in-env",
+      "message": "The document declares a base path (servers url or basePath); operation paths are relative to it, but it is not copied. Include it in ACME_PARTS_BASE_URL.",
+      "severity": "info"
+    }
+  ],
   "limits": {
     "maxPageSize": 50,
     "maxResponseItems": 200

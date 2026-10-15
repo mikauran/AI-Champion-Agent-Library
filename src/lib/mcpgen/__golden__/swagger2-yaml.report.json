@@ -30,6 +30,11 @@
       "severity": "warn"
     },
     {
+      "code": "base-path-in-env",
+      "message": "The document declares a base path (servers url or basePath); operation paths are relative to it, but it is not copied. Include it in ACME_SWAGGER_PARTS_BASE_URL.",
+      "severity": "info"
+    },
+    {
       "code": "write-dropped",
       "message": "Write operation createPart was dropped (read-only server).",
       "path": "createPart",

@@ -1,6 +1,6 @@
 Proposal review (strict mode)
-  proposal file sha256: 83151851b5424614639fe1430c34e6a86fdefcea40398c4bfe39c63e79c093b6
-  baseline fingerprint: 7d8411e7f528d1bd254e266371249de0fba6d32d7dec9f7337025152971f03ff
+  proposal file sha256: b66f62470e87a3b6ee243f87e654b0fb3bf6978fd8c11c64a9b31f802ad0ee6b
+  baseline fingerprint: dfdfb94042e3adecd3ede978d10d7fca89a48d71dbd23cf732e7a8f14e7c2bb4
   result: ACCEPTED
 
 Applied ops (1):

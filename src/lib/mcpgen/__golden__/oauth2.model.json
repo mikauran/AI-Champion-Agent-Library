@@ -39,6 +39,11 @@
   ],
   "gaps": [
     {
+      "code": "base-path-in-env",
+      "message": "The document declares a base path (servers url or basePath); operation paths are relative to it, but it is not copied. Include it in ACME_LEDGER_BASE_URL.",
+      "severity": "info"
+    },
+    {
       "code": "oauth2-flow-not-implemented",
       "message": "The API uses OAuth2; no flow is implemented. The server reads an access token you obtained from ACME_LEDGER_ACCESS_TOKEN and sends it as a bearer token; it never stores or refreshes it.",
       "severity": "warn"
