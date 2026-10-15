@@ -5,7 +5,7 @@ description: "Groups prefab pipe segments into spools and cut groups and drafts 
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/spooling-and-cutting"
+  github_url: "https://github.com/mikauran/AI-Champion-Agent-Library"
   tags:
     - "manufacturing"
     - "prefab"
@@ -30,7 +30,7 @@ metadata:
   gaps:
     - "No cut optimisation or nesting: stock pieces, waste and remainder reuse are marked to compute (tool); a deterministic cut-optimiser (script) is proposed as the future tool"
     - "No isometric, IFC or drawing parsing: the input is a hand-prepared segment list; a preprocessing step from the prefab model is needed"
-    - "Sample is synthetic: real prefab and fabrication data are consortium-confidential and were not used; behaviour on real spools unproven"
+    - "Sample is synthetic: real prefab and fabrication data are not included; behaviour on real spools unproven"
     - "Only straight segments: no fittings, bends, joints, cut allowances or kerf"
     - "Pipes only in the sample: duct and cable-tray variants are not tested"
     - "Scoped to about 6 segments per run; larger lists must be batched"
@@ -38,7 +38,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented segment list; no real prefab or project data"
-  attribution: "Ideas adapted from DDC skill prefab-optimization, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "No DDC basis (own design); no DDC skill covers pipe spooling or cut lists"
   input_schema:
     - key: "input_text"
       label: "Segment list (CSV text)"

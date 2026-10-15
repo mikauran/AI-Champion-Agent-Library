@@ -4,7 +4,7 @@ name: "Customer Support Triager"
 description: "Routes incoming customer support tickets to the appropriate team based on content analysis and urgency classification."
 metadata:
   category: "customer-support"
-  github_url: "https://github.com/aic-consortium/customer-support-triager"
+  github_url: "https://github.com/mikauran/AI-Champion-Agent-Library"
   maturity: "production"
   tags:
     - "nlp"

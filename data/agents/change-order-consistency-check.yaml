@@ -5,7 +5,7 @@ description: "Reconciles a change-order log with the change-order forms and draf
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/change-order-consistency-check"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/1_DDC_Toolkit/Cost-Management/change-order-processor"
   tags:
     - "site-handover"
     - "change-order"
@@ -38,7 +38,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented change-order log and forms; no real project data"
-  attribution: "Ideas adapted from DDC skills change-order-processor and change-order-manager, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "Adapted from DDC skill 1_DDC_Toolkit/Cost-Management/change-order-processor (MIT, (c) 2026 DataDrivenConstruction); no DDC code copied; 4_DDC_Curated/Contract-Legal/change-order-manager not used (third-party source licence)"
   input_schema:
     - key: "input_text"
       label: "Change-order log and forms (text)"

@@ -5,7 +5,7 @@ description: "Reads a quantity take-off table as CSV text and drafts a normalise
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/qto-normalization"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/2_DDC_Book/3.2-QTO-Auto-Estimates/qto-report"
   tags:
     - "qto"
     - "quantity-takeoff"
@@ -35,7 +35,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented take-off rows for an invented building; no real project data"
-  attribution: "Ideas adapted from DDC skill ifc-qto-extraction, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "Adapted (method only) from DDC skill 2_DDC_Book/3.2-QTO-Auto-Estimates/qto-report and bim-qto in the same folder (MIT, (c) 2026 DataDrivenConstruction); qto-report quotes the DDC book, so only the method is used and no book text is copied; no CWICR data"
   input_schema:
     - key: "input_text"
       label: "QTO table (CSV text)"

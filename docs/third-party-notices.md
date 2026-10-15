@@ -44,46 +44,35 @@ SOFTWARE.
 
 - a. `SKILL.md` instructions and documentation may be adapted, with the copyright notice retained (this file).
 - b. Never copy the book, the PDF or CWICR data into the repo, into agent prompts or into samples.
-- c. An adapted entry sets `metadata.attribution` to "Adapted from DDC skill <name>, MIT, (c) 2026 DataDrivenConstruction" and gets a row in the table below (entry slug, DDC skill path, date).
+- c. A DDC-based entry sets `metadata.attribution` to the exact skill path with "adapted from" or "inspired by" and the MIT notice, or to "no DDC basis", and gets a row in the table below.
 - d. Trademarks (Revit, Autodesk, Procore and so on) are used for identification only.
 
-### Adapted entries
+### DDC agents and their skill paths
 
-| Entry slug | DDC skill path | Date |
+Paths are relative to the DDC repository root. "Built on the skill" means the skill's method, data model and rules are the specification, adapted to Finnish MEP; no skill code is packaged or run, and the skills' own defects are not copied. Working mapping (2026-10-15), to be confirmed.
+
+| Entry slug | DDC skill path | Relation |
 | --- | --- | --- |
-| etim-classification-repair | 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai | 2026-10-15 |
-| qto-normalization | 1_DDC_Toolkit/BIM-Analysis/ifc-qto-extraction | 2026-10-15 |
-| clash-prioritization | 2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer; 1_DDC_Toolkit/BIM-Analysis/bim-clash-detection | 2026-10-15 |
-| rfi-generation-from-findings | 1_DDC_Toolkit/Document-Control/rfi-management | 2026-10-15 |
-| product-sourcing-mbom | 1_DDC_Toolkit/Procurement/material-procurement-tracker; 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor | 2026-10-15 |
-| quote-comparison | 1_DDC_Toolkit/Procurement/bid-analysis-comparator; 6_OpenConstructionERP/oce-tendering | 2026-10-15 |
-| carbon-epd-enrichment | 5_DDC_Innovative/embodied-carbon-esg; 1_DDC_Toolkit/Sustainability/carbon-calculator | 2026-10-15 |
-| cut-sheet-qa | 1_DDC_Toolkit/Document-Control/submittal-tracker; 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor | 2026-10-15 |
-| spooling-and-cutting | 5_DDC_Innovative/prefab-optimization | 2026-10-15 |
-| d2-code-validation | 2_DDC_Book/4.3-BIM-Validation-Pipeline/ids-checker; 2_DDC_Book/2.5-Data-Modeling-Standards/standards-compliance-checker | 2026-10-15 |
-| om-completeness | 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist; 1_DDC_Toolkit/Closeout/as-built-tracker; 1_DDC_Toolkit/Closeout/warranty-tracker | 2026-10-15 |
-| bms-digital-twin | 5_DDC_Innovative/digital-twin-sync; 2_DDC_Book/2.2-Open-Data-Standards/ontology-mapper | 2026-10-15 |
-| daily-report-cross-check | 1_DDC_Toolkit/Field-Operations/daily-report-generator; 3_DDC_Insights/Automation-Workflows/n8n-daily-report | 2026-10-15 |
-| punch-list-closure-check | 1_DDC_Toolkit/Field-Operations/punch-list-manager; 1_DDC_Toolkit/Project-Closeout/punch-list-manager | 2026-10-15 |
-| change-order-consistency-check | 1_DDC_Toolkit/Cost-Management/change-order-processor; 4_DDC_Curated/Contract-Legal/change-order-manager | 2026-10-15 |
-| safety-observation-classification | 1_DDC_Toolkit/Field-Operations/safety-inspection; 3_DDC_Insights/Safety-Quality/safety-inspection-checklist | 2026-10-15 |
-| (further entries: Phases 25-29) | | |
+| etim-classification-repair | 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai | inspired by (weak match) |
+| qto-normalization | 2_DDC_Book/3.2-QTO-Auto-Estimates/qto-report (and bim-qto in the same folder) | adapted, method only |
+| clash-prioritization | 2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer | adapted |
+| rfi-generation-from-findings | 1_DDC_Toolkit/Document-Control/rfi-management | adapted |
+| product-sourcing-mbom | 1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement | inspired by (method only; no CWICR data) |
+| quote-comparison | 1_DDC_Toolkit/Procurement/bid-analysis-comparator | adapted |
+| carbon-epd-enrichment | 2_DDC_Book/3.3-4D-BIM-CO2-Simulation/lifecycle-carbon-calculator | adapted (calculation not adopted) |
+| cut-sheet-qa | 1_DDC_Toolkit/Document-Control/submittal-tracker; 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor | inspired by (weak match) |
+| spooling-and-cutting | none | no DDC basis (own design) |
+| d2-code-validation | none | no DDC basis (own design; D2 = Finnish building code part D2, unconfirmed) |
+| om-completeness | 5_DDC_Innovative/as-built-documentation; 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist | adapted |
+| bms-digital-twin | 5_DDC_Innovative/digital-twin-sync | adapted |
+| daily-report-cross-check | 1_DDC_Toolkit/Field-Operations/daily-report-generator; 3_DDC_Insights/Automation-Workflows/n8n-daily-report | adapted |
+| punch-list-closure-check | 1_DDC_Toolkit/Field-Operations/punch-list-manager | adapted |
+| change-order-consistency-check | 1_DDC_Toolkit/Cost-Management/change-order-processor | adapted |
+| safety-observation-classification | 1_DDC_Toolkit/Field-Operations/safety-inspection; 3_DDC_Insights/Safety-Quality/safety-inspection-checklist | adapted |
 
-### Skills adapted in this repository
+Notes:
 
-- etim-classification-repair: approach adapted from DDC skill 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai (MIT); own design for ETIM-style mapping; no DDC code or data copied
-- qto-normalization: ideas adapted from DDC skill 1_DDC_Toolkit/BIM-Analysis/ifc-qto-extraction (MIT); own design; qto-report (quotes the DDC book) and cwicr-* skills (CWICR data licence) not used
-- clash-prioritization: ideas adapted from DDC skills 2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer and 1_DDC_Toolkit/BIM-Analysis/bim-clash-detection (MIT); own design; no DDC book text copied
-- rfi-generation-from-findings: RFI field set adapted from DDC skill 1_DDC_Toolkit/Document-Control/rfi-management (MIT); own design; no DDC code copied
-- product-sourcing-mbom: ideas adapted from DDC skills 1_DDC_Toolkit/Procurement/material-procurement-tracker and 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor (MIT); own design; no DDC code or text copied
-- quote-comparison: ideas adapted from DDC skills 1_DDC_Toolkit/Procurement/bid-analysis-comparator and 6_OpenConstructionERP/oce-tendering (MIT); own design; scoring/recommendation not adopted; no DDC code or text copied
-- carbon-epd-enrichment: ideas adapted from DDC skills 5_DDC_Innovative/embodied-carbon-esg and 1_DDC_Toolkit/Sustainability/carbon-calculator (MIT); own design; no DDC code, factors or text copied
-- cut-sheet-qa: ideas adapted from DDC skills 1_DDC_Toolkit/Document-Control/submittal-tracker and 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor (MIT); own design; no DDC code or text copied
-- spooling-and-cutting: ideas adapted from DDC skill 5_DDC_Innovative/prefab-optimization (MIT); own design; its optimisation algorithms not adopted; no DDC code or text copied
-- d2-code-validation: ideas adapted from DDC skills 2_DDC_Book/4.3-BIM-Validation-Pipeline/ids-checker and 2_DDC_Book/2.5-Data-Modeling-Standards/standards-compliance-checker (MIT); own design; no DDC code or text copied
-- om-completeness: ideas adapted from DDC skills 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist, 1_DDC_Toolkit/Closeout/as-built-tracker and 1_DDC_Toolkit/Closeout/warranty-tracker (MIT); own design; no DDC code or text copied
-- bms-digital-twin: ideas adapted from DDC skills 5_DDC_Innovative/digital-twin-sync and 2_DDC_Book/2.2-Open-Data-Standards/ontology-mapper (MIT); own design; no DDC code or text copied; book content not used
-- daily-report-cross-check: ideas adapted from DDC skills 1_DDC_Toolkit/Field-Operations/daily-report-generator and 3_DDC_Insights/Automation-Workflows/n8n-daily-report (MIT); own design; no DDC code or text copied
-- punch-list-closure-check: ideas adapted from DDC skills 1_DDC_Toolkit/Field-Operations/punch-list-manager and 1_DDC_Toolkit/Project-Closeout/punch-list-manager (MIT); own design; no DDC code or text copied
-- change-order-consistency-check: ideas adapted from DDC skills 1_DDC_Toolkit/Cost-Management/change-order-processor and 4_DDC_Curated/Contract-Legal/change-order-manager (MIT); own design; no DDC code or text copied
-- safety-observation-classification: ideas adapted from DDC skills 1_DDC_Toolkit/Field-Operations/safety-inspection and 3_DDC_Insights/Safety-Quality/safety-inspection-checklist (MIT); own design; no DDC code or text copied
+- qto-normalization uses `qto-report` as the primary skill, but that skill quotes the DDC book. Only the method is used and no book text is copied. The earlier audit preferred `bim-qto` / `ifc-qto-extraction` for this reason; `ifc-qto-extraction` is no longer the primary path.
+- product-sourcing-mbom is inspired by a `cwicr-*` skill as a method only. No CWICR data (CC BY-NC 4.0 plus commercial licence) is used; the catalog sample is invented.
+- spooling-and-cutting and d2-code-validation have no DDC counterpart and keep the library repository as their `github_url`.
+- The nine older entries (airo, demo-rfi-triage and seven seed entries) are not adapted from DDC skills.

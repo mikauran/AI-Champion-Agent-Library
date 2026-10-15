@@ -5,7 +5,7 @@ description: "Reads a coordination clash report as CSV text, ranks every clash P
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/clash-prioritization"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer"
   tags:
     - "clash"
     - "coordination"
@@ -35,7 +35,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented clash rows for an invented building; no real project data"
-  attribution: "Ideas adapted from DDC skills clash-resolution-analyzer and bim-clash-detection, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "Adapted from DDC skill 2_DDC_Book/4.3-BIM-Validation-Pipeline/clash-resolution-analyzer (MIT, (c) 2026 DataDrivenConstruction); no DDC book text or code copied"
   input_schema:
     - key: "input_text"
       label: "Clash report (CSV text)"

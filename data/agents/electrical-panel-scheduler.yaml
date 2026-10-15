@@ -4,7 +4,7 @@ name: "Electrical Panel Scheduler"
 description: "Generates and keeps electrical panel schedules synchronized with BIM model data — calculates connected loads, applies NEC demand factors, checks panel capacity, and exports schedules to design documents."
 metadata:
   category: "electrical"
-  github_url: "https://github.com/aic-consortium/electrical-panel-scheduler"
+  github_url: "https://github.com/mikauran/AI-Champion-Agent-Library"
   maturity: "production"
   tags:
     - "electrical"

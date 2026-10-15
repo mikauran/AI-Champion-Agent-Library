@@ -5,7 +5,7 @@ description: "Reads a request-for-quotation line list and two or three supplier 
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/quote-comparison"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/1_DDC_Toolkit/Procurement/bid-analysis-comparator"
   tags:
     - "sourcing"
     - "quotes"
@@ -36,7 +36,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented RFQ and three invented supplier quotes; no real supplier or price data"
-  attribution: "Ideas adapted from DDC skills bid-analysis-comparator and oce-tendering, MIT, (c) 2026 DataDrivenConstruction (own design; scoring and recommendation not adopted)"
+  attribution: "Adapted from DDC skill 1_DDC_Toolkit/Procurement/bid-analysis-comparator (MIT, (c) 2026 DataDrivenConstruction); the skill scores bids and recommends a winner, this agent deliberately does not; no DDC code copied"
   input_schema:
     - key: "input_text"
       label: "RFQ and supplier quotes (CSV text)"

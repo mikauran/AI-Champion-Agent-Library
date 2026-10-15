@@ -40,7 +40,7 @@ Base AgentSpec fields (`component_type`, `id`, `name`, `description`, `system_pr
 | gaps | yes | known limits; key present, list may be empty | `["No live model access"]` |
 | draft_for_review | yes | must be `true` | `true` |
 | sample_data | yes | `kind` (public or synthetic) and `label` | `{kind: synthetic, label: "Invented RFI text"}` |
-| attribution | only when adapted from a DDC skill | credit line | "Adapted from DDC skill X, MIT, (c) 2026 DataDrivenConstruction" |
+| attribution | only when adapted from a DDC skill | credit line | "Adapted from DDC skill <exact path>, MIT, (c) 2026 DataDrivenConstruction" |
 
 ## Rules
 

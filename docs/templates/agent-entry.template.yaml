@@ -10,7 +10,7 @@ description: "TEMPLATE: one or two sentences on what the agent reads and what dr
 metadata:
   category: "project-management"      # existing category, e.g. mechanical, electrical, plumbing, compliance
   maturity: "experimental"            # production | beta | experimental
-  github_url: "https://github.com/aic-consortium/template-agent"  # public repo or documentation link
+  github_url: "https://github.com/<owner>/<repo>"  # public repo or documentation link
   tags:                               # lowercase keywords for search
     - "template"
   stage: "design"                     # design | sourcing | manufacturing | site-handover

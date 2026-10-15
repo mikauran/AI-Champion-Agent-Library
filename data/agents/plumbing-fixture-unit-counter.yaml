@@ -4,7 +4,7 @@ name: "Plumbing Fixture Unit Counter"
 description: "Scans BIM models for plumbing fixtures, tallies fixture units per IPC/UPC standards, sizes supply and drain stacks, and validates that riser diagrams match the model."
 metadata:
   category: "plumbing"
-  github_url: "https://github.com/aic-consortium/plumbing-fixture-unit-counter"
+  github_url: "https://github.com/mikauran/AI-Champion-Agent-Library"
   maturity: "beta"
   tags:
     - "plumbing"

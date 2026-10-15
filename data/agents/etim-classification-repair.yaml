@@ -5,7 +5,7 @@ description: "Reads a text extract of IFC element properties plus a small ETIM-s
 metadata:
   category: "compliance"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/etim-classification-repair"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/1_DDC_Toolkit/BIM-Analysis/bim-classification-ai"
   tags:
     - "etim"
     - "classification"
@@ -28,7 +28,7 @@ metadata:
     - "Units are metric"
   gaps:
     - "No live ETIM release: ETIM is licensed and not redistributed, the sample uses a small synthetic SYN- class list (SYN- prefix on purpose so codes cannot be mistaken for real ETIM codes)"
-    - "No MCP lookup from the container (no network except the LLM proxy): LVI-INFO/stk-mcp class search is done by the engineer, or an excerpt is pasted into the input"
+    - "No class-register lookup from the container (no network except the LLM proxy): the class excerpt is pasted into the input"
     - "Input is text extracted from IFC; real IFC parsing is out of scope"
     - "No feature-value validation against a real class definition"
     - "One model call, no per-element tool use"
@@ -36,7 +36,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented element rows and invented SYN- class codes; no real project or ETIM data"
-  attribution: "Approach adapted from DDC skill bim-classification-ai, MIT, (c) 2026 DataDrivenConstruction (own design for ETIM-style mapping)"
+  attribution: "Inspired by DDC skill 1_DDC_Toolkit/BIM-Analysis/bim-classification-ai (MIT, (c) 2026 DataDrivenConstruction); weak match: the skill assigns UniFormat/MasterFormat/OmniClass codes, this agent repairs a pasted class excerpt; own design, no DDC code or data copied"
   input_schema:
     - key: "input_text"
       label: "IFC property extract and class excerpt"

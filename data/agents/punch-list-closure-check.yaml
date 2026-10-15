@@ -5,7 +5,7 @@ description: "Checks punch list items against simple closure rules and an as-of 
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/punch-list-closure-check"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/1_DDC_Toolkit/Field-Operations/punch-list-manager"
   tags:
     - "site-handover"
     - "punch-list"
@@ -38,7 +38,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented punch list with an as-of date; placeholder closure rules; no real project data"
-  attribution: "Ideas adapted from DDC skills punch-list-manager (Field-Operations and Project-Closeout), MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "Adapted from DDC skill 1_DDC_Toolkit/Field-Operations/punch-list-manager (MIT, (c) 2026 DataDrivenConstruction); closure rules are own design; no DDC code copied"
   input_schema:
     - key: "input_text"
       label: "Punch list and as-of date (text)"

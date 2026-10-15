@@ -5,7 +5,7 @@ description: "Reconciles daily site report lines (trade, workers, hours, delay h
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/daily-report-cross-check"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/1_DDC_Toolkit/Field-Operations/daily-report-generator"
   tags:
     - "site-handover"
     - "daily-report"
@@ -38,7 +38,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented daily report lines and timesheet extract; no real project data"
-  attribution: "Ideas adapted from DDC skills daily-report-generator and n8n-daily-report, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "Adapted from DDC skills 1_DDC_Toolkit/Field-Operations/daily-report-generator and 3_DDC_Insights/Automation-Workflows/n8n-daily-report (MIT, (c) 2026 DataDrivenConstruction); report fields only; no DDC code copied"
   input_schema:
     - key: "input_text"
       label: "Daily report lines and timesheet extract (text)"

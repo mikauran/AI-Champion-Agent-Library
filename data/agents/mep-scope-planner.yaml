@@ -4,7 +4,7 @@ name: "MEP Scope Planner"
 description: "Conversational agent that helps project engineers define MEP scope at project kickoff — asks structured questions about building type, occupancy, climate zone, and owner requirements, then produces a draft scope narrative and fee basis."
 metadata:
   category: "project-management"
-  github_url: "https://github.com/aic-consortium/mep-scope-planner"
+  github_url: "https://github.com/mikauran/AI-Champion-Agent-Library"
   maturity: "beta"
   tags:
     - "planning"

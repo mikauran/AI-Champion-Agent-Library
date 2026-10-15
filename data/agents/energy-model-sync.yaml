@@ -4,7 +4,7 @@ name: "Energy Model Data Sync"
 description: "Keeps EnergyPlus and eQUEST energy models synchronized with the live BIM model — detects envelope, occupancy, and mechanical system changes and propagates them to the energy simulation inputs."
 metadata:
   category: "mechanical"
-  github_url: "https://github.com/aic-consortium/energy-model-sync"
+  github_url: "https://github.com/mikauran/AI-Champion-Agent-Library"
   maturity: "experimental"
   tags:
     - "energy-modeling"

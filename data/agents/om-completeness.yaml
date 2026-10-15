@@ -5,7 +5,7 @@ description: "Compares a delivered handover document index against a required-do
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/om-completeness"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/5_DDC_Innovative/as-built-documentation"
   tags:
     - "site-handover"
     - "handover"
@@ -38,7 +38,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented checklist and delivered index; no real project data"
-  attribution: "Ideas adapted from DDC skills project-closeout-checklist, as-built-tracker and warranty-tracker, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "Adapted from DDC skills 5_DDC_Innovative/as-built-documentation and 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist (MIT, (c) 2026 DataDrivenConstruction); handover document set; no DDC code copied"
   input_schema:
     - key: "input_text"
       label: "Required documents and delivered index (text)"

@@ -5,7 +5,7 @@ description: "Checks a product cut sheet against a specification excerpt require
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/cut-sheet-qa"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/1_DDC_Toolkit/Document-Control/submittal-tracker"
   tags:
     - "manufacturing"
     - "cut-sheet"
@@ -39,7 +39,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented cut sheet and specification excerpt; no real manufacturer or project data"
-  attribution: "Ideas adapted from DDC skills submittal-tracker and specification-extractor, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "Inspired by DDC skills 1_DDC_Toolkit/Document-Control/submittal-tracker and 2_DDC_Book/2.4-PDF-CAD-to-Data/specification-extractor (MIT, (c) 2026 DataDrivenConstruction); weak match; own design, no DDC code copied"
   input_schema:
     - key: "input_text"
       label: "Cut sheet and specification excerpt (text)"

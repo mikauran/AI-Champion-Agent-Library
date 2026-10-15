@@ -5,7 +5,7 @@ description: "Takes a findings table from model checks or clash prioritization a
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/rfi-generation-from-findings"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/1_DDC_Toolkit/Document-Control/rfi-management"
   tags:
     - "rfi"
     - "clash"
@@ -35,7 +35,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented findings for an invented building; no real project data"
-  attribution: "RFI field set adapted from DDC skill rfi-management, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "Adapted from DDC skill 1_DDC_Toolkit/Document-Control/rfi-management (MIT, (c) 2026 DataDrivenConstruction); RFI field set; no DDC code copied"
   input_schema:
     - key: "input_text"
       label: "Findings table (pipe-separated text)"

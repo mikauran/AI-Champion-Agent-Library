@@ -4,7 +4,7 @@ name: "HVAC Load Calculator"
 description: "Automates ASHRAE 62.1 and Manual J load calculations by extracting zone geometry and occupancy data from BIM models, running calculations, and writing results back to the project data environment."
 metadata:
   category: "mechanical"
-  github_url: "https://github.com/aic-consortium/hvac-load-calculator"
+  github_url: "https://github.com/mikauran/AI-Champion-Agent-Library"
   maturity: "production"
   tags:
     - "hvac"

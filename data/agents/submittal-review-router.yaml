@@ -4,7 +4,7 @@ name: "MEP Submittal Review Router"
 description: "Receives product submittal packages, extracts performance data from spec sheets, compares values against design specifications, and routes to the responsible engineer with a pre-populated review checklist."
 metadata:
   category: "project-management"
-  github_url: "https://github.com/aic-consortium/mep-submittal-router"
+  github_url: "https://github.com/mikauran/AI-Champion-Agent-Library"
   maturity: "beta"
   tags:
     - "submittal"

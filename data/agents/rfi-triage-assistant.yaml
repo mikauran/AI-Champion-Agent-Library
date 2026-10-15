@@ -4,7 +4,7 @@ name: "RFI Triage Assistant"
 description: "Conversational agent that helps field coordinators draft, classify, and route MEP Requests for Information — asks clarifying questions, suggests likely responsible parties, and checks for related prior RFIs before submission."
 metadata:
   category: "project-management"
-  github_url: "https://github.com/aic-consortium/rfi-triage-assistant"
+  github_url: "https://github.com/mikauran/AI-Champion-Agent-Library"
   maturity: "production"
   tags:
     - "rfi"

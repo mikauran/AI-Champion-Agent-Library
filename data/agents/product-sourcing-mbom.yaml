@@ -5,7 +5,7 @@ description: "Reads an engineering BOM and a catalog excerpt as CSV text, propos
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/product-sourcing-mbom"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement"
   tags:
     - "sourcing"
     - "bom"
@@ -22,15 +22,15 @@ metadata:
     - "Draft per-line match table (one row per BOM line), an M-BOM draft of matched lines and an open-items list, written as one result file for an excerpt of up to about 6 lines x 6 catalog rows (draft for engineer review)"
   data_sources:
     - "Synthetic sample in data/tryitout-prompts/product-sourcing-mbom/"
-    - "Intended in a connected setup: stk-mcp and lvi-info-mcp (catalogued in this repository); not callable from the Try It Out container"
+    - "Intended source: a product catalog excerpt pasted by the engineer; no live catalog connection exists"
   assumptions:
     - "Matching is exact text equality on class, dimension and material"
     - "An empty requirement attribute means any value"
     - "Units are never converted"
     - "The step handles an excerpt of up to about 6 E-BOM lines x 6 catalog rows per run; larger BOMs must be batched"
   gaps:
-    - "No live catalog access: the Pi container reaches only the LLM proxy, so stk-mcp and lvi-info-mcp cannot be called; the catalog excerpt is pasted as text"
-    - "Excerpt is synthetic: real LVI-INFO/STK data is confidential or keyed and was not used; behaviour on a real export unproven"
+    - "No live catalog access: the Pi container reaches only the LLM proxy, so the catalog excerpt is pasted as text"
+    - "Excerpt is synthetic: no real catalog export was used; behaviour on a real export unproven"
     - "Matching is exact equality: no synonyms, no multi-attribute scoring, no ETIM feature validation"
     - "Unit mismatches are flagged, never converted (pack sizes, coils)"
     - "No price, lead-time or availability reasoning; in_stock is copied only"
@@ -40,7 +40,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented E-BOM and catalog excerpt with SYN- class codes; no real catalog or project data"
-  attribution: "Ideas adapted from DDC skills material-procurement-tracker and specification-extractor, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "Inspired by DDC skill 1_DDC_Toolkit/CWICR-Database/cwicr-material-procurement (method only; no CWICR data; MIT, (c) 2026 DataDrivenConstruction for the skill text, CWICR data is under a separate licence and is not used)"
   input_schema:
     - key: "input_text"
       label: "E-BOM and catalog excerpt (CSV text)"

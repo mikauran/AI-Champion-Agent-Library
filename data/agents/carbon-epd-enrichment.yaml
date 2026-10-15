@@ -5,7 +5,7 @@ description: "Reads a product list and an EPD excerpt (declared unit, GWP A1-A3)
 metadata:
   category: "sustainability"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/carbon-epd-enrichment"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/2_DDC_Book/3.3-4D-BIM-CO2-Simulation/lifecycle-carbon-calculator"
   tags:
     - "sustainability"
     - "epd"
@@ -22,13 +22,13 @@ metadata:
     - "Draft per-product EPD mapping table (one row per product) with status flags and an open-items list (draft for engineer review)"
   data_sources:
     - "Synthetic sample in data/tryitout-prompts/carbon-epd-enrichment/"
-    - "Intended in a connected setup: EPD Finland / Rakennustieto, EPD Norway, ECO Platform; not reachable from the Try It Out container"
+    - "Intended in a connected setup: public EPD registers (for example EPD Norway, ECO Platform); not reachable from the Try It Out container"
   assumptions:
     - "Mapping is by exact material_key equality"
     - "GWP is A1-A3 per declared unit as written in the EPD excerpt"
     - "Dates are ISO yyyy-mm-dd and compared with the supplied reference_date"
   gaps:
-    - "No live EPD register access: the Pi container reaches only the LLM proxy, so EPD Finland, EPD Norway and ECO Platform data must be pasted as an excerpt"
+    - "No live EPD register access: the Pi container reaches only the LLM proxy, so public EPD register data must be pasted as an excerpt"
     - "EPD values in the sample are synthetic and not authoritative; real EPD numbers were not used and licence/reuse terms of the registers are unchecked"
     - "No calculation by design: quantity x GWP totals and unit conversions (kg vs t, m2 vs kg per m2) are left to a script or the engineer"
     - "Only module A1-A3 is read; no A4-C4, no biogenic carbon, no scenario or generic-data fallback"
@@ -38,7 +38,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented products and invented EPD values (SYNTHETIC, not authoritative); no real EPD or project data"
-  attribution: "Ideas adapted from DDC skills embodied-carbon-esg and carbon-calculator, MIT, (c) 2026 DataDrivenConstruction (own design; calculation deliberately not adopted)"
+  attribution: "Adapted from DDC skill 2_DDC_Book/3.3-4D-BIM-CO2-Simulation/lifecycle-carbon-calculator (MIT, (c) 2026 DataDrivenConstruction); calculation deliberately not adopted; no DDC factors or code copied"
   input_schema:
     - key: "input_text"
       label: "Products and EPD excerpt (CSV text)"

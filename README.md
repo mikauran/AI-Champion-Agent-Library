@@ -33,8 +33,8 @@ Each agent is described in a YAML file using the Oracle AgentSpec format. On sta
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/aic-consortium/aic-agent-library
-cd aic-agent-library
+git clone https://github.com/mikauran/AI-Champion-Agent-Library
+cd AI-Champion-Agent-Library
 ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm install   # the variable avoids a hanging CUDA download (see Search)
 
 # 2. Configure access and email delivery

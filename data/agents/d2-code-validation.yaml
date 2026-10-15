@@ -5,7 +5,7 @@ description: "Checks a ventilation design or commissioning data extract against 
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/d2-code-validation"
+  github_url: "https://github.com/mikauran/AI-Champion-Agent-Library"
   tags:
     - "site-handover"
     - "ventilation"
@@ -24,7 +24,7 @@ metadata:
     - "Synthetic sample in data/tryitout-prompts/d2-code-validation/ with PLACEHOLDER requirement values"
     - "Intended in a connected setup: the public regulation text (Finnish government / environment ministry / Finlex publications) and the project ventilation design or commissioning data; not accessible from the Try It Out container"
   assumptions:
-    - "D2 is read as the Finnish National Building Code part D2 (indoor climate and ventilation); not defined in the task, to be confirmed with Ville/Jussi"
+    - "D2 is read as the Finnish National Building Code part D2 (indoor climate and ventilation); not defined in the task, to be confirmed"
     - "Requirement rows are supplied by the user; the agent never supplies regulation values from memory"
     - "Room id and key match by exact text equality"
     - "Only eq, ge and le tests on numbers written in the lines"
@@ -32,7 +32,7 @@ metadata:
   gaps:
     - "Assumption: D2 means Finnish building code part D2; if another code or standard is meant the agent needs different requirement rows (alternative open, to confirm)"
     - "Requirement values in the sample are invented placeholders; the real regulation text (public) is not loaded or quoted, so no real code validation is claimed"
-    - "Sample is synthetic: real design and commissioning data are consortium-confidential and were not used; behaviour on real extracts unproven"
+    - "Sample is synthetic: real design and commissioning data are not included; behaviour on real extracts unproven"
     - "Text only: no BIM or ventilation-design tool export parsing, no measured commissioning data feed"
     - "Exact-text key and room matching; no synonyms, no room-type based requirements, no conditional or formula requirements"
     - "Units are flagged, never converted (a deterministic unit tool is the proper place)"
@@ -41,7 +41,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented design extract with placeholder requirement values; not regulation values; no real project data"
-  attribution: "Ideas adapted from DDC skills ids-checker and standards-compliance-checker, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "No DDC basis (own design); D2 is read as the Finnish National Building Code part D2 (indoor climate and ventilation), which no DDC skill covers; the reading is unconfirmed"
   input_schema:
     - key: "input_text"
       label: "Design extract and requirement rows (text)"

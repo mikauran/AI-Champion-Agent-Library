@@ -5,7 +5,7 @@ description: "Labels site safety observations with a category and severity hint 
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/safety-observation-classification"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/1_DDC_Toolkit/Field-Operations/safety-inspection"
   tags:
     - "site-handover"
     - "safety"
@@ -38,7 +38,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented observations and placeholder category table; no real site data, not a safety standard"
-  attribution: "Ideas adapted from DDC skills safety-inspection and safety-inspection-checklist, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "Adapted from DDC skills 1_DDC_Toolkit/Field-Operations/safety-inspection and 3_DDC_Insights/Safety-Quality/safety-inspection-checklist (MIT, (c) 2026 DataDrivenConstruction); categories are own design; no DDC code copied"
   input_schema:
     - key: "input_text"
       label: "Category table and safety observations (text)"

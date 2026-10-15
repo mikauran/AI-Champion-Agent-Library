@@ -1,4 +1,4 @@
-# SYNTHETIC SAMPLE - invented data. Not a real STK/LVI-INFO export, not real ETIM codes.
+# SYNTHETIC SAMPLE - invented data. Generic product catalog layout, not a real export, not real classification codes.
 ## E-BOM
 line_id,description,req_class,req_dn,req_material,qty,unit
 BL-01,Water pipe,SYN-EC101,22,copper,120,m

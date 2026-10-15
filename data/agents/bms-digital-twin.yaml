@@ -5,7 +5,7 @@ description: "Drafts a mapping of BMS (building management system) points to equ
 metadata:
   category: "project-management"
   maturity: "experimental"
-  github_url: "https://github.com/aic-consortium/bms-digital-twin"
+  github_url: "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/5_DDC_Innovative/digital-twin-sync"
   tags:
     - "site-handover"
     - "bms"
@@ -40,7 +40,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented point list, assets and tag hints; no real building or BMS data"
-  attribution: "Ideas adapted from DDC skills digital-twin-sync and ontology-mapper, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  attribution: "Adapted from DDC skill 5_DDC_Innovative/digital-twin-sync (MIT, (c) 2026 DataDrivenConstruction); sensor-to-element binding fields; no live data; no DDC code copied"
   input_schema:
     - key: "input_text"
       label: "BMS points, assets and tag hints (text)"
