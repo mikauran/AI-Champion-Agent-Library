@@ -84,3 +84,33 @@ Draft for handover engineer review. Statuses come only from the supplied checkli
 - Caveat: draft for engineer review; synthetic input; the checklist is an invented placeholder; document content not checked. One passing run on 6 rows is evidence that the design is workable, not a reliability claim.
 - Teardown: `podman-compose ... down` done, `podman ps -a --filter label=aic.tryitout -q` empty.
 - Tests: scripts/ddc-alignment.om-completeness.test.ts (6, includes the rule table applied to the sample), validators, scripts/check-ddc-decoupling.sh clean, golden unchanged (no catalog-visible field change).
+
+## Agent 12 BMS twin (plan 33-04)
+
+Status: COUNTED (first run, SKILL v1, no revision needed).
+
+- Skill: `5_DDC_Innovative/digital-twin-sync` (SKILL.md and instructions.md read in full). LOOSE match, recorded in the spec: the skill is about construction-progress digital twins and IoT, it has no BMS, BACnet or tag content; the element-to-sensor binding model, sensor value fields and the min/max threshold status are adopted, point naming and tag hints are our own adaptation. Spec committed before any agent file: docs/ddc-alignment/bms-digital-twin.md (binding model, status words, 13 verified skill defects, helper decision, key, rubric).
+- Helper: kept. `src/lib/bms/pointStatus.ts` (13 tests incl. a regression per fixed defect: NaN/empty reading is no-data, unit checked before comparison, boundaries inclusive, duplicate asset id ambiguous, unknown prefix unbound, low greater than high is an error) and CLI `scripts/bms-point-status.ts` (exit 2 on bad input, no network, no writes). The model never compares numbers: the status cell is `to compute (tool)`.
+- Run (Option A, compose stack with override.tryitout.yml, image tag tryitout): job `a59a358d-a449-474a-88a2-73ab5c4a8553`, model gpt-4.1-mini, 13497 tokens, 3 requests, est. cost 0.0216 USD, input label synthetic (6 invented points with readings, 5 asset lines, 4 tag hints with invented limits), countable true (Pi ran, usage observed, no direct-call fallback). Ledger row present. Local artifact `.tryitout-runs/a59a358d-a449-474a-88a2-73ab5c4a8553/result.md`.
+- Key vs result: all 6 rows match the spec section 8 key on every checked cell (`npx tsx scripts/bms-point-status.ts <sample> <result.md>` exit 0): P-01 bound, P-02 bound (helper: above_maximum, 1350 over 1000), P-03 unbound (AHU-09 not in list), P-04 untagged ("return air temp" matches no keyword), P-05 unit-mismatch (rpm vs %), P-06 ambiguous (PMP-05 listed twice). Rubric R1 met, R2 met, R3 met, R4 met, R5 met (low/high copied, status `to compute (tool)` on all rows, no model judgement of readings), R6 met, R7 met (11 cells per row, open items exactly P-03 to P-06, caveat).
+- Helper output on the sample: statuses normal, above_maximum, not-bound, untagged, unit-mismatch, not-bound; threshold finding P-02 above_maximum.
+- Excerpt of result.md:
+
+```
+## Point mapping
+point_id | asset_id | tag | unit | reading | low | high | binding | status | review | note
+P-01 | AHU-01 | SYN-Supply_Air_Temperature_Sensor | C | 18.5 | 12 | 24 | bound | to compute (tool) | NO | -
+P-02 | RM-201 | SYN-CO2_Sensor | ppm | 1350 | 400 | 1000 | bound | to compute (tool) | NO | -
+P-03 | UNMAPPED | SYN-Supply_Air_Temperature_Sensor | C | 17.0 | 12 | 24 | unbound | to compute (tool) | YES | asset AHU-09 not in asset list
+P-04 | AHU-01 | UNTAGGED | C | 21.0 | - | - | untagged | to compute (tool) | YES | no tag hint matches description
+P-05 | FAN-03 | SYN-Fan_Speed_Command | rpm | 1200 | 0 | 100 | unit-mismatch | to compute (tool) | YES | unit differs rpm vs %, not converted
+P-06 | AMBIGUOUS | SYN-Discharge_Pressure_Sensor | kPa | 250 | 100 | 400 | ambiguous | to compute (tool) | YES | asset PMP-05 listed twice
+## Open items for the engineer
+P-03, asset AHU-09 not in asset list
+P-06, asset PMP-05 listed twice
+Draft for engineer review. Bindings and tags are proposals from the supplied hint table; thresholds and statuses are computed by a tool; no BMS was contacted and no ontology was validated.
+```
+
+- Caveat: draft for engineer review; synthetic input, readings and limits invented; no live BMS, no staleness check; tags are proposals, not validated ontology classes. One passing run on 6 points is evidence that the design is workable, not a reliability claim.
+- Teardown: `podman-compose ... down` done, `podman ps -a --filter label=aic.tryitout -q` empty.
+- Tests: src/lib/bms/pointStatus.test.ts (13), scripts/ddc-alignment.bms-digital-twin.test.ts (8), validators, scripts/check-ddc-decoupling.sh clean, golden diff limited to this entry.

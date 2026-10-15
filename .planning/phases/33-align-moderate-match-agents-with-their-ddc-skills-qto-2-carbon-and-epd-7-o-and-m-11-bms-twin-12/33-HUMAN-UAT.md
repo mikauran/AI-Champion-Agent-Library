@@ -17,3 +17,9 @@
 - [ ] Confirm the status rule: only `final` counts as complete (the skill's rule), everything else (draft, reviewed, approved, as_built) is incomplete. Should `approved` or `as_built` count as complete in your practice?
 - [ ] Decide how superseded versions should be signalled in real document-management exports (status word `superseded` was assumed) and whether asset registry fields (manufacturer, serial, warranty) should be added as further copied columns.
 - [ ] Confirm that the required-document checklist always comes from your contract and that the agent never derives it; read `.tryitout-runs/73ac51f8-4eb4-41cb-8bb6-a67a9b871b8e/result.md` for the draft format.
+
+## Agent 12 BMS twin (plan 33-04)
+- [ ] Skim docs/ddc-alignment/bms-digital-twin.md: the skill (digital-twin-sync) is only a loose match for a BMS (no BMS content); are the adopted parts (element-to-sensor binding, min/max threshold status, 13 listed skill defects) and our own adaptation (id-prefix binding, hint table, expected units) right for your point lists?
+- [ ] Run `npx tsx scripts/bms-point-status.ts data/tryitout-prompts/bms-digital-twin/sample-bms-points.txt .tryitout-runs/a59a358d-a449-474a-88a2-73ab5c4a8553/result.md`: do the statuses (normal, above_maximum, not-bound, untagged, unit-mismatch) and the inclusive band boundaries suit your practice?
+- [ ] Decide whether the helper should be wired into the app or stay an engineer step, whether staleness (timestamp or age per reading) should become an input column, and whether real point naming schemes need more than the exact id prefix.
+- [ ] Confirm all limits must come from your own commissioning data (sample limits are invented) and that ontology validation (Brick or other) stays out of scope.
