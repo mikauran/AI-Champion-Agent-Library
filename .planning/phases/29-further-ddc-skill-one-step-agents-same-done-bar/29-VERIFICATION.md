@@ -91,3 +91,6 @@ COUNTED (SKILL v1, first run, rubric R1-R7 met). Caveat: the category table in t
 - Caveat: draft for safety officer review; counted for the scoped step only (6 observations, one synthetic sample, placeholder table, first run).
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: one 29-04 row (0.0178 USD).
+
+## Phase result (aggregated)
+Agents 13-16 counted (13 and 16 and 15 first run, 14 after one revision). Candidates not built are in docs/ddc-agent-candidates.md. `npm run check` green (273 files, 3118 tests).
