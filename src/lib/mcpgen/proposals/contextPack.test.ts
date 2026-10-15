@@ -116,3 +116,38 @@ describe('context pack safety', () => {
     expect(r.ok).toBe(false)
   })
 })
+
+// CR-27: row data of a SQL dump is never ingested, so it must not be shipped in source/ either.
+describe('SQL dump data rows stay out of the pack (CR-27)', () => {
+  const dump = fixtureText('acme-pgdump.sql')
+  const copyRows = 'COPY public.customer (customer_id, customer_name) FROM stdin;\n1\tZed Distinctive Row\n2\tpassword=' + 'Hunter2Hunter2Hunter2' + ' and ghp_' + 'a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6q7R8' + '\n\\.\n'
+  const inserts = "INSERT INTO customer (customer_id, customer_name) VALUES (1, 'Zed Distinctive Row'), (2, 'Ann Personal Person');\nINSERT INTO note_log VALUES ('call Nowhere Corp');\n"
+  const sourceOf = (text: string) => {
+    const r = buildContextPack({ source: { name: 'dump.sql', text } })
+    if (!r.ok) throw new Error(JSON.stringify(r.gaps))
+    return { r, src: r.files.find((f) => f.path === 'source/dump.sql')!.content }
+  }
+  it('COPY blocks are removed from source/dump.sql', () => {
+    const { r, src } = sourceOf(`${dump}\n${copyRows}`)
+    expect(src).not.toContain('Hunter2')
+    expect(src).not.toContain('ghp_')
+    expect(src).not.toContain('Zed Distinctive Row')
+    expect(src).toMatch(/CREATE TABLE/i)
+    expect(r.notes.join(' ')).toMatch(/row data/i)
+  })
+  it('INSERT statements are removed and the schema statements stay', () => {
+    const { src } = sourceOf(`${dump}\n${inserts}`)
+    expect(src).not.toContain('Ann Personal Person')
+    expect(src).not.toContain('Zed Distinctive Row')
+    expect(src).not.toContain('Nowhere Corp')
+    expect((src.match(/CREATE TABLE/gi) ?? []).length).toBe((dump.match(/CREATE TABLE/gi) ?? []).length)
+  })
+  it('a source without row data is shipped unchanged', () => {
+    const { src } = sourceOf(dump)
+    expect(src).toBe(dump)
+  })
+  it('a non-SQL source is shipped verbatim', () => {
+    const r = pack()
+    expect(r.files.find((f) => f.path === 'source/acme-openapi.yaml')!.content).toBe(fixtureText('acme-openapi.yaml'))
+  })
+})

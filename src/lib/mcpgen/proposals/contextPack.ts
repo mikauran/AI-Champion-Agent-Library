@@ -13,7 +13,7 @@ import { scanForCredentials } from '../credentials.js'
 import { stableJson, generateFromPlan } from '../generate.js'
 import { buildPlan } from '../plan.js'
 import { redactSecrets } from '../redact.js'
-import { parseInput } from '../registry.js'
+import { parseInput, scrubSource } from '../registry.js'
 import type { Gap, GenerateOptions, GeneratedFile } from '../types.js'
 import { buildExamples } from './examples.js'
 import { buildInventory } from './inventory.js'
@@ -119,7 +119,15 @@ export function buildContextPack(input: PackInput): PackResult {
   const files: GeneratedFile[] = []
   const add = (path: string, content: string) => files.push({ path, content })
 
-  add(`source/${sourceLabel}`, input.source.text)
+  // A SQL dump may carry row data (COPY blocks, INSERT statements): the registry scan and the adapter never read it,
+  // so the pack must not ship it either (CR-27). Other sources are verbatim.
+  let sourceText = input.source.text
+  const scrubbed = scrubSource(parsed.adapterId, sourceText)
+  if (scrubbed.changed) {
+    sourceText = scrubbed.text
+    notes.push(`source/${sourceLabel}: row data (COPY blocks and INSERT statements) was removed; the file holds the schema statements only.`)
+  }
+  add(`source/${sourceLabel}`, sourceText)
 
   // ---- samples: row limited, redacted, bannered ----
   const used = new Set<string>()

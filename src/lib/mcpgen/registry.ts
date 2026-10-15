@@ -50,6 +50,16 @@ export async function prepareInput(raw: RawInput, opts: { adapterId?: string; ad
   }
 }
 
+/** The source text without parts that must not leave the process (SQL row data); other adapters return it unchanged. */
+export function scrubSource(adapterId: string, text: string, adapters: InputAdapter[] = ADAPTERS): { text: string; changed: boolean } {
+  try {
+    const f = adapters.find((a) => a.id === adapterId)?.scrubSource
+    return f ? f(text) : { text, changed: false }
+  } catch {
+    return { text: '', changed: true } // fail closed: nothing of the source leaves
+  }
+}
+
 export function parseInput(
   raw: RawInput,
   opts: { adapterId?: string; adapters?: InputAdapter[]; options?: GenerateOptions } = {},

@@ -75,10 +75,27 @@ function enumLabels(inner: string, so: ScanOpts): string[] | undefined {
   return out
 }
 
+const INSERT_HEAD = /^(?:\s|--[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/)*(?:INSERT|REPLACE)\b/i
+
+/**
+ * The dump with ALL row data removed: COPY blocks (stripSqlDumpData) and INSERT / REPLACE statements. Used where text
+ * leaves the process (the context pack): row data can hold personal data that no credential scan recognises (review
+ * CR-27). Text without row data comes back unchanged. Statement splitting is quote aware.
+ */
+export function stripSqlRowData(text: string): { text: string; changed: boolean } {
+  const s = stripSqlDumpData(text)
+  if (!/^\s*(?:INSERT|REPLACE)\b/im.test(s.text)) return { text: s.text, changed: s.changed }
+  const statements = splitStatements(s.text, scanOptsFor(detectDialect(s.text).dialect))
+  const kept = statements.filter((st) => !INSERT_HEAD.test(st))
+  if (kept.length === statements.length) return { text: s.text, changed: s.changed }
+  return { text: kept.length > 0 ? `${kept.join(';\n')};\n` : '', changed: true }
+}
+
 export const sqlDdlAdapter: InputAdapter = {
   id: 'sql-ddl',
   label: 'SQL DDL (CREATE TABLE; pg_dump, SQLite, mysqldump)',
   detect: (input: RawInput) => (/\bcreate\s+(?:\w+\s+){0,3}?table\b/i.test(typeof input.text === 'string' ? input.text : '') ? 0.9 : 0),
+  scrubSource: stripSqlRowData,
   parse(input: RawInput, options?: GenerateOptions): ParseResult {
     try {
       return parseDdl(input, options)

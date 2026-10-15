@@ -112,6 +112,8 @@ export interface InputAdapter {
   parse(input: RawInput, options?: GenerateOptions): ParseResult
   /** Optional: load something asynchronously (a dynamically imported parser) before the synchronous `parse`. */
   prepare?(input: RawInput): Promise<void>
+  /** Optional: the source text without parts that must not leave the process (SQL row data), for exports such as the context pack. */
+  scrubSource?(text: string): { text: string; changed: boolean }
 }
 export interface DerivedTool {
   id: string
