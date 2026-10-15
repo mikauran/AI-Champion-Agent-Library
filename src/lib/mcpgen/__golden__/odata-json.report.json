@@ -64,7 +64,7 @@
     },
     {
       "code": "odata-nextlink-not-followed",
-      "message": "Server-driven paging links (@odata.nextLink) are never followed; lists are paged with $top and $skip.",
+      "message": "Server-driven paging links (@odata.nextLink) are never followed; lists are paged with $top and $skip. When a service caps its responses, the generated list tool returns a warning naming the page size to use.",
       "severity": "info"
     },
     {

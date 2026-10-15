@@ -194,6 +194,15 @@ def test_page_size_is_clamped(upstream):
     assert all(params["$top"] <= 100 for _, params in upstream["calls"])
 
 
+def test_capped_response_with_next_link_warns(upstream):
+    upstream["handler"] = lambda path, params: (200, json.dumps({"value": [make_row(1)], "@odata.nextLink": "next"}))
+    out = server.list_order_lines(page_size=100)
+    assert out["ok"] is True and out["count"] == 1
+    assert "warning" in out and "page_size" in out["warning"] and "skipped" in out["warning"]
+    upstream["handler"] = lambda path, params: (200, json.dumps({"value": [make_row(1)]}))
+    assert "warning" not in server.list_order_lines(page_size=100)
+
+
 def test_empty_result_is_an_honest_message(upstream):
     out = server.list_order_lines()
     assert out["ok"] is True and out["results"] == [] and out["count"] == 0

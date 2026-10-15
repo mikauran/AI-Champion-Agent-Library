@@ -366,6 +366,18 @@ def _odata_rows(data):
     raise _Fail("upstream", "The upstream service returned an unexpected response shape.")
 
 
+def _odata_more(data):
+    """True when the service continues with a server-driven paging link."""
+    return isinstance(data, dict) and bool(data.get("@odata.nextLink"))
+
+
+def _odata_capped_warning(returned, requested):
+    return (
+        "The service returned %d of the %d requested rows and has more; it limits each response. "
+        "Use page_size=%d or smaller, otherwise the rows between pages are skipped." % (returned, requested, returned)
+    )
+
+
 def _odata_item(data):
     return data if isinstance(data, dict) and data else None
 
@@ -512,11 +524,15 @@ def list_order_lines(page: int = 1, page_size: int = 20, field: Optional[str] = 
         if condition is not None:
             query["$filter"] = condition
         data = _http_json(_ODATA["OrderLine"]["set"], query)
-        rows = _odata_rows(data)[: min(page_size, MAX_RESPONSE_ITEMS)]
+        all_rows = _odata_rows(data)
+        rows = all_rows[: min(page_size, MAX_RESPONSE_ITEMS)]
         if not rows:
             return _no_results("order_line", "Try fewer filters or a broader search term.")
         results = [_project(row, sel) for row in rows]
-        return {"ok": True, "results": results, "count": len(results), "page": page, "page_size": page_size}
+        out = {"ok": True, "results": results, "count": len(results), "page": page, "page_size": page_size}
+        if _odata_more(data) and len(all_rows) < page_size:
+            out["warning"] = _odata_capped_warning(len(all_rows), page_size)
+        return out
     except _Fail as exc:
         return _fail(exc)
     except Exception:
@@ -545,11 +561,15 @@ def list_products(page: int = 1, page_size: int = 20, field: Optional[str] = Non
         if condition is not None:
             query["$filter"] = condition
         data = _http_json(_ODATA["Product"]["set"], query)
-        rows = _odata_rows(data)[: min(page_size, MAX_RESPONSE_ITEMS)]
+        all_rows = _odata_rows(data)
+        rows = all_rows[: min(page_size, MAX_RESPONSE_ITEMS)]
         if not rows:
             return _no_results("product", "Try fewer filters or a broader search term.")
         results = [_project(row, sel) for row in rows]
-        return {"ok": True, "results": results, "count": len(results), "page": page, "page_size": page_size}
+        out = {"ok": True, "results": results, "count": len(results), "page": page, "page_size": page_size}
+        if _odata_more(data) and len(all_rows) < page_size:
+            out["warning"] = _odata_capped_warning(len(all_rows), page_size)
+        return out
     except _Fail as exc:
         return _fail(exc)
     except Exception:
@@ -578,11 +598,15 @@ def list_suppliers(page: int = 1, page_size: int = 20, field: Optional[str] = No
         if condition is not None:
             query["$filter"] = condition
         data = _http_json(_ODATA["Supplier"]["set"], query)
-        rows = _odata_rows(data)[: min(page_size, MAX_RESPONSE_ITEMS)]
+        all_rows = _odata_rows(data)
+        rows = all_rows[: min(page_size, MAX_RESPONSE_ITEMS)]
         if not rows:
             return _no_results("supplier", "Try fewer filters or a broader search term.")
         results = [_project(row, sel) for row in rows]
-        return {"ok": True, "results": results, "count": len(results), "page": page, "page_size": page_size}
+        out = {"ok": True, "results": results, "count": len(results), "page": page, "page_size": page_size}
+        if _odata_more(data) and len(all_rows) < page_size:
+            out["warning"] = _odata_capped_warning(len(all_rows), page_size)
+        return out
     except _Fail as exc:
         return _fail(exc)
     except Exception:
