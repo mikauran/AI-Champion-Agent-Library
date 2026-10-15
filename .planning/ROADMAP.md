@@ -754,12 +754,17 @@ Plans:
 ### Phase 35: Phase 29 extras verified against real skills and further self-contained DDC skill agents
 
 **Goal:** Verify that each Phase 29 extra follows a real skill and record the exact path; add further agents where a skill has a self-contained method (no Windows converters, no CWICR database, no IoT feeds); list remaining candidates. Same done bar.
-**Requirements**: TBD
+**Requirements**: DDC-35-EXTRAS-SPEC, DDC-35-EXTRAS-LABELS, DDC-35-EXTRAS-RERUN, DDC-35-DECOUPLE, DDC-35-NEW-PROCUREMENT, DDC-35-NEW-DELIVERY, DDC-35-NEW-QC, DDC-35-NEW-WARRANTY, DDC-35-CANDIDATES, DDC-35-VERIFY
 **Depends on:** Phase 34
-**Plans:** 0 plans
+**Plans:** 6 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 35 to break down)
+- [ ] 35-01-PLAN.md — verify and relabel Phase 29 agents 13-16 against the real skills (specs, attribution, github_url, label test, decoupling script extended, reruns of changed entries)
+- [ ] 35-02-PLAN.md — new agent 17 procurement-lead-time-check (material-procurement-tracker; lead-time helper)
+- [ ] 35-03-PLAN.md — new agent 18 material-delivery-check (material-delivery-tracker; delivery helper)
+- [ ] 35-04-PLAN.md — new agent 19 qc-inspection-record-check (quality-control-workflow; record-completeness checks)
+- [ ] 35-05-PLAN.md — new agent 20 warranty-register-check (warranty-tracker; warranty status helper)
+- [ ] 35-06-PLAN.md — candidates document, verification and UAT, npm run check, ROADMAP and STATE close
 
 ### Phase 36: LVI-INFO MCP agent (flagged off, local only) and MCP-server entries behind the flag
 
