@@ -455,6 +455,18 @@ def _odata_rows(data):
     raise _Fail("upstream", "The upstream service returned an unexpected response shape.")
 
 
+def _odata_more(data):
+    """True when the service continues with a server-driven paging link."""
+    return isinstance(data, dict) and bool(data.get("@odata.nextLink"))
+
+
+def _odata_capped_warning(returned, requested):
+    return (
+        "The service returned %d of the %d requested rows and has more; it limits each response. "
+        "Use page_size=%d or smaller, otherwise the rows between pages are skipped." % (returned, requested, returned)
+    )
+
+
 def _odata_item(data):
     return data if isinstance(data, dict) and data else None
 `

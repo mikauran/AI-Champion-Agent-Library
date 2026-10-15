@@ -94,11 +94,16 @@ export function odataListTool(plan: ServerPlan, tool: PlannedTool): string[] {
     body.push(ind(3, 'query["$filter"] = condition'))
   }
   body.push(ind(2, `data = _http_json(_ODATA[${ent}]["set"], query)`))
-  body.push(ind(2, 'rows = _odata_rows(data)[: min(page_size, MAX_RESPONSE_ITEMS)]'))
+  body.push(ind(2, 'all_rows = _odata_rows(data)'))
+  body.push(ind(2, 'rows = all_rows[: min(page_size, MAX_RESPONSE_ITEMS)]'))
   body.push(ind(2, 'if not rows:'))
   body.push(ind(3, `return _no_results(${pyStr(snake(tool.entity))}, "Try fewer filters or a broader search term.")`))
   body.push(ind(2, 'results = [_project(row, sel) for row in rows]'))
-  body.push(ind(2, 'return {"ok": True, "results": results, "count": len(results), "page": page, "page_size": page_size}'))
+  body.push(ind(2, 'out = {"ok": True, "results": results, "count": len(results), "page": page, "page_size": page_size}'))
+  // A service that caps its responses below $top continues with @odata.nextLink; $skip paging would then skip rows (CR-19).
+  body.push(ind(2, 'if _odata_more(data) and len(all_rows) < page_size:'))
+  body.push(ind(3, 'out["warning"] = _odata_capped_warning(len(all_rows), page_size)'))
+  body.push(ind(2, 'return out'))
   return [`def ${pyIdent(tool.name)}(${sig.join(', ')}) -> dict:`, ...doc(tool.description, args, notes), ind(1, 'try:'), ...body, ...FAIL_TAIL]
 }
 
@@ -197,6 +202,19 @@ export function odataTests(plan: ServerPlan, head: string[], common: (names: str
       `    assert all(params["$top"] <= ${max} for _, params in upstream["calls"])`,
       '',
       '',
+      ...(max >= 2
+        ? [
+            'def test_capped_response_with_next_link_warns(upstream):',
+            '    upstream["handler"] = lambda path, params: (200, json.dumps({"value": [make_row(1)], "@odata.nextLink": "next"}))',
+            `    out = server.${list}(page_size=${max})`,
+            '    assert out["ok"] is True and out["count"] == 1',
+            '    assert "warning" in out and "page_size" in out["warning"] and "skipped" in out["warning"]',
+            '    upstream["handler"] = lambda path, params: (200, json.dumps({"value": [make_row(1)]}))',
+            `    assert "warning" not in server.${list}(page_size=${max})`,
+            '',
+            '',
+          ]
+        : []),
       'def test_empty_result_is_an_honest_message(upstream):',
       `    out = server.${list}()`,
       '    assert out["ok"] is True and out["results"] == [] and out["count"] == 0',

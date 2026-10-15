@@ -146,7 +146,7 @@ function buildModel(doc: DocIR, options: GenerateOptions | undefined, extra: Gap
   if (external > 0) push(gap('odata-external-annotations-ignored', `${external} Annotations block(s) apply annotations to other targets; they are not applied.`, { severity: 'info' }))
   const ignored = doc.schemas.reduce((n, s) => n + s.annotationsIgnored, 0)
   if (ignored > 0) push(gap('odata-annotations-ignored', `${ignored} annotation(s) other than Core.Description, Capabilities.FilterRestrictions and Authorization were ignored.`, { severity: 'info' }))
-  push(gap('odata-nextlink-not-followed', 'Server-driven paging links (@odata.nextLink) are never followed; lists are paged with $top and $skip.', { severity: 'info' }))
+  push(gap('odata-nextlink-not-followed', 'Server-driven paging links (@odata.nextLink) are never followed; lists are paged with $top and $skip. When a service caps its responses, the generated list tool returns a warning naming the page size to use.', { severity: 'info' }))
 
   const entities: Entity[] = []
   const operations: Operation[] = []

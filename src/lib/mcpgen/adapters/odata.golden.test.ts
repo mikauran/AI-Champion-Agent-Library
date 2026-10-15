@@ -51,6 +51,7 @@ describe.each(built)('$name golden', ({ name, model, result }) => {
     expect(server).toContain('_odata_path("OrderLine", [order_id, line_number])')
     expect(server).toContain('ACME_CATALOG_BASE_URL')
     expect(server).toContain('ACME_CATALOG_ACCESS_TOKEN')
+    expect(server).toContain('_odata_capped_warning(len(all_rows), page_size)') // CR-19
     expect(server).not.toContain('$expand')
     expect(server).not.toContain('ArchiveProduct')
     expect(server).not.toContain('Photo')
