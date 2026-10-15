@@ -47,7 +47,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 28: Site and Handover Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 29: Further DDC-skill Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 30: Release Preparation** - see details (not started; execution order 24-30 first, then 21-23)
-- [ ] **Phase 31: Decouple DDC Agents from MCP Work** - see details (fix run 2026-10-15, order 31-38)
+- [x] **Phase 31: Decouple DDC Agents from MCP Work** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 32: Align Strong-match Agents** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 33: Align Moderate-match Agents** - see details (fix run 2026-10-15, order 31-38)
 - [ ] **Phase 34: Own-design Agents Relabelled** - see details (fix run 2026-10-15, order 31-38)
@@ -708,9 +708,9 @@ Phases 24-30 run first (agents, then release prep), then 21-23 (generator roadma
 **Plans:** 3 plans
 
 Plans:
-- [ ] 31-01-PLAN.md — Strip MCP/LVI/STK/Rakennustieto framing from the 16 DDC entries, prompts and samples; exact attribution paths; replace placeholder github_url; third-party notices; golden/tests; npm run check
-- [ ] 31-02-PLAN.md — Correct ROADMAP 24/26, contexts 24/25/26/28, gaps list, inventory, decisions, blockers, STATE; add scripts/check-ddc-decoupling.sh grep gate
-- [ ] 31-03-PLAN.md — Verification wave: 31-VERIFICATION.md, close phase in ROADMAP/STATE
+- [x] 31-01-PLAN.md — Strip MCP/LVI/STK/Rakennustieto framing from the 16 DDC entries, prompts and samples; exact attribution paths; replace placeholder github_url; third-party notices; golden/tests; npm run check
+- [x] 31-02-PLAN.md — Correct ROADMAP 24/26, contexts 24/25/26/28, gaps list, inventory, decisions, blockers, STATE; add scripts/check-ddc-decoupling.sh grep gate
+- [x] 31-03-PLAN.md — Verification wave: 31-VERIFICATION.md, close phase in ROADMAP/STATE
 
 ### Phase 32: Align strong-match agents with their DDC skills (clash 3, RFI 4, quote comparison 6)
 

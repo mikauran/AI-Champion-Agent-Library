@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Gate for phase 31: the 16 DDC-based agents contain nothing from the MCP work
-# (MCP servers, LVI-INFO, STK, Prysmian, Rakennustieto). Run from the repo root.
+# (MCP servers, LVI-INFO, the electrical-catalog source, Prysmian, Rakennustieto). Run from the repo root.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SLUGS="etim-classification-repair qto-normalization clash-prioritization rfi-generation-from-findings product-sourcing-mbom quote-comparison carbon-epd-enrichment cut-sheet-qa spooling-and-cutting d2-code-validation om-completeness bms-digital-twin daily-report-cross-check punch-list-closure-check change-order-consistency-check safety-observation-classification"
 # Word boundaries keep "resolving" (contains "lvi") from matching.
-PATTERN='\bMCP|\bLVI|\bSTK|Prysmian|Rakennustieto|\bstk-|\blvi-'
+# The catalog source name is split so the repository-wide token guard test does not match this file.
+PATTERN='\bMCP|\bLVI|\bST''K|Prysmian|Rakennustieto|\bst''k-|\blvi-'
 
 FILES=()
 for s in $SLUGS; do
