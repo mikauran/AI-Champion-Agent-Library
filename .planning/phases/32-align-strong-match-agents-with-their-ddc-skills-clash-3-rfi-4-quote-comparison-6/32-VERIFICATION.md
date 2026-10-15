@@ -1,7 +1,19 @@
 # Phase 32 verification
 
-## Agent 3 Clash (plan 32-01)
-ATTEMPTED-NOT-COUNTED (4 live runs, all FAIL; revision cap of 2 plus one scope-shrink retry reached). The aligned entry, SKILL.md, sample and spec stay in the repo, but agent 3 is NOT counted as verified against the aligned rubric. No evidence is claimed.
+## Agent 3 Clash (plan 32-01), redesign retry
+STILL ATTEMPTED-NOT-COUNTED (3 more live runs, all FAIL, each one cell short; the retry limit of 3 is used). Not counted as verified; no evidence is claimed.
+
+- Redesign (commits bc2e2cb, ae8d1af, then the revision commit): the Try It Out step is per-clash classification only, 14 cells per row (`clash_id | status | type | pen | disc_a | disc_b | T1 | T2 | T3 | T4 | priority | resolution_type | responsible_discipline | flag`), priority read from a 16-line truth table of the four test answers, resolution/responsible from a 36-line ordered pair list. Element index, pattern label, `fired:` text, pattern groups and findings table are gone from the step. They come from the tested helper `scripts/clash-patterns.ts` (src/lib/clash/clashPatterns.ts, 6 unit tests, transitive grouping, validation, exact 8-column findings format for agent 4; agent 4's sample and test needed no change, its test still reads the header from this SKILL hand-off text). Spec sections 9-11 (rubric R1-R7 now checks the helper on the agent table) were rewritten before the runs.
+- Option A, gpt-4.1-mini, Pi container, usage observed (countable), label synthetic, 8-row sample. Spend 0.0740 USD for the three runs (fix-run total about 0.331 of 5 USD); three ledger rows after the marker.
+- Run 1 (redesign v1), job 917eb36a-cb84-4c2b-af8d-fee75533f0a6, 15349 tokens, 3 requests, est. 0.0246 USD: FAIL. 7 of 8 rows right. CL-003 `type` copied as hard instead of soft, so T1=Y and CRITICAL instead of LOW (R3/R4).
+- Run 2 (rev 1: type copy rule), job fd61a009-88d5-4381-95e3-0abcb6a2ba03, 15467 tokens, 3 requests, est. 0.0247 USD: FAIL. CL-003 fixed (soft, LOW). CL-008 responsible discipline Sähkö instead of Sprinkler (nested pair matrix mis-read, R5).
+- Run 3 (rev 2: flat `disc_a + disc_b -> ...` pair lines, worked row with the responsible = first label case), job c1822385-f536-44a9-8732-7c5c27e2089c, 15449 tokens, 3 requests, est. 0.0247 USD: FAIL. CL-008 fixed, but CL-003 again T1=Y and CRITICAL (type copied soft correctly in the cell, yet T1 answered Y for a soft clash with Rakenne; R3/R4). Priority was consistent with its own T cells in all three runs, and the pattern work (which failed all four earlier runs) is no longer in the model step: run 3 piped through the helper gives PAT-CL-001 (CL-001..003) and PAT-CL-004 (CL-004, CL-005) and findings F-01..F-04 exactly as the key.
+- Judgement: clear improvement (7 of 8 rows right in every run versus 4-5 cells of mixed errors; no priority-cell/fired-text contradiction, no pattern failure), but each run had one wrong cell on a key row, so rubric R1-R7 is not met in any run. A passing rerun would be luck, not evidence, so it is not counted. Remaining model weakness: the T1 rule (soft with Rakenne must be N) is evaluated wrongly on a row whose neighbours are hard Rakenne clashes (CL-001, CL-002 vs CL-003); a candidate next step is two Try It Out passes or putting the per-row test in separate columns (rak, hard) before T1.
+- Excerpt of the last output (wrong cell marked): `CL-003 | assigned | soft | 35 | Ilmanvaihto | Rakenne | Y | N | N | Y | CRITICAL | ...` (T1 should be N, priority LOW).
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+
+### Earlier design (first four runs)
+ATTEMPTED-NOT-COUNTED (4 live runs, all FAIL; revision cap of 2 plus one scope-shrink retry reached). Superseded by the redesign above; kept as history. The aligned entry, SKILL.md, sample and spec stay in the repo, but agent 3 is NOT counted as verified against the aligned rubric. No evidence is claimed.
 
 - Spec written from the full skill text before any agent change: docs/ddc-alignment/clash-prioritization.md (commit c7b3487). Answer key and rubric R1-R7 written before the runs; only the id set changed for the shrink retry (recorded in spec section 10).
 - Option A, gpt-4.1-mini, Pi container, usage observed (countable by infrastructure), input label synthetic. Total spend 0.1203 USD (ledger rows after the fix-run marker).
