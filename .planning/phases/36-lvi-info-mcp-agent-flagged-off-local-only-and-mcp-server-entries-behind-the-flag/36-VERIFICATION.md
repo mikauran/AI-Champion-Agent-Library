@@ -1,4 +1,4 @@
-# Phase 36 Verification (in progress: plans 36-01, 36-02)
+# Phase 36 Verification (in progress: plans 36-01..36-03)
 
 ## 36-01 (LMCP-01)
 - Flag LOCAL_MCP_AGENTS default off: src/lib/localMcpFlag.test.ts (12 cases).
@@ -12,5 +12,12 @@
 - `npm run check` (end of 36-02): exit 0; 325 files passed / 1 skipped; 3935 tests passed / 1 skipped.
 - Network guard, compose, Containerfile, RunnerConfig unchanged (git diff empty).
 
-## Pending (plans 36-03..36-05)
-Pi extension, agent entry, mock-run Try It Out evidence, vite build smoke with flag off, security notes.
+## 36-03 (LMCP-03)
+- Flag off: buildWarmFiles, buildPiArgs (4 cases) and the staged file set deep-equal the pre-change literals (src/lib/server/tryitout/localMcpStaging.test.ts); existing piRunner/service tests unchanged.
+- Flag on, LVI slug: extension staged at AGENT_DIR/extensions/lvi-info.ts, `-e` + 5 tool names in argv, `--no-extensions`/`--no-mcp` kept, no bash; canary env value and `sk-` absent from the staged text.
+- Extension behaviour with stubbed fetch: bearer, body, banner, hostile text unchanged inside banner, ok:false/non-2xx throw, budget exhaustion without fetch, missing token without fetch.
+- `npm run check`: 328 files passed / 1 skipped; 3957 tests passed / 1 skipped.
+- Guard, runnerConfig, compose, Containerfiles, DDC script: git diff empty.
+
+## Pending (plans 36-04..36-05)
+agent entry, proof that Pi 1.0.4 loads the extension (jiti .ts, -e under --no-extensions, --tools allow-listing of extension tools), mock-run Try It Out evidence, vite build smoke with flag off, security notes.
