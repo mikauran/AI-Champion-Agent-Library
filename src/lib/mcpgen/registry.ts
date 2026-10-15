@@ -92,7 +92,7 @@ export function parseInput(
       if (!adapter) {
         return {
           ok: false,
-          gaps: [err('unrecognized-input', 'The input format was not recognized by any adapter.')],
+          gaps: [err('unrecognized-input', 'The input format was not recognized by any adapter. If the document is OpenAPI, Swagger, OData, SQL or Prisma, name the adapter explicitly (adapter option or --adapter).')],
         }
       }
     }

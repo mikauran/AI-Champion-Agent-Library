@@ -214,3 +214,25 @@ components:
     expect(model.entities[0].identifierFields).toEqual(['id'])
   })
 })
+
+// CR-01: the version marker can sit beyond the first 64 KB (key-sorted documents).
+describe('openapi adapter: detect in large key-sorted documents (CR-01)', () => {
+  const big = (kind: 'json' | 'yaml') => {
+    const schemas: Record<string, unknown> = {}
+    for (let i = 0; i < 900; i++) schemas[`S${String(i).padStart(4, '0')}`] = { type: 'object', description: 'x'.repeat(60), properties: { a: { type: 'string' }, b: { type: 'integer' } } }
+    const doc = { components: { schemas }, info: { title: 'T', version: '1' }, openapi: '3.0.3', paths: { '/items': { get: { responses: { '200': { description: 'ok', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/S0001' } } } } } } } } } }
+    return kind === 'json' ? JSON.stringify(doc, null, 1) : JSON.stringify(doc) // flow-style JSON is valid YAML
+  }
+  it('detects the marker after 64 KB of components', () => {
+    const t = big('json')
+    expect(t.indexOf('"openapi"')).toBeGreaterThan(65536)
+    expect(t.length).toBeLessThan(262144)
+    expect(openApiAdapter.detect({ text: t })).toBe(0.95)
+    expect(parseInput({ text: t }).ok).toBe(true)
+  })
+  it('the unrecognized-input message names the adapter override', () => {
+    const r = parseInput({ text: 'nothing useful here' })
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.gaps[0].message).toMatch(/adapter/i)
+  })
+})

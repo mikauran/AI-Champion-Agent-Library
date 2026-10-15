@@ -432,9 +432,11 @@ function exampleMismatch(root: Obj, schema: unknown, example: unknown, ctx: Sche
   }
 }
 
+// The marker may follow a large `components` block in key-sorted documents, so the whole accepted input is
+// scanned (the size cap bounds it; the patterns are linear) (review CR-01).
 function detect(input: RawInput): number {
   try {
-    const t = typeof input?.text === 'string' ? input.text.slice(0, 65536) : ''
+    const t = typeof input?.text === 'string' ? input.text.slice(0, MAX_INPUT_BYTES) : ''
     if (/^\s*\{[\s\S]*?"openapi"\s*:\s*"3\.\d+/.test(t) || /^openapi\s*:\s*["']?3\.\d+/m.test(t)) return 0.95
     // Swagger 2.0 is read by this adapter too (D-520); another swagger version is recognised but rejected.
     if (/^\s*\{[\s\S]*?"swagger"\s*:\s*"2\.0"/.test(t) || /^swagger\s*:\s*["']?2(\.0)?["']?\s*(#.*)?$/m.test(t)) return 0.95
