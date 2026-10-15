@@ -5,7 +5,7 @@
 // own through the `extraDerived` argument of `buildPlan` (origin 'user'). Both flow through the same
 // validation and the same emitter templates. Invalid user entries are reported, never guessed.
 import { gap } from './diagnostics.js'
-import { redactSecrets, sanitizeSourceText } from './redact.js'
+import { cleanSpecTextFlagged } from './hygiene.js'
 import type {
   DerivedTool,
   Entity,
@@ -307,9 +307,7 @@ function words(s: string): string {
 /** Operation summary as it is published: secrets and model-directed phrases removed (review CR-03, WR-06). */
 function summaryNote(op?: Operation): { text: string; flagged: boolean } {
   if (!op?.summary) return { text: '', flagged: false }
-  const r = sanitizeSourceText(
-    redactSecrets(op.summary.slice(0, 8192).replace(/[\u0000-\u001f\u007f"\\`]+/g, ' ').replace(/\s+/g, ' ').trim()),
-  )
+  const r = cleanSpecTextFlagged(op.summary.replace(/["\\]+/g, ' '), 8192)
   return { text: r.text.slice(0, 120), flagged: r.flagged }
 }
 
@@ -320,7 +318,7 @@ function withSummary(base: string, op?: Operation): string {
 
 /** Source free text a tool publishes: its operation summary and the descriptions of its arguments. */
 function publishesSourceText(op: Operation | undefined, params: Param[]): { copied: boolean; flagged: boolean } {
-  const notes = [summaryNote(op), ...params.map((p) => (p.description ? sanitizeSourceText(p.description.slice(0, 8192)) : { text: '', flagged: false }))]
+  const notes = [summaryNote(op), ...params.map((p) => (p.description ? cleanSpecTextFlagged(p.description, 8192) : { text: '', flagged: false }))]
   return { copied: notes.some((n) => n.text !== ''), flagged: notes.some((n) => n.flagged) }
 }
 

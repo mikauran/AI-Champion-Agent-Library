@@ -4,28 +4,11 @@
 // of write capability, no limit numbers that differ from the server's real limits.
 // Pure, linear, never throws, never returns the offending text (only stable codes).
 import { scanForCredentials } from '../credentials.js'
+import { hasControl, MARKUP, URL_LIKE } from '../hygiene.js'
 import { redactSecrets, sanitizeSourceText } from '../redact.js'
 
 export type TextKind = 'description' | 'constant' | 'reason'
 
-// Control characters except tab and newline, zero-width and bidi controls, the BOM (by code point,
-// so this file holds no invisible characters).
-function hasControl(s: string): boolean {
-  for (const ch of s) {
-    const c = ch.codePointAt(0)!
-    if (c <= 0x08 || (c >= 0x0b && c <= 0x1f) || (c >= 0x7f && c <= 0x9f)) return true
-    if ((c >= 0x200b && c <= 0x200f) || (c >= 0x2028 && c <= 0x202e) || (c >= 0x2060 && c <= 0x2064) || c === 0xfeff) return true
-  }
-  return false
-}
-const URL_LIKE: RegExp[] = [
-  /\b[a-z][a-z0-9+.-]{1,31}:\/\//i,
-  /\bwww\./i,
-  /\b[a-z0-9-]+\.(?:com|org|net|io|dev|ai|app|edu|gov|example|local|internal|test)\b/i,
-  /\]\(/,
-  /\bmailto:/i,
-]
-const MARKUP = /[<>`]|\$\{|\{\{|<%|%>/
 const INJECTION: RegExp[] = [
   /\b(?:ignore|disregard|forget|bypass|override)\b/i,
   /\b(?:always|never|must|should)\s+(?:call|use|invoke|run|execute|prefer|choose)\b/i,

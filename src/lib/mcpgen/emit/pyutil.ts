@@ -1,6 +1,7 @@
 // Small helpers for writing Python source text. Everything that reaches generated Python as a
 // string goes through pyStr (exact literals) or cleanText (docstrings and messages).
-import { redactSecrets, sanitizeSourceText } from '../redact.js'
+import { cleanSpecText } from '../hygiene.js'
+import { redactSecrets } from '../redact.js'
 
 /** A valid Python string literal for any JS string. */
 export function pyStr(s: string): string {
@@ -71,8 +72,7 @@ export function cleanText(s: unknown, max = 200): string {
 
 /** cleanText for text that originates in the source document and is published in descriptions. */
 export function cleanSource(s: unknown, max = 200): string {
-  const raw = typeof s === 'string' ? s : s === undefined || s === null ? '' : String(s)
-  return cleanText(sanitizeSourceText(raw.slice(0, 8192)).text, max)
+  return cleanText(cleanSpecText(s, 8192), max)
 }
 
 /** Flatten string and string[] parts into text with a trailing newline. */
