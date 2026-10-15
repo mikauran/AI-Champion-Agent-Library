@@ -503,7 +503,14 @@ Plans:
   4. Tool order is deterministic and stable across runs and input orderings
   5. Applies to every generated server; goldens will churn: regenerate in a dedicated commit (proposal goldens may need `UPDATE_GOLDEN=1`); generated packages' pytest still pass on FastMCP 3.4.8 and 4.1.0
 
-**Plans:** 0 plans (not started; run /gsd:discuss-phase 21 then /gsd:plan-phase 21)
+**Plans:** 5 plans
+
+Plans:
+- [ ] 21-01-PLAN.md — Hygiene filter on spec-derived descriptions (wave 1)
+- [ ] 21-02-PLAN.md — Read-only tool annotations on every generated tool (wave 2)
+- [ ] 21-03-PLAN.md — outputSchema and structuredContent (wave 3)
+- [ ] 21-04-PLAN.md — Deterministic tool order, shuffled-input tests (wave 4)
+- [ ] 21-05-PLAN.md — Golden regeneration commit, FastMCP 3.4.8/4.1.0 pytest in throwaway venvs, npm run check, VERIFICATION (wave 5)
 
 ### Phase 22: Proposal Layer Follow-ups
 
