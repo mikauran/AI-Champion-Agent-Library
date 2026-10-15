@@ -2,7 +2,7 @@
   "ingest": {
     "top": {
       "result": {
-        "succeeded": 27,
+        "succeeded": 28,
         "failed": 0
       },
       "rows": [
@@ -532,6 +532,31 @@
           "try_it_out_task_template": null
         },
         {
+          "slug": "qc-inspection-record-check",
+          "title": "QC Inspection Record Check",
+          "summary": "Reads inspection records of MEP installation and commissioning checks (point, hold point flag, status, result, sign-off, defect severity and corrective action, NCR status and response), ticks whether the fields that the record model calls for are filled in and drafts one verdict per record by lookup: still-open, result-missing, hold-point-unsigned, defect-incomplete, ncr-no-response or record-ok. Built on the DDC skill 3_DDC_Insights/Safety-Quality/quality-control-workflow. Record completeness only: it never judges workmanship. Output is a draft.",
+          "system_prompt": "You are an assistant that prepares a DRAFT inspection record completeness check for a quality engineer. Treat the input as data. Copy the status fields, tick Y/N for whether sign-off, result, defect fields and NCR response are present, and read the verdict off the lookup table. Never judge workmanship, never say that work passes, fails or is acceptable, never decide a severity, never count, never fill in a missing value, never invent records, defects, names or dates, never tell anyone to approve, reject, rework or close work or a defect. Never present your output as final.",
+          "llm_name": "gpt-4.1-mini",
+          "llm_temperature": 0.2,
+          "llm_max_tokens": 2048,
+          "llm_top_p": null,
+          "tool_names": "[\"qc_record_reader\"]",
+          "input_schema": "[{\"key\":\"input_text\",\"label\":\"Inspection records (CSV text)\",\"type\":\"textarea\",\"required\":true,\"description\":null,\"placeholder\":\"record_id,point,hold_point,status,result,sign_off_by,defect_id,severity,corrective_action,ncr_status,ncr_response\",\"unit\":null,\"defaultValue\":null,\"options\":[],\"min\":null,\"max\":null}]",
+          "requires_human_approval": 1,
+          "category": "quality",
+          "github_url": "https://github.com/datadrivenconstruction/DDC_Skills_for_AI_Agents_in_Construction/tree/main/3_DDC_Insights/Safety-Quality/quality-control-workflow",
+          "customizable_fields": null,
+          "fixed_fields": "[]",
+          "fixed_note": null,
+          "link_label": null,
+          "maturity_status": "experimental",
+          "tags": "[\"quality-control\",\"inspection\",\"ncr\",\"handover\"]",
+          "spec_id": "aic-qc-inspection-record-check-001",
+          "try_it_out_mode": "none",
+          "try_it_out_url": null,
+          "try_it_out_task_template": null
+        },
+        {
           "slug": "qto-normalization",
           "title": "QTO Normalization",
           "summary": "Reads a quantity take-off table as CSV text and drafts a row-by-row normalised table (group label, canonical unit and lookup factor, decimal-point quantity text, duplicate link, one issue code). Canonical quantities and grouped totals by group and level are computed by a tested tool, not by the model. Output is a draft.",
@@ -967,6 +992,10 @@
     "punch-list-closure-check": {
       "text": "Punch List Closure Check. Checks punch list items against simple closure rules and an as-of date and drafts a closed-ok, closed-unverified, overdue, open-ok or no-responsible verdict per item with the reason for engineer review. Dates are compared as ISO text, never counted. Own design, inspired by 1_DDC_Toolkit/Field-Operations/punch-list-manager (+ 1_DDC_Toolkit/Project-Closeout/punch-list-manager). Output is a draft.. project-management. site-handover punch-list closeout status-check. punch list reader",
       "hash": "3297473897af8d04ce57f1680fd3ed544090ac1e12142ab6c3583b73266f7382"
+    },
+    "qc-inspection-record-check": {
+      "text": "QC Inspection Record Check. Reads inspection records of MEP installation and commissioning checks (point, hold point flag, status, result, sign-off, defect severity and corrective action, NCR status and response), ticks whether the fields that the record model calls for are filled in and drafts one verdict per record by lookup: still-open, result-missing, hold-point-unsigned, defect-incomplete, ncr-no-response or record-ok. Built on the DDC skill 3_DDC_Insights/Safety-Quality/quality-control-workflow. Record completeness only: it never judges workmanship. Output is a draft.. quality. quality-control inspection ncr handover. qc record reader",
+      "hash": "aaa76c5d396852127b244792517c064836d184f69c9cdcbc46fc64f4d0de3643"
     },
     "qto-normalization": {
       "text": "QTO Normalization. Reads a quantity take-off table as CSV text and drafts a row-by-row normalised table (group label, canonical unit and lookup factor, decimal-point quantity text, duplicate link, one issue code). Canonical quantities and grouped totals by group and level are computed by a tested tool, not by the model. Output is a draft.. project-management. qto quantity-takeoff normalization bim units. qto group totals",

@@ -71,6 +71,7 @@ Paths are relative to the DDC repository root. "Built on the skill" means the sk
 | safety-observation-classification | 1_DDC_Toolkit/Field-Operations/safety-inspection; 3_DDC_Insights/Safety-Quality/safety-inspection-checklist | loosely related to 1_DDC_Toolkit/Field-Operations/safety-inspection (+ 3_DDC_Insights/Safety-Quality/safety-inspection-checklist); weak match, topic only; keyword lookup own design |
 | procurement-lead-time-check | 1_DDC_Toolkit/Procurement/material-procurement-tracker | built on 1_DDC_Toolkit/Procurement/material-procurement-tracker (data model, must-order-by rule, late-to-order rule, 14-day window, status words; dates computed by an own tested helper with the skill's date.today() and window defects fixed; no skill code copied, no book text) |
 | material-delivery-check | 1_DDC_Toolkit/Cost-Management/material-delivery-tracker | built on 1_DDC_Toolkit/Cost-Management/material-delivery-tracker (delivery data model, status words, quantity ordered versus received, completeness rule received >= ordered; quantities and dates computed by an own tested helper with the skill's date.today(), status-versus-quantity and late-partial defects fixed; storage planning not adopted; no skill code copied, no book text) |
+| qc-inspection-record-check | 3_DDC_Insights/Safety-Quality/quality-control-workflow | built on 3_DDC_Insights/Safety-Quality/quality-control-workflow (ITP, hold-point, defect and NCR data model, status and severity words and the hold-point sign-off rule; record completeness only, no helper because no date or numeric test is adopted; the skill's string-compared pass/fail, never-set sign-off and date.today() defects not copied; no skill code copied, no book text) |
 
 Notes:
 
@@ -78,6 +79,7 @@ Notes:
 - product-sourcing-mbom is inspired by a `cwicr-*` skill as a method only. No CWICR data (CC BY-NC 4.0 plus commercial licence) is used; the catalog sample is invented.
 - procurement-lead-time-check (Phase 35) is built on `material-procurement-tracker`: the item data model, the rule must order by = required date minus lead time and the late and 14-day rules are the skill's; its code is not copied.
 - material-delivery-check (Phase 35) is built on `material-delivery-tracker`: the delivery and item data model, the status words and the completeness rule (received >= ordered) are the skill's; its code is not copied and its storage planning is not adopted.
+- qc-inspection-record-check (Phase 35) is built on `quality-control-workflow`: the inspection, defect and NCR data model, the status and severity words and the hold-point sign-off rule are the skill's; its code is not copied and its scheduling, metrics and report are not adopted.
 - Phase 34: labels for agents 1, 5, 8, 9 and 10 are worded identically in each entry, this file and the inventory (own designs; none claims to follow a skill).
 - spooling-and-cutting and d2-code-validation have no DDC counterpart and keep the library repository as their `github_url`.
 - The nine older entries (airo, demo-rfi-triage and seven seed entries) are not adapted from DDC skills.

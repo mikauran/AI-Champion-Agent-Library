@@ -124,6 +124,10 @@ Agents 13-16 are chosen from the DDC skills (see docs/ddc-agent-candidates.md); 
 | G-120 | 18 Material delivery check | Storage areas and capacity, tracking numbers, carrier, vendor contact, on-time rate, status counts and spreadsheet export of the source skill are not adopted; no vendor is contacted and nobody is told to chase a delivery | tool | open | Phase 35 | open |
 | G-121 | 18 Material delivery check | Status words are copied, not derived: a status that contradicts quantities or dates is only flagged (conflict) and shown as data-incomplete; calendar days only, no working-day calendar | tool | open | Phase 35 | open |
 | G-122 | 18 Material delivery check | Sample is synthetic (invented lines, PO numbers and reasons); real delivery logs are confidential and were not used; behaviour on real data unproven; scoped to about 7 lines per run | data | open | Phase 35 | open |
+| G-123 | 19 QC inspection record check | No numeric or date test: measurements are not compared with acceptance criteria and NCR or defect due dates are not tested (no helper); an overdue NCR response is not detected | tool | open | Phase 35 | open |
+| G-124 | 19 QC inspection record check | Workmanship is never judged: record-ok only means the fields are filled in; contradictions between status and result text, a failed record without a defect and unknown status words are not checked; nothing is approved, rejected or closed | tool | open | Phase 35 | open |
+| G-125 | 19 QC inspection record check | Scheduling, photos, root cause, severity due dates, cost and schedule impact, quality metrics and the report of the source skill are not adopted | tool | open | Phase 35 | open |
+| G-126 | 19 QC inspection record check | Sample is synthetic (invented records, names and defects); real inspection logs are confidential and were not used; behaviour on real data unproven; scoped to about 7 records per run | data | open | Phase 35 | open |
 
 ## Changelog
 

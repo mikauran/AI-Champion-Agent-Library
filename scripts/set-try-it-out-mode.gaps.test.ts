@@ -60,6 +60,7 @@ describe('setTryItOutMode edge cases', () => {
       { slug: 'safety-observation-classification', mode: 'link', url: 'https://soc', tpl: 'S' },
       { slug: 'procurement-lead-time-check', mode: 'link', url: 'https://plt', tpl: 'P' },
       { slug: 'material-delivery-check', mode: 'link', url: 'https://mdc', tpl: 'M' },
+      { slug: 'qc-inspection-record-check', mode: 'link', url: 'https://qcr', tpl: 'Q' },
     ])
     setTryItOutMode(p)
     const rows = read(p)
@@ -79,6 +80,7 @@ describe('setTryItOutMode edge cases', () => {
       ['procurement-lead-time-check', 'runnable', null, null],
       ['product-sourcing-mbom', 'runnable', null, null],
       ['punch-list-closure-check', 'runnable', null, null],
+      ['qc-inspection-record-check', 'runnable', null, null],
       ['qto-normalization', 'runnable', null, null],
       ['quote-comparison', 'runnable', null, null],
       ['rfi-generation-from-findings', 'runnable', null, null],
@@ -110,6 +112,7 @@ describe('setTryItOutMode edge cases', () => {
       { slug: 'safety-observation-classification' },
       { slug: 'procurement-lead-time-check' },
       { slug: 'material-delivery-check' },
+      { slug: 'qc-inspection-record-check' },
       { slug: 'other-agent', mode: 'link', url: 'https://keep', tpl: 'keep' },
       { slug: 'demo-rfi-triage-2', mode: 'runnable' },
     ])
@@ -123,7 +126,7 @@ describe('setTryItOutMode edge cases', () => {
 
   it('returns results in the declared order with one changed row each', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'rfi-generation-from-findings' }, { slug: 'product-sourcing-mbom' }, { slug: 'quote-comparison' }, { slug: 'carbon-epd-enrichment' }, { slug: 'cut-sheet-qa' }, { slug: 'spooling-and-cutting' }, { slug: 'd2-code-validation' }, { slug: 'om-completeness' }, { slug: 'bms-digital-twin' }, { slug: 'daily-report-cross-check' }, { slug: 'punch-list-closure-check' }, { slug: 'change-order-consistency-check' }, { slug: 'safety-observation-classification' }, { slug: 'procurement-lead-time-check' }, { slug: 'material-delivery-check' }, { slug: 'clash-prioritization' }, { slug: 'qto-normalization' }, { slug: 'etim-classification-repair' }, { slug: 'hvac-load-calculator' }, { slug: 'demo-rfi-triage' }])
+    seed(p, [{ slug: 'rfi-generation-from-findings' }, { slug: 'product-sourcing-mbom' }, { slug: 'quote-comparison' }, { slug: 'carbon-epd-enrichment' }, { slug: 'cut-sheet-qa' }, { slug: 'spooling-and-cutting' }, { slug: 'd2-code-validation' }, { slug: 'om-completeness' }, { slug: 'bms-digital-twin' }, { slug: 'daily-report-cross-check' }, { slug: 'punch-list-closure-check' }, { slug: 'change-order-consistency-check' }, { slug: 'safety-observation-classification' }, { slug: 'procurement-lead-time-check' }, { slug: 'material-delivery-check' }, { slug: 'qc-inspection-record-check' }, { slug: 'clash-prioritization' }, { slug: 'qto-normalization' }, { slug: 'etim-classification-repair' }, { slug: 'hvac-load-calculator' }, { slug: 'demo-rfi-triage' }])
     expect(setTryItOutMode(p)).toEqual([
       { slug: 'demo-rfi-triage', mode: 'runnable', changes: 1 },
       { slug: 'hvac-load-calculator', mode: 'none', changes: 1 },
@@ -145,13 +148,14 @@ describe('setTryItOutMode edge cases', () => {
       { slug: 'safety-observation-classification', mode: 'runnable', changes: 1 },
       { slug: 'procurement-lead-time-check', mode: 'runnable', changes: 1 },
       { slug: 'material-delivery-check', mode: 'runnable', changes: 1 },
+      { slug: 'qc-inspection-record-check', mode: 'runnable', changes: 1 },
     ])
   })
 
   it('an already-correct row still counts as one change (SQLite counts matched rows)', () => {
     const p = tmpDb()
-    seed(p, [{ slug: 'demo-rfi-triage', mode: 'runnable' }, { slug: 'hvac-load-calculator', mode: 'none' }, { slug: 'etim-classification-repair', mode: 'runnable' }, { slug: 'qto-normalization', mode: 'runnable' }, { slug: 'clash-prioritization', mode: 'runnable' }, { slug: 'rfi-generation-from-findings', mode: 'runnable' }, { slug: 'product-sourcing-mbom', mode: 'runnable' }, { slug: 'quote-comparison', mode: 'runnable' }, { slug: 'carbon-epd-enrichment', mode: 'runnable' }, { slug: 'cut-sheet-qa', mode: 'runnable' }, { slug: 'spooling-and-cutting', mode: 'runnable' }, { slug: 'd2-code-validation', mode: 'runnable' }, { slug: 'om-completeness', mode: 'runnable' }, { slug: 'bms-digital-twin', mode: 'runnable' }, { slug: 'daily-report-cross-check', mode: 'runnable' }, { slug: 'punch-list-closure-check', mode: 'runnable' }, { slug: 'change-order-consistency-check', mode: 'runnable' }, { slug: 'safety-observation-classification', mode: 'runnable' }, { slug: 'procurement-lead-time-check', mode: 'runnable' }, { slug: 'material-delivery-check', mode: 'runnable' }])
-    expect(setTryItOutMode(p).map((r) => r.changes)).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    seed(p, [{ slug: 'demo-rfi-triage', mode: 'runnable' }, { slug: 'hvac-load-calculator', mode: 'none' }, { slug: 'etim-classification-repair', mode: 'runnable' }, { slug: 'qto-normalization', mode: 'runnable' }, { slug: 'clash-prioritization', mode: 'runnable' }, { slug: 'rfi-generation-from-findings', mode: 'runnable' }, { slug: 'product-sourcing-mbom', mode: 'runnable' }, { slug: 'quote-comparison', mode: 'runnable' }, { slug: 'carbon-epd-enrichment', mode: 'runnable' }, { slug: 'cut-sheet-qa', mode: 'runnable' }, { slug: 'spooling-and-cutting', mode: 'runnable' }, { slug: 'd2-code-validation', mode: 'runnable' }, { slug: 'om-completeness', mode: 'runnable' }, { slug: 'bms-digital-twin', mode: 'runnable' }, { slug: 'daily-report-cross-check', mode: 'runnable' }, { slug: 'punch-list-closure-check', mode: 'runnable' }, { slug: 'change-order-consistency-check', mode: 'runnable' }, { slug: 'safety-observation-classification', mode: 'runnable' }, { slug: 'procurement-lead-time-check', mode: 'runnable' }, { slug: 'material-delivery-check', mode: 'runnable' }, { slug: 'qc-inspection-record-check', mode: 'runnable' }])
+    expect(setTryItOutMode(p).map((r) => r.changes)).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
   })
 
   it('a missing hvac row throws naming that slug', () => {
