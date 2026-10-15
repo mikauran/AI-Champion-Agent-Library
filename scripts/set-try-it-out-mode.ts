@@ -18,6 +18,7 @@ const UPDATES: Array<{ slug: string; mode: string; url: string | null; taskTempl
   { slug: 'rfi-generation-from-findings', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'product-sourcing-mbom', mode: 'runnable', url: null, taskTemplate: null },
   { slug: 'quote-comparison', mode: 'runnable', url: null, taskTemplate: null },
+  { slug: 'carbon-epd-enrichment', mode: 'runnable', url: null, taskTemplate: null },
 ]
 
 export function setTryItOutMode(dbPath: string): Array<{ slug: string; mode: string; changes: number }> {

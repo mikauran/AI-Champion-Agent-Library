@@ -1,0 +1,24 @@
+# SYNTHETIC SAMPLE - invented data. EPD values below are INVENTED and not authoritative; no real EPD was used.
+reference_date: 2026-10-15
+## PRODUCTS
+product_id,description,material_key,qty,unit
+X-01,Concrete C30/37 ready-mix,CONC-C30,85,m3
+X-02,Concrete C25/30 ready-mix,CONC-C25,40,m3
+X-03,Reinforcement steel B500,REBAR,3850,kg
+X-04,Copper pipe 22,CU-PIPE,120,m
+X-05,Mineral wool insulation,MW-INS,60,m2
+X-06,Steel beam HEA 200,STEEL-HEA,2400,kg
+X-07,Gypsum board 13 mm,GYP-13,300,m2
+X-08,Circulation pump,PUMP-25,2,pcs
+X-09,Window triple glazed,WIN-3G,18,pcs
+X-10,Floor drain stainless,DRAIN-SS,6,pcs
+## EPD EXCERPT (SYNTHETIC)
+epd_id,material_key,product_name,declared_unit,gwp_a1_a3_kgco2e,valid_until,source
+EPD-01,CONC-C30,Concrete C30/37 plant 1,m3,310,2029-12-31,SYNTHETIC
+EPD-02,REBAR,Reinforcement steel B500,t,720,2028-06-30,SYNTHETIC
+EPD-03,CU-PIPE,Copper pipe,m,6.1,2025-06-30,SYNTHETIC
+EPD-04,MW-INS,Mineral wool insulation,m2,4.2,2028-03-31,SYNTHETIC
+EPD-05,STEEL-HEA,Steel beam HEA,kg,1.9,2030-01-31,SYNTHETIC
+EPD-06,GYP-13,Gypsum board 13 mm,m2,2.8,2027-05-31,SYNTHETIC
+EPD-07,WIN-3G,Triple glazed window,pcs,95,2028-09-30,SYNTHETIC
+EPD-08,CONC-C30,Concrete C30/37 plant 2,m3,335,2027-01-31,SYNTHETIC
