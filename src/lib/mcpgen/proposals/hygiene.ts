@@ -21,12 +21,16 @@ const INJECTION: RegExp[] = [
   /\b(?:jailbreak|prompt\s+injection|new\s+instructions?)\b/i,
 ]
 const CREDENTIAL_WORD = /\b(?:password|passwd|passphrase|secret|api[_ -]?key|bearer|credential|private[_ -]?key|access[_ -]?token)s?\b/i
-const WRITE_CLAIM = /\b(?:creates?|updates?|deletes?|modif(?:y|ies)|inserts?|overwrites?|writes?|removes?|drops?|truncates?|mutates?)\b/gi
+// All verb forms (creates, creating, created ...); CR-30.
+const WRITE_CLAIM = /\b(?:(?:creat|updat|delet|overwrit|remov|truncat|mutat)(?:e|es|ed|ing)|insert(?:s|ed|ing)?|modif(?:y|ies|ied|ying)|writ(?:e|es|ing|ten)|wrote|overwrote|drop(?:s|ped|ping)?)\b/gi
+// A past participle that only locates a timestamp ("updated since a date") is not a claim.
+const PARTICIPLE_TIME = /^(?:updated|created|modified)$/i
+const TIME_WORD_AFTER = /^\s+(?:since|after|before|on|at|in|between|during|from)\b/i
 // A write verb is not a claim when the same clause negates it ("Does not delete or modify any data"): the
 // negation must be directly before the verb with only write verbs, "or"/"nor" and filler words between, so
 // "Does not delete, but updates rows" and "Does not delete and updates rows" are still claims.
 const WRITE_VERB_WORD = '(?:creat\\w*|updat\\w*|delet\\w*|modif\\w*|insert\\w*|overwrit\\w*|writ\\w*|remov\\w*|drop\\w*|truncat\\w*|mutat\\w*|chang\\w*|alter\\w*|edit\\w*)'
-const NEGATED_BEFORE = new RegExp(`(?:\\b(?:not|never|cannot|without|neither|nor)|n't)\\s+(?:(?:${WRITE_VERB_WORD}|or|nor|ever)\\s+)*$`, 'i')
+const NEGATED_BEFORE = new RegExp(`(?:\\b(not|never|cannot|without|neither|nor)|n't)\\s+(?:(?:${WRITE_VERB_WORD}|or|nor|ever)\\s+)*$`, 'i')
 // "update" as a noun naming returned data ("the last update time", "update date"), not as an action.
 const UPDATE_NOUN_BEFORE = /\b(?:last|latest|recent|since\s+the)\s+$/i
 const UPDATE_NOUN_AFTER = /^\s+(?:date|time|timestamp|count|history|log)\b/i
@@ -36,9 +40,15 @@ function hasWriteClaim(text: string): boolean {
   for (const m of text.matchAll(WRITE_CLAIM)) {
     const at = m.index ?? 0
     const before = text.slice(Math.max(0, at - 80), at)
-    if (NEGATED_BEFORE.test(before)) continue
+    const neg = NEGATED_BEFORE.exec(before)
+    // After an auxiliary negation ("does not", "cannot") the following verbs are base forms, so a third-person
+    // form ("does not delete or updates rows") is a new claim; "never"/"without" may take -s forms.
+    const thirdPerson = /[^s]s$/i.test(m[0])
+    const aux = neg !== null && (neg[1] === undefined || /^(?:not|cannot|neither|nor)$/i.test(neg[1]))
+    if (neg !== null && !(aux && thirdPerson)) continue
     const after = text.slice(at + m[0].length, at + m[0].length + 20)
-    if (/^updates?$/i.test(m[0]) && (UPDATE_NOUN_BEFORE.test(before) || UPDATE_NOUN_AFTER.test(after))) continue
+    if (/^update$/i.test(m[0]) && (UPDATE_NOUN_BEFORE.test(before) || UPDATE_NOUN_AFTER.test(after))) continue
+    if (PARTICIPLE_TIME.test(m[0]) && TIME_WORD_AFTER.test(after)) continue
     return true
   }
   return false

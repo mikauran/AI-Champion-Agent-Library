@@ -78,3 +78,23 @@ describe('CR-42 the gate sees more than a short domain list', () => {
     expect(d(t)).toContain('text-url'),
   )
 })
+
+// CR-30: -ing and -ed forms are claims, "updates" as a clause-initial verb is never a noun, and "or" after an
+// auxiliary negation does not swallow a third-person verb.
+describe('write claim: bypasses found in review 23 (CR-30)', () => {
+  it.each([
+    'Supports deleting records.',
+    'Rows can be deleted with this tool.',
+    'Used for writing new rows.',
+    'Removed rows are returned.',
+    'Updates log entries.',
+    'Updates count of rows.',
+    'Updates time zone settings.',
+    'Does not delete or updates rows.',
+    'Not or deletes rows.',
+  ])('rejects: %s', (t) => expect(d(t)).toContain('text-write-claim'))
+  it.each(['Returns parts that were updated since a date.', 'Includes the last update time of each part.', 'Never modifies or deletes or writes anything.', 'Does not delete or update rows.'])(
+    'still accepts: %s',
+    (t) => expect(d(t)).toEqual([]),
+  )
+})
