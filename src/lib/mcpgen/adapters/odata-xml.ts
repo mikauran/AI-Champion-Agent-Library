@@ -47,7 +47,7 @@ export function xmlParserLoaded(): boolean {
   return saxModule !== undefined
 }
 
-const DECLARATION = /^﻿?\s*<\?xml\s[^<>]*\?>/
+const DECLARATION = /^\uFEFF?\s*<\?xml\s[^<>]*\?>/
 const DOCTYPE_LIKE = /<!(?:doctype|entity|element|attlist|notation)/i
 const BANG_NOT_COMMENT_OR_CDATA = /<!(?!--|\[CDATA\[)/
 
@@ -64,7 +64,7 @@ export function precheckXml(text: string): Gap | undefined {
   }
   const decl = DECLARATION.exec(text)
   if (text.indexOf('<?', decl ? decl[0].length : 0) !== -1) {
-    return gap('xml-pi-rejected', 'The document contains a processing instruction other than the XML declaration; the input was rejected.', { severity: 'error' })
+    return gap('xml-pi-rejected', 'The document contains a processing instruction other than the XML declaration; the input was rejected. The check is textual, so a `<?` inside a CDATA section or a comment is rejected too.', { severity: 'error' })
   }
   return undefined
 }

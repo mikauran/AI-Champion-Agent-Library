@@ -110,6 +110,12 @@ function pointer(root: Obj, ref: string): unknown {
       /* keep raw */
     }
     seg = seg.replace(/~1/g, '/').replace(/~0/g, '~')
+    if (Array.isArray(cur)) {
+      // CR-07: a numeric segment indexes an array (#/paths/~1a/get/parameters/0).
+      cur = /^(?:0|[1-9][0-9]{0,5})$/.test(seg) ? cur[Number(seg)] : undefined
+      if (cur === undefined) throw new Unsupported('ref-unresolved', 'A local $ref does not resolve.')
+      continue
+    }
     if (!isObj(cur)) throw new Unsupported('ref-unresolved', 'A local $ref does not resolve.')
     cur = own(cur, seg)
     if (cur === undefined) throw new Unsupported('ref-unresolved', 'A local $ref does not resolve.')
@@ -628,7 +634,8 @@ function parseDoc(input: RawInput): ParseResult {
       if (!isObj(opNode)) continue
       const id = opIdFor(method, path, opNode.operationId, usedIds)
       if (method !== 'get') {
-        dropped.push(id)
+        // HEAD, OPTIONS and TRACE are not write operations; they are not reported as dropped writes (CR-09).
+        if (method !== 'head' && method !== 'options' && method !== 'trace') dropped.push(id)
         continue
       }
       const where = `GET ${path.slice(0, 120)}`

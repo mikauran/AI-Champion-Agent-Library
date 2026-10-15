@@ -427,7 +427,7 @@ function parseCreateTable(stmt: string, push: (g: Gap) => void, ctx: { so: ScanO
     const inline = /^ENUM\s*\(/i.exec(typeText)
     if (inline) {
       const close = matchParen(typeText, typeText.indexOf('('), so)
-      labels = close > 0 && typeText.slice(close + 1).trim() === '' ? enumLabels(typeText.slice(typeText.indexOf('(') + 1, close), so) : undefined
+      labels = close > 0 && /^(?:(?:CHARACTER\s+SET|CHARSET)\s+\w+)?$/i.test(typeText.slice(close + 1).trim()) ? enumLabels(typeText.slice(typeText.indexOf('(') + 1, close), so) : undefined
       if (labels) mt = { type: 'string', known: true, composite: false }
     } else {
       const tid = readIdent(typeText)

@@ -43,7 +43,7 @@ const PRIMS: Record<string, Prim> = {
 const plain = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
 function sniff(text: string): { xml: boolean; json: boolean } {
-  const head = text.replace(/^﻿/, '').trimStart()
+  const head = text.replace(/^\uFEFF/, '').trimStart()
   return { xml: head.startsWith('<'), json: head.startsWith('{') }
 }
 
@@ -259,6 +259,11 @@ function buildEntity(
       break
     }
     cur = next.type
+  }
+  // A chain that stopped although the next base type exists was cut by the cycle or depth guard (CR-23).
+  const top = chain[0]
+  if (top.base !== undefined && ix.entityTypes.has(top.base)) {
+    push(gap('odata-type-unresolved', `The base type chain of ${type.name} is cyclic or longer than ${MAX_HIERARCHY} levels; inherited properties and keys beyond that are unknown.`, { path: set.name }))
   }
   const hasSubtypes = [...ix.entityTypes.values()].some((e) => e.type.base !== undefined && ix.entityTypes.get(e.type.base)?.type === type)
   if (hasSubtypes) push(gap('odata-derived-types-flattened', `Entity set ${set.name} may return derived types; only the properties of ${type.name} and its base types are exposed.`, { severity: 'info', path: set.name }))

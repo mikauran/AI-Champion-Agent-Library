@@ -63,7 +63,7 @@ export function buildSqlModel(
   const operations: Operation[] = []
   const maxPage = options?.limits?.maxPageSize
   const pageMax = typeof maxPage === 'number' && Number.isInteger(maxPage) && maxPage >= 1 ? maxPage : 100
-  if (!(typeof maxPage === 'number' && maxPage >= 1)) {
+  if (!(typeof maxPage === 'number' && Number.isInteger(maxPage) && maxPage >= 1)) {
     push(gap('limit-default', `No page size is known from the schema; the default of ${pageMax} rows per call was used. Override it with options.limits.maxPageSize.`, { severity: 'info' }))
   }
   for (const t of tables) {

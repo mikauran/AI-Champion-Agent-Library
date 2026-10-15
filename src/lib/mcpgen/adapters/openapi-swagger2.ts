@@ -87,6 +87,8 @@ export function swagger2Paths(root: Obj, deref: Deref, ignoredBodyOps: string[])
     const item = own(paths, path)
     if (!isObj(item)) continue
     const conv: Obj = {}
+    // A path item $ref is kept so the caller resolves it or reports ref-unresolved (CR-06).
+    if (typeof item.$ref === 'string') conv.$ref = item.$ref
     const itemIgnored = { body: false }
     if (Array.isArray(item.parameters)) {
       conv.parameters = item.parameters.map((p) => convertParam(deref, root, p, itemIgnored)).filter((p) => p !== undefined)
