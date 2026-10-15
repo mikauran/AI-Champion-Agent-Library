@@ -245,3 +245,4 @@ Order: 24 -> 30, then 21 -> 23. Cap: $0.50 per agent run, $10 total.
 - Phase 26 / Agent 5 Product sourcing: COUNTED on third attempt (scoped to 6 lines x 6 rows, job 41f820ae; earlier 12 x 13 attempts failed). Limit recorded as G-037.
 - Phase 26 / Agent 6 Quote comparison: COUNTED (job eaee09d8…, ~$0.025). Spend ~$0.32.
 - Phase 26 COMPLETE: agents 5 (scoped, 1/3 runs passed), 6, 7 counted. Next: Phase 27 (agents 8, 9).
+- Phase 27 / Agent 8 Cut-sheet QA: COUNTED (job fb46b86d…, first run).
