@@ -1,6 +1,6 @@
 // Small helpers for writing Python source text. Everything that reaches generated Python as a
 // string goes through pyStr (exact literals) or cleanText (docstrings and messages).
-import { cleanSpecText } from '../hygiene.js'
+import { cleanSpecText, isControlCode } from '../hygiene.js'
 import { redactSecrets } from '../redact.js'
 
 /** A valid Python string literal for any JS string. */
@@ -51,6 +51,12 @@ export function pyLit(v: unknown, indent = 0): string {
   return 'None'
 }
 
+function stripInvisible(s: string): string {
+  let out = ''
+  for (const ch of s) out += isControlCode(ch.codePointAt(0)!) ? ' ' : ch
+  return out
+}
+
 /**
  * Text taken from the source model (descriptions, labels, summaries) is untrusted. This makes it
  * safe inside a triple-quoted docstring or a message literal: no control characters, no quotes,
@@ -59,8 +65,8 @@ export function pyLit(v: unknown, indent = 0): string {
  */
 export function cleanText(s: unknown, max = 200): string {
   let t = typeof s === 'string' ? s : s === undefined || s === null ? '' : String(s)
+  t = stripInvisible(t.slice(0, 8192))
   t = t
-    .slice(0, 8192)
     .replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ')
     .replace(/\\/g, '/')
     .replace(/["`]/g, "'")

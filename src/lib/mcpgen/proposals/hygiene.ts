@@ -51,10 +51,12 @@ export interface TextOptions {
 }
 
 /** Stable codes for everything wrong with the text; [] means clean. */
-export function textCodes(text: string, opts: TextOptions): string[] {
+export function textCodes(raw: string, opts: TextOptions): string[] {
   const out: string[] = []
-  if (typeof text !== 'string' || text.trim() === '') return ['text-empty']
-  if (hasControl(text)) out.push('text-control-chars')
+  if (typeof raw !== 'string' || raw.trim() === '') return ['text-empty']
+  // Checks other than the control scan run on the NFKC form, so full-width spellings are matched (CR-39).
+  const text = raw.normalize('NFKC')
+  if (hasControl(raw)) out.push('text-control-chars')
   if (scanForCredentials(text).length > 0 || redactSecrets(text) !== text) out.push('text-credential')
   if (URL_LIKE.some((re) => re.test(text))) out.push('text-url')
   if (MARKUP.test(text)) out.push('text-markup')

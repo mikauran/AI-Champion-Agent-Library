@@ -9,11 +9,15 @@ import { INSTRUCTION_REMOVED, LINK_REMOVED, redactSecrets, sanitizeSourceText } 
 /** Longest text the filter looks at; callers clip to far less. */
 const MAX_INPUT = 8192
 
-// Control characters except tab and newline, zero-width and bidi controls, the BOM (by code point,
-// so this file holds no invisible characters).
-function isControlCode(c: number): boolean {
+// Control characters except tab and newline, plus characters a human cannot see but a model reads
+// (zero-width, bidi, soft hyphen, variation selectors, interlinear annotation, Unicode tag characters), and
+// the BOM. By code point, so this file holds no invisible characters (review CR-39).
+export function isControlCode(c: number): boolean {
   if (c <= 0x08 || (c >= 0x0b && c <= 0x1f) || (c >= 0x7f && c <= 0x9f)) return true
-  return (c >= 0x200b && c <= 0x200f) || (c >= 0x2028 && c <= 0x202e) || (c >= 0x2060 && c <= 0x2064) || c === 0xfeff
+  if (c === 0x00ad || c === 0x061c || c === 0x180e || c === 0xfeff) return true
+  if ((c >= 0x200b && c <= 0x200f) || (c >= 0x2028 && c <= 0x202e) || (c >= 0x2060 && c <= 0x206f)) return true
+  if ((c >= 0xfe00 && c <= 0xfe0f) || (c >= 0xfff9 && c <= 0xfffb)) return true
+  return (c >= 0xe0000 && c <= 0xe007f) || (c >= 0xe0100 && c <= 0xe01ef)
 }
 
 export function hasControl(s: string): boolean {
@@ -75,7 +79,7 @@ export function cleanSpecTextFlagged(s: unknown, max = 200): CleanSpecResult {
   try {
     const raw = typeof s === 'string' ? s : s === undefined || s === null ? '' : String(s)
     // Redact secrets and links, drop model-directed phrases, flatten markdown links and tags.
-    const r = sanitizeSourceText(stripControl(raw.slice(0, Math.min(MAX_INPUT, Math.max(1, max) * 4))).replace(MD_LINK, '$1'))
+    const r = sanitizeSourceText(stripControl(raw.slice(0, Math.min(MAX_INPUT, Math.max(1, max) * 4))).normalize('NFKC').replace(MD_LINK, '$1'))
     let t = r.text
     for (const m of REMOVAL_MARKERS) t = t.split(m).join(' ')
     t = removeLinkWords(t)
