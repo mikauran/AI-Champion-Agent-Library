@@ -52,7 +52,9 @@ export const RESERVED_NAMES = new Set(
     'str int float bool len list dict set tuple range min max sum any all sorted isinstance zip enumerate print dir ' +
     'os json time csv math sqlite3 httpx mcp server Any Optional functools urllib pathlib Exception BaseException ' +
     'exc sel query data rows row results item items hits matches scanned truncated needle coverage out ' +
-    'base_query spec conn cur sql args col pages hint ident entry'
+    'base_query spec conn cur sql args col pages hint ident entry ' +
+    // builtins and modules the emitted runtime calls or assigns (CR-28)
+    'open ord super datetime re parts'
   ).split(' '),
 )
 export const STANDARD_ARGS = new Set(['page', 'page_size', 'fields', 'limit', 'offset', 'field', 'value', 'match', 'key', 'max_pages'])

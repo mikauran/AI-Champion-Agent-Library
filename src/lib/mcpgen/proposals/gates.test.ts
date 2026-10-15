@@ -288,3 +288,12 @@ describe('gate 4: rename_arg collisions (CR-26)', () => {
     }
   })
 })
+
+// CR-28: names the emitted runtime itself calls or assigns must not be usable as tool names.
+describe('gate 3: reserved runtime names (CR-28)', () => {
+  for (const name of ['open', 'ord', 'super', 'datetime', 'parts']) {
+    it(`rejects rename_tool to ${name}`, () => {
+      rejects(http, [op('rename_tool', 'r', { tool: 'search_part', name })], 'reserved-tool-name', 'r')
+    })
+  }
+})
