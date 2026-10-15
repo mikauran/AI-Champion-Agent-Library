@@ -19,7 +19,7 @@ Template for consortium agents (Phases 25-29). The entry is one Oracle AgentSpec
 
 Entries without any consortium key (the older agents) print `[SKIPPED]` and are not errors. A failing entry lists the field, for example `- metadata.gaps must be a list of strings (key present, may be empty)`.
 
-Exit codes: 0 all entries ok or skipped, 1 at least one entry has errors, 2 path not found. The same checks run in `npm test` through `scripts/validate-entries.test.ts`, so they are part of `npm run check`.
+Exit codes: 0 all entries ok or skipped, 1 at least one entry has errors, 2 path not found, no entry files found, or an unknown option. The same checks run in `npm test` through `scripts/validate-entries.test.ts`, so they are part of `npm run check`.
 
 ## Fields
 

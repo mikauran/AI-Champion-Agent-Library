@@ -99,6 +99,12 @@ export function main(
   argv: string[],
   io: { out: (s: string) => void; err: (s: string) => void } = { out: console.log, err: console.error },
 ): number {
+  // CR-56: an unknown flag is a usage error, not silently ignored.
+  const unknown = argv.find((a) => a.startsWith('--'))
+  if (unknown !== undefined) {
+    io.err(`validate-entries: unknown option ${unknown.slice(0, 40).replace(/[^\x20-\x7e]/g, '?')}`)
+    return 2
+  }
   const paths = argv.filter((a) => !a.startsWith('--'))
   if (paths.length === 0) paths.push('data/agents')
   const results: EntryResult[] = []
@@ -108,6 +114,11 @@ export function main(
       return 2
     }
     results.push(...(lstatSync(p).isDirectory() ? validateEntriesDir(p) : [validateEntryFile(p)]))
+  }
+  // A mistyped directory that holds no YAML files must not pass as "0 entries" (CR-56).
+  if (results.length === 0) {
+    io.err('validate-entries: no entry files found')
+    return 2
   }
   for (const r of results) {
     io.out(`[${r.status.toUpperCase()}] ${r.path}`)
