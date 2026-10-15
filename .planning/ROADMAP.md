@@ -37,7 +37,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 18: Live Verification and Container-Path Fixes** - Real-model search run, FastMCP 3.4.8 and 4.1.0, live Podman run and fixes, human guide (outside the GSD flow; remaining checks pending human)
 - [x] **Phase 19: Generator Input Kinds** - Swagger 2.0, OAuth2, OpenAPI 3.1 audit, SQL dialects, Prisma, OData (outside the GSD flow)
 - [x] **Phase 20: Proposal Layer and Context Pack** - Data-only proposals and context pack, stages 1-2 (outside the GSD flow)
-- [ ] **Phase 21: Generator Stage 0** - Description cleanup, tool annotations, outputSchema, deterministic tool order (not started)
+- [x] **Phase 21: Generator Stage 0** - Description cleanup, tool annotations, outputSchema, deterministic tool order (complete 2026-10-15, verification passed)
 - [ ] **Phase 22: Proposal Layer Follow-ups** - First real proposal reviewed, baseline vs proposal run, hygiene tuning, derived_filter on OData (not started)
 - [ ] **Phase 23: Code Review of New Generator Code** - Review, fixes and security audit of everything added since the Phase 14 review (not started)
 - [x] **Phase 24: Agent Inventory and Catalog Template** - see details (not started; execution order 24-30 first, then 21-23)
@@ -506,11 +506,11 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 21-01-PLAN.md — Hygiene filter on spec-derived descriptions (wave 1)
-- [ ] 21-02-PLAN.md — Read-only tool annotations on every generated tool (wave 2)
-- [ ] 21-03-PLAN.md — outputSchema and structuredContent (wave 3)
-- [ ] 21-04-PLAN.md — Deterministic tool order, shuffled-input tests (wave 4)
-- [ ] 21-05-PLAN.md — Golden regeneration commit, FastMCP 3.4.8/4.1.0 pytest in throwaway venvs, npm run check, VERIFICATION (wave 5)
+- [x] 21-01-PLAN.md — Hygiene filter on spec-derived descriptions (wave 1)
+- [x] 21-02-PLAN.md — Read-only tool annotations on every generated tool (wave 2)
+- [x] 21-03-PLAN.md — outputSchema and structuredContent (wave 3)
+- [x] 21-04-PLAN.md — Deterministic tool order, shuffled-input tests (wave 4)
+- [x] 21-05-PLAN.md — Golden regeneration commit, FastMCP 3.4.8/4.1.0 pytest in throwaway venvs, npm run check, VERIFICATION (wave 5)
 
 ### Phase 22: Proposal Layer Follow-ups
 
@@ -569,7 +569,7 @@ Phases execute in numeric order, with decimal phases between their integers: 1, 
 | 18. Live Verification and Container-Path Fixes | outside GSD flow | Complete (human_needed) | 2026-10-14 |
 | 19. Generator Input Kinds | outside GSD flow | Complete (human_needed) | 2026-10-14 |
 | 20. Proposal Layer and Context Pack | outside GSD flow | Complete (passed) | 2026-10-14 |
-| 21. Generator Stage 0 | 0/0 | Not started | - |
+| 21. Generator Stage 0 | 5/5 | Complete (passed) | 2026-10-15 |
 | 22. Proposal Layer Follow-ups | 0/0 | Not started | - |
 | 23. Code Review of New Generator Code | 0/0 | Not started | - |
 

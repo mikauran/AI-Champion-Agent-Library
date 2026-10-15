@@ -1,18 +1,18 @@
 ---
 gsd_state_version: "1.0"
 milestone: v1.0
-current_phase: 21
-current_phase_name: Generator Stage 0
+current_phase: 22
+current_phase_name: Proposal Layer Follow-ups
 status: human_verification_pending
 stopped_at: Phases 1-20 recorded; Phase 2 only needs human checkpoint 02-04; Phases 21-23 planned, not started; .planning made GSD-conformant 2026-10-14
-last_updated: "2026-10-14T00:00:00.000Z"
-last_activity: 2026-10-14
-last_activity_desc: Recorded phases 16-20 (executed outside the GSD flow), planned phases 21-23, planning docs audited and synced
+last_updated: "2026-10-15T00:00:00.000Z"
+last_activity: 2026-10-15
+last_activity_desc: Phase 21 Generator Stage 0 complete (5 plans, verification passed, goldens regenerated in one commit)
 progress:
   total_phases: 25
-  completed_phases: 21
-  total_plans: 75
-  completed_plans: 74
+  completed_phases: 22
+  total_plans: 80
+  completed_plans: 79
   percent: 99
 milestone_name: milestone
 ---
@@ -252,3 +252,5 @@ Order: 24 -> 30, then 21 -> 23. Cap: $0.50 per agent run, $10 total.
 - Phase 28 COMPLETE: agents 10, 11, 12 counted. All 12 consortium agents have counted entries (limited reliability, see HUMAN-UAT). Next: Phase 29 (further DDC agents), then 30.
 - Phase 29 COMPLETE: DDC-derived agents 13-16 counted. Next: Phase 30 release prep, then 21-23.
 - Phase 30 COMPLETE (verification human_needed): local branch release/agents-2026-10 tip f9ef5d0 in worktree /home/ville/projects/aic-release (7 commits on origin/main, not pushed, no upstream). Method: tree snapshot onto origin/main (gsd-pr-branch workflow file absent). Exclusions: consortium inventory/gaps docs, two .planning-reading criteria tests, .planning/.claude. Final-tip build exit 0, smoke 104/104, npm run check 271 files / 3075 tests pass. Sweep CLEAN-WITH-NOTES. Pending for Ville: see phases/30-*/release/PENDING-HUMAN.md. Next: Phases 21-23.
+
+- Phase 21 COMPLETE (verification passed): hygiene filter, read-only annotations, outputSchema/structuredContent, deterministic order; goldens regenerated in commit 5188702 (50 files, goldens only); 26 generated packages pass pytest on FastMCP 3.4.8 and 4.1.0; npm run check 277 files / 3319 tests pass (1 skipped). Phase 21-23 changes are NOT on release/agents-2026-10 (later PR, see phases/21-generator-stage-0/PENDING-HUMAN.md). Next: Phase 22, 23.
