@@ -1,18 +1,18 @@
 ---
 gsd_state_version: "1.0"
 milestone: v1.0
-current_phase: 22
-current_phase_name: Proposal Layer Follow-ups
+current_phase: 23
+current_phase_name: Code Review of New Generator Code
 status: human_verification_pending
 stopped_at: Phases 1-20 recorded; Phase 2 only needs human checkpoint 02-04; Phases 21-23 planned, not started; .planning made GSD-conformant 2026-10-14
 last_updated: "2026-10-15T00:00:00.000Z"
 last_activity: 2026-10-15
-last_activity_desc: Phase 21 Generator Stage 0 complete (5 plans, verification passed, goldens regenerated in one commit)
+last_activity_desc: Phase 23 Code Review of New Generator Code complete (4 plans, verification passed, security SECURED; phases 21-23 done)
 progress:
   total_phases: 25
-  completed_phases: 22
+  completed_phases: 23
   total_plans: 80
-  completed_plans: 79
+  completed_plans: 80
   percent: 99
 milestone_name: milestone
 ---
@@ -28,8 +28,8 @@ See: .planning/PROJECT.md (updated 2026-10-14)
 
 ## Current Position
 
-Phase: 21 and 22 are complete (22 verification human_needed); Phase 23 (Code Review) is next, not started. Of the 25 roadmap phases, 21 are built (1, 2.1, 2.2, 3-20); Phase 2 is the only earlier phase not closed (human checkpoint 02-04).
-Plan: 02-04 (human checkpoint) not executed, not faked. Phase 23 has no PLAN files yet.
+Phase: 21, 22 and 23 are complete (21 and 23 verification passed, 22 human_needed); security audit of the generator SECURED. Of the 25 roadmap phases, 21 are built (1, 2.1, 2.2, 3-20); Phase 2 is the only earlier phase not closed (human checkpoint 02-04).
+Plan: 02-04 (human checkpoint) not executed, not faked. Phase 23: 4 of 4 plans done.
 Status: Verification per phase: `passed` for 1, 2.1, 2.2, 5, 6, 7, 8, 12, 20; `human_needed` for 3, 4, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19 (automated evidence complete; browser, live-container, paid-key and real-service checks pending); Phase 2 has no VERIFICATION file (pending its checkpoint).
 Final verified numbers on main (2026-10-14, after the last merge): `npm run check` (svelte-kit sync, tsc, vitest) twice exit 0: 269 test files passed (1 skipped), 3072 tests passed (1 skipped); `SEARCH_EMBEDDINGS=off npx vite build` exit 0; `npm run smoke` 104/104 (8 flag configurations). Generated packages' own pytest pass on FastMCP 3.4.8 and 4.1.0 (counts in `18-VERIFICATION.md`).
 Last activity: 2026-10-14, phases 16-20 recorded, phases 21-23 planned, `.planning` audited.
@@ -225,7 +225,7 @@ Environment constraint: this machine has 3.7 GB RAM. Do not run Podman checks al
 - Phase 15 question 9: calibration runs against the study's legacy arms? Question 10: should uploaded servers ever be run (default: no, only fake variants and generator samples)?
 - Phase 14 question 1 (zip download vs platform-hosted output) and the tabular 5-row limit were covered by D-478 (all remaining defaults confirmed).
 
-**Next planned work (needs a go from you):** Phase 23 (ROADMAP.md). Pending on you from Phase 22: review `src/lib/mcpgen/proposals/real/acme-openapi.proposals.json` and sign off the comparison (`phases/22-proposal-layer-follow-ups/22-HUMAN-UAT.md`).
+**Pending on you from Phases 22 and 23** (no further planned phase in the generator track): Phase 23: build the production and runner images and decide the compose hardening and pip pins (`phases/23-code-review-of-new-generator-code/23-HUMAN-UAT.md`). Phase 22: review `src/lib/mcpgen/proposals/real/acme-openapi.proposals.json` and sign off the comparison (`phases/22-proposal-layer-follow-ups/22-HUMAN-UAT.md`).
 
 
 ## Autonomous run 2026-10-14 (phases 24-30, then 21-23)
@@ -255,3 +255,4 @@ Order: 24 -> 30, then 21 -> 23. Cap: $0.50 per agent run, $10 total.
 
 - Phase 21 COMPLETE (verification passed): hygiene filter, read-only annotations, outputSchema/structuredContent, deterministic order; goldens regenerated in commit 5188702 (50 files, goldens only); 26 generated packages pass pytest on FastMCP 3.4.8 and 4.1.0; npm run check 277 files / 3319 tests pass (1 skipped). Phase 21-23 changes are NOT on release/agents-2026-10 (later PR, see phases/21-generator-stage-0/PENDING-HUMAN.md). Next: Phase 22, 23.
 - Phase 22 COMPLETE (verification human_needed): first real proposal (9 ops, Acme OpenAPI, review by Ville pending), baseline vs proposal-assisted comparison (no regression; local-exec run disqualified for both, not informative), negation-aware write-claim hygiene (D-609), derived_filter on OData is a final limitation (D-610); npm run check 279 files / 3352 tests pass (1 skipped). Next: Phase 23.
+- Phase 23 COMPLETE (verification passed, security SECURED): code review of 74 files since d45f59b, 59 findings (6 critical, 27 warning, 26 info), 50 fixed, 5 accepted, 4 deferred (D-611..D-631); security audit found and fixed 1 low threat (symlinked subdirectory write with --force, D-632) and accepted 5 risks (D-633); 26 new malicious-input tests; `npm run check` 296 files / 3570 tests pass (1 skipped), `vite build` exit 0, `npm run smoke` 104/104. Phases 21-23 are NOT on release/agents-2026-10. Pending human: container image builds, compose hardening, pip pins (23-HUMAN-UAT.md).

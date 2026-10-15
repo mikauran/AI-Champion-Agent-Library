@@ -39,7 +39,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 20: Proposal Layer and Context Pack** - Data-only proposals and context pack, stages 1-2 (outside the GSD flow)
 - [x] **Phase 21: Generator Stage 0** - Description cleanup, tool annotations, outputSchema, deterministic tool order (complete 2026-10-15, verification passed)
 - [x] **Phase 22: Proposal Layer Follow-ups** - First real proposal reviewed, baseline vs proposal run, hygiene tuning, derived_filter on OData (complete 2026-10-15, verification human_needed: Ville's review of the proposal pending)
-- [ ] **Phase 23: Code Review of New Generator Code** - Review, fixes and security audit of everything added since the Phase 14 review (not started)
+- [x] **Phase 23: Code Review of New Generator Code** - Review, fixes and security audit of everything added since the Phase 14 review (complete 2026-10-15, verification passed, security SECURED)
 - [x] **Phase 24: Agent Inventory and Catalog Template** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 25: Design-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
 - [x] **Phase 26: Sourcing-stage Agents** - see details (not started; execution order 24-30 first, then 21-23)
@@ -546,13 +546,14 @@ Plans:
   3. Security audit of the sax reader, the proposal and context-pack file inputs, and the binding file loader concludes SECURED or lists open threats
   4. `npm run check`, `vite build` and `npm run smoke` still pass
 
-**Plans:** 4 plans
+**Status:** Complete 2026-10-15; verification `passed`; security `SECURED` (1 threat fixed, 5 accepted, 0 open); pending human: container image builds and compose hardening (`23-HUMAN-UAT.md`)
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 23-01-PLAN.md - file-set inventory and five gsd-code-reviewer passes (A adapters, B SQL/Prisma, C OData/sax, D proposals/context pack/binding, E Phase 21-22 emit/container/CLI) -> 23-REVIEW.md
-- [ ] 23-02-PLAN.md - fixes for critical and warning findings with tests -> 23-REVIEW-FIX.md, decisions for accepted
-- [ ] 23-03-PLAN.md - security audit (sax, proposal/context-pack inputs, binding loader, emitted-Python injection, container path) -> 23-SECURITY.md
-- [ ] 23-04-PLAN.md - final gates (check, vite build, smoke, sequential), 23-VERIFICATION.md, ROADMAP/STATE
+- [x] 23-01-PLAN.md - file-set inventory and five gsd-code-reviewer passes (A adapters, B SQL/Prisma, C OData/sax, D proposals/context pack/binding, E Phase 21-22 emit/container/CLI) -> 23-REVIEW.md
+- [x] 23-02-PLAN.md - fixes for critical and warning findings with tests -> 23-REVIEW-FIX.md, decisions for accepted
+- [x] 23-03-PLAN.md - security audit (sax, proposal/context-pack inputs, binding loader, emitted-Python injection, container path) -> 23-SECURITY.md
+- [x] 23-04-PLAN.md - final gates (check, vite build, smoke, sequential), 23-VERIFICATION.md, ROADMAP/STATE
 
 ## Progress
 
@@ -585,7 +586,7 @@ Phases execute in numeric order, with decimal phases between their integers: 1, 
 | 20. Proposal Layer and Context Pack | outside GSD flow | Complete (passed) | 2026-10-14 |
 | 21. Generator Stage 0 | 5/5 | Complete (passed) | 2026-10-15 |
 | 22. Proposal Layer Follow-ups | 5/5 | Complete (human_needed) | 2026-10-15 |
-| 23. Code Review of New Generator Code | 0/0 | Not started | - |
+| 23. Code Review of New Generator Code | 4/4 | Complete (passed, security SECURED) | 2026-10-15 |
 
 ### Phase 24: Agent inventory, catalog entry template, MCP-server entries and DDC license check
 
