@@ -54,6 +54,11 @@ describe('carbon-epd-enrichment alignment', () => {
     expect(compareRows(expectedRows(products, epds, ref), parseResultTable(KEY_RESULT))).toEqual([])
   })
 
+  it('accepts the table written without leading and trailing pipes (as the SKILL header shows it)', () => {
+    const plain = KEY_RESULT.split('\n').map((l) => l.replace(/^\| /, '').replace(/ \|$/, '')).join('\n')
+    expect(runCli(sample, plain)).toMatchObject({ code: 0 })
+  })
+
   it('the sample is labelled synthetic with 6 products and 6 EPD rows', () => {
     expect(sample.split('\n')[0]).toMatch(/^# SYNTHETIC SAMPLE/)
     const { products, epds } = parseInput(sample)

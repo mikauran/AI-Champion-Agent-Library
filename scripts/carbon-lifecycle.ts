@@ -68,7 +68,7 @@ export function parseResultTable(text: string): Record<string, string>[] {
   for (const l of lines.slice(start + 1)) {
     const t = l.trim()
     if (/^##\s/.test(t)) break
-    if (!t.startsWith('|')) continue
+    if (!t.includes('|')) continue // the result table may be written with or without leading and trailing pipes
     const cells = t.replace(/^\||\|$/g, '').split('|').map((s) => s.trim())
     if (cells.every((c) => /^:?-+:?$/.test(c))) continue
     if (!head) {
