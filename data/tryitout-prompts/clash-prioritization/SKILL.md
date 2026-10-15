@@ -1,6 +1,6 @@
 ---
 name: clash-prioritization
-description: "Prioritise the clashes of a coordination clash report (CSV text) one row per clash on the CRITICAL/HIGH/MEDIUM/LOW scale, group clashes that share an element into patterns, propose a resolution type and responsible discipline, and produce a findings table for RFI drafting. Writes output/result.md."
+description: "Classify the clashes of a coordination clash report (CSV text) one row per clash: status, CRITICAL/HIGH/MEDIUM/LOW priority from a fixed truth table, proposed resolution type and responsible discipline from a lookup. Pattern groups and findings are made afterwards by a helper script. Writes output/result.md."
 ---
 
 # Clash prioritization (draft)
@@ -15,94 +15,123 @@ Discipline labels in the report: `Rakenne` (structural), `Arkkitehti` (architect
 
 Status: `open` = new; `assigned`, `in_progress`, `resolved`, `approved`, `void` are copied. Closed statuses are resolved, approved and void. Open statuses are new, assigned and in_progress.
 
-Pair lookup, the order of the two disciplines does not matter (resolution_type | responsible_discipline):
+Pair lookup, keyed on the two copied discipline labels (resolution_type | responsible_discipline). Find the group `disc_a`, then the line `disc_b`; both orders are listed, copy the line as it stands:
 
-- Rakenne + Arkkitehti: ROUTE_AROUND | Arkkitehti
-- Rakenne + Ilmanvaihto: ROUTE_AROUND | Ilmanvaihto
-- Rakenne + Putkisto: ROUTE_AROUND | Putkisto
-- Rakenne + Sähkö: ROUTE_AROUND | Sähkö
-- Rakenne + Sprinkler: ROUTE_AROUND | Sprinkler
-- Arkkitehti + Ilmanvaihto: ROUTE_AROUND | Ilmanvaihto
-- Arkkitehti + Putkisto: ROUTE_AROUND | Putkisto
-- Arkkitehti + Sähkö: ROUTE_AROUND | Sähkö
-- Arkkitehti + Sprinkler: ROUTE_AROUND | Sprinkler
-- Ilmanvaihto + Putkisto: ROUTE_AROUND | Putkisto
-- Ilmanvaihto + Sähkö: RAISE_LOWER | Sähkö
-- Ilmanvaihto + Sprinkler: ROUTE_AROUND | Sprinkler
-- Putkisto + Sähkö: ROUTE_AROUND | Sähkö
-- Putkisto + Sprinkler: ROUTE_AROUND | Sprinkler
-- Sähkö + Sprinkler: ROUTE_AROUND | Sprinkler
-- Ilmanvaihto + Ilmanvaihto: RESIZE | Ilmanvaihto
-- any other pair of the same discipline twice: ROUTE_AROUND | that discipline
+- disc_a = Rakenne:
+  - disc_b = Rakenne: ROUTE_AROUND | Rakenne
+  - disc_b = Arkkitehti: ROUTE_AROUND | Arkkitehti
+  - disc_b = Ilmanvaihto: ROUTE_AROUND | Ilmanvaihto
+  - disc_b = Putkisto: ROUTE_AROUND | Putkisto
+  - disc_b = Sähkö: ROUTE_AROUND | Sähkö
+  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
+- disc_a = Arkkitehti:
+  - disc_b = Rakenne: ROUTE_AROUND | Arkkitehti
+  - disc_b = Arkkitehti: ROUTE_AROUND | Arkkitehti
+  - disc_b = Ilmanvaihto: ROUTE_AROUND | Ilmanvaihto
+  - disc_b = Putkisto: ROUTE_AROUND | Putkisto
+  - disc_b = Sähkö: ROUTE_AROUND | Sähkö
+  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
+- disc_a = Ilmanvaihto:
+  - disc_b = Rakenne: ROUTE_AROUND | Ilmanvaihto
+  - disc_b = Arkkitehti: ROUTE_AROUND | Ilmanvaihto
+  - disc_b = Ilmanvaihto: RESIZE | Ilmanvaihto
+  - disc_b = Putkisto: ROUTE_AROUND | Putkisto
+  - disc_b = Sähkö: RAISE_LOWER | Sähkö
+  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
+- disc_a = Putkisto:
+  - disc_b = Rakenne: ROUTE_AROUND | Putkisto
+  - disc_b = Arkkitehti: ROUTE_AROUND | Putkisto
+  - disc_b = Ilmanvaihto: ROUTE_AROUND | Putkisto
+  - disc_b = Putkisto: ROUTE_AROUND | Putkisto
+  - disc_b = Sähkö: ROUTE_AROUND | Sähkö
+  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
+- disc_a = Sähkö:
+  - disc_b = Rakenne: ROUTE_AROUND | Sähkö
+  - disc_b = Arkkitehti: ROUTE_AROUND | Sähkö
+  - disc_b = Ilmanvaihto: RAISE_LOWER | Sähkö
+  - disc_b = Putkisto: ROUTE_AROUND | Sähkö
+  - disc_b = Sähkö: ROUTE_AROUND | Sähkö
+  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
+- disc_a = Sprinkler:
+  - disc_b = Rakenne: ROUTE_AROUND | Sprinkler
+  - disc_b = Arkkitehti: ROUTE_AROUND | Sprinkler
+  - disc_b = Ilmanvaihto: ROUTE_AROUND | Sprinkler
+  - disc_b = Putkisto: ROUTE_AROUND | Sprinkler
+  - disc_b = Sähkö: ROUTE_AROUND | Sprinkler
+  - disc_b = Sprinkler: ROUTE_AROUND | Sprinkler
 
-## Method: one row per input clash, no counting
+- Any label not in the six above (either side): `ROUTE_AROUND | TO BE DECIDED BY COORDINATOR`.
 
-FIRST write the element index (output section 1). THEN work through the input rows ONE BY ONE in file order. Write exactly one table row per input row, in input order, before anything else. Do not skip, merge, reorder or add rows. Do not compute any totals or counts anywhere in the output.
+## Method: one table row per input clash, tests first, then lookups
 
-For each row fill this fixed checklist (copy values from the row, answer Y or N):
+Work through the input rows ONE BY ONE in file order. Write exactly one table row per input row, nothing before the table except the heading. Do not skip, merge, reorder or add rows. Do not compute counts or totals. Do not look at other rows: every cell depends only on its own input row and the lookups here. Pattern groups and findings are NOT part of this step (see the end).
 
-- `closed`: Y if status is resolved, approved or void, else N.
-- `type`: `hard` or `soft`, copied from clash_type.
-- `struct`: Y only if the text `Rakenne` is discipline_a or discipline_b of THIS row, else N.
-- `pen`: the penetration_mm value copied, `unknown` if empty. `big`: Y only if type=hard AND pen is a number above 100 (100 itself is N), else N (N when unknown or soft).
-- `mep`: Y only if NEITHER discipline_a NOR discipline_b is Rakenne or Arkkitehti, else N.
-- `idx_a`: the ids on the element index line of element_a of THIS row, copied. `idx_b`: the ids on the element index line of element_b of THIS row, copied.
-- `others`: all ids from idx_a and idx_b together, without this row's own id and without duplicates, in file order; `none` if nothing is left. Every id that shares a line with this row's id in the index is an other, even when the sharing element is element_a of one row and element_b of another.
-
-Then evaluate four tests, each Y or N, for every open row (copy the answers into the reason, in this order):
-
-- `T1`: Y if struct=Y AND type=hard. Both must be Y: struct=Y with type=hard gives T1=Y every time, whatever the penetration is (even small or unknown); struct=Y with type=soft gives T1=N.
-- `T2`: Y if big=Y.
-- `T3`: Y if mep=Y.
-- `T4`: Y if type=soft.
-
-The priority is decided ONLY by these answers, never by feel: read T1, T2, T3, T4 in this order and stop at the FIRST one that is Y: T1 gives CRITICAL, T2 gives HIGH, T3 gives MEDIUM, T4 gives LOW. T3=Y wins over T4=Y (a soft clash between two MEP trades is MEDIUM, not LOW). If all four are N the priority is MEDIUM; CRITICAL is NEVER written unless T1=Y. Decide the four answers first, then write the priority that follows; the priority cell MUST be the same word as the one after `fired:` (never write a different priority in the cell); the `fired` text names the first Y test (`fired: CRITICAL because T1=Y`) or `fired: MEDIUM because T1-T4 all N`. A soft clash with Rakenne has T1=N. Closed rows are not ranked.
-
-The pattern label of an open row is `PAT-` followed by the FIRST clash_id in file order among this row's own id and its `others`; `-` when others is none. A row whose others is not `none` always has a pattern label; a row whose others is `none` always has `-` (one clash alone is never a pattern). Patterns come ONLY from copying identical element text: never invent a pattern, never join rows without an identical element text.
-
-For open rows look up the pair of the two disciplines in the pair lookup and copy resolution_type and responsible_discipline (write `pair=` and the two labels in the reason). These are PROPOSALS for the coordinator.
-
-## Output, plain ASCII, no code fence around the whole file, in this order
-
-1. `## Element index`: built from the OPEN rows only (status not resolved, approved or void). One line per distinct element text that appears in element_a or element_b of any open row, in order of first appearance, in the form `element text: id, id, ...` listing the clash_id of EVERY open row where that text is element_a or element_b (copy the text exactly). Example with invented ids: `Fan unit FU-1: EX-1, EX-4, EX-9` and `Panel PN-2: EX-2`.
-
-2. `## Per-clash rows`: a markdown table with EXACTLY these columns, one row per input clash in input order:
-
-```
-clash_id | status | priority | pattern | resolution_type | responsible_discipline | reason
-```
-
-   status is new, assigned, in_progress, resolved, approved or void. The reason is the checklist in one line, then the rule that fired, then the pair. Worked rows (invented ids EX-1..EX-7, not part of any input):
+Columns, in this order (14 cells, always):
 
 ```
-EX-1 | new | CRITICAL | PAT-EX-1 | ROUTE_AROUND | Ilmanvaihto | closed=N; type=hard; struct=Y; pen=120; big=Y; mep=N; idx_a=EX-1,EX-2; idx_b=EX-1; others=EX-2; T1=Y T2=Y T3=N T4=N; fired: CRITICAL because T1=Y; pair=Ilmanvaihto+Rakenne
-EX-2 | assigned | LOW | PAT-EX-1 | ROUTE_AROUND | Ilmanvaihto | closed=N; type=soft; struct=Y; pen=20; big=N; mep=N; idx_a=EX-1,EX-2; idx_b=EX-2; others=EX-1; T1=N T2=N T3=N T4=Y; fired: LOW because T4=Y; pair=Ilmanvaihto+Rakenne
-EX-3 | new | HIGH | - | ROUTE_AROUND | Sprinkler | closed=N; type=hard; struct=N; pen=150; big=Y; mep=Y; idx_a=EX-3; idx_b=EX-3; others=none; T1=N T2=Y T3=Y T4=N; fired: HIGH because T2=Y; pair=Ilmanvaihto+Sprinkler
-EX-4 | in_progress | MEDIUM | - | RAISE_LOWER | Sähkö | closed=N; type=hard; struct=N; pen=unknown; big=N; mep=Y; idx_a=EX-4; idx_b=EX-4; others=none; confidence lower: penetration missing; T1=N T2=N T3=Y T4=N; fired: MEDIUM because T3=Y; pair=Ilmanvaihto+Sähkö
-EX-5 | new | MEDIUM | PAT-EX-5 | ROUTE_AROUND | Ilmanvaihto | closed=N; type=hard; struct=N; pen=30; big=N; mep=N; idx_a=EX-5; idx_b=EX-5,EX-7; others=EX-7; T1=N T2=N T3=N T4=N; fired: MEDIUM because T1-T4 all N; pair=Arkkitehti+Ilmanvaihto
-EX-6 | resolved | not ranked | - | - | - | closed=Y; not ranked
-EX-7 | new | MEDIUM | PAT-EX-5 | ROUTE_AROUND | Sprinkler | closed=N; type=soft; struct=N; pen=10; big=N; mep=Y; idx_a=EX-5,EX-7; idx_b=EX-7; others=EX-5; T1=N T2=N T3=Y T4=Y; fired: MEDIUM because T3=Y; pair=Ilmanvaihto+Sprinkler
+clash_id | status | type | pen | disc_a | disc_b | T1 | T2 | T3 | T4 | priority | resolution_type | responsible_discipline | flag
 ```
 
-   For a missing penetration write `pen=unknown` and add `confidence lower: penetration missing` (it does not change the tests). For closed rows write `closed=Y; not ranked` and `not ranked` in priority; pattern, resolution_type and responsible_discipline are `-`.
+1. Copy `clash_id`; `status` (open becomes new; the others are copied); `type` (hard or soft, copied from clash_type); `pen` (penetration_mm copied, `unknown` when empty); `disc_a`, `disc_b` (copied).
+2. Closed rows (status resolved, approved or void): write `-` in T1-T4, `not ranked` in priority, `-` in resolution_type and responsible_discipline and `closed` in flag. Stop.
+3. Open rows: answer four tests, each Y or N, from the copied cells of THIS row only:
+   - `T1` = Y if type is hard AND (disc_a is Rakenne OR disc_b is Rakenne). Hard with Rakenne is Y whatever pen is (small or unknown too). Soft with Rakenne is N.
+   - `T2` = Y if type is hard AND pen is a number above 100 (100 itself is N; unknown is N).
+   - `T3` = Y if neither disc_a nor disc_b is Rakenne or Arkkitehti (both sides are MEP trades), else N.
+   - `T4` = Y if type is soft, else N.
+4. `priority` is read from the truth table below with the four answers: find the one line that has your T1, T2, T3, T4 and copy its word. It is a pure function of the four cells; nothing else counts. Never write CRITICAL unless T1=Y.
+5. `resolution_type` and `responsible_discipline` are copied from the pair lookup line for (disc_a, disc_b).
+6. `flag` is `penetration missing` when pen is unknown, else `-`.
 
-3. `## Pattern groups`: one row per distinct pattern label, in order of first appearance in the per-clash rows, `none` if there are no patterns. Columns `pattern | clash_ids | shared_element | priority | suggested_resolution | root_cause`. clash_ids are the ids copied from the per-clash rows with that label, in input order. shared_element is the element text copied that the members share. priority is the highest member priority (CRITICAL before HIGH before MEDIUM before LOW). suggested_resolution is copied from the first member row (a proposal). root_cause is `same element in several clashes: ` plus the shared element text.
+Truth table (first Y wins, all N is MEDIUM), all 16 cases:
 
-4. `## Findings for RFI drafting`: a markdown table in EXACTLY this column format, header row included, one row per pattern group AND one row per open clash without a pattern, in order of first appearance in the per-clash rows (closed rows never appear):
+- T1=Y T2=Y T3=Y T4=Y -> CRITICAL
+- T1=Y T2=Y T3=Y T4=N -> CRITICAL
+- T1=Y T2=Y T3=N T4=Y -> CRITICAL
+- T1=Y T2=Y T3=N T4=N -> CRITICAL
+- T1=Y T2=N T3=Y T4=Y -> CRITICAL
+- T1=Y T2=N T3=Y T4=N -> CRITICAL
+- T1=Y T2=N T3=N T4=Y -> CRITICAL
+- T1=Y T2=N T3=N T4=N -> CRITICAL
+- T1=N T2=Y T3=Y T4=Y -> HIGH
+- T1=N T2=Y T3=Y T4=N -> HIGH
+- T1=N T2=Y T3=N T4=Y -> HIGH
+- T1=N T2=Y T3=N T4=N -> HIGH
+- T1=N T2=N T3=Y T4=Y -> MEDIUM
+- T1=N T2=N T3=Y T4=N -> MEDIUM
+- T1=N T2=N T3=N T4=Y -> LOW
+- T1=N T2=N T3=N T4=N -> MEDIUM
+
+Worked rows (invented ids EX-1..EX-9, not part of any input), one for every branch of the table and for closed rows:
 
 ```
-finding_id | clash_ids | priority | disciplines | location | description | suggested_owner | open_question
+EX-1 | new | hard | 120 | Ilmanvaihto | Rakenne | Y | Y | N | N | CRITICAL | ROUTE_AROUND | Ilmanvaihto | -
+EX-2 | assigned | hard | 20 | Rakenne | Sähkö | Y | N | N | N | CRITICAL | ROUTE_AROUND | Sähkö | -
+EX-3 | new | hard | unknown | Putkisto | Rakenne | Y | N | N | N | CRITICAL | ROUTE_AROUND | Putkisto | penetration missing
+EX-4 | new | hard | 150 | Ilmanvaihto | Sprinkler | N | Y | Y | N | HIGH | ROUTE_AROUND | Sprinkler | -
+EX-5 | in_progress | hard | 100 | Ilmanvaihto | Sähkö | N | N | Y | N | MEDIUM | RAISE_LOWER | Sähkö | -
+EX-6 | new | soft | 10 | Sähkö | Sprinkler | N | N | Y | Y | MEDIUM | ROUTE_AROUND | Sprinkler | -
+EX-7 | new | hard | 30 | Arkkitehti | Putkisto | N | N | N | N | MEDIUM | ROUTE_AROUND | Putkisto | -
+EX-8 | assigned | soft | 35 | Ilmanvaihto | Rakenne | N | N | N | Y | LOW | ROUTE_AROUND | Ilmanvaihto | -
+EX-9 | resolved | hard | 70 | Ilmanvaihto | Sähkö | - | - | - | - | not ranked | - | - | closed
 ```
 
-   finding_id is `F-01`, `F-02`, ... in that order; clash_ids and priority are copied from the pattern group or the clash row; disciplines are the distinct labels of the member rows; location is level plus grid copied from the first member row (`various` when members differ); description is one short sentence built from the element names plus `proposed: ` and the resolution type; suggested_owner is the responsible_discipline copied from the first member row (a proposal); open_question names the clashes with a missing penetration, for example `penetration missing for CL-010`, or `none`.
+## Output, plain ASCII, no code fence around the whole file
+
+1. `## Per-clash rows`: the heading, the header line exactly as above, then one row per input clash in input order (14 cells each).
+2. Nothing else except the closing line. No element index, no pattern groups, no findings table, no counts.
+
+End with: `Draft for engineer review. Priorities, resolution types and responsible disciplines are proposals from the report columns only; the model was not consulted.`
+
+## Hand-off (not done by this step)
+
+Pattern groups (open clashes sharing an identical element text) and the findings table for RFI drafting (`finding_id | clash_ids | priority | disciplines | location | description | suggested_owner | open_question`) are produced after this step by the deterministic helper `scripts/clash-patterns.ts` (input CSV plus this result.md), run by a connected setup or the engineer. Do not attempt them here.
 
 ## Hard constraints
 
-- The per-clash table has one row for every input clash_id and the other tables only copy from it. Never drop or duplicate an id.
-- Never invent ids, element names, levels, grids, coordinates, numbers or drawing numbers. Resolution type and responsible discipline are proposals; the BIM coordinator decides.
+- One row for every input clash_id, in input order. Never drop or duplicate an id.
+- Never invent ids, element names, levels, grids, numbers or drawing numbers. Resolution type and responsible discipline are proposals; the BIM coordinator decides.
 - No summary, no counts, no sums, no rates, no coverage line.
 - Never claim to have checked the model or used a tool.
-
-End with: `Draft for engineer review. Priorities, resolution types and responsible disciplines are proposals from the report columns only; the model was not consulted.`
 
 Method adapted from the DDC skill clash-resolution-analyzer (MIT, (c) 2026 DataDrivenConstruction); own wording. Draft for engineer review.

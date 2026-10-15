@@ -84,9 +84,9 @@ Checked the scoring (`_auto_prioritize`), responsibility (`_auto_assign`), patte
 6. The MEP-MEP rule precedes the clearance rule, so a clearance clash between two MEP trades is MEDIUM, not LOW; LOW is reached only by clearance clashes with structural or architectural elements. Treated as intended (stated rule, kept in the thresholds below) and called out here so the coordinator is not surprised.
 7. `NO_CLASH` (tolerance) is in the enum but no rule assigns it; `void` status is the only way a false clash is recorded. Kept: void rows are copied from the report, never decided by the agent.
 
-## 7. location_key decision: replaced
+## 7. location_key decision: replaced (grouping now done by the helper, section 9)
 
-The invented `location_key` column is removed. The skill's pattern idea (same system pair across several clashes) is keyed from export fields instead: two open clashes belong to the same pattern group when an element text of one (element_a or element_b) is identical to an element text of the other. This is a model-checkable lookup by identical copied text: per row, `others=` lists the ids of the other open rows that share an identical element text. The group label is `PAT-` plus the first clash_id (in file order) of the group, copied. Justification: the skill groups by system; a system is not in the export, but the shared element (a duct, a riser) is the closest field-based stand-in and needs no hand-made preprocessing column. Limits (recorded as gaps): real exports may spell the same element differently, and groups are not transitive (only direct text matches with this row count; the synthetic sample contains no chains).
+The invented `location_key` column is removed. The skill's pattern idea (same system pair across several clashes) is keyed from export fields instead: two open clashes belong to the same pattern group when an element text of one (element_a or element_b) is identical to an element text of the other. This is a model-checkable lookup by identical copied text: per row, `others=` lists the ids of the other open rows that share an identical element text. The group label is `PAT-` plus the first clash_id (in file order) of the group, copied. Justification: the skill groups by system; a system is not in the export, but the shared element (a duct, a riser) is the closest field-based stand-in and needs no hand-made preprocessing column. Limits (recorded as gaps): real exports may spell the same element differently, and groups were not transitive in the first design; the helper in section 9 groups transitively.
 
 ## 8. Priority rule table (all thresholds stated and copied into the SKILL)
 
@@ -102,15 +102,25 @@ Per open row, answers decide, first Y wins:
 
 Missing penetration: pen=unknown, big=N, add `confidence lower: penetration missing`. Pattern group priority = highest member (CRITICAL > HIGH > MEDIUM > LOW). Resolution type and responsible discipline: pair lookup (section 4); a group copies both from its first member.
 
-## 9. Output format (what the agent writes)
+## 9. Output format (redesign after four failed live runs, 2026-10-15)
 
-0. `## Element index` (and per-row `idx_a`, `idx_b` fields added in revision 2 after run 2 mis-copied `others`; element index added in revision 1 after live run 1 found no patterns: one line per element text of open rows with the ids that contain it; `others=` is looked up from it). Not consumed by agent 4.
-1. `## Per-clash rows`: `clash_id | status | priority | pattern | resolution_type | responsible_discipline | reason` one row per input clash in input order; closed rows have priority `not ranked` and `-` in pattern, resolution_type, responsible_discipline.
-2. `## Pattern groups`: `pattern | clash_ids | shared_element | priority | suggested_resolution | root_cause`, in order of first appearance; none if there are no groups.
-3. `## Findings for RFI drafting`, the 8 columns agent 4 reads, unchanged names: `finding_id | clash_ids | priority | disciplines | location | description | suggested_owner | open_question`, one row per pattern group and one per ungrouped open clash, in order of first appearance. Change for agent 4 (plan 32-02): `priority` now holds CRITICAL/HIGH/MEDIUM/LOW; the resolution type is carried in `description` as `proposed: <type>`; `suggested_owner` is the responsible discipline (Finnish label) or the coordinator marker.
-4. Caveat footer.
+Diagnosis of the first design (32-VERIFICATION.md): gpt-4.1-mini could not copy its own `fired:` result into the priority cell and could not build pattern groups from an element index. The skill's method and data model stay the spec; the Try It Out step is cut to per-clash classification, and the deterministic parts move into code.
 
-## 10. Answer key for the synthetic sample (hand derived from section 8)
+Agent step (Try It Out result.md): one section, `## Per-clash rows`, one row per input clash in input order, 14 cells:
+
+`clash_id | status | type | pen | disc_a | disc_b | T1 | T2 | T3 | T4 | priority | resolution_type | responsible_discipline | flag`
+
+- Copied cells first (status open = new; type, pen, disc_a, disc_b from the row), then the four Y/N test columns T1-T4 (section 8), then `priority` as a SINGLE-STEP lookup of the T1-T4 pattern in a fixed 16-line truth table in the SKILL (first Y wins, all N = MEDIUM), then resolution_type and responsible_discipline from a 36-line ordered pair matrix keyed on the copied disc_a and disc_b (same content as section 4, both orders listed), and `flag` = `penetration missing` or `-`. Closed rows: `-` in T1-T4, `not ranked`, `-`, `-`, flag `closed`.
+- Worked rows in the SKILL cover every branch (T1, T2, T3, T4, all N), a missing penetration, the 100 mm boundary and a closed row. Removed from the agent step: element index, `others`/`idx` fields, pattern label, the `fired:` text, pattern groups and findings.
+
+Deterministic helper (after the agent step, run by a connected setup or the engineer; not part of Try It Out, same A-02 style hand-off as the quote comparison): `scripts/clash-patterns.ts <clash-report.csv> <result.md>` (logic in `src/lib/clash/clashPatterns.ts`, unit tests in `scripts/clash-patterns.test.ts`). It validates that the table ids equal the input ids in order and that every open row has a priority from the scale, groups OPEN clashes that share an identical element text (element_a or element_b) with union-find (so groups are transitive, which closes the non-transitive limit of the first design), labels a group `PAT-` plus its first clash_id in input order, and prints:
+
+1. `## Pattern groups`: `pattern | clash_ids | shared_element | priority | suggested_resolution | root_cause` (priority = highest member; suggested_resolution copied from the first member; root_cause `same element in several clashes: <element>`), `none` when no group.
+2. `## Findings for RFI drafting`, the 8 columns agent 4 reads, unchanged names: `finding_id | clash_ids | priority | disciplines | location | description | suggested_owner | open_question`, one row per group and one per ungrouped open clash in order of first appearance; disciplines sorted distinct labels; location `<level> grid <grid>` or `various`; description `Clash between <elements>; proposed: <resolution_type>`; suggested_owner copied from the first member; open_question `penetration missing for <ids>` or `none`. Agent 4 (plan 32-02) consumes exactly this format, so its sample stays consistent; `priority` is CRITICAL/HIGH/MEDIUM/LOW and `suggested_owner` the Finnish label or the coordinator marker.
+
+Not consumed by agent 4 any more: the element index (gone).
+
+## 10. Answer key for the synthetic sample (hand derived from section 8; the pattern column and groups are the helper output, the other columns are the agent step)
 
 Scope-shrink note: the first sample had 16 rows (key written before any run; CL-001..CL-016 incl. a third pattern group CL-012/CL-013). After two failed revisions on it (jobs 4f18541b, f4376fb6, 977ecb72; see 32-VERIFICATION.md) the sample was shrunk to 8 rows (the one allowed scope-shrink retry) and this key replaces the long one. Rules and thresholds are unchanged.
 
@@ -129,13 +139,13 @@ Closed (not ranked): CL-006 resolved.
 
 Pattern groups: PAT-CL-001 = CL-001..CL-003, shared element Supply duct SD-12, CRITICAL; PAT-CL-004 = CL-004, CL-005, shared element Riser RS-3, HIGH. Findings: F-01 = PAT-CL-001, F-02 = PAT-CL-004, F-03 = CL-007, F-04 = CL-008 (4 rows).
 
-## 11. Rubric R1-R7 (written before the live run; ids adjusted for the 8-row sample)
+## 11. Rubric R1-R7 (redesigned step; written before the second-design live runs; the pattern and findings items now test the helper on the agent table)
 
-- R1: every input clash_id appears exactly once in the per-clash table, in input order (8 rows).
-- R2: CL-006 is `not ranked` with `-` fields and absent from pattern and findings tables.
-- R3: pattern groups come only from copying identical element text: exactly PAT-CL-001 (CL-001..003) and PAT-CL-004 (CL-004, CL-005); no other grouping, no invented labels.
-- R4: priority per row follows the key (section 10) and equals the word after `fired:`; the rule that fired is named.
-- R5: resolution_type and responsible_discipline per row follow the pair lookup, labelled proposals, Finnish labels used.
-- R6: no invented ids, elements, numbers, dates; no counts, totals or rates anywhere; missing penetration (CL-007) flagged `confidence lower: penetration missing`.
-- R7: findings table has the exact 8-column header, 4 rows F-01..F-04 matching section 10, and the draft caveat is present.
+- R1: every input clash_id appears exactly once in the per-clash table, in input order (8 rows), 14 cells per row, the exact header.
+- R2: CL-006 is `not ranked` with `-` in T1-T4, resolution_type and responsible_discipline, flag `closed`.
+- R3: the four test cells of every open row equal the key's derivation (T1 hard with Rakenne, T2 hard above 100, T3 neither Rakenne nor Arkkitehti, T4 soft); checked cell by cell against the spec definitions.
+- R4: priority per row equals the key (section 10) AND equals the truth-table word for that row's own T1-T4 cells (self-consistency); CRITICAL only with T1=Y.
+- R5: resolution_type and responsible_discipline per row follow the pair matrix and the key, Finnish labels used.
+- R6: no invented ids, elements, numbers; no counts, totals, rates, element index, pattern or findings section in the agent output; CL-007 flagged `penetration missing`.
+- R7: caveat footer present; and the helper run on the input CSV plus the agent result.md exits 0 and prints exactly PAT-CL-001 (CL-001..003) and PAT-CL-004 (CL-004, CL-005) and findings F-01..F-04 matching section 10.
 A single material violation of R1-R7 is a FAIL.
