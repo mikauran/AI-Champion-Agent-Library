@@ -19,5 +19,12 @@
 - `npm run check`: 328 files passed / 1 skipped; 3957 tests passed / 1 skipped.
 - Guard, runnerConfig, compose, Containerfiles, DDC script: git diff empty.
 
-## Pending (plans 36-04..36-05)
-agent entry, proof that Pi 1.0.4 loads the extension (jiti .ts, -e under --no-extensions, --tools allow-listing of extension tools), mock-run Try It Out evidence, vite build smoke with flag off, security notes.
+## Cut-off status (Plan 36-04 interrupted)
+- Plans 36-01, 36-02, and 36-03 executed, committed, and verified green (npm run check 328 files / 3957 tests pass, 1 skipped).
+- Plan 36-04 (LVI-INFO product match agent & live Try It Out run) was interrupted at initialization due to hitting the Anthropic weekly API usage limit (`HTTP 429 You've hit your weekly limit · resets Oct 20, 3am`).
+- Plan 36-05 (flagged build/smoke and final closeout) not started.
+
+## Pending when resumed:
+1. Plan 36-04: Implement `src/lib/localMcp/mockLviApi.ts`, `data/agents-local/lvi-info-product-match.yaml`, prompts in `data/tryitout-prompts-local/`, tests, and execute one live container run through the proxy.
+2. Plan 36-05: Final verification wave across flag states.
+

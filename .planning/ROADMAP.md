@@ -720,10 +720,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 32-01-PLAN.md — Agent 3 clash prioritization: alignment spec, aligned entry/SKILL/sample/answer key/rubric, tests, one live run
-- [ ] 32-02-PLAN.md — Agent 4 RFI generation: skill RFI schema and template, placeholder deadlines, one live run
-- [ ] 32-03-PLAN.md — Agent 6 quote comparison: weighted-score bug verified, tested deterministic helper (A-02), aligned entry, one live run
-- [ ] 32-04-PLAN.md — Aggregation, npm run check, 32-VERIFICATION, STATE and ROADMAP close
+- [ ] 32-01-PLAN.md — Agent 3 clash prioritization (aligned, 4 failed runs, retry deferred)
+- [x] 32-02-PLAN.md — Agent 4 RFI generation: skill RFI schema and template, placeholder deadlines, one live run
+- [x] 32-03-PLAN.md — Agent 6 quote comparison: weighted-score bug verified, tested deterministic helper (A-02), aligned entry, one live run
+- [x] 32-04-PLAN.md — Aggregation, npm run check, 32-VERIFICATION, STATE and ROADMAP close
 
 ### Phase 33: Align moderate-match agents with their DDC skills (QTO 2, carbon and EPD 7, O and M 11, BMS twin 12)
 
@@ -733,11 +733,11 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 33-01-PLAN.md — Agent 2 QTO: alignment spec (bim-qto/qto-report, book-text exclusion), tested grouping helper, aligned entry/SKILL/sample/key/rubric, one live run
-- [ ] 33-02-PLAN.md — Agent 7 Carbon and EPD: spec, corrected tested lifecycle-carbon helper, synthetic EPD excerpt, aligned entry, one live run
-- [ ] 33-03-PLAN.md — Agent 11 O and M: spec (as-built-documentation + project-closeout-checklist), handover document set and statuses, aligned entry, one live run
-- [ ] 33-04-PLAN.md — Agent 12 BMS twin: spec (digital-twin-sync), binding model and threshold/status helper, aligned entry, one live run
-- [ ] 33-05-PLAN.md — Aggregation, npm run check, 33-VERIFICATION, STATE and ROADMAP close
+- [x] 33-01-PLAN.md — Agent 2 QTO: alignment spec (bim-qto/qto-report, book-text exclusion), tested grouping helper, aligned entry/SKILL/sample/key/rubric, one live run
+- [x] 33-02-PLAN.md — Agent 7 Carbon and EPD: spec, corrected tested lifecycle-carbon helper, synthetic EPD excerpt, aligned entry, one live run
+- [x] 33-03-PLAN.md — Agent 11 O and M: spec (as-built-documentation + project-closeout-checklist), handover document set and statuses, aligned entry, one live run
+- [x] 33-04-PLAN.md — Agent 12 BMS twin: spec (digital-twin-sync), binding model and threshold/status helper, aligned entry, one live run
+- [x] 33-05-PLAN.md — Aggregation, npm run check, 33-VERIFICATION, STATE and ROADMAP close
 
 ### Phase 34: Own-design agents relabelled and cleaned (ETIM 1, sourcing 5, cut-sheet 8, spooling 9, D2 10)
 
@@ -771,13 +771,13 @@ Plans:
 **Goal:** One agent making a real MCP call to Ville's LVI-INFO server, local only: choose a proxy or a sidecar on the internal network, whichever changes the network guard less. The agent and the three MCP-server entries (stk-mcp, stk-catalog-mcp, lvi-info-mcp) stay behind a flag, off by default, never in the release branch. No real LVI-INFO data or API key in any commit that could reach the release; evidence from real-data runs redacted.
 **Requirements**: LMCP-01, LMCP-02, LMCP-03, LMCP-04, LMCP-05
 **Depends on:** Phase 35
-**Plans:** 5 plans
+**Plans:** 5 plans (PAUSED: Plans 36-01..36-03 done; 36-04 cut off by Anthropic rate limit)
 
 Plans:
-- [ ] 36-01-PLAN.md - LOCAL_MCP_AGENTS flag, decisions D-635..D-637, relocation of the 3 MCP-server entries to data/agents-local, ingest second pass, flag-off golden proof, docs skeleton
-- [ ] 36-02-PLAN.md - app-side MCP proxy (route, per-lease token, per-job budget, allow-list, size caps, 404 when off, hook, upstream clients, tests with fakes)
-- [ ] 36-03-PLAN.md - per-agent Pi extension staged at warm time (flag-gated runner change, fake-runtime tests)
-- [ ] 36-04-PLAN.md - LVI-INFO agent, synthetic mock LVI API, helper tests, one live Try It Out run through the proxy, VERIFICATION and UAT
+- [x] 36-01-PLAN.md - LOCAL_MCP_AGENTS flag, decisions D-635..D-637, relocation of the 3 MCP-server entries to data/agents-local, ingest second pass, flag-off golden proof, docs skeleton
+- [x] 36-02-PLAN.md - app-side MCP proxy (route, per-lease token, per-job budget, allow-list, size caps, 404 when off, hook, upstream clients, tests with fakes)
+- [x] 36-03-PLAN.md - per-agent Pi extension staged at warm time (flag-gated runner change, fake-runtime tests)
+- [ ] 36-04-PLAN.md - LVI-INFO agent, synthetic mock LVI API, helper tests, one live Try It Out run through the proxy, VERIFICATION and UAT (cut off by rate limit)
 - [ ] 36-05-PLAN.md - npm run check, build and smoke flag off (no change) and on, security notes, ROADMAP and STATE close
 
 ### Phase 37: DDC mapping document for Alok

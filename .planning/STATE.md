@@ -269,3 +269,14 @@ All phases 21-30 executed. Spend: ~$1.09 of $10 (upper-bound estimates, 36 ledge
 - Decision (34): weak and none matches stay own designs, labelled "inspired by" or "no DDC basis"; SKILL footers must not claim an adaptation the label denies.
 - Fix run / Phase 35 COMPLETE (human_needed): agents 13-16 read against the real skills and relabelled (13 and 16 loosely related to, 14 and 15 inspired by), all four reruns counted; four new agents built on real skills and counted: 17 procurement-lead-time-check (material-procurement-tracker), 18 material-delivery-check (material-delivery-tracker), 19 qc-inspection-record-check (quality-control-workflow, no helper), 20 warranty-register-check (warranty-tracker); candidates document updated. Fix-run spend 0.7519 USD of 5 (34 ledger rows). npm run check exit 0 (318 files, 3867 tests). Next: 36 (LVI agent), 37 (Alok doc), 38 (release); then retry agent 3.
 - Decision (35): labels found by full reads: 13 and 16 loosely related, 14 and 15 inspired by, 17-20 built on; the small model gets precomputed helper columns (dates, quantities, presence checks) and only copies and looks up; an attention list rule must be stated mechanically (run 1 of agent 20 omitted expired and expiring rows).
+- Fix run / Phase 36 PAUSED (cut off at plan 36-04):
+  - Plans 36-01 to 36-03 complete: LOCAL_MCP_AGENTS flag created, 3 MCP servers moved to data/agents-local/, local MCP proxy route implemented with tests, and Pi extension staging built.
+  - Plan 36-04 failed early due to Anthropic Claude weekly usage quota limit (`HTTP 429 You've hit your weekly limit · resets Oct 20, 3am`).
+  - Plan 36-05 not started.
+  - Fix run spend remains ~$0.75 USD of $5.00 budget.
+- Cut-off tasks remaining:
+  1. Phase 36 completion: Plan 36-04 (LVI-INFO product match agent & Try It Out test) and Plan 36-05.
+  2. Phase 37: Write .planning/research/ddc-mapping-for-alok.md (12-agent mapping table and message for Alok).
+  3. Phase 38: Release branch rework on release/agents-2026-10 in /home/ville/projects/aic-release (strip MCP entries, sync decoupled/new agents 17-20, update counts, rebuild, smoke).
+  4. Scoped retry for Agent 3 (Clash Prioritization).
+
