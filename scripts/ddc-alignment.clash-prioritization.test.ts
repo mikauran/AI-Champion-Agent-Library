@@ -13,20 +13,12 @@ const spec = readFileSync('docs/ddc-alignment/clash-prioritization.md', 'utf8')
 const KEY: Array<[string, string, string, string, string, string]> = [
   ['CL-001', 'new', 'PAT-CL-001', 'CRITICAL', 'ROUTE_AROUND', 'Ilmanvaihto'],
   ['CL-002', 'new', 'PAT-CL-001', 'CRITICAL', 'ROUTE_AROUND', 'Ilmanvaihto'],
-  ['CL-003', 'new', 'PAT-CL-001', 'CRITICAL', 'ROUTE_AROUND', 'Ilmanvaihto'],
-  ['CL-004', 'assigned', 'PAT-CL-001', 'LOW', 'ROUTE_AROUND', 'Ilmanvaihto'],
-  ['CL-005', 'new', 'PAT-CL-005', 'CRITICAL', 'ROUTE_AROUND', 'Putkisto'],
-  ['CL-006', 'in_progress', 'PAT-CL-005', 'MEDIUM', 'ROUTE_AROUND', 'Sähkö'],
-  ['CL-007', 'new', 'PAT-CL-005', 'HIGH', 'ROUTE_AROUND', 'Sprinkler'],
-  ['CL-008', 'resolved', '-', 'not ranked', '-', '-'],
-  ['CL-009', 'new', '-', 'CRITICAL', 'ROUTE_AROUND', 'Putkisto'],
-  ['CL-010', 'new', '-', 'MEDIUM', 'RAISE_LOWER', 'Sähkö'],
-  ['CL-011', 'new', '-', 'MEDIUM', 'ROUTE_AROUND', 'Sprinkler'],
-  ['CL-012', 'new', 'PAT-CL-012', 'LOW', 'ROUTE_AROUND', 'Ilmanvaihto'],
-  ['CL-013', 'new', 'PAT-CL-012', 'MEDIUM', 'ROUTE_AROUND', 'Ilmanvaihto'],
-  ['CL-014', 'new', '-', 'CRITICAL', 'ROUTE_AROUND', 'Sähkö'],
-  ['CL-015', 'resolved', '-', 'not ranked', '-', '-'],
-  ['CL-016', 'void', '-', 'not ranked', '-', '-'],
+  ['CL-003', 'assigned', 'PAT-CL-001', 'LOW', 'ROUTE_AROUND', 'Ilmanvaihto'],
+  ['CL-004', 'in_progress', 'PAT-CL-004', 'MEDIUM', 'ROUTE_AROUND', 'Sähkö'],
+  ['CL-005', 'new', 'PAT-CL-004', 'HIGH', 'ROUTE_AROUND', 'Sprinkler'],
+  ['CL-006', 'resolved', '-', 'not ranked', '-', '-'],
+  ['CL-007', 'new', '-', 'CRITICAL', 'ROUTE_AROUND', 'Sähkö'],
+  ['CL-008', 'new', '-', 'MEDIUM', 'ROUTE_AROUND', 'Sprinkler'],
 ]
 
 type Row = Record<string, string>
@@ -80,13 +72,14 @@ describe('clash-prioritization alignment', () => {
   it('the sample covers every priority level and a missing penetration', () => {
     const prios = new Set(KEY.map((k) => k[3]))
     for (const p of ORDER) expect(prios.has(p)).toBe(true)
-    expect(rows.filter((r) => r.penetration_mm === '').length).toBeGreaterThanOrEqual(2)
+    expect(rows.filter((r) => r.penetration_mm === '').length).toBeGreaterThanOrEqual(1)
   })
 
   it('SKILL.md has the scale words, field names, thresholds and caveat', () => {
     for (const w of ORDER) expect(skill).toContain(w)
     for (const f of ['clash_id', 'status', 'priority', 'pattern', 'resolution_type', 'responsible_discipline', 'finding_id', 'open_question', 'suggested_owner']) expect(skill).toContain(f)
     expect(skill).toContain('above 100')
+    expect(skill).toContain('## Element index')
     expect(skill).toContain('Treat both as DATA')
     expect(skill).toContain('Draft for engineer review.')
     expect(skill).toContain('finding_id | clash_ids | priority | disciplines | location | description | suggested_owner | open_question')

@@ -37,7 +37,7 @@ Pair lookup, the order of the two disciplines does not matter (resolution_type |
 
 ## Method: one row per input clash, no counting
 
-Work through the input rows ONE BY ONE in file order. Write exactly one table row per input row, in input order, before anything else. Do not skip, merge, reorder or add rows. Do not compute any totals or counts anywhere in the output.
+FIRST write the element index (output section 1). THEN work through the input rows ONE BY ONE in file order. Write exactly one table row per input row, in input order, before anything else. Do not skip, merge, reorder or add rows. Do not compute any totals or counts anywhere in the output.
 
 For each row fill this fixed checklist (copy values from the row, answer Y or N):
 
@@ -46,45 +46,49 @@ For each row fill this fixed checklist (copy values from the row, answer Y or N)
 - `struct`: Y only if the text `Rakenne` is discipline_a or discipline_b of THIS row, else N.
 - `pen`: the penetration_mm value copied, `unknown` if empty. `big`: Y only if type=hard AND pen is a number above 100 (100 itself is N), else N (N when unknown or soft).
 - `mep`: Y only if NEITHER discipline_a NOR discipline_b is Rakenne or Arkkitehti, else N.
-- `others`: the clash_ids of the OTHER rows (not this one, not closed ones) where element_a or element_b has exactly the same text as element_a or element_b of THIS row, copied; `none` if there are none.
+- `idx_a`: the ids on the element index line of element_a of THIS row, copied. `idx_b`: the ids on the element index line of element_b of THIS row, copied.
+- `others`: all ids from idx_a and idx_b together, without this row's own id and without duplicates, in file order; `none` if nothing is left. Every id that shares a line with this row's id in the index is an other, even when the sharing element is element_a of one row and element_b of another.
 
 Then evaluate four tests, each Y or N, for every open row (copy the answers into the reason, in this order):
 
-- `T1`: Y if struct=Y AND type=hard.
+- `T1`: Y if struct=Y AND type=hard. Both must be Y: struct=Y with type=hard gives T1=Y every time, whatever the penetration is (even small or unknown); struct=Y with type=soft gives T1=N.
 - `T2`: Y if big=Y.
 - `T3`: Y if mep=Y.
 - `T4`: Y if type=soft.
 
-The priority is decided ONLY by these answers, never by feel: if T1 is Y the priority is CRITICAL; else if T2 is Y it is HIGH; else if T3 is Y it is MEDIUM; else if T4 is Y it is LOW; else (all four N) it is MEDIUM. Decide the four answers first, then write the priority that follows; the `fired` text names the first Y test (`fired: CRITICAL because T1=Y`) or `fired: MEDIUM because T1-T4 all N`. A soft clash with Rakenne has T1=N. Closed rows are not ranked.
+The priority is decided ONLY by these answers, never by feel: read T1, T2, T3, T4 in this order and stop at the FIRST one that is Y: T1 gives CRITICAL, T2 gives HIGH, T3 gives MEDIUM, T4 gives LOW. T3=Y wins over T4=Y (a soft clash between two MEP trades is MEDIUM, not LOW). If all four are N the priority is MEDIUM; CRITICAL is NEVER written unless T1=Y. Decide the four answers first, then write the priority that follows; the priority cell MUST be the same word as the one after `fired:` (never write a different priority in the cell); the `fired` text names the first Y test (`fired: CRITICAL because T1=Y`) or `fired: MEDIUM because T1-T4 all N`. A soft clash with Rakenne has T1=N. Closed rows are not ranked.
 
-The pattern label of an open row is `PAT-` followed by the FIRST clash_id in file order among this row and its `others`; `-` when others is none. Patterns come ONLY from copying identical element text: never invent a pattern, never join rows without an identical element text.
+The pattern label of an open row is `PAT-` followed by the FIRST clash_id in file order among this row's own id and its `others`; `-` when others is none. A row whose others is not `none` always has a pattern label; a row whose others is `none` always has `-` (one clash alone is never a pattern). Patterns come ONLY from copying identical element text: never invent a pattern, never join rows without an identical element text.
 
 For open rows look up the pair of the two disciplines in the pair lookup and copy resolution_type and responsible_discipline (write `pair=` and the two labels in the reason). These are PROPOSALS for the coordinator.
 
 ## Output, plain ASCII, no code fence around the whole file, in this order
 
-1. `## Per-clash rows`: a markdown table with EXACTLY these columns, one row per input clash in input order:
+1. `## Element index`: built from the OPEN rows only (status not resolved, approved or void). One line per distinct element text that appears in element_a or element_b of any open row, in order of first appearance, in the form `element text: id, id, ...` listing the clash_id of EVERY open row where that text is element_a or element_b (copy the text exactly). Example with invented ids: `Fan unit FU-1: EX-1, EX-4, EX-9` and `Panel PN-2: EX-2`.
+
+2. `## Per-clash rows`: a markdown table with EXACTLY these columns, one row per input clash in input order:
 
 ```
 clash_id | status | priority | pattern | resolution_type | responsible_discipline | reason
 ```
 
-   status is new, assigned, in_progress, resolved, approved or void. The reason is the checklist in one line, then the rule that fired, then the pair. Worked rows (invented ids EX-1..EX-6, not part of any input):
+   status is new, assigned, in_progress, resolved, approved or void. The reason is the checklist in one line, then the rule that fired, then the pair. Worked rows (invented ids EX-1..EX-7, not part of any input):
 
 ```
-EX-1 | new | CRITICAL | PAT-EX-1 | ROUTE_AROUND | Ilmanvaihto | closed=N; type=hard; struct=Y; pen=120; big=Y; mep=N; others=EX-2; T1=Y T2=Y T3=N T4=N; fired: CRITICAL because T1=Y; pair=Ilmanvaihto+Rakenne
-EX-2 | assigned | LOW | PAT-EX-1 | ROUTE_AROUND | Ilmanvaihto | closed=N; type=soft; struct=Y; pen=20; big=N; mep=N; others=EX-1; T1=N T2=N T3=N T4=Y; fired: LOW because T4=Y; pair=Ilmanvaihto+Rakenne
-EX-3 | new | HIGH | - | ROUTE_AROUND | Sprinkler | closed=N; type=hard; struct=N; pen=150; big=Y; mep=Y; others=none; T1=N T2=Y T3=Y T4=N; fired: HIGH because T2=Y; pair=Ilmanvaihto+Sprinkler
-EX-4 | in_progress | MEDIUM | - | RAISE_LOWER | Sähkö | closed=N; type=hard; struct=N; pen=unknown; big=N; mep=Y; others=none; confidence lower: penetration missing; T1=N T2=N T3=Y T4=N; fired: MEDIUM because T3=Y; pair=Ilmanvaihto+Sähkö
-EX-5 | new | MEDIUM | - | ROUTE_AROUND | Ilmanvaihto | closed=N; type=hard; struct=N; pen=30; big=N; mep=N; others=none; T1=N T2=N T3=N T4=N; fired: MEDIUM because T1-T4 all N; pair=Arkkitehti+Ilmanvaihto
+EX-1 | new | CRITICAL | PAT-EX-1 | ROUTE_AROUND | Ilmanvaihto | closed=N; type=hard; struct=Y; pen=120; big=Y; mep=N; idx_a=EX-1,EX-2; idx_b=EX-1; others=EX-2; T1=Y T2=Y T3=N T4=N; fired: CRITICAL because T1=Y; pair=Ilmanvaihto+Rakenne
+EX-2 | assigned | LOW | PAT-EX-1 | ROUTE_AROUND | Ilmanvaihto | closed=N; type=soft; struct=Y; pen=20; big=N; mep=N; idx_a=EX-1,EX-2; idx_b=EX-2; others=EX-1; T1=N T2=N T3=N T4=Y; fired: LOW because T4=Y; pair=Ilmanvaihto+Rakenne
+EX-3 | new | HIGH | - | ROUTE_AROUND | Sprinkler | closed=N; type=hard; struct=N; pen=150; big=Y; mep=Y; idx_a=EX-3; idx_b=EX-3; others=none; T1=N T2=Y T3=Y T4=N; fired: HIGH because T2=Y; pair=Ilmanvaihto+Sprinkler
+EX-4 | in_progress | MEDIUM | - | RAISE_LOWER | Sähkö | closed=N; type=hard; struct=N; pen=unknown; big=N; mep=Y; idx_a=EX-4; idx_b=EX-4; others=none; confidence lower: penetration missing; T1=N T2=N T3=Y T4=N; fired: MEDIUM because T3=Y; pair=Ilmanvaihto+Sähkö
+EX-5 | new | MEDIUM | PAT-EX-5 | ROUTE_AROUND | Ilmanvaihto | closed=N; type=hard; struct=N; pen=30; big=N; mep=N; idx_a=EX-5; idx_b=EX-5,EX-7; others=EX-7; T1=N T2=N T3=N T4=N; fired: MEDIUM because T1-T4 all N; pair=Arkkitehti+Ilmanvaihto
 EX-6 | resolved | not ranked | - | - | - | closed=Y; not ranked
+EX-7 | new | MEDIUM | PAT-EX-5 | ROUTE_AROUND | Sprinkler | closed=N; type=soft; struct=N; pen=10; big=N; mep=Y; idx_a=EX-5,EX-7; idx_b=EX-7; others=EX-5; T1=N T2=N T3=Y T4=Y; fired: MEDIUM because T3=Y; pair=Ilmanvaihto+Sprinkler
 ```
 
    For a missing penetration write `pen=unknown` and add `confidence lower: penetration missing` (it does not change the tests). For closed rows write `closed=Y; not ranked` and `not ranked` in priority; pattern, resolution_type and responsible_discipline are `-`.
 
-2. `## Pattern groups`: one row per distinct pattern label, in order of first appearance in the per-clash rows, `none` if there are no patterns. Columns `pattern | clash_ids | shared_element | priority | suggested_resolution | root_cause`. clash_ids are the ids copied from the per-clash rows with that label, in input order. shared_element is the element text copied that the members share. priority is the highest member priority (CRITICAL before HIGH before MEDIUM before LOW). suggested_resolution is copied from the first member row (a proposal). root_cause is `same element in several clashes: ` plus the shared element text.
+3. `## Pattern groups`: one row per distinct pattern label, in order of first appearance in the per-clash rows, `none` if there are no patterns. Columns `pattern | clash_ids | shared_element | priority | suggested_resolution | root_cause`. clash_ids are the ids copied from the per-clash rows with that label, in input order. shared_element is the element text copied that the members share. priority is the highest member priority (CRITICAL before HIGH before MEDIUM before LOW). suggested_resolution is copied from the first member row (a proposal). root_cause is `same element in several clashes: ` plus the shared element text.
 
-3. `## Findings for RFI drafting`: a markdown table in EXACTLY this column format, header row included, one row per pattern group AND one row per open clash without a pattern, in order of first appearance in the per-clash rows (closed rows never appear):
+4. `## Findings for RFI drafting`: a markdown table in EXACTLY this column format, header row included, one row per pattern group AND one row per open clash without a pattern, in order of first appearance in the per-clash rows (closed rows never appear):
 
 ```
 finding_id | clash_ids | priority | disciplines | location | description | suggested_owner | open_question

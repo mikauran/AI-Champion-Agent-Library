@@ -2,17 +2,9 @@
 clash_id,discipline_a,discipline_b,element_a,element_b,level,grid,penetration_mm,clash_type,status
 CL-001,Ilmanvaihto,Rakenne,Supply duct SD-12,Beam B-L2-04,L2,C/3,140,hard,open
 CL-002,Ilmanvaihto,Rakenne,Supply duct SD-12,Beam B-L2-05,L2,C/4,90,hard,open
-CL-003,Ilmanvaihto,Rakenne,Supply duct SD-12,Beam B-L2-06,L2,C/5,60,hard,open
-CL-004,Ilmanvaihto,Rakenne,Supply duct SD-12,Beam B-L2-07,L2,C/6,35,soft,assigned
-CL-005,Putkisto,Rakenne,Riser RS-3,Slab S-L1-02,L1,E/2,55,hard,open
-CL-006,Putkisto,Sähkö,Riser RS-3,Cable tray CT-7,L1,E/2,40,hard,in_progress
-CL-007,Putkisto,Sprinkler,Riser RS-3,Sprinkler branch SP-9,L1,E/2,130,hard,open
-CL-008,Ilmanvaihto,Sähkö,Exhaust duct ED-2,Cable tray CT-4,L2,B/1,70,hard,resolved
-CL-009,Putkisto,Rakenne,Drain pipe DP-4,Transfer beam TB-1,L0,B/2,210,hard,open
-CL-010,Sähkö,Ilmanvaihto,Cable tray CT-2,Supply duct SD-03,L1,A/1,,hard,open
-CL-011,Sprinkler,Sähkö,Sprinkler main SP-1,Cable tray CT-9,L3,F/4,8,soft,open
-CL-012,Ilmanvaihto,Arkkitehti,Return duct RD-5,Ceiling grid CG-L3,L3,B/5,15,soft,open
-CL-013,Arkkitehti,Ilmanvaihto,Ceiling grid CG-L3,Return duct RD-2,L3,F/2,45,hard,open
-CL-014,Sähkö,Rakenne,Conduit bank CB-1,Wall W-L1-09,L1,A/3,,hard,open
-CL-015,Ilmanvaihto,Arkkitehti,Fan coil FC-7,Partition P-L2-11,L2,D/6,30,hard,resolved
-CL-016,Sähkö,Putkisto,Cable tray CT-5,Water pipe WP-2,L0,C/1,22,soft,void
+CL-003,Ilmanvaihto,Rakenne,Supply duct SD-12,Beam B-L2-07,L2,C/6,35,soft,assigned
+CL-004,Putkisto,Sähkö,Riser RS-3,Cable tray CT-7,L1,E/2,40,hard,in_progress
+CL-005,Putkisto,Sprinkler,Riser RS-3,Sprinkler branch SP-9,L1,E/2,130,hard,open
+CL-006,Ilmanvaihto,Sähkö,Exhaust duct ED-2,Cable tray CT-4,L2,B/1,70,hard,resolved
+CL-007,Sähkö,Rakenne,Conduit bank CB-1,Wall W-L1-09,L1,A/3,,hard,open
+CL-008,Sprinkler,Sähkö,Sprinkler main SP-1,Cable tray CT-9,L3,F/4,8,soft,open

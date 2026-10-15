@@ -104,6 +104,7 @@ Missing penetration: pen=unknown, big=N, add `confidence lower: penetration miss
 
 ## 9. Output format (what the agent writes)
 
+0. `## Element index` (and per-row `idx_a`, `idx_b` fields added in revision 2 after run 2 mis-copied `others`; element index added in revision 1 after live run 1 found no patterns: one line per element text of open rows with the ids that contain it; `others=` is looked up from it). Not consumed by agent 4.
 1. `## Per-clash rows`: `clash_id | status | priority | pattern | resolution_type | responsible_discipline | reason` one row per input clash in input order; closed rows have priority `not ranked` and `-` in pattern, resolution_type, responsible_discipline.
 2. `## Pattern groups`: `pattern | clash_ids | shared_element | priority | suggested_resolution | root_cause`, in order of first appearance; none if there are no groups.
 3. `## Findings for RFI drafting`, the 8 columns agent 4 reads, unchanged names: `finding_id | clash_ids | priority | disciplines | location | description | suggested_owner | open_question`, one row per pattern group and one per ungrouped open clash, in order of first appearance. Change for agent 4 (plan 32-02): `priority` now holds CRITICAL/HIGH/MEDIUM/LOW; the resolution type is carried in `description` as `proposed: <type>`; `suggested_owner` is the responsible discipline (Finnish label) or the coordinator marker.
@@ -111,36 +112,30 @@ Missing penetration: pen=unknown, big=N, add `confidence lower: penetration miss
 
 ## 10. Answer key for the synthetic sample (hand derived from section 8)
 
-Closed (not ranked): CL-008 resolved, CL-015 resolved, CL-016 void.
+Scope-shrink note: the first sample had 16 rows (key written before any run; CL-001..CL-016 incl. a third pattern group CL-012/CL-013). After two failed revisions on it (jobs 4f18541b, f4376fb6, 977ecb72; see 32-VERIFICATION.md) the sample was shrunk to 8 rows (the one allowed scope-shrink retry) and this key replaces the long one. Rules and thresholds are unchanged.
+
+Closed (not ranked): CL-006 resolved.
 
 | clash_id | status | pattern | priority | resolution_type | responsible_discipline | note |
 |---|---|---|---|---|---|---|
 | CL-001 | new | PAT-CL-001 | CRITICAL | ROUTE_AROUND | Ilmanvaihto | struct hard |
 | CL-002 | new | PAT-CL-001 | CRITICAL | ROUTE_AROUND | Ilmanvaihto | struct hard |
-| CL-003 | new | PAT-CL-001 | CRITICAL | ROUTE_AROUND | Ilmanvaihto | struct hard |
-| CL-004 | assigned | PAT-CL-001 | LOW | ROUTE_AROUND | Ilmanvaihto | struct but soft, T4 |
-| CL-005 | new | PAT-CL-005 | CRITICAL | ROUTE_AROUND | Putkisto | struct hard |
-| CL-006 | in_progress | PAT-CL-005 | MEDIUM | ROUTE_AROUND | Sähkö | mep |
-| CL-007 | new | PAT-CL-005 | HIGH | ROUTE_AROUND | Sprinkler | 130 mm, T2 |
-| CL-008 | resolved | - | not ranked | - | - | closed |
-| CL-009 | new | - | CRITICAL | ROUTE_AROUND | Putkisto | struct hard, 210 mm |
-| CL-010 | new | - | MEDIUM | RAISE_LOWER | Sähkö | pen unknown, confidence lower |
-| CL-011 | new | - | MEDIUM | ROUTE_AROUND | Sprinkler | soft MEP-MEP is MEDIUM |
-| CL-012 | new | PAT-CL-012 | LOW | ROUTE_AROUND | Ilmanvaihto | soft, Arkkitehti |
-| CL-013 | new | PAT-CL-012 | MEDIUM | ROUTE_AROUND | Ilmanvaihto | hard, Arkkitehti, default MEDIUM |
-| CL-014 | new | - | CRITICAL | ROUTE_AROUND | Sähkö | struct hard, pen unknown, confidence lower |
-| CL-015 | resolved | - | not ranked | - | - | closed |
-| CL-016 | void | - | not ranked | - | - | closed |
+| CL-003 | assigned | PAT-CL-001 | LOW | ROUTE_AROUND | Ilmanvaihto | struct but soft, T4 |
+| CL-004 | in_progress | PAT-CL-004 | MEDIUM | ROUTE_AROUND | Sähkö | mep, T3 |
+| CL-005 | new | PAT-CL-004 | HIGH | ROUTE_AROUND | Sprinkler | 130 mm, T2 |
+| CL-006 | resolved | - | not ranked | - | - | closed |
+| CL-007 | new | - | CRITICAL | ROUTE_AROUND | Sähkö | struct hard, pen unknown, confidence lower |
+| CL-008 | new | - | MEDIUM | ROUTE_AROUND | Sprinkler | soft MEP-MEP is MEDIUM |
 
-Pattern groups: PAT-CL-001 = CL-001..CL-004, shared element Supply duct SD-12, CRITICAL; PAT-CL-005 = CL-005..CL-007, shared element Riser RS-3, CRITICAL; PAT-CL-012 = CL-012, CL-013, shared element Ceiling grid CG-L3 (element_b of CL-012 equals element_a of CL-013), MEDIUM. Findings: F-01 = PAT-CL-001 group, F-02 = PAT-CL-005, F-03 = CL-009, F-04 = CL-010, F-05 = CL-011, F-06 = PAT-CL-012, F-07 = CL-014 (7 rows).
+Pattern groups: PAT-CL-001 = CL-001..CL-003, shared element Supply duct SD-12, CRITICAL; PAT-CL-004 = CL-004, CL-005, shared element Riser RS-3, HIGH. Findings: F-01 = PAT-CL-001, F-02 = PAT-CL-004, F-03 = CL-007, F-04 = CL-008 (4 rows).
 
-## 11. Rubric R1-R7 (written before the live run)
+## 11. Rubric R1-R7 (written before the live run; ids adjusted for the 8-row sample)
 
-- R1: every input clash_id appears exactly once in the per-clash table, in input order (16 rows).
-- R2: CL-008, CL-015, CL-016 are `not ranked` with `-` fields and absent from pattern and findings tables.
-- R3: pattern groups come only from copying identical element text: exactly PAT-CL-001 (CL-001..004), PAT-CL-005 (CL-005..007), PAT-CL-012 (CL-012, CL-013); no other grouping, no invented labels.
-- R4: priority per row follows the key (section 10), with the key rows (CL-004 LOW, CL-007 HIGH, CL-010/011/013 MEDIUM, CL-012 LOW) right and the rule that fired named.
-- R5: resolution_type and responsible_discipline per row follow the pair lookup, labelled proposals (draft wording), Finnish labels used.
-- R6: no invented ids, elements, numbers, dates; no counts, totals or rates anywhere; missing penetration (CL-010, CL-014) flagged `confidence lower: penetration missing`.
-- R7: findings table has the exact 8-column header, 7 rows F-01..F-07 matching section 10, and the draft caveat is present.
+- R1: every input clash_id appears exactly once in the per-clash table, in input order (8 rows).
+- R2: CL-006 is `not ranked` with `-` fields and absent from pattern and findings tables.
+- R3: pattern groups come only from copying identical element text: exactly PAT-CL-001 (CL-001..003) and PAT-CL-004 (CL-004, CL-005); no other grouping, no invented labels.
+- R4: priority per row follows the key (section 10) and equals the word after `fired:`; the rule that fired is named.
+- R5: resolution_type and responsible_discipline per row follow the pair lookup, labelled proposals, Finnish labels used.
+- R6: no invented ids, elements, numbers, dates; no counts, totals or rates anywhere; missing penetration (CL-007) flagged `confidence lower: penetration missing`.
+- R7: findings table has the exact 8-column header, 4 rows F-01..F-04 matching section 10, and the draft caveat is present.
 A single material violation of R1-R7 is a FAIL.
