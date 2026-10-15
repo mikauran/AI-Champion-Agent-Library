@@ -38,11 +38,11 @@ Note `dn=any/empty Y`: the flag is the letter Y, never N. Against a row of anoth
 
 Closing line, after the last catalog row of the line:
 
-`<line_id> U=<Y|N> hits=<ids of the HIT lines of this line in catalog order, or none> count=<0|1|2|...> same_class=<ids of this line's check lines whose cls flag is Y, or none>`
+`<line_id> req_dn=<req_dn or any> req_mat=<req_mat or any> U=<Y|N> hits=<ids of the HIT lines of this line in catalog order, or none> count=<0|1|2|...> same_class=<ids of this line's check lines whose cls flag is Y, or none>`
 
 - `hits` is copied from the HIT lines you just wrote (never from memory, never an id without a HIT line).
 - `count` is the number of ids in `hits`.
-- `U` is Y when req_dn is `any` OR req_mat is `any` (underspecified line); otherwise N.
+- `U` is read off the two texts just written on the same line: Y when `req_dn=any` OR `req_mat=any`; N when both are real values. Examples: `req_dn=50 req_mat=stainless U=N`; `req_dn=any req_mat=steel U=Y`; `req_dn=any req_mat=cast iron U=Y`; `req_dn=22 req_mat=copper U=N`. A line with both values filled is never underspecified.
 
 Status lookup (read it off `count`, no other input):
 
@@ -66,7 +66,7 @@ line_id | description | qty | unit | candidates | status | unit_same | near_miss
 - `candidates` = `hits` of the closing line (`-` if none). `status` = the lookup result for `count`.
 - `unit_same`: copied from the unit line for matched rows, `-` for other statuses.
 - `near_miss`: for no-match rows the `same_class` ids copied from the closing line (`-` when same_class is none); `-` for matched and ambiguous rows.
-- `review`: `NO` only when status is matched AND unit_same is Y AND U is N (an underspecified or unit-mismatch line is always YES); otherwise `YES`.
+- `review` (copy the three inputs from the closing line and unit line of that E-BOM line, then read the result): `NO` only when status=matched AND unit_same=Y AND U=N, else `YES`. So U=Y always gives YES, even for a matched line with unit_same=Y (example: `BL-06 U=Y matched unit_same=Y` => review YES, note `underspecified`; `BL-01 U=N matched unit_same=Y` => review NO; `BL-05 U=N matched unit_same=N` => review YES). Open items lists EVERY row with review=YES, with the reason copied from the note or status (for a no-match with near_miss write `near miss <ids>`).
 - `note`: short copied facts: `underspecified` when U=Y; `unit E-BOM pcs vs sales_unit pack10` style text for unit_same=N; `stock=N for <id>` for hits with stock=N (copied, not interpreted); otherwise `-`.
 
 ### Step 3: M-BOM draft

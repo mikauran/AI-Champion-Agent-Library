@@ -242,5 +242,5 @@ Order: 24 -> 30, then 21 -> 23. Cap: $0.50 per agent run, $10 total.
 - Phase 25 / Agent 2 QTO normalization: COUNTED (job af4663e3…, 11384 tokens, ~$0.018; run 1 failed rubric, SKILL revised). Running spend ~$0.08.
 - Phase 25 / Agent 3 Clash prioritization: ATTEMPTED, NOT COUNTED (3 live runs failed rubric: lost clash id, mis-ranking; ~$0.057). Entry exists in data/agents. RETRY LATER (blocker B-clash): simplify the step (e.g. model only clusters, or split input) once other agents are done. Release (Phase 30) must decide whether non-counted entries ship / count them. Running spend ~$0.14.
 - Phase 25 COMPLETE: 4/4 agents counted (agent 3 passed after redesign; run 5 job 1aa6f1be…). Agent 4 RFI generation counted (job a5ef49db…). Spend total ~$0.20 of $10. Next: Phase 26 (agents 5-7).
-- Phase 26 / Agent 5 Product sourcing: attempted, NOT counted after 3 runs (BL-09 unit-mismatch line mis-classified); retry later (B-agent5). Spend ~$0.27.
+- Phase 26 / Agent 5 Product sourcing: COUNTED on third attempt (scoped to 6 lines x 6 rows, job 41f820ae; earlier 12 x 13 attempts failed). Limit recorded as G-037.
 - Phase 26 / Agent 6 Quote comparison: COUNTED (job eaee09d8…, ~$0.025). Spend ~$0.32.

@@ -1,13 +1,13 @@
 ---
 phase: 26
 plan: 01
-status: attempted-not-counted
+status: counted
 requirements: [CONS-A5]
 ---
 
 # 26-01 Summary
 
-Agent 5 (Product sourcing, E-BOM to M-BOM): entry, SKILL and sample built and validated; live run ATTEMPTED-NOT-COUNTED (rubric not met after SKILL v1 plus two revisions).
+Agent 5 (Product sourcing, E-BOM to M-BOM): entry, SKILL and sample built and validated; live run COUNTED on the third attempt (scoped down to 6 lines x 6 rows, job 41f820ae). Earlier text below is history.
 
 ## Built
 - data/agents/product-sourcing-mbom.yaml (stage sourcing, agent_no 5, DDC attribution), SKILL.md and a synthetic labelled sample (12 E-BOM lines, 13 catalog rows) in data/tryitout-prompts/product-sourcing-mbom/.
@@ -31,3 +31,7 @@ Total 0.0694 USD. Stack torn down, no aic.tryitout containers.
 ## Retry 2026-10-15
 
 Three more live runs (bc11ce1a, 0ab6b5f4, 20061fd7; 0.4527 USD) with a redesigned per-catalog-row Match checks SKILL: still attempted-not-counted (model truncates, splits or skips the 156-line check section; BL-06 `any` equality mis-ticked). Details in 26-VERIFICATION.md. Yaml unchanged, so no golden regeneration.
+
+## Third attempt 2026-10-15
+
+Sample scoped to 6 E-BOM lines x 6 catalog rows, SKILL writes one result.md with an explicit any=Y rule. Three runs (90c11c2c, 94f49e70, 41f820ae; 0.0744 USD); run 3 passed the rubric. Entry now states the ~6 x 6 per-run limit (gap G-037, batching needed); golden regenerated, unchanged. Inventory row 5 partial.
