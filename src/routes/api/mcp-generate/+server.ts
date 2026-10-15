@@ -41,7 +41,12 @@ function sanitizeOptions(raw: unknown): GenerateOptions | null {
   return o
 }
 
-async function generate(request: Request): Promise<Response> {
+/**
+ * Reads and validates the request, then takes the admission slot just before the pipeline runs and releases it in
+ * `finally`. The slot is not held while the body is read (CR-50): a client that trickles its body must not occupy
+ * the few concurrency slots. `admit` returns a response (429) or a release function.
+ */
+async function generate(request: Request, admit: () => Response | (() => void)): Promise<Response> {
   const len = Number(request.headers.get('content-length') ?? '0')
   if (Number.isFinite(len) && len > MAX_INPUT_BYTES * 2) {
     return fail(413, 'input-too-large', `Request exceeds the ${MAX_INPUT_BYTES} byte input limit.`)
@@ -72,7 +77,14 @@ async function generate(request: Request): Promise<Response> {
   const options = sanitizeOptions(body.options)
   if (options === null) return fail(400, 'bad-request', 'Field "options" must be an object.')
 
-  const result = await runPipelineAsync(body.input, { adapterId, options })
+  const admitted = admit()
+  if (typeof admitted !== 'function') return admitted
+  let result: Awaited<ReturnType<typeof runPipelineAsync>>
+  try {
+    result = await runPipelineAsync(body.input, { adapterId, options })
+  } finally {
+    admitted()
+  }
   if (!result.ok) return json({ ok: false, message: result.gaps[0]?.message ?? 'The input could not be converted.', gaps: result.gaps } satisfies GenerateErrorResponse, { status: 422 })
 
   let zip: Uint8Array
@@ -103,14 +115,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
   } catch {
     clientKey = undefined
   }
-  const admission = generatorGate().admit(clientKey)
-  if (!admission.ok) {
+  const admit = (): Response | (() => void) => {
+    const admission = generatorGate().admit(clientKey)
+    if (admission.ok) return () => admission.release()
     const message = admission.reason === 'busy' ? 'The generator is busy. Try again in a moment.' : 'Too many generation requests from this client, try again later.'
     return json({ message }, { status: 429, headers: { 'retry-after': admission.reason === 'busy' ? '5' : '60' } })
   }
-  try {
-    return await generate(request)
-  } finally {
-    admission.release()
-  }
+  return await generate(request, admit)
 }
