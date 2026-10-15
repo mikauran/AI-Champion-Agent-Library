@@ -59,4 +59,4 @@ None. The skill's closure words are `completed` and `verified` (two steps) and `
 
 ## 6. Impact on rerun
 
-SKILL body changes: no (footer wording only: "Ideas adapted from" becomes "Inspired by"). Sample changes: no. Rubric/key changes: no. One footer-change rerun on the existing sample.
+SKILL body changes: no for the label (footer wording only: "Ideas adapted from" becomes "Inspired by"); the footer-change rerun failed on the open-ok review cell and revision 1 (explicit review rule and a worked open-ok row) was needed, see 35-VERIFICATION.md. Sample changes: no. Rubric/key changes: no.

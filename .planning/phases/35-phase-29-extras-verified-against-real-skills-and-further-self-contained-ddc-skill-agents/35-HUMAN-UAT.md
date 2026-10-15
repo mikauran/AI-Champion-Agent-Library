@@ -1,0 +1,7 @@
+# Phase 35 Human UAT (pending for Ville / engineers)
+
+Plan 35-01 (agents 13-16 verified against the real skills):
+- [ ] Agent 13 Daily Report Cross Check: open the Try It Out page, run the sample, compare to the key (D-03 and D-04 mismatch, D-05 delay-unexplained, D-06 not-in-timesheet); job 33c64dfb. Confirm the label "loosely related to daily-report-generator (+ n8n-daily-report)" (the skills generate reports, none cross-checks them).
+- [ ] Agent 14 Punch List Closure Check: run the sample, compare to the key (P-04 open-ok review NO); jobs d9a413e5 (failed, not counted) and edc60b32 (counted). The model slipped once on the open-ok review cell, so repeat the run once by hand and check P-04. Confirm the label "inspired by punch-list-manager (Field-Operations, + Project-Closeout)".
+- [ ] Agent 15 Change Order Consistency Check: run the sample, compare to the key (CO-02 8400 vs 8040, CO-05 SEK, CO-06 no form); job bb72743d. Confirm the label "inspired by change-order-processor" and that dropping the "third-party source licence" claim for change-order-manager (not supported by the repo NOTICE.md) is acceptable.
+- [ ] Agent 16 Safety Observation Classification: run the sample, compare to the key; job a121094f (check line S-02 has high=N although sev is high; no table cell affected). The category table is a placeholder, not a safety standard. Confirm the label "loosely related to safety-inspection (+ safety-inspection-checklist)".

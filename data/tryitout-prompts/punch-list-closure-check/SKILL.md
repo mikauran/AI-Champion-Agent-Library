@@ -52,18 +52,19 @@ Worked lines (invented values, not from the input):
 item_id | location | responsible | due | status | verdict | review | note
 ```
 
-One row per item in input order, cells copied from its check line (location from the input; `due` empty -> `-`; responsible empty -> `-`). EXACTLY 8 cells per row: count the `|` separators, there are 7 per row; never drop the review cell; single characters only, no doubled symbols. `review`: NO only for closed-ok and open-ok, YES otherwise. `note` is NEVER `-` for closed-unverified: for closed-unverified write exactly `closed_date missing` when only closed_date is EMPTY, `verified_by missing` when only verified_by is EMPTY, or `closed_date missing; verified_by missing` when both are EMPTY. For overdue write `due <due> before as_of <as_of>`. For no-responsible write `responsible missing`. For status-unknown write `status text not open or closed`. `-` only for closed-ok and open-ok.
+One row per item in input order, cells copied from its check line (location from the input; `due` empty -> `-`; responsible empty -> `-`). EXACTLY 8 cells per row: count the `|` separators, there are 7 per row; never drop the review cell; single characters only, no doubled symbols. `review`: NO for the verdicts closed-ok and open-ok (BOTH are NO), YES for every other verdict. `note` is NEVER `-` for closed-unverified: for closed-unverified write exactly `closed_date missing` when only closed_date is EMPTY, `verified_by missing` when only verified_by is EMPTY, or `closed_date missing; verified_by missing` when both are EMPTY. For overdue write `due <due> before as_of <as_of>`. For no-responsible write `responsible missing`. For status-unknown write `status text not open or closed`. `-` only for closed-ok and open-ok.
 
 Worked rows (invented):
 - `X-3 | Level 9 plant room | Beta | 2025-12-30 | open | overdue | YES | due 2025-12-30 before as_of 2026-01-05`
 - `X-1 | Level 9 plant room | Acme | 2026-01-10 | closed | closed-ok | NO | -`
+- `X-4 | Level 9 plant room | Beta | 2026-06-01 | open | open-ok | NO | -`
 - `X-2 | Level 9 plant room | Acme | 2026-01-10 | closed | closed-unverified | YES | closed_date missing`
 - `X-7 | Level 9 plant room | Acme | 2026-01-10 | closed | closed-unverified | YES | verified_by missing`
 - `X-5 | Level 9 plant room | - | 2026-06-01 | open | no-responsible | YES | responsible missing`
 
 ## Step 3: Open items for the engineer
 
-`## Open items for the engineer`: one line per row with review=YES: `item_id, verdict, one-clause reason`. No counts, no percent complete, no statement that the building is ready for handover or accepted.
+`## Open items for the engineer`: one line per row with review=YES only (never a closed-ok or open-ok row): `item_id, verdict, one-clause reason`. No counts, no percent complete, no statement that the building is ready for handover or accepted.
 
 ## Hard constraints
 
