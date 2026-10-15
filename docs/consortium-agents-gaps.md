@@ -34,7 +34,7 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-028 | 4 RFI generation | Chaining from agent 3 is manual (paste its findings table); agent 3 is attempted-not-counted, so findings come from a manual list for now | process | open | Phase 25 | open |
 | G-029 | 3 Clash prioritization | The sample adds a hand-made location_key column (shared element or level/grid) that defines the clusters; real clash exports (Navisworks, BCF) have no such column and need a preprocessing step to compute it. | tool | open | Phase 25 | open |
 | G-030 | 5 Product sourcing | No live catalog access: the Pi container reaches only the LLM proxy, so stk-mcp and lvi-info-mcp cannot be called; the catalog excerpt is pasted as text | data | open | Phase 26 | open |
-| G-031 | 5 Product sourcing | Excerpt is synthetic: real LVI-INFO/STK data is confidential or keyed and was not used; behaviour on a real export unproven | data | open | Phase 26 | open |
+| G-031 | 5 Product sourcing | Excerpt is synthetic: real LVI-INFO and Finnish product-catalog data is confidential or keyed and was not used; behaviour on a real export unproven | data | open | Phase 26 | open |
 | G-032 | 5 Product sourcing | Matching is exact equality: no synonyms, no multi-attribute scoring, no ETIM feature validation | tool | open | Phase 26 | open |
 | G-033 | 5 Product sourcing | Unit mismatches are flagged, never converted (pack sizes, coils) | tool | open | Phase 26 | open |
 | G-034 | 5 Product sourcing | No price, lead-time or availability reasoning; in_stock is copied only | data | open | Phase 26 | open |
