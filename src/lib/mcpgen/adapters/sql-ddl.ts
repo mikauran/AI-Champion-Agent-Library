@@ -222,7 +222,7 @@ function parseDdl(input: RawInput, options?: GenerateOptions): ParseResult {
   // ALTER TABLE: constraints are folded into the tables, noise is counted, everything else stays a reported write.
   const alterIgnoredOn = new Set<string>()
   for (const a of pendingAlters) {
-    const t = tables.find((x) => x.name === a.table)
+    const t = tables.find((x) => x.name.toLowerCase() === a.table.toLowerCase())
     let reported = false
     for (const action of a.actions) {
       const outcome = t ? foldAlterAction(t, action, push, so) : classifyOnly(action)
@@ -273,13 +273,16 @@ function classifyOnly(action: string): AlterOutcome {
 
 function foldAlterAction(t: Table, action: string, push: (g: Gap) => void, so: ScanOpts): AlterOutcome {
   let m: RegExpExecArray | null
+  // SQL identifiers are case-insensitive: resolve names to the declared spelling (CR-11).
+  const declared = (n: string) => t.cols.find((x) => x.name.toLowerCase() === n.toLowerCase())?.name ?? n
+  const fix = (l: string[] | undefined) => l?.map(declared)
   const has = (c: string) => t.cols.some((x) => x.name === c)
   const bad = (msg: string) => {
     push(gap('unparsable-constraint', msg, { path: t.name }))
     return 'bad' as const
   }
   if ((m = RE_ADD_PK.exec(action))) {
-    const names = identList(m[1], so)
+    const names = fix(identList(m[1], so))
     if (!names || names.length === 0 || !names.every(has)) return bad('A PRIMARY KEY constraint added with ALTER TABLE names a column that does not exist or cannot be read; it was ignored.')
     if (t.pk.length > 0) {
       push(gap('duplicate-primary-key', 'The table already has a primary key; a second one added with ALTER TABLE was ignored.', { path: t.name }))
@@ -289,7 +292,7 @@ function foldAlterAction(t: Table, action: string, push: (g: Gap) => void, so: S
     return 'folded'
   }
   if ((m = RE_ADD_FK.exec(action))) {
-    const local = identList(m[1], so)
+    const local = fix(identList(m[1], so))
     const target = readIdent(m[2])
     const refCols = target ? /^\s*\(([^)]*)\)/.exec(target.rest) : null
     const remote = refCols ? identList(refCols[1], so) : undefined
@@ -301,7 +304,7 @@ function foldAlterAction(t: Table, action: string, push: (g: Gap) => void, so: S
     return 'folded'
   }
   if ((m = RE_ADD_UNIQUE.exec(action))) {
-    const names = identList(m[1], so)
+    const names = fix(identList(m[1], so))
     if (!names || !names.every(has)) return bad('A UNIQUE constraint added with ALTER TABLE names a column that does not exist or cannot be read; it was ignored.')
     if (names.length === 1) t.cols.find((x) => x.name === names[0])!.unique = true
     return 'folded'
@@ -310,7 +313,7 @@ function foldAlterAction(t: Table, action: string, push: (g: Gap) => void, so: S
   if (RE_SET_DEFAULT_SEQ.test(action) || RE_IDENTITY.test(action) || RE_OWNER.test(action)) return 'noise'
   if ((m = RE_SET_NOT_NULL.exec(action))) {
     const c = readIdent(m[1])
-    const col = c ? t.cols.find((x) => x.name === c.name) : undefined
+    const col = c ? t.cols.find((x) => x.name.toLowerCase() === c.name.toLowerCase()) : undefined
     if (col) {
       col.nullable = false
       return 'folded'
@@ -446,7 +449,8 @@ function parseCreateTable(stmt: string, push: (g: Gap) => void, ctx: { so: ScanO
     }
     seen.add(c.name.toLowerCase())
   }
-  const pk = [...cols.filter((c) => c.pk).map((c) => c.name), ...tablePk].filter((n, i, a) => a.indexOf(n) === i)
+  const declared = (n: string) => cols.find((c) => c.name.toLowerCase() === n.toLowerCase())?.name ?? n
+  const pk = [...cols.filter((c) => c.pk).map((c) => c.name), ...tablePk.map(declared)].filter((n, i, a) => a.indexOf(n) === i)
   for (const n of pk) {
     if (!cols.some((c) => c.name === n)) {
       push(gap('unparsable-table', 'A primary key names a column that does not exist (or was left out); the table was skipped.', { path: tname }))
@@ -454,12 +458,15 @@ function parseCreateTable(stmt: string, push: (g: Gap) => void, ctx: { so: ScanO
     }
   }
   for (const fk of fks) {
-    const c = cols.find((x) => x.name === fk.column)
-    if (c) c.ref = { table: fk.table, column: fk.ref }
+    const c = cols.find((x) => x.name.toLowerCase() === fk.column.toLowerCase())
+    if (c) {
+      fk.column = c.name
+      c.ref = { table: fk.table, column: fk.ref }
+    }
   }
   for (const u of tableUnique) {
     if (u.length === 1) {
-      const c = cols.find((x) => x.name === u[0])
+      const c = cols.find((x) => x.name.toLowerCase() === u[0].toLowerCase())
       if (c) c.unique = true
     }
   }

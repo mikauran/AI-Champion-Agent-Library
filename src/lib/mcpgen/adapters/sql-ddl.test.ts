@@ -150,3 +150,22 @@ describe('columns named like constraint keywords (CR-10)', () => {
     expect(fieldNames(sql)).toEqual(['id', 'name', 'period_start', 'period_end'])
   })
 })
+
+// CR-11: key, foreign key and unique column names match case-insensitively.
+describe('identifier case in keys (CR-11)', () => {
+  const parse = (sql: string) => ok(adapter.parse({ text: sql }))
+  it('a table-level PRIMARY KEY with different case keeps the table', () => {
+    const m = parse('CREATE TABLE t (Id INT, name text, PRIMARY KEY (id))')
+    expect(m.entities[0].identifierFields).toEqual(['Id'])
+    expect(m.entities[0].fields.find((f) => f.name === 'Id')).toMatchObject({ identifier: true })
+  })
+  it('a table-level FOREIGN KEY and UNIQUE with different case are applied', () => {
+    const m = parse('CREATE TABLE p (Id INT PRIMARY KEY); CREATE TABLE c (Cid INT PRIMARY KEY, ParentId INT, Code TEXT, FOREIGN KEY (parentid) REFERENCES p (id), UNIQUE (code))')
+    const c = m.entities.find((e) => e.id === 'c')!
+    expect(c.fields.find((f) => f.name === 'ParentId')!.description).toBe('References p.id')
+  })
+  it('ALTER TABLE constraints match table and column case-insensitively', () => {
+    const m = parse('CREATE TABLE Users (Id INT, Name TEXT); ALTER TABLE ONLY users ADD CONSTRAINT pk PRIMARY KEY (id);')
+    expect(m.entities[0].identifierFields).toEqual(['Id'])
+  })
+})
