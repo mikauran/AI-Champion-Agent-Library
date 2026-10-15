@@ -648,12 +648,15 @@ Plans:
 ### Phase 30: Release preparation (clean release branch, production build, PR description, release notes, deploy checklist)
 
 **Goal:** Prepare the release for the publishing repo (PR opened by Ville, published by someone else): a clean release branch with the MCP generator and test queue behind their flags and switched off, a production build with smoke passing, a PR description, release notes (including the agent count) and a deploy checklist. Do not push and do not open PRs.
-**Requirements**: TBD
+**Requirements**: REL-BRANCH, REL-BUILD, REL-DOCS, REL-SWEEP
 **Depends on:** Phase 29
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 30 to break down)
+- [ ] 30-01-PLAN.md — clean local release branch (snapshot, exclusion list) and flag-off proof for MCP_GENERATOR/MCP_TESTER
+- [ ] 30-02-PLAN.md — production build and smoke on the release branch in a worktree, alone, numbers recorded
+- [ ] 30-03-PLAN.md — confidentiality sweep of the release diff, PR-DESCRIPTION, RELEASE-NOTES, DEPLOY-CHECKLIST
+- [ ] 30-04-PLAN.md — verification, STATE/ROADMAP, pending-human items (AGENT_KINDS, internal docs)
 
 
 ## Backlog (noted, postponed, not built)
