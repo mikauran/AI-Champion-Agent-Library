@@ -27,3 +27,7 @@ Total 0.0694 USD. Stack torn down, no aic.tryitout containers.
 ## Deviations
 - Entry `name` is "Product Sourcing MBOM" (not "Product Sourcing (E-BOM to M-BOM)"): the catalog slug is derived from the name and must equal product-sourcing-mbom for UPDATES, the prompt directory and the harness.
 - Three runs (cap of two revisions). Suggested follow-up: deterministic matching tool, model writes the reason only.
+
+## Retry 2026-10-15
+
+Three more live runs (bc11ce1a, 0ab6b5f4, 20061fd7; 0.4527 USD) with a redesigned per-catalog-row Match checks SKILL: still attempted-not-counted (model truncates, splits or skips the 156-line check section; BL-06 `any` equality mis-ticked). Details in 26-VERIFICATION.md. Yaml unchanged, so no golden regeneration.
