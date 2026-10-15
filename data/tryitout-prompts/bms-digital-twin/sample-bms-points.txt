@@ -1,0 +1,20 @@
+# SYNTHETIC SAMPLE - invented data. Point names, assets and the tag hint table are invented; tag names are proposals in a Brick-like style, not validated against any real ontology.
+## POINTS
+point_id,point_name,description,unit
+P-01,AHU-01.SAT,supply air temperature,C
+P-02,AHU-01.SAF,supply fan status,
+P-03,AHU-01.RAT,return air temp,C
+P-04,FAN-03.SPD,fan speed command,rpm
+P-05,AHU-09.SAT,supply air temperature,C
+P-06,RM-201.CO2,room co2,ppm
+## ASSETS
+asset_id,name,kind
+AHU-01,Air handling unit 1,equipment
+FAN-03,Fan 3,equipment
+RM-201,Meeting room 201,space
+## TAG HINTS
+keyword,tag,expected_unit
+supply air temperature,SYN-Supply_Air_Temperature_Sensor,C
+fan status,SYN-Fan_Status,
+fan speed command,SYN-Fan_Speed_Command,%
+co2,SYN-CO2_Sensor,ppm

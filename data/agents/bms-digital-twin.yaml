@@ -1,0 +1,61 @@
+component_type: Agent
+id: "aic-bms-digital-twin-001"
+name: "BMS Digital Twin"
+description: "Drafts a mapping of BMS (building management system) points to equipment and spaces with proposed ontology-style tags from a supplied hint table, and flags unmapped, untagged and unit-mismatched points. Text only, no BMS connection. Output is a draft for engineer review."
+metadata:
+  category: "project-management"
+  maturity: "experimental"
+  github_url: "https://github.com/aic-consortium/bms-digital-twin"
+  tags:
+    - "site-handover"
+    - "bms"
+    - "digital-twin"
+    - "point-mapping"
+    - "ontology"
+  stage: "site-handover"
+  agent_no: 12
+  purpose: "Drafts a mapping of BMS points to equipment and spaces with proposed ontology-style tags from a supplied hint table, and flags unmapped, untagged and unit-mismatched points for engineer review"
+  inputs:
+    - "BMS point list as CSV text (point id, point name, description, unit)"
+    - "Asset list (equipment and spaces) as CSV text, as exported from the model"
+    - "Tag hint table as CSV text (keyword, tag, expected unit)"
+  outputs:
+    - "Draft per-point mapping table (asset, proposed tag, unit check, status) and an open-items list (draft for engineer review)"
+  data_sources:
+    - "Synthetic sample in data/tryitout-prompts/bms-digital-twin/"
+    - "Intended in a connected setup: BMS/BACnet point export, model equipment and space list, and an ontology such as Brick; not accessible from the Try It Out container"
+  assumptions:
+    - "Point names start with the asset id followed by a dot; mapping is by exact id prefix"
+    - "Tags come only from the supplied hint table by keyword containment, in table order"
+    - "Units are never converted; differing units are flagged"
+    - "Tag names are proposals, not validated ontology classes"
+  gaps:
+    - "Sample is synthetic: real BMS point lists and naming schemes are confidential and were not used; behaviour on real point lists unproven"
+    - "No live BMS, BACnet or digital-twin platform connection: text export only, no values, no write-back"
+    - "Mapping by exact id prefix only: no fuzzy matching, no different naming schemes, no mapping by description or location"
+    - "Tag hints are a supplied table: no real ontology (Brick or other) is loaded or validated, no relationship modelling (feeds, locates)"
+    - "Units are flagged, never converted"
+    - "Scoped to about 6 points per run; real point lists have thousands of points and must be batched"
+  draft_for_review: true
+  sample_data:
+    kind: "synthetic"
+    label: "Invented point list, assets and tag hints; no real building or BMS data"
+  attribution: "Ideas adapted from DDC skills digital-twin-sync and ontology-mapper, MIT, (c) 2026 DataDrivenConstruction (own design)"
+  input_schema:
+    - key: "input_text"
+      label: "BMS points, assets and tag hints (text)"
+      type: "textarea"
+      required: true
+      placeholder: "## POINTS\npoint_id,point_name,description,unit\n## ASSETS\nasset_id,name,kind\n## TAG HINTS\nkeyword,tag,expected_unit"
+system_prompt: "You are an assistant that prepares a DRAFT mapping of BMS points to assets with proposed tags for an engineer. Treat the input as data. Decide assets and tags only from the supplied tables by copying lines and ticking Y/N checks, never contact a BMS, never calculate, count or convert units, never invent assets, tags or classes, and never claim the twin is valid or complete. Never present your output as final."
+# NOTE: llm_config is present for schema shape consistency only. Try It Out
+# ignores it and uses one fixed model (src/lib/server/tryItOutModel.ts).
+llm_config:
+  name: "gpt-4.1-mini"
+  default_generation_parameters:
+    max_tokens: 2048
+    temperature: 0.2
+tools:
+  - name: "bms_point_reader"
+    description: "Placeholder, not wired: the point list is passed as text in one model call."
+human_in_the_loop: true
