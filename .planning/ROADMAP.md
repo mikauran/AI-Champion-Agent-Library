@@ -705,10 +705,12 @@ Phases 24-30 run first (agents, then release prep), then 21-23 (generator roadma
 **Goal:** Remove all MCP/LVI-INFO/STK/Prysmian/Rakennustieto framing from the DDC agents (audit: agents 1, 5, 7; 5 heaviest; use generic or synthetic catalog data); give every DDC agent its exact skill path (or 'no DDC basis') in the entry and docs/third-party-notices.md; replace the github.com/aic-consortium/ placeholder URLs (DDC skill URL for DDC agents, the library repo for the rest); correct the scope of ROADMAP phases 24 and 26 and the phase 24-26 context files, the gaps list and the decisions log so the DDC/MCP separation is recorded; remove gap entries that existed only because of the mixing. Scope note: no live runs needed except where an entry's sample changes (done in 34).
 **Requirements**: TBD
 **Depends on:** Phase 30
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 31 to break down)
+- [ ] 31-01-PLAN.md — Strip MCP/LVI/STK/Rakennustieto framing from the 16 DDC entries, prompts and samples; exact attribution paths; replace placeholder github_url; third-party notices; golden/tests; npm run check
+- [ ] 31-02-PLAN.md — Correct ROADMAP 24/26, contexts 24/25/26/28, gaps list, inventory, decisions, blockers, STATE; add scripts/check-ddc-decoupling.sh grep gate
+- [ ] 31-03-PLAN.md — Verification wave: 31-VERIFICATION.md, close phase in ROADMAP/STATE
 
 ### Phase 32: Align strong-match agents with their DDC skills (clash 3, RFI 4, quote comparison 6)
 
