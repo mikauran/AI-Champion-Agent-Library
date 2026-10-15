@@ -66,6 +66,7 @@ SOFTWARE.
 | daily-report-cross-check | 1_DDC_Toolkit/Field-Operations/daily-report-generator; 3_DDC_Insights/Automation-Workflows/n8n-daily-report | 2026-10-15 |
 | punch-list-closure-check | 1_DDC_Toolkit/Field-Operations/punch-list-manager; 1_DDC_Toolkit/Project-Closeout/punch-list-manager | 2026-10-15 |
 | change-order-consistency-check | 1_DDC_Toolkit/Cost-Management/change-order-processor; 4_DDC_Curated/Contract-Legal/change-order-manager | 2026-10-15 |
+| safety-observation-classification | 1_DDC_Toolkit/Field-Operations/safety-inspection; 3_DDC_Insights/Safety-Quality/safety-inspection-checklist | 2026-10-15 |
 | (further entries: Phases 25-29) | | |
 
 ### Skills adapted in this repository
@@ -85,3 +86,4 @@ SOFTWARE.
 - daily-report-cross-check: ideas adapted from DDC skills 1_DDC_Toolkit/Field-Operations/daily-report-generator and 3_DDC_Insights/Automation-Workflows/n8n-daily-report (MIT); own design; no DDC code or text copied
 - punch-list-closure-check: ideas adapted from DDC skills 1_DDC_Toolkit/Field-Operations/punch-list-manager and 1_DDC_Toolkit/Project-Closeout/punch-list-manager (MIT); own design; no DDC code or text copied
 - change-order-consistency-check: ideas adapted from DDC skills 1_DDC_Toolkit/Cost-Management/change-order-processor and 4_DDC_Curated/Contract-Legal/change-order-manager (MIT); own design; no DDC code or text copied
+- safety-observation-classification: ideas adapted from DDC skills 1_DDC_Toolkit/Field-Operations/safety-inspection and 3_DDC_Insights/Safety-Quality/safety-inspection-checklist (MIT); own design; no DDC code or text copied

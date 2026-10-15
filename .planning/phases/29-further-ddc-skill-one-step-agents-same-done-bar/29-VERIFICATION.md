@@ -72,3 +72,22 @@ COUNTED (SKILL v1, first run, rubric R1-R7 met).
 - Caveat: draft for reviewer; counted for the scoped step only (6 log rows, one synthetic sample, first run).
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: one 29-03 row (0.0211 USD).
+
+### Agent 16: Safety observation classification
+COUNTED (SKILL v1, first run, rubric R1-R7 met). Caveat: the category table in the sample is an invented placeholder, not a safety standard.
+
+- Entry: data/agents/safety-observation-classification.yaml (validate-submission INGESTIBLE, validate-entries 0 errors; stage site-handover, agent_no 16; name "Safety Observation Classification" so the slug is safety-observation-classification, confirmed by tryout:configure). DDC paths 1_DDC_Toolkit/Field-Operations/safety-inspection and 3_DDC_Insights/Safety-Quality/safety-inspection-checklist both verified present with gh api; incident-reporting deliberately not used. Input label: synthetic (data/tryitout-prompts/safety-observation-classification/sample-safety-observations.txt: 6-line placeholder category table, 6 invented observations, no persons). Option A, gpt-4.1-mini, Pi container, 3 requests, usage observed (countable).
+- Run: job c5bc6732-80ee-424f-aa80-e1b276eb3008, SKILL v1, 11149 tokens, est. 0.0178 USD, 12.5 s. No FAILed runs, no revisions, no scope-shrink retry.
+- Answer key vs result: S-01 fall-protection/high matched, S-02 electrical/high multi-match (also matches wet (housekeeping)), S-03 housekeeping/low matched, S-04 UNCLASSIFIED/NONE no-match, S-05 ppe/medium matched, S-06 excavation/high matched: all six match.
+- Verdict: R1 pass (one result.md; 6 check lines and 6 table rows S-01..S-06 in order, 8 cells each); R2 pass (every first_line verbatim from the table); R3 pass; R4 pass (review NO only S-03, S-05); R5 pass (open items S-01, S-02, S-04, S-06); R6 pass (no counts, ranking, advice, danger, incident or reporting statement, no category outside the table, no persons); R7 pass (draft caveat present).
+- Excerpt:
+  ```
+  S-02 text="Extension cord frayed near wet area" | hits=cord,wet | first_line="cord,electrical,high" cat=electrical sev=high | multi=Y | high=Y | status=multi-match
+  S-02 | Level 1 plant room | electrical | high | cord | multi-match | YES | also matches wet (housekeeping)
+  S-04 | Yard | UNCLASSIFIED | NONE | NONE | no-match | YES | -
+  S-05 | Gate | ppe | medium | hard hat | matched | NO | -
+  Draft for safety officer review. Categories and severity hints come only from the supplied placeholder table; no safety assessment was made.
+  ```
+- Caveat: draft for safety officer review; counted for the scoped step only (6 observations, one synthetic sample, placeholder table, first run).
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: one 29-04 row (0.0178 USD).
