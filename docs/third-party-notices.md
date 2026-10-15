@@ -82,6 +82,7 @@ Notes:
 - material-delivery-check (Phase 35) is built on `material-delivery-tracker`: the delivery and item data model, the status words and the completeness rule (received >= ordered) are the skill's; its code is not copied and its storage planning is not adopted.
 - qc-inspection-record-check (Phase 35) is built on `quality-control-workflow`: the inspection, defect and NCR data model, the status and severity words and the hold-point sign-off rule are the skill's; its code is not copied and its scheduling, metrics and report are not adopted.
 - warranty-register-check (Phase 35) is built on `warranty-tracker`: the warranty record, the type and system words and the status rule (expired, expiring within 90 days, active) are the skill's; its code is not copied and its claim workflow is not adopted.
+- Agents 13-20 (Phases 29 and 35): the label of each entry (built on, inspired by, loosely related to) is worded identically in the entry attribution, this file, the inventory and docs/ddc-alignment/<slug>.md; the selection and the rejected candidates are in docs/ddc-agent-candidates.md.
 - Phase 34: labels for agents 1, 5, 8, 9 and 10 are worded identically in each entry, this file and the inventory (own designs; none claims to follow a skill).
 - spooling-and-cutting and d2-code-validation have no DDC counterpart and keep the library repository as their `github_url`.
 - The nine older entries (airo, demo-rfi-triage and seven seed entries) are not adapted from DDC skills.
