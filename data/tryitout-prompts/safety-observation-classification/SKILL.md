@@ -59,4 +59,4 @@ Worked rows (invented):
 
 End with: `Draft for safety officer review. Categories and severity hints come only from the supplied placeholder table; no safety assessment was made.`
 
-Ideas adapted from DDC skills safety-inspection (Field-Operations) and safety-inspection-checklist (Safety-Quality) (MIT, (c) 2026 DataDrivenConstruction); own design.
+Own design, loosely related to DDC skills safety-inspection (Field-Operations) and safety-inspection-checklist (Safety-Quality) (MIT, (c) 2026 DataDrivenConstruction); the keyword lookup is own.

@@ -1,7 +1,7 @@
 component_type: Agent
 id: "aic-safety-observation-classification-001"
 name: "Safety Observation Classification"
-description: "Labels site safety observations with a category and severity hint taken from a supplied keyword table and flags unmatched or ambiguous ones for safety officer review. Lookup only, no safety advice or incident determination. Output is a draft."
+description: "Labels site safety observations with a category and severity hint taken from a supplied keyword table and flags unmatched or ambiguous ones for safety officer review. Lookup only, no safety advice or incident determination. Own design, loosely related to 1_DDC_Toolkit/Field-Operations/safety-inspection (+ 3_DDC_Insights/Safety-Quality/safety-inspection-checklist). Output is a draft."
 metadata:
   category: "project-management"
   maturity: "experimental"
@@ -38,7 +38,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented observations and placeholder category table; no real site data, not a safety standard"
-  attribution: "Adapted from DDC skills 1_DDC_Toolkit/Field-Operations/safety-inspection and 3_DDC_Insights/Safety-Quality/safety-inspection-checklist (MIT, (c) 2026 DataDrivenConstruction); categories are own design; no DDC code copied"
+  attribution: "loosely related to 1_DDC_Toolkit/Field-Operations/safety-inspection (+ 3_DDC_Insights/Safety-Quality/safety-inspection-checklist) (MIT, (c) 2026 DataDrivenConstruction); the DDC skills are checklist inspections and do not classify free-text observations; the keyword lookup is own design; shared: topic and severity words; no DDC code copied, no book text"
   input_schema:
     - key: "input_text"
       label: "Category table and safety observations (text)"

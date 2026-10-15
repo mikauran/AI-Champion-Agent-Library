@@ -1,7 +1,7 @@
 component_type: Agent
 id: "aic-change-order-consistency-check-001"
 name: "Change Order Consistency Check"
-description: "Reconciles a change-order log with the change-order forms and drafts a consistent, amount-mismatch, approval-incomplete or no-form verdict per row with the quoted form line for review. Amounts are compared as identical text, never summed or converted. Output is a draft."
+description: "Reconciles a change-order log with the change-order forms and drafts a consistent, amount-mismatch, approval-incomplete or no-form verdict per row with the quoted form line for review. Amounts are compared as identical text, never summed or converted. Own design, inspired by 1_DDC_Toolkit/Cost-Management/change-order-processor. Output is a draft."
 metadata:
   category: "project-management"
   maturity: "experimental"
@@ -38,7 +38,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented change-order log and forms; no real project data"
-  attribution: "Adapted from DDC skill 1_DDC_Toolkit/Cost-Management/change-order-processor (MIT, (c) 2026 DataDrivenConstruction); no DDC code copied; 4_DDC_Curated/Contract-Legal/change-order-manager not used (third-party source licence)"
+  attribution: "inspired by 1_DDC_Toolkit/Cost-Management/change-order-processor (MIT, (c) 2026 DataDrivenConstruction); idea taken: approved status with approved_by and approval date; own design: log-versus-form reconciliation, signed column and verdicts; change-order-manager and change-order-analysis were read and are not the basis; no DDC code copied, no book text"
   input_schema:
     - key: "input_text"
       label: "Change-order log and forms (text)"

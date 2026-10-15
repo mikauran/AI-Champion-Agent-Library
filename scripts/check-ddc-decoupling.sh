@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gate for phase 31: the 16 DDC-based agents contain nothing from the MCP work
+# Gate for phases 31 and 35: the DDC-based agents (entries, prompts and alignment specs) contain nothing from the MCP work
 # (MCP servers, LVI-INFO, the electrical-catalog source, Prysmian, Rakennustieto). Run from the repo root.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -13,6 +13,7 @@ FILES=()
 for s in $SLUGS; do
   FILES+=("data/agents/$s.yaml")
   [ -d "data/tryitout-prompts/$s" ] && FILES+=("data/tryitout-prompts/$s")
+  [ -f "docs/ddc-alignment/$s.md" ] && FILES+=("docs/ddc-alignment/$s.md")
 done
 
 status=0

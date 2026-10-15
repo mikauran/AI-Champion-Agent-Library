@@ -65,10 +65,10 @@ Paths are relative to the DDC repository root. "Built on the skill" means the sk
 | d2-code-validation | none | no DDC basis (own design); D2 = Finnish National Building Code part D2 (indoor climate and ventilation), unconfirmed; alternatives open (Alok/Jussi to confirm) |
 | om-completeness | 5_DDC_Innovative/as-built-documentation; 1_DDC_Toolkit/Project-Closeout/project-closeout-checklist | adapted |
 | bms-digital-twin | 5_DDC_Innovative/digital-twin-sync | adapted |
-| daily-report-cross-check | 1_DDC_Toolkit/Field-Operations/daily-report-generator; 3_DDC_Insights/Automation-Workflows/n8n-daily-report | adapted |
-| punch-list-closure-check | 1_DDC_Toolkit/Field-Operations/punch-list-manager | adapted |
-| change-order-consistency-check | 1_DDC_Toolkit/Cost-Management/change-order-processor | adapted |
-| safety-observation-classification | 1_DDC_Toolkit/Field-Operations/safety-inspection; 3_DDC_Insights/Safety-Quality/safety-inspection-checklist | adapted |
+| daily-report-cross-check | 1_DDC_Toolkit/Field-Operations/daily-report-generator; 3_DDC_Insights/Automation-Workflows/n8n-daily-report | loosely related to 1_DDC_Toolkit/Field-Operations/daily-report-generator (+ 3_DDC_Insights/Automation-Workflows/n8n-daily-report); weak match, topic only; own design |
+| punch-list-closure-check | 1_DDC_Toolkit/Field-Operations/punch-list-manager; 1_DDC_Toolkit/Project-Closeout/punch-list-manager | inspired by 1_DDC_Toolkit/Field-Operations/punch-list-manager (+ 1_DDC_Toolkit/Project-Closeout/punch-list-manager); idea only, closure rules own design |
+| change-order-consistency-check | 1_DDC_Toolkit/Cost-Management/change-order-processor | inspired by 1_DDC_Toolkit/Cost-Management/change-order-processor; idea only, log-versus-form check own design; change-order-manager and change-order-analysis read, not the basis |
+| safety-observation-classification | 1_DDC_Toolkit/Field-Operations/safety-inspection; 3_DDC_Insights/Safety-Quality/safety-inspection-checklist | loosely related to 1_DDC_Toolkit/Field-Operations/safety-inspection (+ 3_DDC_Insights/Safety-Quality/safety-inspection-checklist); weak match, topic only; keyword lookup own design |
 
 Notes:
 

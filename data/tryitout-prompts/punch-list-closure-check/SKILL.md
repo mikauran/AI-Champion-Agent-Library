@@ -73,4 +73,4 @@ Worked rows (invented):
 
 End with: `Draft for engineer review. Verdicts come only from the supplied punch list and as_of date using placeholder closure rules.`
 
-Ideas adapted from DDC skills punch-list-manager (Field-Operations and Project-Closeout) (MIT, (c) 2026 DataDrivenConstruction); own design.
+Own design, inspired by DDC skills punch-list-manager (Field-Operations and Project-Closeout) (MIT, (c) 2026 DataDrivenConstruction); the closure rules are own placeholders.

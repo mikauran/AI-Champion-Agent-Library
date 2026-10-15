@@ -62,4 +62,4 @@ Worked rows (invented):
 
 End with: `Draft for site manager review. Verdicts come only from the supplied report lines and timesheet extract.`
 
-Ideas adapted from DDC skills daily-report-generator and n8n-daily-report (MIT, (c) 2026 DataDrivenConstruction); own design.
+Own design, loosely related to DDC skills daily-report-generator and n8n-daily-report (MIT, (c) 2026 DataDrivenConstruction); those skills generate reports and do not cross-check them.

@@ -72,4 +72,4 @@ Worked rows (invented):
 
 End with: `Draft for reviewer. Verdicts come only from the supplied log and forms; no pricing or contract assessment was made.`
 
-Ideas adapted from DDC skills change-order-processor (Cost-Management) and change-order-manager (Contract-Legal) (MIT, (c) 2026 DataDrivenConstruction); own design.
+Own design, inspired by DDC skill change-order-processor (Cost-Management) (MIT, (c) 2026 DataDrivenConstruction); the log-versus-form check is own.

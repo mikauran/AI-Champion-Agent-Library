@@ -27,7 +27,7 @@ Skill: weighted comparison table, bid details, recommendation. Agent (one `outpu
 
 ## 4. Finnish MEP adaptation
 
-Criteria names suggested for the engineer's table: price, delivery_time, technical_compliance (with the RFQ items), references (experience), warranty. Weights are the engineer's. EUR and VAT basis stay in the existing quote basis table (currency, vat, delivery_terms compared with the first quote); RFQ lines are LVI/ventilation, sprinkler and electrical items (the synthetic sample uses copper pipe, valves, pump, clamp, floor drain). Safety record and capacity criteria of the skill are not defaults; they can be added by the engineer as rows.
+Criteria names suggested for the engineer's table: price, delivery_time, technical_compliance (with the RFQ items), references (experience), warranty. Weights are the engineer's. EUR and VAT basis stay in the existing quote basis table (currency, vat, delivery_terms compared with the first quote); RFQ lines are HVAC and ventilation, sprinkler and electrical items (the synthetic sample uses copper pipe, valves, pump, clamp, floor drain). Safety record and capacity criteria of the skill are not defaults; they can be added by the engineer as rows.
 
 ## 5. Deliberately different
 

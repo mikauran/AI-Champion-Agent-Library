@@ -1,7 +1,7 @@
 component_type: Agent
 id: "aic-punch-list-closure-check-001"
 name: "Punch List Closure Check"
-description: "Checks punch list items against simple closure rules and an as-of date and drafts a closed-ok, closed-unverified, overdue, open-ok or no-responsible verdict per item with the reason for engineer review. Dates are compared as ISO text, never counted. Output is a draft."
+description: "Checks punch list items against simple closure rules and an as-of date and drafts a closed-ok, closed-unverified, overdue, open-ok or no-responsible verdict per item with the reason for engineer review. Dates are compared as ISO text, never counted. Own design, inspired by 1_DDC_Toolkit/Field-Operations/punch-list-manager (+ 1_DDC_Toolkit/Project-Closeout/punch-list-manager). Output is a draft."
 metadata:
   category: "project-management"
   maturity: "experimental"
@@ -38,7 +38,7 @@ metadata:
   sample_data:
     kind: "synthetic"
     label: "Invented punch list with an as-of date; placeholder closure rules; no real project data"
-  attribution: "Adapted from DDC skill 1_DDC_Toolkit/Field-Operations/punch-list-manager (MIT, (c) 2026 DataDrivenConstruction); closure rules are own design; no DDC code copied"
+  attribution: "inspired by 1_DDC_Toolkit/Field-Operations/punch-list-manager (+ 1_DDC_Toolkit/Project-Closeout/punch-list-manager) (MIT, (c) 2026 DataDrivenConstruction); idea taken: responsible party, due date, completion plus verification, overdue against a date; own design: open/closed vocabulary, closure rules and verdicts, as-of date instead of today; no DDC code copied, no book text"
   input_schema:
     - key: "input_text"
       label: "Punch list and as-of date (text)"
