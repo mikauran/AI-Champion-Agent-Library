@@ -114,3 +114,6 @@ Draft for engineer review. Bindings and tags are proposals from the supplied hin
 - Caveat: draft for engineer review; synthetic input, readings and limits invented; no live BMS, no staleness check; tags are proposals, not validated ontology classes. One passing run on 6 points is evidence that the design is workable, not a reliability claim.
 - Teardown: `podman-compose ... down` done, `podman ps -a --filter label=aic.tryitout -q` empty.
 - Tests: src/lib/bms/pointStatus.test.ts (13), scripts/ddc-alignment.bms-digital-twin.test.ts (8), validators, scripts/check-ddc-decoupling.sh clean, golden diff limited to this entry.
+
+## Phase result (aggregated)
+All four moderate-match agents aligned and counted on the first live run: 2 QTO (bim-qto primary), 7 Carbon & EPD (lifecycle-carbon-calculator, tested helper), 11 O&M (as-built-documentation + project-closeout-checklist), 12 BMS twin (digital-twin-sync, loose match; tested helper). `npm run check` green (309 files, 3707 tests). Reliability: one run each on synthetic samples.
