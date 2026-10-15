@@ -742,12 +742,14 @@ Plans:
 ### Phase 34: Own-design agents relabelled and cleaned (ETIM 1, sourcing 5, cut-sheet 8, spooling 9, D2 10)
 
 **Goal:** Keep agents 1 ETIM, 5 E-BOM to M-BOM, 8 Cut-sheet QA, 9 Spooling and cutting, 10 D2 code validation as own designs; label each 'inspired by <skill path>' or 'no DDC basis'; agent 5 loses MCP framing and uses generic or synthetic catalog data; agent 10 keeps the D2 assumption visible in the entry. Same done bar for changed entries.
-**Requirements**: TBD
+**Requirements**: DDC-34-LABELS, DDC-34-ETIM, DDC-34-SOURCING, DDC-34-CUTSHEET, DDC-34-SPOOLING, DDC-34-D2, DDC-34-VERIFY
 **Depends on:** Phase 33
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 34 to break down)
+- [ ] 34-01-PLAN.md — Labels for agents 1, 5, 8, 9, 10 in entries, third-party notices and inventory; label test, D2 assumption visible
+- [ ] 34-02-PLAN.md — Live reruns for agents 1 ETIM, 5 E-BOM to M-BOM, 8 Cut-sheet QA (sequential, evidence)
+- [ ] 34-03-PLAN.md — Live reruns for agents 9, 10; aggregation, npm run check, 34-VERIFICATION, STATE and ROADMAP close
 
 ### Phase 35: Phase 29 extras verified against real skills and further self-contained DDC skill agents
 
