@@ -49,7 +49,12 @@ export function clean(s: unknown): string {
 
 export const defaultIo: CliIo = {
   readFile: (p) => readFile(p, 'utf8'),
-  fileSize: async (p) => (await stat(p)).size,
+  fileSize: async (p) => {
+    const st = await stat(p)
+    // A FIFO or device reports size 0 and a read would never end (CR-55b).
+    if (!st.isFile()) throw new Error('the input is not a regular file')
+    return st.size
+  },
   readdir: async (p) => {
     try {
       return await readdir(p)
@@ -58,7 +63,15 @@ export const defaultIo: CliIo = {
       throw e
     }
   },
-  writeFile: (p, c) => writeFile(p, c, 'utf8'),
+  writeFile: async (p, c) => {
+    // --force writes into an existing directory: never through a symlink an earlier run or a stranger left there (CR-55c).
+    try {
+      if ((await lstat(p)).isSymbolicLink()) throw new Error('refusing to write through a symbolic link')
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException)?.code !== 'ENOENT') throw e
+    }
+    await writeFile(p, c, 'utf8')
+  },
   mkdir: async (p) => {
     await mkdir(p, { recursive: true })
   },
@@ -268,7 +281,7 @@ export async function main(argv: string[], io: CliIo = defaultIo): Promise<numbe
     }
     if (!(await writeFiles(io, args.out!, result.files, args.force, 'generate-mcp'))) return 2
     const r = result.report
-    io.log(`Generated ${result.files.length} files in ${args.out} (adapter: ${clean(result.adapterId)}).`)
+    io.log(`Generated ${result.files.length} files in ${clean(args.out)} (adapter: ${clean(result.adapterId)}).`)
     io.log(`Tools: ${r.toolsEmitted.map(clean).join(', ') || '(none)'}`)
     if (r.toolsDropped.length > 0) {
       io.log('Dropped:')
