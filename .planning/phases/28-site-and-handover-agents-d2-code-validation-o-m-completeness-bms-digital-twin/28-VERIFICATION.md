@@ -33,3 +33,22 @@ COUNTED (SKILL revision 1, second run, rubric R1-R7 met).
 - Caveat: draft for engineer review; counted for the scoped step only (6 requirement rows, one synthetic sample, second run after one revision). Requirement values are invented placeholders; no real regulation values were used or looked up; the D2 interpretation (Finnish code part D2, indoor climate and ventilation) is an assumption.
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: two 28-01 rows (0.0193 and 0.0204 USD).
+
+### Agent 11: O&M completeness
+COUNTED (SKILL v1, first run, rubric R1-R7 met).
+
+- Entry: data/agents/om-completeness.yaml (validate-submission INGESTIBLE, validate-entries 0 errors; stage site-handover, agent_no 11; name "OM Completeness" so the slug is om-completeness). Input label: synthetic (data/tryitout-prompts/om-completeness/sample-handover-index.txt: 6 placeholder required rows, 7-line invented delivered index). Option A, gpt-4.1-mini, Pi container, 3 requests, usage observed (countable).
+- Run: job 20b66bce-6eea-472f-9f1b-a0a0c5b9b16d, SKILL v1, 10903 tokens, est. 0.0174 USD, 16.6 s. No FAILed runs, no revisions.
+- Answer key vs result: H-01 complete, H-02 incomplete (draft), H-03 missing (AHU-02 line not used), H-04 complete, H-05 incomplete (unsigned), H-06 missing: all six match.
+- Verdict: R1 pass (one result.md; 6 check lines and 6 table rows H-01..H-06 in order); R2 pass (every non-NONE index_line verbatim); R3 pass; R4 pass (H-03 and H-06 NONE, review NO only H-01, H-04); R5 pass (no rows for spare-parts-list or FAN-03 operating-manual; open items H-02, H-03, H-05, H-06); R6 pass (no counts, percentage or handover verdict; no content claim); R7 pass (draft caveat).
+- Excerpt:
+  ```
+  H-03 eq=AHU-01 doc=commissioning-report | ix_line=NONE ix_status=NONE | status_final=- | status=missing
+  H-05 eq=PMP-02 doc=warranty-certificate | ix_line="PMP-02,warranty-certificate,SYN-DOC-302,unsigned" ix_status=unsigned | status_final=N | status=incomplete
+  H-02 | AHU-01 | Air handling unit 1 | maintenance-plan | AHU-01,maintenance-plan,SYN-DOC-102,draft | incomplete | YES | status draft not final
+  Open items: H-02 incomplete; H-03 missing; H-05 incomplete; H-06 missing
+  Draft for handover engineer review. Statuses come only from the supplied checklist and index; document content was not checked.
+  ```
+- Caveat: draft for engineer review; counted for the scoped step only (6 required rows, one synthetic sample, first run). The checklist is an invented placeholder; `final` in the index is taken at face value, content not checked.
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: one 28-02 row (0.0174 USD).

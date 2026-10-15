@@ -77,3 +77,10 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-070 | 10 D2 code validation | Units are flagged, never converted (a deterministic unit tool is the proper place) | tool | open | Phase 28 | open |
 | G-071 | 10 D2 code validation | Scoped to about 6 requirement rows per run; larger sets must be batched | tool | open | Phase 28 | open |
 | G-072 | 10 D2 code validation | Counted on the second run (job 2231091f) after one SKILL revision: SKILL v1 (job 86ff272e) missed a same-room same-key line with another unit (Q-04, not-stated instead of unit-differs deviation); fixed by an explicit scan rule and a worked line; still one synthetic sample of 6 rows, real extracts unproven | tool | open | Phase 28 | open |
+| G-073 | 11 O&M completeness | Sample is synthetic: real handover indexes and document sets are confidential and were not used; behaviour on real indexes unproven | data | open | Phase 28 | open |
+| G-074 | 11 O&M completeness | Index only: document content (is the manual actually complete and correct) is not checked, no PDF reading | tool | open | Phase 28 | open |
+| G-075 | 11 O&M completeness | The checklist is a placeholder: no real handover requirement set (contract, standard) is loaded and the agent does not derive what documents an equipment class needs | data | open | Phase 28 | open |
+| G-076 | 11 O&M completeness | Exact-text id and document type matching; no synonyms, multilingual or revision-aware matching | tool | open | Phase 28 | open |
+| G-077 | 11 O&M completeness | No document management system or COBie-style export connection | tool | open | Phase 28 | open |
+| G-078 | 11 O&M completeness | Scoped to about 6 required rows per run; larger checklists must be batched | tool | open | Phase 28 | open |
+| G-079 | 11 O&M completeness | Counted on the first run (job 20b66bce, SKILL v1, all six statuses right, cross-equipment line not used); still one synthetic sample of 6 rows, real handover indexes unproven | tool | open | Phase 28 | open |
