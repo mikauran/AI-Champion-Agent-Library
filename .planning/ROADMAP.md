@@ -598,7 +598,7 @@ Phases execute in numeric order, with decimal phases between their integers: 1, 
 
 ### Phase 24: Agent inventory, catalog entry template, MCP-server entries and DDC license check
 
-**Goal:** Audit which of the 12 consortium agents already exist fully or partly in data/agents (e.g. RFI triage, HVAC, submittal review); define the catalog entry template (purpose, stage, inputs, outputs, data sources, assumptions, gaps; every output is a draft for engineer review); add Ville's own MCP agents (stk-mcp and others from ~/projects/mcp-gen-comparison and -2) as MCP-server kind entries; check the DDC_Skills_for_AI_Agents_in_Construction license and record attribution; start the combined gaps list for Ville and Jussi (docs/consortium-agents-gaps.md). Source slide is TUNI-confidential: names only, own wording, slide never committed. Spend: $0.50 per agent run, $10 total, running log in STATE.md.
+**Goal:** Audit which of the 12 consortium agents already exist fully or partly in data/agents (e.g. RFI triage, HVAC, submittal review); define the catalog entry template (purpose, stage, inputs, outputs, data sources, assumptions, gaps; every output is a draft for engineer review); MCP-server entries (stk-mcp and others) are separate work, handled in Phase 36, and are not part of the DDC agent set (corrected 2026-10-15, Phase 31; the three entries were added here originally); check the DDC_Skills_for_AI_Agents_in_Construction license and record attribution; start the combined gaps list for Ville and Jussi (docs/consortium-agents-gaps.md). Source slide is TUNI-confidential: names only, own wording, slide never committed. Spend: $0.50 per agent run, $10 total, running log in STATE.md.
 **Requirements**: CONS-INV, CONS-TPL, CONS-MCP, CONS-GAPS, CONS-LIC
 **Depends on:** Phase 23
 **Plans:** 3 plans
@@ -625,7 +625,7 @@ Plans:
 
 ### Phase 26: Sourcing-stage agents (product sourcing E-BOM to M-BOM, quote comparison, carbon and EPD enrichment)
 
-**Goal:** Build or complete agents 5 Product sourcing (E-BOM to M-BOM), 6 Quote comparison, 7 Carbon & EPD enrichment (LVI-INFO catalog stage). Use Ville's MCP servers (stk-mcp etc.) for catalog data where applicable. Same done bar, data labelling and gap recording as Phase 25.
+**Goal:** Build or complete agents 5 Product sourcing (E-BOM to M-BOM), 6 Quote comparison, 7 Carbon & EPD enrichment (corrected 2026-10-15, Phase 31: no MCP servers or LVI-INFO/STK data; catalog and EPD data are generic synthetic excerpts, MCP work is separate, Phase 36). Same done bar, data labelling and gap recording as Phase 25.
 **Requirements**: CONS-A5, CONS-A6, CONS-A7, CONS-VER
 **Depends on:** Phase 25
 **Plans:** 4 plans

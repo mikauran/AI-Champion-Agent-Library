@@ -6,14 +6,7 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | --- | --- | --- | --- | --- | --- | --- |
 | G-001 | 1-3, 5-7, 9-12 | No catalog entry yet for the agents with status missing (see the inventory); agents 4 and 8 are partial. | data | Ville | Phase 24 | open |
 | G-002 | all | The extra template fields under `metadata` (stage, inputs, outputs, gaps and so on) are not rendered by the detail page; no UI change in Phase 24. | UI | open | Phase 24 | open |
-| G-003 | 5 Product sourcing | stk-mcp reads a local product-catalog Excel file (the Finnish electrical product database) that is not public, so no sample runs or data can be stored in the repo. | data | Ville | Phase 24 | open |
-| G-004 | MCP servers | `kind: mcp-server` entries are only visible with `AGENT_KINDS=on`; with the flag off they are valid files but not listed. | tool | open | Phase 24 | open |
-| G-005 | 5 Product sourcing | Question for Ville: choice made in Plan 24-03 to catalogue stk-mcp (gsd-only arm, recommended), stk-catalog-mcp (codex arm) and the hand-authored arm as the canonical LVI-INFO server (lvi-info-mcp). Please confirm or name a different arm. | question | Ville | Phase 24 | open |
-| G-006 | 5 Product sourcing | The five other LVI-INFO arms (gsd, plain, mcpybarra, from_openapi, openapi-mcp-generator) are not catalogued; add them if wanted. | tool | Ville | Phase 24 | open |
-| G-007 | 5 Product sourcing | stk-catalog-mcp has no tests. | tool | Ville | Phase 24 | open |
-| G-008 | MCP servers | The existing ingest tests `scripts/ingest.kinds.test.ts` and `scripts/ingest.allformats.hinted.test.ts` assert that the flag-on catalog from `data/agents` equals the flag-off catalog, which the three new mcp-server directories break (see .planning/AUTONOMOUS-BLOCKERS.md B-004). | tool | open | Phase 24 | open |
 | G-009 | 1 ETIM & classification repair | No live ETIM release: ETIM is licensed and not redistributed; the sample uses a small synthetic SYN- class list. | data | Ville | Phase 25 | open |
-| G-010 | 1 ETIM & classification repair | No MCP class lookup from the container (no network except the LLM proxy); LVI-INFO/stk-mcp search is done by the engineer or an excerpt is pasted into the input. | tool | open | Phase 25 | open |
 | G-011 | 1 ETIM & classification repair | Input is text extracted from IFC; real IFC parsing is out of scope. | tool | open | Phase 25 | open |
 | G-012 | 1 ETIM & classification repair | No feature-value validation against a real class definition; one model call, no per-element tool use. | tool | open | Phase 25 | open |
 | G-013 | 2 QTO normalization | No access to the BIM model: cannot check quantities against geometry. | data | open | Phase 25 | open |
@@ -33,8 +26,6 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-027 | 4 RFI generation | No project directory: addressed party is a discipline/role | data | open | Phase 25 | open |
 | G-028 | 4 RFI generation | Chaining from agent 3 is manual (paste its findings table); agent 3 is attempted-not-counted, so findings come from a manual list for now | process | open | Phase 25 | open |
 | G-029 | 3 Clash prioritization | The sample adds a hand-made location_key column (shared element or level/grid) that defines the clusters; real clash exports (Navisworks, BCF) have no such column and need a preprocessing step to compute it. | tool | open | Phase 25 | open |
-| G-030 | 5 Product sourcing | No live catalog access: the Pi container reaches only the LLM proxy, so stk-mcp and lvi-info-mcp cannot be called; the catalog excerpt is pasted as text | data | open | Phase 26 | open |
-| G-031 | 5 Product sourcing | Excerpt is synthetic: real LVI-INFO and Finnish product-catalog data is confidential or keyed and was not used; behaviour on a real export unproven | data | open | Phase 26 | open |
 | G-032 | 5 Product sourcing | Matching is exact equality: no synonyms, no multi-attribute scoring, no ETIM feature validation | tool | open | Phase 26 | open |
 | G-033 | 5 Product sourcing | Unit mismatches are flagged, never converted (pack sizes, coils) | tool | open | Phase 26 | open |
 | G-034 | 5 Product sourcing | No price, lead-time or availability reasoning; in_stock is copied only | data | open | Phase 26 | open |
@@ -48,7 +39,6 @@ Combined gaps list for Ville and Jussi. One row per gap. Source slide is confide
 | G-041 | 6 Quote comparison | Substitution detection is by visible model or size text only; technical equivalence is not assessed | tool | open | Phase 26 | open |
 | G-042 | 6 Quote comparison | Comparison of more than 3 quotes or more than about 40 lines is unproven (one model call, 200 KB upload cap) | tool | open | Phase 26 | open |
 | G-043 | 6 Quote comparison | SKILL v1 run (job c1bb118d) failed the rubric: the model wrote code=22/22 with code_same=N and named a lowest price from a single eligible offer; fixed by an agreement rule and a closing lowest= line per RFQ line (job eaee09d8 passed). Multi-condition steps still need copyable per-row checks. | tool | open | Phase 26 | open |
-| G-044 | 7 Carbon & EPD enrichment | No live EPD register access: the Pi container reaches only the LLM proxy, so EPD Finland (Rakennustieto), EPD Norway and ECO Platform data must be pasted as an excerpt | data | open | Phase 26 | open |
 | G-045 | 7 Carbon & EPD enrichment | EPD values in the sample are synthetic and not authoritative; real EPD numbers were not used and licence/reuse terms of the registers are unchecked | data | open | Phase 26 | open |
 | G-046 | 7 Carbon & EPD enrichment | No calculation by design: quantity x GWP totals and unit conversions (kg vs t, m2 vs kg per m2) are left to a script or the engineer | tool | open | Phase 26 | open |
 | G-047 | 7 Carbon & EPD enrichment | Only module A1-A3 is read; no A4-C4, no biogenic carbon, no scenario or generic-data fallback | data | open | Phase 26 | open |
@@ -126,3 +116,7 @@ Agents 13-16 are chosen from the DDC skills (see docs/ddc-agent-candidates.md); 
 | G-112 | 16 Safety observation classification | No photo, location or hazard-ranking inputs; no corrective action tracking (DDC safety-inspection features not adopted) | tool | open | Phase 29 | open |
 | G-113 | 16 Safety observation classification | Scoped to about 6 observations and a table of about 6 lines per run; real logs must be batched | tool | open | Phase 29 | open |
 | G-114 | 16 Safety observation classification | Counted on the first run (job c5bc6732, SKILL v1, all six categories, severity hints, statuses and the multi-match note right, no advice or incident statement); still one synthetic sample of 6 observations with a placeholder table, real logs unproven | tool | open | Phase 29 | open |
+
+## Changelog
+
+- 2026-10-15 (phase 31, MCP separation): removed rows G-003, G-004, G-005, G-006, G-007, G-008, G-010, G-030, G-031 and G-044. They existed only because MCP servers (stk-mcp, stk-catalog-mcp, lvi-info-mcp) and LVI-INFO/STK/Rakennustieto data were mixed into the DDC-based agents; G-004, G-007 and G-008 concern the MCP-server entries and belong to Phase 36 (MCP work is separate). IDs are not renumbered, so the gaps in the numbering are intentional. G-037 appears twice (agent 5 and agent 6) from the original list and is left as is.

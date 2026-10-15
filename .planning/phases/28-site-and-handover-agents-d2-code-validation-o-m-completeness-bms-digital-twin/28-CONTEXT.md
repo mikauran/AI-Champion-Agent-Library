@@ -8,3 +8,7 @@ Gathered unattended (auto mode). Inherits Phases 25-27 contexts, summaries and l
 - A-03 Agent 12 "BMS digital twin": reads a BMS point list (point names/descriptions/units) and an equipment/space list (as from the model) and drafts a point-to-equipment/space mapping with an ontology-style tag proposal (e.g. Brick-like class names), flagging unmappable/ambiguous points. No live BMS connection; text only. Real BMS/BACnet/twin integration is a gap.
 - A-04 Real data are consortium-confidential: synthetic samples only; labelled.
 - A-05 Same harness, procedure, done bar, bump list, evidence files as phases 25-27. One plan per agent plus aggregation; container runs sequential. DDC skills: look for O&M, handover, commissioning, BMS, ventilation, building code skills (MIT; no cwicr/book).
+
+## Corrected 2026-10-15 (Phase 31)
+
+This context was reviewed for the DDC/MCP mixing: it contains none. The only open item is A-01, the reading of "D2" as the Finnish building code part D2: it stays an unconfirmed assumption (the entry says so; no DDC skill covers it, attribution is "no DDC basis"). The phrase "consortium-confidential" in A-04 was removed from the entries in Phase 31 (D-634); the text above is kept as history.

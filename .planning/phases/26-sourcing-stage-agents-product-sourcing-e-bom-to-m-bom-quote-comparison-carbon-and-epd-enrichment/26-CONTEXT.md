@@ -14,3 +14,7 @@ Agents 5 Product sourcing (E-BOM to M-BOM), 6 Quote comparison, 7 Carbon & EPD e
 - A-06: Design lesson applied: one output row per input item in input order, fixed per-row checklist, no model arithmetic, no cross-section id copying beyond copy.
 - A-07: Same bump-list for each new agent: scripts/__golden__/flag-off.json regenerate (UPDATE_GOLDEN=1), hard-coded agent counts in src/lib/server/search/accuracy.test.ts and scripts/mcp-server-entries.test.ts, set-try-it-out-mode tests, Phase 15 guard src/lib/mcptest/criteria.test.ts exemptions. Consider asking the executor to make those counts derive from data/ to stop the churn if cheap.
 - A-08: DDC skills: use relevant ones (MIT, attribution): look for BOM/procurement/quote/EPD/carbon skills; exclude CWICR data and book content.
+
+## Corrected 2026-10-15 (Phase 31)
+
+Wrong assumptions (text above kept as history): A-02 (superseded) named stk-mcp and lvi-info-mcp as the intended data source for agent 5 and treated STK/LVI-INFO/Prysmian/Rakennustieto data as the catalog layer; A-07 (the "MCP-servers" framing of the sourcing stage in the bump list context) and the ROADMAP phrase "LVI-INFO catalog stage" likewise. A-05 named EPD Finland/Rakennustieto as a data source; Rakennustieto is MCP-side data. Corrected: agent 5 is a generic E-BOM to M-BOM matcher on a synthetic catalog excerpt, inspired by cwicr-material-procurement (method only); agent 7 names only "public EPD registers" generically. The catalog-lookup idea belongs to the separate LVI-INFO agent (Phase 36). See D-634.

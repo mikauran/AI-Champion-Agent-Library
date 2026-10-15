@@ -22,3 +22,7 @@ Counted only with (a) complete catalog entry per docs/agent-entry-template.md, v
 
 ## Done when
 All four agents either counted with evidence in 25-VERIFICATION.md / 25-HUMAN-UAT.md or recorded with reason; gaps list updated; npm run check green; STATE.md spend log updated.
+
+## Corrected 2026-10-15 (Phase 31)
+
+Wrong assumption (text above kept as history): A-03 (superseded) said catalog data would come from stk-mcp / LVI-INFO as the intended source and recorded the missing lookup as a gap. Corrected: the DDC agents have no MCP or LVI-INFO source; where catalog or class data is needed it is a generic synthetic excerpt pasted into the input, and the gap is only "no live register or catalog connection". Gap rows that existed only because of the mixing were removed from docs/consortium-agents-gaps.md in Phase 31 (D-634).
