@@ -52,4 +52,4 @@ Base AgentSpec fields (`component_type`, `id`, `name`, `description`, `system_pr
 
 ## MCP-server entries
 
-MCP servers are a different shape: a directory `data/agents/<slug>/catalog.yaml` with `kind: mcp-server`. They are ingested only with `AGENT_KINDS=on` (see [phase13-adapters.md](phase13-adapters.md)). Examples are added in Plan 24-03 (`data/agents/stk-mcp/`, `data/agents/stk-catalog-mcp/`, `data/agents/lvi-info-mcp/`).
+MCP servers are a different shape: a directory `<slug>/catalog.yaml` with `kind: mcp-server`. They are ingested only with `AGENT_KINDS=on` (see [phase13-adapters.md](phase13-adapters.md)). The three existing examples live in `data/agents-local/` and are read only when `LOCAL_MCP_AGENTS` is on; see [local-mcp-agent.md](local-mcp-agent.md).

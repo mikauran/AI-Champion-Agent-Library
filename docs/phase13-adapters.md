@@ -2,6 +2,8 @@
 
 Everything here is behind the `AGENT_KINDS` flag, default off. With the flag off, ingest, search, the catalog and the detail page behave exactly as before (proved by `scripts/flag-off.golden.test.ts` and `scripts/flag-regression.test.ts`).
 
+The three `mcp-server` catalog entries (stk-mcp, stk-catalog-mcp, lvi-info-mcp) are not in `data/agents`; they live in `data/agents-local/` and are ingested only when `LOCAL_MCP_AGENTS` is on as well (see [local-mcp-agent.md](local-mcp-agent.md)).
+
 ## How to enable
 
 ```bash
