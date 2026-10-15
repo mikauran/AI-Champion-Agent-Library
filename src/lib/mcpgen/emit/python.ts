@@ -397,6 +397,8 @@ export function emitPython(plan: ServerPlan): string {
   out.push('# Configuration (names only; values come from the environment).')
   out.push(`SERVER_NAME = ${pyStr(cleanText(m.name, 80))}`)
   out.push(`MAX_RESPONSE_ITEMS = ${pyNum(m.limits.maxResponseItems)}`)
+  // Every tool is read-only (write operations never reach the plan). openWorldHint: true only when the tool talks to an external service.
+  out.push(`_ANNOTATIONS = ${pyLit({ readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: kind === 'http' })}`)
   if (kind === 'http') {
     out.push(`BASE_URL_ENV = ${pyStr(env.baseUrl!)}`)
     out.push(`AUTH_ENV = ${env.auth ? pyStr(env.auth) : 'None'}`)
@@ -466,6 +468,6 @@ export function emitPython(plan: ServerPlan): string {
   }
   out.push('', '', '# Register every tool with the server (read-only tools only).', 'for _tool in (')
   for (const n of names) out.push(`    ${n},`)
-  out.push('):', '    mcp.tool(_tool)', '', '', 'if __name__ == "__main__":', '    mcp.run()')
+  out.push('):', '    mcp.tool(_tool, annotations=_ANNOTATIONS)', '', '', 'if __name__ == "__main__":', '    mcp.run()')
   return joinLines(out)
 }

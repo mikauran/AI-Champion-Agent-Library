@@ -5,7 +5,7 @@ import type { Entity, Operation, Param, PlannedTool, ServerPlan } from '../types
 import { effectiveMaxPageSize, resolveEnv, toolKind } from '../plan.js'
 import { hasOdata, odataTests } from './odata.js'
 import { joinLines, pyLit, pyNum, pyStr } from './pyutil.js'
-import { emitProposedPytest } from './pytestProposed.js'
+import { annotationTests, emitProposedPytest } from './pytestProposed.js'
 
 function sample(p: Param): unknown {
   if (p.enum && p.enum.length) return p.enum[0]
@@ -61,7 +61,7 @@ const HEAD = (name: string) => [
   '',
 ]
 
-function commonTests(names: string[]): string[] {
+function commonTests(names: string[], openWorld: boolean): string[] {
   return [
     `EXPECTED_TOOLS = ${pyLit(names)}`,
     '',
@@ -78,6 +78,7 @@ function commonTests(names: string[]): string[] {
     '    assert not [n for n in public if re.match(r"^(create|update|delete|post|put|patch|remove|write)_", n)]',
     '',
     '',
+    ...annotationTests(openWorld),
   ]
 }
 
@@ -125,7 +126,7 @@ function httpTests(plan: ServerPlan): string[] {
   )
   if (env.auth) out.push('    monkeypatch.setenv(AUTH_ENV, "dummy-secret-value")')
   out.push('    return state', '', '')
-  out.push(...commonTests(plan.tools.map((t) => t.name)))
+  out.push(...commonTests(plan.tools.map((t) => t.name), true))
 
   const calls = kinds
     .filter((x) => x.k !== 'describe')
@@ -377,7 +378,7 @@ function localTests(plan: ServerPlan): string[] {
     )
   }
   out.push('    monkeypatch.setenv(ENV_NAME, str(path))', '    return path', '', '')
-  out.push(...commonTests(plan.tools.map((t) => t.name)))
+  out.push(...commonTests(plan.tools.map((t) => t.name), false))
   const tools = '@pytest.mark.parametrize("tool,entity,fields", QUERY_TOOLS)'
   out.push(
     tools,
@@ -475,7 +476,7 @@ function localTests(plan: ServerPlan): string[] {
 
 export function emitPytest(plan: ServerPlan): string {
   if (plan.proposals) return emitProposedPytest(plan)
-  const lines = plan.model.backend.kind === 'http' ? (hasOdata(plan) ? odataTests(plan, HEAD(plan.model.name), commonTests) : httpTests(plan)) : localTests(plan)
+  const lines = plan.model.backend.kind === 'http' ? (hasOdata(plan) ? odataTests(plan, HEAD(plan.model.name), (names) => commonTests(names, true)) : httpTests(plan)) : localTests(plan)
   // Trim the extra blank lines left at the end of the last test.
   while (lines.length && lines[lines.length - 1] === '') lines.pop()
   return joinLines(lines)

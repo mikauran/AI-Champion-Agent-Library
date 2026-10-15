@@ -8,6 +8,43 @@ import type { ServerPlan } from '../types.js'
 import { finalSignature } from '../proposals/signature.js'
 import { joinLines, pyLit, pyStr } from './pyutil.js'
 
+/**
+ * Test asserting the annotations of every registered tool. Lists tools through the in-memory fastmcp
+ * Client (same on 3.4.x and 4.x); annotations are read as an attribute or a dict key so a model
+ * class or a plain mapping both work. Needs EXPECTED_TOOLS in the module.
+ */
+export function annotationTests(openWorld: boolean): string[] {
+  return [
+    `OPEN_WORLD = ${openWorld ? 'True' : 'False'}`,
+    '',
+    '',
+    'def _hint(annotations, key):',
+    '    if isinstance(annotations, dict):',
+    '        return annotations.get(key)',
+    '    return getattr(annotations, key, None)',
+    '',
+    '',
+    'def test_every_tool_declares_read_only_annotations():',
+    '    import asyncio',
+    '',
+    '    from fastmcp import Client',
+    '',
+    '    async def list_tools():',
+    '        async with Client(server.mcp) as client:',
+    '            return await client.list_tools()',
+    '',
+    '    tools = asyncio.run(list_tools())',
+    '    assert sorted(t.name for t in tools) == sorted(EXPECTED_TOOLS)',
+    '    for tool in tools:',
+    '        assert _hint(tool.annotations, "readOnlyHint") is True, tool.name',
+    '        assert _hint(tool.annotations, "destructiveHint") is False, tool.name',
+    '        assert _hint(tool.annotations, "idempotentHint") is True, tool.name',
+    '        assert _hint(tool.annotations, "openWorldHint") is OPEN_WORLD, tool.name',
+    '',
+    '',
+  ]
+}
+
 export function emitProposedPytest(plan: ServerPlan): string {
   const exposed = plan.tools.map((t) => t.name)
   const signatures = Object.fromEntries(plan.tools.map((t) => [t.name, finalSignature(plan, t).map((a) => a.name)]))
@@ -59,6 +96,7 @@ export function emitProposedPytest(plan: ServerPlan): string {
     '        assert set(out) == ERROR_KEYS',
     '',
     '',
+    ...annotationTests(plan.model.backend.kind === 'http'),
     `# Proposal provenance: ${pyStr(plan.proposals?.sha256 ?? '')}`,
   ]
   return joinLines(out)
