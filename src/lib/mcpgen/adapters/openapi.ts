@@ -514,10 +514,9 @@ function parseDoc(input: RawInput): ParseResult {
   // Paths are relative to servers[0].url (3.x) or basePath (2.0); neither is copied. When it carries a path,
   // the operator has to include it in <PREFIX>_BASE_URL, so say so (CR-04).
   {
-    const pathPart = declaredBasePath(root, swagger2)
-    if (pathPart !== undefined) {
-      const shown = /^\/[A-Za-z0-9._~/-]{1,60}$/.test(pathPart) ? ` (${pathPart})` : ''
-      gaps.push(gap('base-path-in-env', `The document declares a base path${shown}; operation paths are relative to it, but it is not copied. Include it in ${prefix}_BASE_URL.`, { severity: 'info' }))
+    if (declaredBasePath(root, swagger2) !== undefined) {
+      // The path text itself is never copied into the output (no value from the document's server URL is kept).
+      gaps.push(gap('base-path-in-env', `The document declares a base path (servers url or basePath); operation paths are relative to it, but it is not copied. Include it in ${prefix}_BASE_URL.`, { severity: 'info' }))
     }
   }
 

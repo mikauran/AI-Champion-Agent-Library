@@ -259,6 +259,6 @@ describe('openapi adapter: base path gap (CR-04)', () => {
     const t = 'swagger: "2.0"\ninfo: {title: Pathy, version: "1"}\nbasePath: /v2\npaths:\n  /items:\n    get:\n      responses:\n        "200":\n          description: ok\n          schema: {type: array, items: {type: object, properties: {id: {type: integer}}}}\n'
     const g = gapCodes(t)
     expect(g).toHaveLength(1)
-    expect(g[0].message).toContain('/v2')
+    expect(g[0].message).not.toContain('/v2')
   })
 })
