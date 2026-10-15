@@ -211,3 +211,198 @@ describe('T-23-02 proposal file: hostile JSON', () => {
     expect(Date.now() - t0).toBeLessThan(3000)
   })
 })
+
+// ---- runtime behaviour of the emitted server with hostile ARGUMENTS (our own template code, stubbed fastmcp/httpx) ----
+const STUBS = `
+import sys, types, json, os
+m = types.ModuleType('fastmcp')
+class FastMCP:
+    def __init__(self, *a, **k): pass
+    def tool(self, *a, **k):
+        if len(a) == 1 and callable(a[0]) and not k: return a[0]
+        return lambda f: f
+    def run(self, *a, **k): pass
+m.FastMCP = FastMCP
+sys.modules['fastmcp'] = m
+h = types.ModuleType('httpx')
+class _E(Exception): pass
+h.HTTPError = h.TimeoutException = h.RequestError = _E
+sys.modules['httpx'] = h
+sys.path.insert(0, sys.argv[1])
+import server
+`
+function runHarness(label: string, serverPy: string, body: string, env: Record<string, string> = {}): unknown {
+  const dir = mkdtempSync(join(tmpdir(), 'mcpgen-dyn-'))
+  dirs.push(dir)
+  writeFileSync(join(dir, 'server.py'), serverPy)
+  writeFileSync(join(dir, 'driver.py'), STUBS + body)
+  const r = spawnSync('python3', ['-I', join(dir, 'driver.py'), dir], { encoding: 'utf8', env: { PATH: process.env.PATH ?? '', ...env }, timeout: 30_000 })
+  expect(r.status, `${label}: ${r.stderr}`).toBe(0)
+  return JSON.parse(r.stdout)
+}
+const serverOf = (file: string, filename: string, text = fixtureText(file)) => {
+  const r = runPipeline(text, { filename })
+  if (!r.ok) throw new Error(`${file} did not generate`)
+  return r.files.find((f) => f.path === 'server.py')!.content
+}
+
+describe('T-23-05 emitted SQL server: hostile arguments never reach the SQL text', () => {
+  it.skipIf(!hasPython)('injection in field, value, fields, limit and offset is rejected or bound as data; the database stays unchanged', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mcpgen-db-'))
+    dirs.push(dir)
+    const db = join(dir, 'acme.db')
+    const setup = spawnSync(
+      'python3',
+      ['-I', '-c', `import sqlite3,sys\nc=sqlite3.connect(sys.argv[1])\nc.executescript(''.join(l for l in open(sys.argv[2]) if 'sqlite_sequence' not in l))\nc.execute("INSERT INTO customer(customer_name,segment,city) VALUES ('Ann','standard','Oslo'),('Bob','gold','Rome')")\nc.commit()`, db, join(__dirname, 'testing/fixtures/acme-sqlite.schema')],
+      { encoding: 'utf8' },
+    )
+    expect(setup.status, setup.stderr).toBe(0)
+    const out = runHarness(
+      'sql',
+      serverOf('acme-sqlite.schema', 'acme.schema'),
+      `
+import sqlite3
+EVIL = ["x' OR '1'='1", "x'; DROP TABLE customer; --", '" OR 1=1 --', "%", "_", "\\\\", "\\x00", "a" * 300, "x\\u2028y"]
+res = []
+for v in EVIL:
+    for mode in ("equals", "contains", "startsWith", "regex; DROP TABLE customer"):
+        res.append(server.query_customer(field="customer_name", value=v, match=mode))
+    res.append(server.query_customer(field=v, value="a"))
+    res.append(server.query_customer(fields=[v]))
+    res.append(server.query_customer(fields=["customer_name", v]))
+for lim in (-1, 0, 10**9, "1; DROP TABLE customer", 1.5, None, True):
+    for off in (-5, 10**12, "0 OR 1", None):
+        try: res.append(server.query_customer(limit=lim, offset=off))
+        except Exception as e: res.append({"raised": type(e).__name__})
+conn = sqlite3.connect(os.environ["DB"] + "?mode=ro".replace("?mode=ro", ""))
+count = conn.execute("SELECT COUNT(*) FROM customer").fetchone()[0]
+hostile_equals = [server.query_customer(field="customer_name", value=v, match="equals") for v in EVIL]
+leak = [r for r in hostile_equals if r.get("count", 0) != 0]
+legit = server.query_customer(field="customer_name", value="ann", match="equals")
+print(json.dumps({"count": count, "raised": [r for r in res if "raised" in r], "leak": len(leak), "legit": legit.get("count", 0), "legit_raw": legit, "total": len(res)}))
+`,
+      { ACME_DB_PATH: db, DB: db },
+    ) as { count: number; raised: unknown[]; leak: number; legit: number; total: number }
+    expect(out.count).toBe(2) // the table was never dropped or changed
+    expect(out.legit).toBe(1) // the harness really queries the database (not vacuous)
+    expect(out.leak).toBe(0) // an injected OR 1=1 would return rows; every hostile equals value matches none
+    expect(out.raised.length).toBeLessThanOrEqual(out.total)
+  })
+})
+
+describe('T-23-05 emitted OData server: keys and filter values stay one literal', () => {
+  it.skipIf(!hasPython)('path keys are encoded, filter text is a single quoted literal, typed values are validated', () => {
+    const out = runHarness(
+      'odata',
+      serverOf('acme-odata.xml', 'acme-odata.xml'),
+      `
+calls = []
+def fake(path, params=None):
+    calls.append([path, dict(params or {})])
+    return 200, '{"value": []}'
+server._raw_get = fake
+EVIL = ["1)/$value", "x')/../../secret", "..", ".", "%2e%2e", "a/b", "a?b=c", "a#b", "1 or 1 eq 1", "a'b", "x'); DELETE", "\\n", "é" * 40]
+res = []
+for v in EVIL:
+    for call in (lambda: server.lookup_product_by_id(id=v), lambda: server.lookup_supplier_by_supplier_code(supplier_code=v),
+                 lambda: server.list_products(field="name", value=v, match="equals"), lambda: server.list_products(field="name", value=v, match="contains"),
+                 lambda: server.list_products(field="name", value=v, match="startsWith")):
+        n = len(calls)
+        try: call()
+        except Exception as e: res.append({"raised": type(e).__name__})
+        res.extend(calls[n:])
+print(json.dumps(res))
+`,
+      { ACME_CATALOG_BASE_URL: 'http://127.0.0.1:9' },
+    ) as ({ raised: string } | [string, Record<string, string>])[]
+    let seen = 0
+    for (const c of out) {
+      if (!Array.isArray(c)) continue
+      seen++
+      const [path, params] = c
+      expect(path, 'the path is one entity-set segment with one key predicate').toMatch(/^\/[A-Za-z_]+\((?:[A-Za-z0-9_%'.~-]|=|,)*\)$/)
+      const f = params['$filter']
+      if (f !== undefined) expect(f).toMatch(/^(?:\w+ eq '(?:[^']|'')*'|(?:contains|startswith)\(\w+,'(?:[^']|'')*'\))$/)
+      for (const k of Object.keys(params)) expect(k).toMatch(/^\$(filter|select|top|skip|count|orderby)$/)
+    }
+    expect(seen).toBeGreaterThan(0)
+  })
+})
+
+describe('T-23-01 sax reader: amplification and nesting inputs are rejected fast', () => {
+  const bomb = `<?xml version="1.0"?><!DOCTYPE lolz [<!ENTITY lol "lol"><!ENTITY lol2 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;"><!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;">]><lolz>&lol3;</lolz>`
+  const timed = <T,>(f: () => T) => {
+    const t = Date.now()
+    const v = f()
+    return { v, ms: Date.now() - t }
+  }
+  it('billion laughs, parameter entities and external entities never reach the parser', async () => {
+    const { parseXml } = await import('./adapters/odata-xml')
+    for (const x of [bomb, '<!DOCTYPE a [<!ENTITY % p SYSTEM "http://127.0.0.1:1/x">%p;]><a/>', '<!DOCTYPE a SYSTEM "file:///etc/passwd"><a/>']) {
+      const { v, ms } = timed(() => parseXml(x))
+      expect('gap' in v && v.gap.code === 'doctype-rejected').toBe(true)
+      expect(ms).toBeLessThan(500)
+    }
+  })
+  it('an undeclared entity reference and a nesting or width bomb are bounded', async () => {
+    const { parseXml } = await import('./adapters/odata-xml')
+    expect(timed(() => parseXml('<a>&undeclared;</a>')).v).toHaveProperty('gap')
+    const deep = timed(() => parseXml('<a>'.repeat(100_000) + '</a>'.repeat(100_000)))
+    expect('gap' in deep.v).toBe(true)
+    expect(deep.ms).toBeLessThan(1500)
+    const wide = timed(() => parseXml(`<r>${'<e a="1"/>'.repeat(90_000)}</r>`))
+    expect('gap' in wide.v).toBe(true)
+    expect(wide.ms).toBeLessThan(2500)
+    const attrs = timed(() => parseXml(`<r ${Array.from({ length: 5000 }, (_, i) => `a${i}="v"`).join(' ')}/>`))
+    expect('gap' in attrs.v).toBe(true)
+    const nsbomb = timed(() => parseXml(`<r ${Array.from({ length: 5000 }, (_, i) => `xmlns:p${i}="urn:${i}"`).join(' ')}/>`))
+    expect(nsbomb.ms).toBeLessThan(2500)
+  })
+})
+
+describe('T-23-04 binding file', () => {
+  it('a __proto__ or constructor key cannot change the parsed object or reach an entry', async () => {
+    const { parseBindingFile } = await import('../mcptest/core/bindingSchema')
+    for (const t of ['{"__proto__":{"tool":"x"}}', '{"a":{"tool":"x","args":{"__proto__":{"polluted":1}}}}', '{"constructor":{"tool":"x"}}']) {
+      const p = parseBindingFile(t)
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+      if (p) expect(Object.getPrototypeOf(p)).toBe(Object.prototype)
+      if (p && !Object.keys(p).includes('__proto__')) expect((p as Record<string, unknown>).tool).toBeUndefined()
+    }
+  })
+  it('a traversal-looking tool name is only ever compared with the server tool list', async () => {
+    const { bindTool } = await import('../mcptest/core/binding')
+    const r = bindTool({}, [{ name: 'search_part' } as never], { tool: '../../etc/passwd' })
+    expect(r.status).toBe('no_tool')
+  })
+})
+
+describe('T-23-06 container path: hostile requests and package paths never reach the engine', () => {
+  it('a bad driver request or package path is refused before any runtime call', async () => {
+    const { runInContainer } = await import('../server/mcptest/containerRun')
+    const touched: string[] = []
+    const runtime = new Proxy({}, { get: (_t, k) => () => { touched.push(String(k)); throw new Error('engine touched') } }) as never
+    const good = { v: 1, subject: { kind: 'staged', command: 'python3', args: ['server.py'], cwd: '/work/pkg', id: 'generator:openapi' } }
+    const bad: unknown[] = [
+      { ...good, subject: { ...good.subject, args: ['-c', 'import os'] } },
+      { ...good, subject: { ...good.subject, args: ['../../etc/x.py'] } },
+      { ...good, subject: { ...good.subject, cwd: '/etc' } },
+      { ...good, subject: { ...good.subject, cwd: '/work/pkg/../../etc' } },
+      { ...good, subject: { ...good.subject, command: 'sh' } },
+      { ...good, subject: { ...good.subject, envNames: { apiKey: 'LD_PRELOAD' } } },
+      { ...good, subject: { ...good.subject, envNames: { apiKey: 'PATH' } } },
+      { ...good, extra: 1 },
+    ]
+    for (const req of bad) {
+      const r = await runInContainer(runtime, req as never, [], { driverTree: [] })
+      expect(r.ok, JSON.stringify(req)).toBe(false)
+      expect(touched, JSON.stringify(req)).toEqual([])
+    }
+    for (const path of ['../evil.py', '/etc/passwd', 'a/../../b', 'a\\b', 'a/\u0000b', '']) {
+      const r = await runInContainer(runtime, good as never, [{ path, content: 'x' }], { driverTree: [] })
+      expect(r.ok, path).toBe(false)
+      expect(touched, path).toEqual([])
+    }
+    expect(touched).toEqual([])
+  })
+})
