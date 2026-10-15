@@ -21,3 +21,33 @@ ATTEMPTED-NOT-COUNTED (4 live runs, all FAIL; revision cap of 2 plus one scope-s
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty (see below).
 - Ledger: four 32-01 rows after the fix-run marker in .planning/spend-log.md.
 - Phase 25 evidence for the previous (P1-P3, location_key) design stays valid for that design only; it no longer describes the entry.
+
+## Agent 4 RFI (plan 32-02)
+COUNTED (1 live run, SKILL v1, no revision needed). Aligned with DDC skill 1_DDC_Toolkit/Document-Control/rfi-management; spec docs/ddc-alignment/rfi-generation-from-findings.md written first (commit 6b1afdd).
+
+- Option A, Pi container, usage observed (countable), input label synthetic (6 findings in agent 3 findings format, Finnish labels).
+- Job 8c98cb89-f805-44d4-9bfb-7e041406585e, model gpt-4.1-mini, 16287 tokens, 3 requests, est. 0.0261 USD (ledger row after the fix-run marker).
+- Answer key (spec section 8) vs result: ids RFI-DRAFT-01..06 in order, index 6 rows, 6 blocks (R1); all 20 field lines in every block, checked by script (R2); Date, Response required by, CC, Submitted by exact placeholder in all 6, no date pattern anywhere in the file (R3); Assigned to matches the key incl. TO BE DECIDED BY COORDINATOR for F-04 and F-05 (R4); Question copied for F-01, F-02, F-04, F-06 and `(derived)` exactly for F-03 and F-05 (R5); impact lines placeholders, suggested resolution matches the lookup (route around, raise or lower, resize, route around, route around, none proposed for the model-data finding F-06), no invented names/sections/amounts (R6); caveat footer, checklist by ids with no count line (R7). Missing information matches the key in all 6 blocks. Verdict: PASS, rubric R1-R7 met.
+- Minor: the checklist ids are one per line instead of one line; the index table has uneven column padding. Neither is a rubric failure.
+- Excerpt (RFI-DRAFT-05 and RFI-DRAFT-06 abbreviated, impact/date lines are the placeholders):
+  ```
+  ### RFI-DRAFT-03
+  Source finding: F-03 (clash_ids: CL-005, CL-006)
+  Status: DRAFT
+  Priority: MEDIUM
+  Subject: Coordination: Ilmanvaihto, L3 grid B/2
+  Question: Please confirm which element at L3 grid B/2 shall change and whether the proposal is acceptable. (derived)
+  Suggested resolution: Proposal: resize one element
+  Assigned to: Ilmanvaihto
+  Date: to be set by coordinator
+  Response required by: to be set by coordinator
+  Missing information: spec section, drawing reference, cost and schedule basis, open question
+  ### RFI-DRAFT-04
+  Assigned to: TO BE DECIDED BY COORDINATOR
+  Missing information: spec section, drawing reference, cost and schedule basis, assigned party
+  Draft for engineer review. RFIs are written only from the findings table; nothing was checked in the model.
+  ```
+- Draft caveat: output is a draft for engineer review; nothing was checked in the model.
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: one 32-02 row after the fix-run marker. Fix-run spend so far 0.1464 USD (0.1203 + 0.0261).
+- Lesson confirmed: a one-block-per-finding layout of fixed lines (copy, constant placeholder or one lookup, worked examples, no cross-section dependency) passes first time on the small model, unlike the agent 3 output.
