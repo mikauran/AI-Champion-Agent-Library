@@ -27,3 +27,6 @@ Labels only (34-01); no rerun required by the plan (no entry text beyond label/a
 
 ## Spend
 Three runs, 0.0608 USD (upper bound) for this plan; no failed runs, no revisions. Stack stopped, no aic.tryitout containers left.
+
+## npm run check
+Run alone after the stack was stopped: 310 test files passed (1 skipped), 3720 tests passed (1 skipped); exit 0.
