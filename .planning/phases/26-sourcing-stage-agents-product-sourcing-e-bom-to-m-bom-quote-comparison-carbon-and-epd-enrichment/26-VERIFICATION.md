@@ -52,3 +52,23 @@ COUNTED (SKILL revision 1, rubric R1-R7 met).
 - Caveat: draft for engineer review; one sample of 8 lines and 3 quotes, synthetic, single run passing after one revision.
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: two 26-02 rows (0.0240, 0.0249).
+
+### Agent 7: Carbon and EPD enrichment
+COUNTED (SKILL v1, first run, rubric R1-R7 met).
+
+- Entry: data/agents/carbon-epd-enrichment.yaml (validate-submission INGESTIBLE, validate-entries 0 errors; stage sourcing, agent_no 7). The name is "Carbon EPD Enrichment" (not "... and ...") because the ingest derives the slug from the name and the slug must be `carbon-epd-enrichment`. Input label: synthetic (data/tryitout-prompts/carbon-epd-enrichment/sample-products-epd.txt: 10 products, 8 invented EPD rows). All EPD values are INVENTED and not authoritative; no real EPD was used. Option A, gpt-4.1-mini, Pi container, 3 requests, usage observed (countable).
+- Job c61b9914-d298-4f6e-be44-7e71a46201f5, 14550 tokens, est. 0.0233 USD (ledger row 26-03).
+- Answer key: X-01 EPD-01,EPD-08 ambiguous; X-02, X-08, X-10 no-epd; X-03 EPD-02 unit-mismatch (kg vs t, 720 copied); X-04 EPD-03 expired; X-05, X-06, X-07, X-09 matched (review NO).
+- Verdict: R1 pass (X-01..X-10 once each, in order, checks and table); R2 pass (qty/unit copied, no conversion); R3 pass (candidates and status equal the key for all 10); R4 pass (declared_unit, gwp, valid_until digit-identical for X-03 720/t, X-04 6.1/m, X-05 4.2/m2, X-06 1.9/kg, X-07 2.8/m2, X-09 95/pcs; `-` for ambiguous and no-epd rows); R5 pass (unit_ok N for X-03, expired Y for X-04, review NO for exactly the four matched rows); R6 pass (no total, conversion, ranking or other computed number; totals-not-computed sentence present; values labelled synthetic in the column name and footer); R7 pass (nothing outside the input, draft caveat present).
+- Design note: as in 26-02 the output has a `## Product checks` section (one checklist line per product, agreement rules for unit_same and expired) before the contract table; the table copies from it. No SKILL revision was needed.
+- Excerpt of the counted output:
+  ```
+  X-03 | Reinforcement steel B500 | 3850 | kg | EPD-02 | t | 720 | N | 2028-06-30 | N | unit-mismatch | YES | ...fired: product and declared units differ
+  X-04 | Copper pipe 22 | 120 | m | EPD-03 | m | 6.1 | Y | 2025-06-30 | Y | expired | YES | ...fired: EPD expired before reference date
+  X-05 | Mineral wool insulation | 60 | m2 | EPD-04 | m2 | 4.2 | Y | 2028-03-31 | N | matched | NO | ...
+  GWP totals (quantity x GWP per declared unit) are not computed here: recompute with a script or by hand for matched rows only, after resolving unit mismatches and ambiguous or expired EPDs.
+  Draft for engineer review. All EPD values in this run are synthetic and not authoritative; no EPD register lookup or calculation was made.
+  ```
+- Caveat: draft for engineer review; one synthetic sample (10 products), a single run.
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: one 26-03 row (0.0233 USD).
