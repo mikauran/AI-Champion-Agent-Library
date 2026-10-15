@@ -112,3 +112,10 @@ Agents 13-16 are chosen from the DDC skills (see docs/ddc-agent-candidates.md); 
 | G-098 | 14 Punch list closure check | Dates compared as ISO text; other date formats are not handled | tool | open | Phase 29 | open |
 | G-099 | 14 Punch list closure check | Scoped to about 6 items per run; real punch lists have hundreds of items and must be batched | tool | open | Phase 29 | open |
 | G-100 | 14 Punch list closure check | Counted on the second run (job 4100e229) after one SKILL revision: SKILL v1 (job e9cef5f5) got all verdicts right but left the notes empty; fixed by an explicit note rule and worked rows; still one synthetic sample of 6 items, real lists unproven | tool | open | Phase 29 | open |
+| G-101 | 15 Change order consistency check | Sample is synthetic: real change-order registers and forms are confidential and were not used; behaviour on real data unproven | data | open | Phase 29 | open |
+| G-102 | 15 Change order consistency check | Stage placement: change orders are commercial document control; the entry template has only four stages, so the entry uses site-handover | tool | open | Phase 29 | open |
+| G-103 | 15 Change order consistency check | Text only: no PDF forms, no signatures or attachments verified (signed is a text column) | tool | open | Phase 29 | open |
+| G-104 | 15 Change order consistency check | No cost impact analysis, schedule impact, pricing opinion, contract-clause or cumulative change-order limit checks (DDC skill features not adopted) | tool | open | Phase 29 | open |
+| G-105 | 15 Change order consistency check | Identical-text amount comparison: formats such as 8,400 vs 8400 are flagged as differences; no unit or currency conversion | tool | open | Phase 29 | open |
+| G-106 | 15 Change order consistency check | Scoped to about 6 log rows per run; real registers must be batched | tool | open | Phase 29 | open |
+| G-107 | 15 Change order consistency check | Counted on the first run (job 8746152c, SKILL v1, all six verdicts, notes and quoted form lines right, distractor form CO-60 not used); still one synthetic sample of 6 rows, real registers unproven | tool | open | Phase 29 | open |

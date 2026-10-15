@@ -49,6 +49,7 @@ These agents were chosen from the DDC skills; they are not among the 12 consorti
 | --- | --- | --- | --- | --- | --- |
 | 13 | Daily Report Cross Check | Site and handover | partial | data/agents/daily-report-cross-check.yaml | Counted: entry plus one container run on a synthetic daily report and timesheet (Phase 29, 29-01); text only, about 6 lines per run. |
 | 14 | Punch List Closure Check | Site and handover | partial | data/agents/punch-list-closure-check.yaml | Counted: entry plus one container run on a synthetic punch list with placeholder closure rules (Phase 29, 29-02); text only, about 6 items per run. |
+| 15 | Change Order Consistency Check | Site and handover | partial | data/agents/change-order-consistency-check.yaml | Counted: entry plus one container run on a synthetic change-order log and forms (Phase 29, 29-03); text only, identical-text amount comparison, about 6 rows per run. |
 
 ## MCP servers
 

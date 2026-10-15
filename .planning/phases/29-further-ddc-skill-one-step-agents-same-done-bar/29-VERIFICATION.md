@@ -52,3 +52,23 @@ COUNTED (SKILL revision 1, second run; rubric R1-R7 met).
 - Caveat: draft for engineer review; counted for the scoped step only (6 items, one synthetic sample, placeholder closure rules that are not a contract requirement).
 - Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
 - Ledger: two 29-02 rows (0.0192 + 0.0202 USD).
+
+### Agent 15: Change order consistency check
+COUNTED (SKILL v1, first run, rubric R1-R7 met).
+
+- Entry: data/agents/change-order-consistency-check.yaml (validate-submission INGESTIBLE, validate-entries 0 errors; stage site-handover, agent_no 15; name "Change Order Consistency Check" so the slug is change-order-consistency-check, confirmed by tryout:configure). DDC paths 1_DDC_Toolkit/Cost-Management/change-order-processor and 4_DDC_Curated/Contract-Legal/change-order-manager both verified present with gh api. Input label: synthetic (data/tryitout-prompts/change-order-consistency-check/sample-change-orders.txt: 6 invented log rows, 6 invented form lines including the distractor CO-60). Option A, gpt-4.1-mini, Pi container, 3 requests, usage observed (countable). SKILL stated each verdict's note content with worked lines and rows (lesson from 29-02).
+- Run: job 8746152c-5930-4df9-afb4-d113e7b41482, SKILL v1, 13208 tokens, est. 0.0211 USD, 14.5 s. No FAILed runs, no revisions, no scope-shrink retry.
+- Answer key vs result: CO-01 consistent, CO-02 amount-mismatch (amount differs 8400 vs 8040), CO-03 approval-incomplete (approved_by missing), CO-04 consistent (pending, unsigned form, no approval requirement), CO-05 amount-mismatch (currency differs EUR vs SEK), CO-06 no-form (NONE, CO-60 not used): all six match.
+- Verdict: R1 pass (one result.md; 6 check lines and 6 table rows CO-01..CO-06 in order, 7 cells each); R2 pass (every non-NONE form_line verbatim from the forms section); R3 pass; R4 pass (notes as key; review NO only CO-01, CO-04); R5 pass (no row for CO-60; open items CO-02, CO-03, CO-05, CO-06); R6 pass (no sums, totals, validity, approval or payment statement, no price opinion); R7 pass (draft caveat present).
+- Excerpt:
+  ```
+  CO-02 amount=8400 cur=EUR status=approved approved_by=Project Manager A approval_date=2026-02-14 | form_line="CO-02,8040,EUR,2,yes" f_amount=8040 f_cur=EUR f_signed=yes | amount_same=N | cur_same=Y | approval_gap=N | verdict=amount-mismatch
+  CO-02 | Revised duct routing | 8400 EUR | CO-02,8040,EUR,2,yes | amount-mismatch | YES | amount differs 8400 vs 8040
+  CO-03 | Added fire damper | 3200 EUR | CO-03,3200,EUR,0,yes | approval-incomplete | YES | approved_by missing
+  CO-05 | Extra cable tray | 3000 EUR | CO-05,3000,SEK,0,yes | amount-mismatch | YES | currency differs EUR vs SEK
+  CO-06 | Relocated riser | 7100 EUR | NONE | no-form | YES | no form line
+  Draft for reviewer. Verdicts come only from the supplied log and forms; no pricing or contract assessment was made.
+  ```
+- Caveat: draft for reviewer; counted for the scoped step only (6 log rows, one synthetic sample, first run).
+- Teardown: stack down, `podman ps -a --filter label=aic.tryitout` empty.
+- Ledger: one 29-03 row (0.0211 USD).
