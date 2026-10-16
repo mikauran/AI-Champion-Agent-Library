@@ -1,0 +1,14 @@
+node_modules/
+build/
+.svelte-kit/
+db/
+*.db
+dist/
+.env
+.env.local
+.git/
+.planning/
+prototypes/
+docs/
+*.md
+!data/tryitout-prompts/**/SKILL.md
