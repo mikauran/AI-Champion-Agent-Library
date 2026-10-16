@@ -322,7 +322,19 @@ restart.
 
 #### Setting up the Pi runner
 
-1. Enable the user socket: `systemctl --user enable --now podman.socket`
+Run these steps as the dedicated, non-root deployment user (without `sudo`).
+Compose always mounts the socket, even when `PI_RUNNER_ENABLED=false`.
+
+1. Prepare and check the user socket:
+   ```sh
+   export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+   systemctl --user enable --now podman.socket
+   test -S "$XDG_RUNTIME_DIR/podman/podman.sock"
+   ```
+   Continue only if all three commands succeed. If the user bus is unavailable,
+   log in directly over SSH as the deployment user. See the
+   [deployment runbook](docs/deploy-runbook.md#4-containers) for troubleshooting
+   and unattended startup.
 2. Build the image: `podman build -t localhost/pi-runner:latest -f Containerfile.pi-runner .`
 3. Start the app: `podman-compose up -d --build`. The compose file mounts the host
    Podman socket into the app, and attaches it to the internal network

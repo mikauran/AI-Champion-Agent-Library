@@ -7,7 +7,7 @@ Operator guide for building, starting, checking and rolling back the AIC Agent L
 ## 1. Prerequisites
 
 - Node.js 22 (the Containerfile uses `node:22-bookworm-slim`; the Pi and MCP-test runner images need Node >= 22.19).
-- For the container route: rootless Podman with `podman-compose`; for Try It Out containers also `systemctl --user enable --now podman.socket`.
+- For the container route: rootless Podman with `podman-compose` and an active user socket (`systemctl --user enable --now podman.socket`). Compose always mounts the socket, including when `PI_RUNNER_ENABLED=false`.
 - `ONNXRUNTIME_NODE_INSTALL_CUDA=skip` on every `npm install` / `npm ci`. Without it the onnxruntime-node postinstall hangs on a CUDA download.
 
 ## 2. Build steps (bare metal)
@@ -93,7 +93,7 @@ Defaults are read from the code. "unset" means the feature is off or the value c
 | `TRYITOUT_WORK_DIR` | `./.tryitout-work` (image `/app/runtime/tryitout-work`) | Job working files |
 | `TRYITOUT_PROMPTS_DIR` | `./data/tryitout-prompts` | Agent skill/prompt files (shipped in the image) |
 | `TRYOUT_STORAGE_PATH`, `TRYOUT_TEMPLATE_PATH` | `./runtime/try-out-sessions`, `./data/try-out/prompt-template.txt` | Legacy `/api/try-out` route |
-| `XDG_RUNTIME_DIR` | set by the host session | Locates the rootless Podman socket |
+| `XDG_RUNTIME_DIR` | set by the host session | Required and non-empty for Compose; locates the deployment user's rootless Podman socket on the host |
 
 ### Errors and support references
 
@@ -119,10 +119,47 @@ API error bodies are JSON with a `message` field (D-461). An unexpected server e
 Files: `Containerfile` (app, multi-stage), `Containerfile.pi-runner` (generic Pi image, `@earendil-works/pi-coding-agent@1.0.4`), `Containerfile.mcp-test-runner` (definition only; runs as user `pi`, uid 1000, like the Pi runner, D-464), `podman-compose.yml`, `.containerignore`.
 
 ```bash
-cp .env.example .env            # replace every placeholder; compose reads it at run time (not baked in)
+# First installation only: copy .env.example to .env and replace placeholders.
+# On upgrades, preserve the existing .env.
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+systemctl --user enable --now podman.socket || exit 1
+test -S "$XDG_RUNTIME_DIR/podman/podman.sock" || {
+    echo "Missing Podman socket: $XDG_RUNTIME_DIR/podman/podman.sock" >&2
+    exit 1
+}
 podman build -t localhost/pi-runner:latest -f Containerfile.pi-runner .
 podman-compose up -d --build    # builds the app image and starts it
 ```
+
+Run the commands above as the same dedicated, non-root user that owns the
+application containers, without `sudo`. The export applies to the current shell;
+any deployment script or service must also supply that user's `XDG_RUNTIME_DIR`.
+
+For an unattended server, an administrator can enable the deployment user's
+systemd user manager at boot and after logout with
+`sudo loginctl enable-linger <deployment-user>`. This keeps the enabled user
+socket available; it does not itself configure the app containers to start at boot.
+
+### Socket startup errors
+
+- `XDG_RUNTIME_DIR must be set ...`: Compose stopped before creating the app.
+  Export the runtime directory as shown above in the shell that invokes Compose.
+- `statfs /podman/podman.sock: no such file or directory` with an older compose
+  file: the variable expanded to an empty string. Update the file and set the variable.
+- `statfs /run/user/.../podman/podman.sock: no such file or directory`: the path
+  is set, but the socket is missing. Check `systemctl --user status podman.socket`
+  and confirm the path belongs to the current deployment user. Do not create a
+  directory or regular file in place of the socket.
+- `Failed to connect to bus` from `systemctl --user`: log in directly over SSH as
+  the deployment user and retry; a session entered through `su` or `sudo` may lack
+  the user manager environment.
+- `no container with name or ID "aic-agent-library" found` after a mount error:
+  container creation failed; fix the first error and run Compose again.
+
+`PI_RUNNER_SOCKET` is the app's path inside the container, pinned by Compose to
+`/run/podman/podman.sock`. Changing it in `.env` does not change the host mount.
+`PI_RUNNER_ENABLED=false` and `PI_FALLBACK_ENABLED=true` do not bypass the mount
+requirement, since mounts are prepared before the app can start.
 
 Notes from the files:
 

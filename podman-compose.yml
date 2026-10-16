@@ -1,6 +1,5 @@
 # Usage: podman-compose up -d --build
-# (or: podman play kube / docker compose — this file is compatible with both
-# podman-compose and docker-compose syntax)
+# Requires the deployment user's active rootless Podman socket; see docs/deploy-runbook.md.
 services:
   aic-agent-library:
     build:
@@ -33,7 +32,7 @@ services:
       - tryout-sessions:/app/runtime/tryitout-work:U
       - auth-data:/app/runtime/auth:U
       # Host user's rootless Podman socket: the app starts Pi containers through it.
-      - ${XDG_RUNTIME_DIR}/podman/podman.sock:/run/podman/podman.sock
+      - "${XDG_RUNTIME_DIR:?XDG_RUNTIME_DIR must be set to the deployment user runtime directory}/podman/podman.sock:/run/podman/podman.sock"
     # Needed to use the socket on SELinux hosts (app service only).
     security_opt:
       - label=disable
